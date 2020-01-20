@@ -16,4 +16,13 @@
     {{ note.markdown | safe }}
 </div>
 
+<footer>
+    <hr>
+    {% if note.publication %}
+    <p>
+        <b>{{note.publication.author}}</b>  &middot;  {{note.publication.date_publication|date}}
+    </p>
+    {% endif %}
+</footer>
+
 {% endblock section %}

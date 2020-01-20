@@ -65,7 +65,7 @@ def dashboard(request):
     """View containting the aggregation of notes and tasks."""
     notes = models.Note.objects\
         .filter(task=None)\
-        .order_by("-date_modification")[:10]
+        .order_by("-date_access", "-date_modification")[:6]
     tasks = models.Note.objects\
         .filter(
             task__isnull=False,
@@ -100,7 +100,10 @@ def view_notes(request):
         )
     else:
         objects = base_objects
-    paginator = Paginator(objects.order_by("-date_modification"), page_size)
+    paginator = Paginator(objects.order_by(
+        "-date_access",
+        "-date_modification"
+    ), page_size)
     page = request.GET.get("page")
     notes = paginator.get_page(page)
     return render(request, "orgapy/notes.html", {

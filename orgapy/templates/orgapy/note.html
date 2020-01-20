@@ -12,7 +12,7 @@
 {% block section %}
 <h1>{{note.title}}</h1>
 
-<nav class="navbar">
+<nav class="command_panel">
     <a href="{% url 'orgapy:edit_note' slug=note.slug %}" class="button">Edit</a>
     {% if note.public %}
     <a href="{% url 'orgapy:view_public_note' slug=note.slug %}" class="button">Share</a>
@@ -32,27 +32,34 @@
 </p>
 {% endif %}
 
-{% if note.categories %}
-<p>
-    {% for category in note.categories.all %}
-    <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
-    {% endfor %}
-</p>
-{% endif %}
+<footer>
+    <hr>
 
-{% if note.task %}
-<hr>
-<p>
-{% if note.task.done %}
-This task was done on {{note.task.date_done|date:"l, F j, Y"}}.
-{% else %}
-{% if note.task.date_due %}
-The task is due to {{note.task.date_due|date:"l, F j, Y"}}.
-{% else %}
-This task has no deadline.
-{% endif %}
-{% endif %}
-</p>
-{% endif %}
+    <p>
+        <i>Last update: {{note.date_modification}}</i>
+    </p>
+
+    {% if note.categories %}
+    <p>
+        {% for category in note.categories.all %}
+        <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+        {% endfor %}
+    </p>
+    {% endif %}
+
+    {% if note.task %}
+    <p>
+    {% if note.task.done %}
+    This task was done on {{note.task.date_done|date:"l, F j, Y"}}.
+    {% else %}
+    {% if note.task.date_due %}
+    The task is due to {{note.task.date_due|date:"l, F j, Y"}}.
+    {% else %}
+    This task has no deadline.
+    {% endif %}
+    {% endif %}
+    </p>
+    {% endif %}
+</footer>
 
 {% endblock section %}

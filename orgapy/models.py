@@ -58,6 +58,7 @@ class Note(models.Model):
 
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=False, auto_now=True)
+    date_access = models.DateTimeField(auto_now_add=False, auto_now=True)
     title = models.CharField(max_length=255)
     content = models.TextField()
     slug = models.SlugField(unique=True, max_length=255)
@@ -69,6 +70,8 @@ class Note(models.Model):
 
     def markdown(self):
         """Produce html code from Markdown content"""
+        self.date_access = datetime.datetime.now()
+        self.save()
         factory = mistune.create_markdown(
             renderer=HighlightRenderer(),
             escape=False,

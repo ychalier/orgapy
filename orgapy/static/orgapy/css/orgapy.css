@@ -1,10 +1,20 @@
+html, body {
+    height: 100%;
+}
+
+.fullheight_padding {
+    height: 16px;
+}
+
 .body_wrapper {
     display: flex;
     flex-direction: column;
     max-width: 800px;
     margin: 0 auto 0 auto;
     background-color: #2F2F2F;
-    padding: 16px;
+    padding: 0 16px 0 16px;
+    min-height: 100vh;
+    box-shadow: 0 0 20px 10px rgba(0, 0, 0, .1);
 }
 
 .header {}
@@ -16,44 +26,28 @@
     overflow: auto;
 }
 
-@media (max-width: 800px) {
-    .header__nav {
-        margin: auto;
-    }
-
-    .header--inline {
-        justify-content: center;
-    }
-
-    section .navbar {
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    section .navbar>* {
-        margin: 0 0 8px 0;
-    }
-
-    section .navbar>*:last-child {
-        margin-bottom: 0px;
-    }
-
-    section .navbar .button {
-        margin: auto;
-    }
-
-    .form--row input[type="text"] {
-        width: 100%;
-    }
-
-    .form--column input[type="date"] {
-        margin-left: auto;
-        margin-right: auto;
-    }
-}
-
 .header__title {
     font-weight: bold;
+}
+
+.command_panel {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.command_panel > * {
+    margin-right: 8px;
+}
+
+.command_panel > *:last-child {
+    margin-right: 0;
+}
+
+.command_panel > form {
+    width: 100%;
 }
 
 .navbar {
@@ -80,6 +74,10 @@
     flex-direction: row;
 }
 
+.form--row input[type="date"], .form--row input[type="text"] {
+    width: 100%;
+}
+
 .form--column {
     display: flex;
     flex-direction: column;
@@ -97,28 +95,16 @@ input, textarea, select {
     border: none;
     background: #202020;
     color: white;
+    min-width: 0;
 }
 
 textarea {
     resize: vertical;
 }
 
-input[type="submit"] {
-    cursor: pointer;
-    width: 120px;
-    margin: auto;
-    transition: .1s ease;
-    background-color: white;
-    color: #2F2F2F;
-}
-
-input[type="submit"]:hover, input[type="submit"]:focus {
-    background-color: #F0F0F0;
-}
-
 .button, a.button {
     cursor: pointer;
-    width: 100px;
+    min-width: 100px;
     transition: .1s ease;
     background-color: white;
     color: #2F2F2F;
@@ -126,7 +112,7 @@ input[type="submit"]:hover, input[type="submit"]:focus {
     text-align: center;
 }
 
-.button:hover, .button:focus {
+.button:hover, .button:focus, a.button:hover, a.button:focus {
     background-color: #F0F0F0;
     text-decoration: none;
 }
@@ -386,4 +372,24 @@ a.divlink {
 li.task-list-item {
     list-style: none;
     margin-left: -25px;
+}
+
+@media (max-width: 800px) {
+
+    .button, a.button {
+        min-width: 0;
+    }
+
+    .button--fixed {
+        flex-shrink: 0;
+    }
+
+    .note_list .col1, .note_list .col3, .note_list .col4, .note_list .col5 {
+        width: 0;
+    }
+
+    .note_list .col3 {
+        display: none;
+    }
+
 }

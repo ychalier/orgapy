@@ -1,7 +1,7 @@
 Orgapy
 ======
 
-Current version: **v0.2**
+Current version: **v0.3**
 
 It is a Django application, whose purpose is to act as a notebook, allowing to
 keep **notes** and manage **tasks**. Notes can be arranged into a **blog** for
@@ -28,7 +28,7 @@ Installation
 
     .. code-block:: bash
 
-        pip install django-orgapy-v0.2.tar.gz
+        pip install django-orgapy-v0.3.tar.gz
 
 2. Add ``orgapy`` to the ``INSTALLED_APPS`` variables in Django settings
 

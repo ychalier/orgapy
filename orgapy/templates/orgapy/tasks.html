@@ -10,12 +10,12 @@
 {% block section %}
 <h1>Tasks</h1>
 
-<form class="form--column" action="{% url 'orgapy:save_note' %}" method="post">
+<form class="form--row" action="{% url 'orgapy:save_note' %}" method="post">
     {% csrf_token %}
     <input type="hidden" name="task" value="">
     <input type="text" name="title" value="" placeholder="Title">
     <input type="date" name="due" value="">
-    <input type="submit" name="" value="Create">
+    <input class="button button--fixed" type="submit" value="Create task">
 </form>
 
 {% include "orgapy/task_list.html" %}
