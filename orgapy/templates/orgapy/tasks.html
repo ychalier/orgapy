@@ -1,0 +1,23 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static from staticfiles %}
+
+{% block title %}{% block subtitle %}Tasks | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+{% endblock head %}
+
+{% block section %}
+<h1>Tasks</h1>
+
+<form class="form--column" action="{% url 'orgapy:save_note' %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="task" value="">
+    <input type="text" name="title" value="" placeholder="Title">
+    <input type="date" name="due" value="">
+    <input type="submit" name="" value="Create">
+</form>
+
+{% include "orgapy/task_list.html" %}
+
+{% endblock section %}

@@ -1,0 +1,19 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static from staticfiles %}
+
+{% block title %}{% block subtitle %}{{note.title}} | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/monokai.css' %}" />
+<link rel="stylesheet" href="{% static 'orgapy/css/markdown.css' %}" />
+{% endblock head %}
+
+{% block section %}
+<h1>{{note.title}}</h1>
+
+<div class="note_content">
+    {{ note.markdown | safe }}
+</div>
+
+{% endblock section %}

@@ -1,0 +1,389 @@
+.body_wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    margin: 0 auto 0 auto;
+    background-color: #2F2F2F;
+    padding: 16px;
+}
+
+.header {}
+
+.header--inline {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    overflow: auto;
+}
+
+@media (max-width: 800px) {
+    .header__nav {
+        margin: auto;
+    }
+
+    .header--inline {
+        justify-content: center;
+    }
+
+    section .navbar {
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    section .navbar>* {
+        margin: 0 0 8px 0;
+    }
+
+    section .navbar>*:last-child {
+        margin-bottom: 0px;
+    }
+
+    section .navbar .button {
+        margin: auto;
+    }
+
+    .form--row input[type="text"] {
+        width: 100%;
+    }
+
+    .form--column input[type="date"] {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.header__title {
+    font-weight: bold;
+}
+
+.navbar {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.navbar>* {
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+.navbar>*:first-child {
+    margin-left: 0px;
+}
+
+.navbar>*:last-child {
+    margin-right: 0px;
+}
+
+.form--row {
+    display: flex;
+    flex-direction: row;
+}
+
+.form--column {
+    display: flex;
+    flex-direction: column;
+    margin: 20px auto 20px auto;
+}
+
+.form--column>* {
+    margin: 0 0 8px 0;
+}
+
+input, textarea, select {
+    font-size: inherit;
+    font-family: inherit;
+    padding: 8px;
+    border: none;
+    background: #202020;
+    color: white;
+}
+
+textarea {
+    resize: vertical;
+}
+
+input[type="submit"] {
+    cursor: pointer;
+    width: 120px;
+    margin: auto;
+    transition: .1s ease;
+    background-color: white;
+    color: #2F2F2F;
+}
+
+input[type="submit"]:hover, input[type="submit"]:focus {
+    background-color: #F0F0F0;
+}
+
+.button, a.button {
+    cursor: pointer;
+    width: 100px;
+    transition: .1s ease;
+    background-color: white;
+    color: #2F2F2F;
+    padding: 8px;
+    text-align: center;
+}
+
+.button:hover, .button:focus {
+    background-color: #F0F0F0;
+    text-decoration: none;
+}
+
+.input_group {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.input_group input {
+    margin: 0 8px 0 0;
+}
+
+.input_group label {}
+
+.expandable__content {
+    display: none;
+    margin: 8px auto 0 auto;
+    flex-direction: column;
+}
+
+.expandable__checkbox:checked~.expandable__content {
+    display: flex;
+}
+
+.expandable {
+    padding: none;
+}
+
+.expandable__content>* {
+    margin: 0 0 8px 0;
+}
+
+.expandable__content>*:last-child {
+    margin: 0;
+}
+
+.expandable__checkbox {
+    margin: 0 8px 0 0;
+}
+
+input[type="checkbox"], label {
+    cursor: pointer;
+}
+
+label {
+    user-select: none;
+}
+
+body {
+    color: #EEE;
+    background-color: #202020;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI";
+}
+
+h1 {
+    font-size: 32px;
+}
+
+h1, h2 {
+    font-weight: 600;
+}
+
+h2 {
+    font-size: 24px;
+}
+
+h3 {
+    font-size: 20px;
+}
+
+h3, h4 {
+    font-weight: 600;
+}
+
+h4 {
+    font-size: 16px;
+}
+
+h5 {
+    font-size: 14px;
+}
+
+h5, h6 {
+    font-weight: 600;
+}
+
+h6 {
+    font-size: 12px;
+}
+
+header a {
+    color: white;
+}
+
+a {
+    color: #61BFC1;
+    text-decoration: none;
+    vertical-align: baseline;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+p, ul, ol {
+    font-size: 16px;
+}
+
+pre {
+    white-space: pre-wrap;
+}
+
+code {
+    font-family: Consolas, Monaco, Andale Mono, monospace;
+}
+
+aside {
+    display: block;
+    float: right;
+    width: 390px;
+}
+
+blockquote {
+    border-left: 2px solid #eee;
+    padding: 0 16px;
+    margin-left: 0;
+}
+
+blockquote cite {
+    font-size: 14px;
+    color: #bfbfbf;
+}
+
+blockquote cite:before {
+    content: '\2014 \00A0';
+}
+
+blockquote p {
+    color: #666;
+}
+
+hr {
+    text-align: left;
+    color: #999;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: left;
+    padding: 5px 10px;
+    border-bottom: 1px solid #202020;
+}
+
+dt {
+    color: #BFBFBF;
+    font-weight: 700;
+}
+
+th {
+    color: #BFBFBF;
+    font-weight: normal;
+}
+
+img {
+    max-width: 100%;
+    max-height: 50vh;
+    margin: auto;
+    display: block;
+    border-radius: 4px;
+}
+
+code, pre {
+    font-family: Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal, Consolas, Liberation Mono, DejaVu Sans Mono, Courier New, monospace;
+    color: inherit;
+}
+
+pre {
+    padding: 8px 15px;
+    background: #272822;
+    border-radius: 5px;
+    border: 1px solid #1A1A1A;
+    overflow-x: auto;
+}
+
+.note_content a:visited {
+    color: #466B6C;
+}
+
+.note_list {
+    margin: 20px auto 20px auto;
+}
+
+.note_list .col1 {
+    width: 60px;
+    text-align: center;
+}
+
+.note_list .col3 {
+    width: 50px;
+    text-align: center;
+}
+
+.note_list .col4 {
+    width: 100px;
+    text-align: center;
+}
+
+.note_list .col5 {
+    width: 42px;
+    text-align: center;
+}
+
+.task--urgent, .task--urgent a, .task--urgent a:hover, .task--urgent a:focus, .task--urgent a:visited {
+    color: crimson;
+}
+
+.task--done {
+    opacity: .2;
+}
+
+.task--today, .task--urgent {
+    font-weight: bold;
+}
+
+a.divlink {
+    color: inherit;
+    text-decoration: inherit;
+}
+
+.publication {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background-color: #202020;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.publication__title {
+    margin: 0;
+}
+
+.publication__meta {
+    opacity: .6;
+    font-size: 14px;
+    margin: 0;
+}
+
+li.task-list-item {
+    list-style: none;
+    margin-left: -25px;
+}

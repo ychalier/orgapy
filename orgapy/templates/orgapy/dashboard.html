@@ -1,0 +1,26 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static from staticfiles %}
+
+{% block title %}{% block subtitle %}Dashboard | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+{% endblock head %}
+
+{% block section %}
+
+<h1>Dashboard</h1>
+
+<nav class="navbar">
+    <a class="button" href="{% url 'orgapy:create_note' %}">Create note</a>
+</nav>
+
+<h2>Upcoming tasks</h2>
+
+{% include "orgapy/task_list.html" %}
+
+<h2>Recent notes</h2>
+
+{% include "orgapy/note_list.html" %}
+
+{% endblock section %}

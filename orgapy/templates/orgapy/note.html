@@ -1,0 +1,58 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static from staticfiles %}
+
+{% block title %}{% block subtitle %}{{note.title}} | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/monokai.css' %}" />
+<link rel="stylesheet" href="{% static 'orgapy/css/markdown.css' %}" />
+{% endblock head %}
+
+{% block section %}
+<h1>{{note.title}}</h1>
+
+<nav class="navbar">
+    <a href="{% url 'orgapy:edit_note' slug=note.slug %}" class="button">Edit</a>
+    {% if note.public %}
+    <a href="{% url 'orgapy:view_public_note' slug=note.slug %}" class="button">Share</a>
+    {% endif %}
+    <a href="{% url 'orgapy:export_note' slug=note.slug %}" class="button">Export</a>
+    <a href="{% url 'orgapy:publish_note' slug=note.slug %}" class="button">Publish</a>
+    <a href="{% url 'orgapy:delete_note' slug=note.slug %}" class="button">Delete</a>
+</nav>
+
+{% if note.content %}
+<div class="note_content">
+    {{ note.markdown | safe }}
+</div>
+{% else %}
+<p>
+    This note has no content.
+</p>
+{% endif %}
+
+{% if note.categories %}
+<p>
+    {% for category in note.categories.all %}
+    <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+    {% endfor %}
+</p>
+{% endif %}
+
+{% if note.task %}
+<hr>
+<p>
+{% if note.task.done %}
+This task was done on {{note.task.date_done|date:"l, F j, Y"}}.
+{% else %}
+{% if note.task.date_due %}
+The task is due to {{note.task.date_due|date:"l, F j, Y"}}.
+{% else %}
+This task has no deadline.
+{% endif %}
+{% endif %}
+</p>
+{% endif %}
+
+{% endblock section %}

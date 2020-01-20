@@ -1,0 +1,30 @@
+{% if notes %}
+<table class="note_list">
+    <tr>
+        <th class="col2">Title</th>
+        <th class="col3">Public</th>
+        <th class="col4">Categories</th>
+    </tr>
+    {% for note in notes %}
+    <tr>
+        <td class="col2">
+            <a href="{% url 'orgapy:view_note' slug=note.slug %}">{{note.title}}</a>
+        </td>
+        <td class="col3">
+            {% if note.public %}
+            <a href="{% url 'orgapy:view_public_note' slug=note.slug %}">⁕</a>
+            {% endif %}
+        </td>
+        <td class="col4">
+            {% for category in note.categories.all %}
+            <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+            {% endfor%}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>
+    No note to be shown.
+</p>
+{% endif %}

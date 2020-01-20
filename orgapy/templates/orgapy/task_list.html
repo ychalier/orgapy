@@ -1,0 +1,46 @@
+{% if tasks %}
+<table class="note_list">
+    <tr>
+        <th class="col1">Due</th>
+        <th class="col2">Title</th>
+        <th class="col3">Public</th>
+        <th class="col4">Categories</th>
+        <th class="col5">Done</th>
+    </tr>
+    {% for note in tasks %}
+    <tr class="task{% if note.task.done %} task--done{% elif note.task.urgent %} task--urgent{% elif note.task.today %} task--today{% endif%}">
+        <td class="col1">
+            {% if note.task.date_due %}
+            {{note.task.date_due|date:"M. d"}}
+            {% else %}
+            --
+            {% endif %}
+        </td>
+        <td class="col2">
+            <a href="{% url 'orgapy:view_note' slug=note.slug %}">{{note.title}}</a>
+        </td>
+        <td class="col3">
+            {% if note.public %}
+            <a href="{% url 'orgapy:view_public_note' slug=note.slug %}">⁕</a>
+            {% endif %}
+        </td>
+        <td class="col4">
+            {% for category in note.categories.all %}
+            <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+            {% endfor%}
+        </td>
+        <td class="col5">
+            {% if note.task.done %}
+            <a href="{% url 'orgapy:delete_note' slug=note.slug %}">✕</a>
+            {% else %}
+            <a href="{% url 'orgapy:task_done' note_id=note.id %}">✓</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>
+    No task to be shown.
+</p>
+{% endif %}
