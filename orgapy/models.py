@@ -57,8 +57,8 @@ class Note(models.Model):
     """Represent a general note, ie. a title and a text"""
 
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_modification = models.DateTimeField(auto_now_add=False, auto_now=True)
-    date_access = models.DateTimeField(auto_now_add=False, auto_now=True)
+    date_modification = models.DateTimeField(auto_now_add=False, auto_now=False)
+    date_access = models.DateTimeField(auto_now_add=False, auto_now=False)
     title = models.CharField(max_length=255)
     content = models.TextField()
     slug = models.SlugField(unique=True, max_length=255)

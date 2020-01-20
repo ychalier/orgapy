@@ -203,6 +203,7 @@ def save_note_core(request):
         note.public = is_public
         note.slug = slug
         note.categories.clear()
+    note.date_modification = datetime.datetime.now()
     note.save()
     return note
 
