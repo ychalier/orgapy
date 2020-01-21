@@ -32,6 +32,7 @@
                 <a href="{% url 'admin:index' %}">Admin</a>
                 {% endif %}
             </nav>
+            <span class="now">{% now "F jS, Y" %}</span>
         </header>
         <section>
             {% block section %}{% endblock section %}

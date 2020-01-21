@@ -128,3 +128,30 @@ class Publication(models.Model):
 
     def __str__(self):
         return "Publication<%s>" % self.note
+
+
+class SingletonModel(models.Model):
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super(SingletonModel, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class CalDavSettings(SingletonModel):
+
+    username = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    host = models.CharField(max_length=255)
+    port = models.IntegerField(default=5232)
+    protocol = models.CharField(max_length=255, default="https")

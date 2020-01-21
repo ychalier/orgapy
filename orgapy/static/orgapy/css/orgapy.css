@@ -38,15 +38,15 @@ html, body {
     margin-bottom: 20px;
 }
 
-.command_panel > * {
+.command_panel>* {
     margin-right: 8px;
 }
 
-.command_panel > *:last-child {
+.command_panel>*:last-child {
     margin-right: 0;
 }
 
-.command_panel > form {
+.command_panel>form {
     width: 100%;
 }
 
@@ -374,8 +374,48 @@ li.task-list-item {
     margin-left: -25px;
 }
 
-@media (max-width: 800px) {
+.event_list {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
 
+.event_list__date {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background-color: #202020;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.event_list__date:last-child {
+    margin-bottom: 0;
+}
+
+.event__list__date__date {
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.event {
+    margin-bottom: 4px;
+}
+
+.event:last-child {
+    margin-bottom: 0;
+}
+
+.event__info {
+    font-size: 14px;
+    opacity: .6;
+}
+
+.now {
+    font-size: 14px;
+}
+
+@media (max-width: 800px) {
     .button, a.button {
         min-width: 0;
     }
@@ -392,4 +432,7 @@ li.task-list-item {
         display: none;
     }
 
+    .now {
+        display: none;
+    }
 }

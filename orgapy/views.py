@@ -1,5 +1,6 @@
 import re
 import datetime
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -9,6 +10,8 @@ from django.db.models import Q
 from django.db.models import F
 from django.http import HttpResponse
 from xhtml2pdf import pisa
+import caldav
+import icalendar
 from . import models
 
 
@@ -28,6 +31,70 @@ def find_title(base):
             candidate = pattern.sub(
                 "(%d)" % (int(suffix.group(1)) + 1), candidate)
     return candidate
+
+
+def parse_event(parsed):
+    event = dict()
+    event["title"] = parsed.get("summary")
+    event["location"] = parsed.get("location")
+    event["dt_type"] = type(parsed.get("dtstart").dt) == datetime.datetime
+    dtstart = parsed.get("dtstart").dt
+    dtend = parsed.get("dtend").dt
+    if not event["dt_type"]:
+        dtstart = datetime.datetime.combine(dtstart, datetime.datetime.min.time())
+        dtend = datetime.datetime.combine(dtend, datetime.datetime.min.time())
+    if parsed.get("rrule") is not None:
+        freq = parsed.get("rrule").get("freq")[0]
+        delta = {
+            "SECONDLY": datetime.timedelta(seconds=1),
+            "MINUTELY": datetime.timedelta(minutes=1),
+            "HOURLY": datetime.timedelta(hours=1),
+            "DAILY": datetime.timedelta(days=1),
+            "WEEKLY": datetime.timedelta(weeks=1),
+            "MONTHLY": relativedelta(months=+1),
+            "YEARLY": relativedelta(years=+1)
+        }[freq]
+        while dtend < datetime.datetime.now():
+            dtstart += delta
+            dtend += delta
+    event["start_date"] = dtstart.date()
+    event["start_time"] = dtstart.time()
+    event["end_date"] = dtend.date()
+    event["end_time"] = dtend.time()
+    return event
+
+def get_events():
+    """Return upcoming events from CalDav server"""
+    settings = models.CalDavSettings.load()
+    if settings.host == "":
+        return list()
+    url = "%s://%s:%s@%s:%s" % (
+        settings.protocol,
+        settings.username,
+        settings.password,
+        settings.host,
+        settings.port
+    )
+    event_list = list()
+    client = caldav.DAVClient(url, ssl_verify_cert=False)
+    principal = client.principal()
+    calendars = principal.calendars()
+    for calendar in calendars:
+        for vevents in calendar.date_search(
+                datetime.datetime.today(),
+                datetime.datetime.today() + datetime.timedelta(days=7)
+            ):
+            for parsed in icalendar.Calendar.from_ical(vevents.data).walk("vevent"):
+                event = parse_event(parsed)
+                if event is not None:
+                    event_list.append(event)
+    events = dict()
+    for event in event_list:
+        events.setdefault(event["start_date"], list())
+        events[event["start_date"]].append(event)
+    for day in events:
+        events[day].sort(key=lambda x: x["start_time"])
+    return sorted(events.items(), key=lambda x: x[0])
 
 
 def about(request):
@@ -79,6 +146,7 @@ def dashboard(request):
     return render(request, "orgapy/dashboard.html", {
         "notes": notes,
         "tasks": tasks,
+        "events": get_events(),
     })
 
 

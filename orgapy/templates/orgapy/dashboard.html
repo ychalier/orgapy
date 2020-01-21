@@ -11,13 +11,44 @@
 
 <h1>Dashboard</h1>
 
+{% if events %}
+<h2>Upcoming events</h2>
+<section class="event_list">
+{% for start_date, date_events in events %}
+    <section class="event_list__date">
+        <div class="event__list__date__date">
+            {{start_date|date:"l, M. j"}}
+        </div>
+        {% for event in date_events %}
+        <article class="event">
+            <div class="event__title">{{event.title}}</div>
+            <div class="event__info">
+                {% if event.dt_type %}
+                    {{event.start_time|date:"G:i"}} &ndash; {{event.end_time|date:"G:i"}}
+                {% endif %}
+                {% if event.dt_type and event.location %}
+                    &middot;
+                {% endif %}
+                {% if event.location %}
+                {{ event.location }}
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+{% endfor %}
+</section>
+{% endif %}
+
+{% if tasks %}
 <h2>Upcoming tasks</h2>
-
 {% include "orgapy/task_list.html" %}
+{% endif %}
 
+{% if notes %}
 <h2>Recent notes</h2>
-
 {% include "orgapy/note_list.html" %}
+{% endif %}
 
 <nav class="navbar">
     <a class="button" href="{% url 'orgapy:create_note' %}">Create note</a>
