@@ -34,6 +34,7 @@ def find_title(base):
 
 
 def parse_event(parsed):
+    """Parse an Icalendar event"""
     event = dict()
     event["title"] = parsed.get("summary")
     event["location"] = parsed.get("location")
@@ -41,7 +42,8 @@ def parse_event(parsed):
     dtstart = parsed.get("dtstart").dt
     dtend = parsed.get("dtend").dt
     if not event["dt_type"]:
-        dtstart = datetime.datetime.combine(dtstart, datetime.datetime.min.time())
+        dtstart = datetime.datetime.combine(
+            dtstart, datetime.datetime.min.time())
         dtend = datetime.datetime.combine(dtend, datetime.datetime.min.time())
     if parsed.get("rrule") is not None:
         freq = parsed.get("rrule").get("freq")[0]
@@ -63,6 +65,7 @@ def parse_event(parsed):
     event["end_time"] = dtend.time()
     return event
 
+
 def get_events():
     """Return upcoming events from CalDav server"""
     settings = models.CalDavSettings.load()
@@ -83,7 +86,7 @@ def get_events():
         for vevents in calendar.date_search(
                 datetime.datetime.today(),
                 datetime.datetime.today() + datetime.timedelta(days=7)
-            ):
+        ):
             for parsed in icalendar.Calendar.from_ical(vevents.data).walk("vevent"):
                 event = parse_event(parsed)
                 if event is not None:
@@ -143,10 +146,20 @@ def dashboard(request):
             F("task__date_due").asc(nulls_last=True),
             "-date_modification"
         )
+    objectives = list()
+    for objective in models.DailyObjective.objects.all().order_by("name"):
+        if not objective.is_current_done():
+            objective.freq = "daily"
+            objectives.append(objective)
+    for objective in models.WeeklyObjective.objects.all().order_by("name"):
+        if not objective.is_current_done():
+            objective.freq = "weekly"
+            objectives.append(objective)
     return render(request, "orgapy/dashboard.html", {
         "notes": notes,
         "tasks": tasks,
         "events": get_events(),
+        "objectives": objectives,
     })
 
 
@@ -191,8 +204,22 @@ def view_tasks(request):
             F("task__date_due").asc(nulls_last=True),
             "date_creation"
         )
+    daily_objectives = models.DailyObjective.objects.all().order_by("name")
+    weekly_objectives = models.WeeklyObjective.objects.all().order_by("name")
+    all_done = True
+    for objective in daily_objectives:
+        if not objective.is_current_done():
+            all_done = False
+            break
+    for objective in weekly_objectives:
+        if not objective.is_current_done():
+            all_done = False
+            break
     return render(request, "orgapy/tasks.html", {
         "tasks": notes,
+        "daily_objectives": daily_objectives,
+        "weekly_objectives": weekly_objectives,
+        "all_done": all_done,
     })
 
 
@@ -426,3 +453,75 @@ def publish_note(_, slug):
         if not hasattr(note, "publication"):
             models.Publication.objects.create(note=note)
     return redirect("orgapy:blog")
+
+
+@login_required
+def edit_objectives(request):
+    """Edit daily and weekly objectives"""
+    daily_objectives = models.DailyObjective.objects.all().order_by("name")
+    weekly_objectives = models.WeeklyObjective.objects.all().order_by("name")
+    return render(request, "orgapy/edit_objectives.html", {
+        "daily_objectives": daily_objectives,
+        "weekly_objectives": weekly_objectives
+    })
+
+
+def get_objective(freq, oid):
+    """Search for a corresponding objective in the database"""
+    if freq == "daily":
+        if models.DailyObjective.objects.filter(id=oid).exists():
+            return models.DailyObjective.objects.get(id=oid)
+    elif freq == "weekly":
+        if models.WeeklyObjective.objects.filter(id=oid).exists():
+            return models.WeeklyObjective.objects.get(id=oid)
+    return None
+
+
+@login_required
+def check_objective(_, freq, oid):
+    """Set current objective to checked"""
+    objective = get_objective(freq, oid)
+    if objective is not None:
+        objective.check_current()
+    return redirect("orgapy:tasks")
+
+
+@login_required
+def uncheck_objective(_, freq, oid):
+    """Set current objective to unchecked"""
+    objective = get_objective(freq, oid)
+    if objective is not None:
+        objective.uncheck_current()
+    return redirect("orgapy:tasks")
+
+
+@login_required
+def save_objective(request, freq, oid):
+    """Change an objective's name"""
+    if request.method == "POST":
+        objective = get_objective(freq, oid)
+        if objective is not None:
+            objective.name = request.POST["name"].strip()
+            objective.save()
+    return redirect("orgapy:edit_objectives")
+
+
+@login_required
+def delete_objective(_, freq, oid):
+    """Delete an objective"""
+    objective = get_objective(freq, oid)
+    if objective is not None:
+        objective.delete()
+    return redirect("orgapy:edit_objectives")
+
+
+@login_required
+def create_objective(request):
+    """Create a new objective"""
+    if request.method == "POST":
+        name = request.POST["name"].strip()
+        if request.POST["freq"] == "1":
+            models.DailyObjective.objects.create(name=name)
+        elif request.POST["freq"] == "2":
+            models.WeeklyObjective.objects.create(name=name)
+    return redirect("orgapy:edit_objectives")

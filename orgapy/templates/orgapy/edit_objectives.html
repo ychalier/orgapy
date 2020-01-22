@@ -1,0 +1,70 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static from staticfiles %}
+
+{% block title %}{% block subtitle %}Edit objectives | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block section %}
+<h1>{% block section__title %}Edit objectives{% endblock section__title %}</h1>
+<h2>Add an objective</h2>
+<form class="command_panel" action="{% url 'orgapy:create_objective' %}" method="post">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Objective name" />
+    <select name="freq">
+        <option value="1" selected>Daily</option>
+        <option value="2">Weekly</option>
+    </select>
+    <input class="button  button--fixed" type="submit" value="Create" />
+</form>
+<h2>Daily objectives</h2>
+{% if daily_objectives %}
+<section>
+    {% for objective in daily_objectives %}
+    <article class="command_panel">
+        <form class="form--row" action="{% url 'orgapy:save_objective' freq="daily" oid=objective.id %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{objective.id}}" />
+            <input type="hidden" name="freq" value="daily" />
+            <input type="text" name="name" value="{{objective.name}}" placeholder="Objective name" />
+            <input class="button  button--fixed" type="submit" value="Save" />
+        </form>
+        {% if objective.is_current_done %}
+        <a class="button button--fixed" href="{% url 'orgapy:uncheck_objective' freq='daily' oid=objective.id %}">Uncheck</a>
+        {% else %}
+        <a class="button button--fixed" href="{% url 'orgapy:check_objective' freq='daily' oid=objective.id %}">Check</a>
+        {% endif %}
+        <a class="button button--fixed" href="{% url 'orgapy:delete_objective' freq='daily' oid=objective.id %}">Delete</a>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<p>
+    Nothing to show here.
+</p>
+{% endif %}
+<h2>Weekly objectives</h2>
+{% if weekly_objectives %}
+<section>
+    {% for objective in weekly_objectives %}
+    <article class="command_panel">
+        <form class="form--row" action="{% url 'orgapy:save_objective' freq='weekly' oid=objective.id %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{objective.id}}" />
+            <input type="hidden" name="freq" value="weekly" />
+            <input type="text" name="name" value="{{objective.name}}" placeholder="Objective name" />
+            <input class="button" type="submit" value="Save" />
+        </form>
+        {% if objective.is_current_done %}
+        <a class="button" href="{% url 'orgapy:uncheck_objective' freq='weekly' oid=objective.id %}">Uncheck</a>
+        {% else %}
+        <a class="button" href="{% url 'orgapy:check_objective' freq='weekly' oid=objective.id %}">Check</a>
+        {% endif %}
+        <a class="button" href="{% url 'orgapy:delete_objective' freq='weekly' oid=objective.id %}">Delete</a>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<p>
+    Nothing to show here.
+</p>
+{% endif %}
+{% endblock section %}

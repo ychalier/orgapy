@@ -435,4 +435,83 @@ li.task-list-item {
     .now {
         display: none;
     }
+
+    .objct_gr_shrinker {
+        width: 0;
+    }
+}
+
+.objective_grid {
+    display: flex;
+    flex-direction: row;
+    overflow: auto;
+}
+
+.objct_gr {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 4px;
+    justify-content: flex-end;
+}
+
+.objct_gr_shrinker {
+    width: 100%;
+}
+
+.objct_gr:last-child {
+    margin-bottom: 0;
+}
+
+.objct_gr__name {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    text-align: right;
+    margin-right: 8px;
+}
+
+.objct_gr__line {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.objct_gr_c {
+    font-size: 10px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    width: 12px;
+    height: 12px;
+    margin-right: 2px;
+    flex-shrink: 0;
+}
+
+.objct_gr_c:last-child {
+    margin-right: 0;
+}
+
+.objct_gr_c.unchecked {
+    background-color: #ebedf0;
+}
+
+.objct_gr_c.checked {
+    background-color: #7bc96f;
+}
+
+.objct_gr_c.overflow {
+    background-color: #202020;
+}
+
+
+.objective_forms {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.objective_forms>* {
+    margin-right: 8px;
+}
+
+.objective_forms>*:last-child {
+    margin-right: 0;
 }

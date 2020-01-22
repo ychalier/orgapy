@@ -144,6 +144,7 @@ class SingletonModel(models.Model):
 
     @classmethod
     def load(cls):
+        """Return singleton and creates it if needed"""
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
 
@@ -155,3 +156,120 @@ class CalDavSettings(SingletonModel):
     host = models.CharField(max_length=255)
     port = models.IntegerField(default=5232)
     protocol = models.CharField(max_length=255, default="https")
+
+
+def daterange(start_date, end_date, step):
+    """Iterate over datetime.date objects"""
+    for i in range(0, int((end_date - start_date).days) + 1, step):
+        yield start_date + datetime.timedelta(days=i)
+
+
+def last_day_of_month(any_day):
+    """Return a datetime for the month end of a given day"""
+    next_month = any_day.replace(day=28) + datetime.timedelta(days=4)
+    return next_month - datetime.timedelta(days=next_month.day)
+
+
+class Objective(models.Model):
+
+    name = models.CharField(max_length=255)
+    history = models.TextField(default="", blank=True)
+    date_start = models.DateField(auto_now_add=True, auto_now=False)
+
+    def __str__(self):
+        return self.name
+
+    def _cast(self, _):
+        raise NotImplementedError
+
+    def _step(self):
+        raise NotImplementedError
+
+    def to_array(self, date_start=None, date_end=None):
+        """Convert text history to an array format"""
+        array = list()
+        if date_start is None:
+            date_start = self.date_start
+        if date_end is None:
+            date_end = datetime.datetime.today()
+        date_start = self._cast(date_start)
+        date_end = self._cast(date_end)
+        current = self._cast(datetime.datetime.today())
+        offset = (date_start - self._cast(self.date_start)).days // self._step()
+        for i, date in enumerate(daterange(date_start, date_end, self._step())):
+            j = i + offset
+            if 0 <= j < len(self.history):
+                array.append({
+                    "date": date,
+                    "checked": str(self.history)[j] == "1",
+                    "overflow": (self._cast(date) > current
+                                 or self._cast(date) < self._cast(self.date_start))
+                })
+            else:
+                array.append({
+                    "date": date,
+                    "checked": False,
+                    "overflow": (self._cast(date) > current
+                                 or self._cast(date) < self._cast(self.date_start))
+                })
+        return array
+
+    def from_array(self, array):
+        """Write history from the array"""
+        self.history = "".join(map(
+            lambda x: {True: "1", False: "0"}[x["checked"]],
+            array
+        ))
+        self.save()
+
+    def check_current(self):
+        """Check current index"""
+        array = self.to_array()
+        array[-1]["checked"] = True
+        self.from_array(array)
+
+    def uncheck_current(self):
+        """Uncheck current index"""
+        array = self.to_array()
+        array[-1]["checked"] = False
+        self.from_array(array)
+
+    def is_current_done(self):
+        """Return if current index is checked"""
+        return self.to_array(date_start=datetime.datetime.today())[0]["checked"]
+
+
+class DailyObjective(Objective):
+
+    def _cast(self, date):
+        if type(date) == datetime.date:
+            return date
+        return date.date()
+
+    def _step(self):
+        return 1
+
+    def current_month(self):
+        """Check array for the current month"""
+        return self.to_array(
+            date_start=datetime.datetime.today().date().replace(day=1),
+            date_end=last_day_of_month(datetime.datetime.today().date())
+        )
+
+class WeeklyObjective(Objective):
+
+    def _cast(self, date):
+        if type(date) == datetime.date:
+            return date - datetime.timedelta(days=date.weekday())
+        return date.date() - datetime.timedelta(days=date.weekday())
+
+    def _step(self):
+        return 7
+
+    def current_year(self):
+        """Check array for the current year"""
+        epoch_year = datetime.date.today().year
+        return self.to_array(
+            date_start=datetime.date(epoch_year, 1, 1),
+            date_end=datetime.date(epoch_year, 12, 31)
+        )
