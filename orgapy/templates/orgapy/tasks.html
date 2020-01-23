@@ -1,5 +1,5 @@
 {% extends "orgapy/skeleton.html" %}
-{% load static from staticfiles %}
+{% load static %}
 
 {% block title %}{% block subtitle %}Tasks | {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
@@ -23,7 +23,7 @@
 <h2>Objectives</h2>
 {% if daily_objectives or weekly_objectives %}
 {% if not all_done %}
-<div class="objective_forms">
+<div class="objective_forms command_panel--wrap command_panel">
 {% for objective in daily_objectives %}
     {% if not objective.is_current_done %}
     <a class="button" href="{% url 'orgapy:check_objective' freq='daily' oid=objective.id %}">{{objective.name}} &check;</a>

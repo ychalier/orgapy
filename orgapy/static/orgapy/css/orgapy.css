@@ -46,6 +46,15 @@ html, body {
     margin-right: 0;
 }
 
+.command_panel--wrap {
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.command_panel--wrap>* {
+    margin-bottom: 8px;
+}
+
 .command_panel>form {
     width: 100%;
 }
@@ -505,7 +514,6 @@ li.task-list-item {
 .objective_forms {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
 }
 
 .objective_forms>* {
