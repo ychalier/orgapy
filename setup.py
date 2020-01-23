@@ -31,7 +31,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        "urllib3==1.24.1",
+        "urllib3==1.24.2",
         "Pygments==2.3.1",
         "mistune==2.0.0a2",
         "caldav==0.6.2",
