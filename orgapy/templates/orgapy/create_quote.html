@@ -1,0 +1,56 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Create quote | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block section %}
+<h1>{% block section__title %}Create quote{% endblock section__title %}</h1>
+
+<h2>Add an author</h2>
+
+<form class="form--column" action="{% url 'orgapy:create_quote' %}" method="post">
+    {% csrf_token %}
+    <input type="text" name="author_name" placeholder="Author name" />
+    <input class="button" type="submit" name="form_author" value="Add author" />
+</form>
+
+<h2>Add a work</h2>
+
+{% if authors %}
+<form class="form--column" action="{% url 'orgapy:create_quote' %}" method="post">
+    {% csrf_token %}
+    <select name="work_author">
+        {% for author in authors %}
+        <option value="{{ author.id }}">{{ author.name }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="work_title" placeholder="Work title" />
+    <input class="button" type="submit" name="form_work" value="Add work" />
+</form>
+{% else %}
+<p>
+    You must add at least one author to add a work.
+</p>
+{% endif %}
+
+<h2>Add a quote</h2>
+
+{% if works %}
+<form class="form--column" action="{% url 'orgapy:create_quote' %}" method="post">
+    {% csrf_token %}
+    <select name="quote_work">
+        {% for work in works %}
+        <option value="{{ work.id }}">{{ work.author.name }} &ndash; {{ work.title }}</option>
+        {% endfor %}
+    </select>
+    <textarea name="quote_content" placeholder="Quote content" rows="8"></textarea>
+    <input class="button" type="submit" name="form_quote_edit" value="Add quote and stay" />
+    <input class="button" type="submit" name="form_quote" value="Add quote" />
+</form>
+{% else %}
+<p>
+    You must add at least one work to add a quote.
+</p>
+{% endif %}
+
+{% endblock section %}

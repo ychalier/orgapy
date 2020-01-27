@@ -2,6 +2,7 @@ import re
 import datetime
 import mistune
 from django.db import models
+from django.utils.text import slugify
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import html
@@ -68,6 +69,9 @@ class Note(models.Model):
     def __str__(self):
         return str(self.id) + ". " + self.title
 
+    def _content_preprocess(self):
+        return self.content
+
     def markdown(self):
         """Produce html code from Markdown content"""
         self.date_access = datetime.datetime.now()
@@ -81,7 +85,7 @@ class Note(models.Model):
                 "footnotes"
             ]
         )
-        return factory(self.content)
+        return factory(self._content_preprocess())
 
 
 class Task(models.Model):
@@ -273,3 +277,39 @@ class WeeklyObjective(Objective):
             date_start=datetime.date(epoch_year, 1, 1),
             date_end=datetime.date(epoch_year, 12, 31)
         )
+
+class Author(models.Model):
+
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(blank=True, max_length=255)
+    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
+
+    def __str__(self):
+        return str(self.name)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        models.Model.save(self, *args, **kwargs)
+
+
+class Work(models.Model):
+
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(blank=True, max_length=255)
+    author = models.ForeignKey("Author", on_delete=models.CASCADE)
+    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
+
+    def __str__(self):
+        return "{} - {}".format(self.author, self.title)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.title)
+        models.Model.save(self, *args, **kwargs)
+
+
+class Quote(Note):
+
+    work = models.ForeignKey("Work", on_delete=models.CASCADE)
+
+    def _content_preprocess(self):
+        return re.sub("^ ?- ", "&mdash; ", self.content.replace("\n", "\n\n"), flags=re.MULTILINE)

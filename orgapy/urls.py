@@ -23,5 +23,9 @@ urlpatterns = [
     path("objective/<freq>/<oid>/delete", views.delete_objective, name="delete_objective"),
     path("objective/create", views.create_objective, name="create_objective"),
     path("objective/edit", views.edit_objectives, name="edit_objectives"),
+    path("quotes", views.view_quotes, name="quotes"),
+    path("quotes/<author>", views.view_quotes, name="quotes_author"),
+    path("quotes/<author>/<work>", views.view_quotes, name="quotes_work"),
+    path("create-quote", views.create_quote, name="create_quote"),
     path("blog", views.blog, name="blog"),
 ]

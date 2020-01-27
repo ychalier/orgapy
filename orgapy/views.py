@@ -135,6 +135,7 @@ def dashboard(request):
     """View containting the aggregation of notes and tasks."""
     notes = models.Note.objects\
         .filter(task=None)\
+        .filter(~Q(categories__name__exact="quote"))\
         .order_by("-date_access", "-date_modification")[:6]
     tasks = models.Note.objects\
         .filter(
@@ -171,7 +172,7 @@ def view_notes(request):
     category = request.GET.get("category", "")
     if len(query) > 0 and query[0] == "#":
         category = query[1:]
-    base_objects = models.Note.objects.filter(task=None)
+    base_objects = models.Note.objects.filter(task=None).filter(~Q(categories__name__exact="quote"))
     if len(category) > 0:
         objects = base_objects.filter(categories__name__exact=category)
     elif len(query) > 0:
@@ -525,3 +526,82 @@ def create_objective(request):
         elif request.POST["freq"] == "2":
             models.WeeklyObjective.objects.create(name=name)
     return redirect("orgapy:edit_objectives")
+
+
+@login_required
+def view_quotes(request, author=None, work=None):
+    page_size = 5
+    query = request.GET.get("query", "")
+    objects = models.Quote.objects.all()
+    if author is not None:
+        author = models.Author.objects.get(slug=author)
+        objects = objects.filter(work__author=author)
+    if work is not None:
+        work = models.Work.objects.get(slug=work)
+        objects = objects.filter(work=work)
+    if len(query) > 0:
+        objects = objects.filter(
+            Q(title__contains=query)
+            | Q(content__contains=query)
+        )
+    paginator = Paginator(objects.order_by(
+        "-date_creation",
+    ), page_size)
+    page = request.GET.get("page")
+    quotes = paginator.get_page(page)
+    authors = models.Author.objects.all().order_by("name")
+    return render(request, "orgapy/quotes.html", {
+        "quotes": quotes,
+        "query": query,
+        "authors": authors,
+        "author": author,
+        "work": work,
+    })
+
+
+def add_note(work_id, content):
+    work = models.Work.objects.get(id=work_id)
+    title = find_title("%s - %s" % (work.author.name, work.title))
+    slug = slugify(title)
+    quote = models.Quote.objects.create(
+        work=work,
+        title=title,
+        content=content,
+        public=False,
+        slug=slug,
+    )
+    if models.Category.objects.filter(name="quote").exists():
+        category = models.Category.objects.get(name="quote")
+    else:
+        category = models.Category.objects.create(name="quote")
+    quote.categories.add(category)
+    quote.save()
+    return quote
+
+
+@login_required
+def create_quote(request):
+    if request.method == "POST":
+        if "form_author" in request.POST:
+            name = request.POST.get("author_name", "").strip()
+            if len(name) > 0 and not models.Author.objects.filter(name=name).exists():
+                models.Author.objects.create(name=name)
+        elif "form_work" in request.POST:
+            author_id = request.POST.get("work_author", "").strip()
+            title = request.POST.get("work_title", "").strip()
+            if len(title) > 0 and models.Author.objects.filter(id=author_id).exists():
+                author = models.Author.objects.get(id=author_id)
+                if not models.Work.objects.filter(author=author, title=title).exists():
+                    models.Work.objects.create(author=author, title=title)
+        elif "form_quote" or "form_quote_edit" in request.POST:
+            work_id = request.POST.get("quote_work", "").strip()
+            if models.Work.objects.filter(id=work_id).exists():
+                add_note(work_id, request.POST.get("quote_content").strip())
+        if "form_quote" in request.POST:
+            return redirect("orgapy:quotes")
+    authors = models.Author.objects.all().order_by("-date_creation")
+    works = models.Work.objects.all().order_by("-date_creation")
+    return render(request, "orgapy/create_quote.html", {
+        "authors": authors,
+        "works": works,
+    })
