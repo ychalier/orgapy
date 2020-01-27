@@ -62,4 +62,13 @@
     {% endif %}
 </footer>
 
+<form action="{% url 'orgapy:checkbox' %}" method="post" id="checkbox_form">
+    {% csrf_token %}
+    <input type="hidden" name="note_id" value="{{ note.id }}" />
+    <input type="hidden" name="checkbox_id" />
+    <input type="hidden" name="checkbox_state" />
+</form>
+
+<script type="text/javascript" src="{% static 'orgapy/js/checkbox.js '%}"></script>
+
 {% endblock section %}

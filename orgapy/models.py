@@ -12,6 +12,10 @@ from pygments.util import ClassNotFound
 class HighlightRenderer(mistune.HTMLRenderer):
     """Custom mistune renderder to handle syntax highlighting"""
 
+    def __init__(self, *args, **kwargs):
+        mistune.HTMLRenderer.__init__(self, *args, **kwargs)
+        self.checkboxes_index = 0
+
     def block_code(self, code, lang=None):
         """Use pygments to highlight a markdown code block"""
         if lang:
@@ -33,13 +37,19 @@ class HighlightRenderer(mistune.HTMLRenderer):
             return old_list_item(self, text, level)
         prefix = match.group()
         checked = False
+        checkbox_id = self.checkboxes_index
+        self.checkboxes_index += 1
         if prefix[1].lower() == "x":
             checked = True
+        checked_txt = ""
         if checked:
-            checkbox = "<input type=\"checkbox\" class=\"task-list-item-checkbox\" checked disabled/> "
-        else:
-            checkbox = "<input type=\"checkbox\" class=\"task-list-item-checkbox\" disabled /> "
-        return new_list_item(self, checkbox + text[match.end():])
+            checked_txt = "checked"
+        return new_list_item(self, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" id=\"cb%s\" %s/> <label for=\"cb%s\">%s</label>" % (
+            checkbox_id,
+            checked_txt,
+            checkbox_id,
+            text[match.end():]
+        ))
 
 
 class Category(models.Model):

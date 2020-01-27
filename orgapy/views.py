@@ -235,6 +235,30 @@ def view_note(request, slug):
     })
 
 
+@login_required
+def checkbox(request):
+    if request.method == "POST":
+        note_id = request.POST["note_id"]
+        checkbox_id = int(request.POST["checkbox_id"])
+        checkbox_state = request.POST["checkbox_state"]
+        replacement = {
+            "true": "[x]",
+            "false": "[ ]",
+        }[checkbox_state]
+        note = models.Note.objects.get(id=note_id)
+        matches = re.finditer(r"^ ?- \[([xX ])\]", note.content, flags=re.MULTILINE)
+        for index, match in enumerate(matches):
+            if index != checkbox_id:
+                continue
+            note.content =\
+                note.content[:match.start()]\
+                + re.sub(r"\[[xX ]\]", replacement, match.group(0))\
+                + note.content[match.end():]
+            note.save()
+            return redirect("orgapy:view_note", slug=note.slug)
+    return redirect("orgapy:notes")
+
+
 def view_public_note(request, slug):
     """View showing a note to an anonymous user"""
     if not models.Note.objects.filter(slug=slug).exists():
