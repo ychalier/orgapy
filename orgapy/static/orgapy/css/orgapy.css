@@ -274,6 +274,10 @@ hr {
     color: #999;
 }
 
+.note_content {
+    overflow-x: auto;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
