@@ -1,7 +1,7 @@
 Orgapy
 ======
 
-Current version: **v0.7**
+Current version: **v0.8**
 
 It is a Django application, whose purpose is to act as a notebook, allowing to
 keep **notes** and manage **tasks**. Notes can be arranged into a **blog** for
