@@ -17,7 +17,13 @@
 {% for start_date, date_events in events %}
     <section class="event_list__date">
         <div class="event__list__date__date">
+            {% if start_date == today %}
+            Today
+            {% elif start_date == tomorrow %}
+            Tomorrow
+            {% else %}
             {{start_date|date:"l, M. j"}}
+            {% endif %}
         </div>
         {% for event in date_events %}
         <article class="event">

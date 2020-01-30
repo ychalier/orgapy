@@ -164,6 +164,8 @@ def dashboard(request):
         "tasks": tasks,
         "events": get_events(),
         "objectives": objectives,
+        "today": datetime.date.today(),
+        "tomorrow": datetime.date.today() + datetime.timedelta(days=1),
     })
 
 
