@@ -39,5 +39,9 @@ setup(
         "icalendar==4.0.4",
         "python_dateutil==2.8.1",
         "xhtml2pdf==0.2.4",
+        "django-visitors"
+    ],
+    dependency_links=[
+        "https://packages.chalier.fr/"
     ]
 )

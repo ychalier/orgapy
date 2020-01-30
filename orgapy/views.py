@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from xhtml2pdf import pisa
 import caldav
 import icalendar
+from visitors.monitor_visitors import monitor_visitors
 from . import models
 
 
@@ -100,11 +101,13 @@ def get_events():
     return sorted(events.items(), key=lambda x: x[0])
 
 
+@monitor_visitors
 def about(request):
     """View for the homepage, describing the application for a new user."""
     return render(request, "orgapy/about.html", {})
 
 
+@monitor_visitors
 def blog(request):
     """View showing all published notes"""
     page_size = 50
@@ -259,6 +262,7 @@ def checkbox(request):
     return redirect("orgapy:notes")
 
 
+@monitor_visitors
 def view_public_note(request, slug):
     """View showing a note to an anonymous user"""
     if not models.Note.objects.filter(slug=slug).exists():
