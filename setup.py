@@ -35,7 +35,7 @@ setup(
         "Pygments==2.3.1",
         "mistune==2.0.0a2",
         "caldav==0.6.2",
-        "Django==3.0.2",
+        "Django==3.0.3",
         "icalendar==4.0.4",
         "python_dateutil==2.8.1",
         "xhtml2pdf==0.2.4",
