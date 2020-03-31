@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-orgapy',
-    version='0.8',
+    version='0.8.1',
     packages=find_packages(),
     include_package_data=True,
     license='MIT License',
@@ -21,7 +21,7 @@ setup(
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
-        'Framework :: Django :: 3.0.2',
+        'Framework :: Django :: 3.0.4',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
@@ -35,7 +35,7 @@ setup(
         "Pygments==2.3.1",
         "mistune==2.0.0a2",
         "caldav==0.6.2",
-        "Django==3.0.2",
+        "Django>=3.0.4",
         "icalendar==4.0.4",
         "python_dateutil==2.8.1",
         "xhtml2pdf==0.2.4",
