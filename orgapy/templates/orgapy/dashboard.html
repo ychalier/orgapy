@@ -5,6 +5,10 @@
 
 {% block head %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
+<link rel="stylesheet" href="{% static 'orgapy/css/tasks.css' %}" />
+<link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
+<link rel="stylesheet" href="{% static 'orgapy/css/events.css' %}" />
 {% endblock head %}
 
 {% block section %}
@@ -53,12 +57,10 @@
 
 {% if objectives %}
 <h2>Objectives</h2>
-<div class="objective_forms">
-    <nav class="command_panel command_panel--wrap">
-        {% for objective in objectives %}
-            <a class="button button-fixed" href="{% url 'orgapy:check_objective' freq=objective.freq oid=objective.id %}">{{objective.name}} &check;</a>
-        {% endfor %}
-    </nav>
+<div class="objective_forms command_panel command_panel--wrap">
+    {% for objective in objectives %}
+        <a class="button button-fixed" href="{% url 'orgapy:check_objective' freq=objective.freq oid=objective.id %}">{{objective.name}} &check;</a>
+    {% endfor %}
 </div>
 {% endif %}
 

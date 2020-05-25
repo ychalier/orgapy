@@ -1,0 +1,25 @@
+
+.note_list a {
+    color: inherit;
+}
+
+
+.note_list .col1 {
+    width: 60px;
+    text-align: center;
+}
+
+.note_list .col3 {
+    width: 50px;
+    text-align: center;
+}
+
+.note_list .col4 {
+    width: 100px;
+    text-align: center;
+}
+
+.note_list .col5 {
+    width: 42px;
+    text-align: center;
+}

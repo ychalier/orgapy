@@ -1,0 +1,29 @@
+.publication_list {
+    margin-top: 20px;
+}
+
+.publication {
+    background-color: rgba(0, 0, 0, .2);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.publication a {
+    text-decoration: none;
+}
+
+.publication__title {
+    margin: 4px 0 0 0;
+    color: #EEE;
+    text-decoration: none;
+}
+
+.publication__meta {
+    opacity: .6;
+    font-size: 93%;
+    margin: 0;
+}
+
+.publication__abstract {
+    margin: 8px auto;
+}

@@ -6,13 +6,13 @@
 {% block head %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'orgapy/css/monokai.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/markdown.css' %}" />
+<!--<link rel="stylesheet" href="{% static 'orgapy/css/markdown.css' %}" />-->
 {% endblock head %}
 
 {% block section %}
 <h1>{{note.title}}</h1>
 
-<nav class="command_panel">
+<nav class="command_panel--wrap command_panel">
     <a href="{% url 'orgapy:edit_note' slug=note.slug %}" class="button">Edit</a>
     {% if note.public %}
     <a href="{% url 'orgapy:view_public_note' slug=note.slug %}" class="button">Share</a>

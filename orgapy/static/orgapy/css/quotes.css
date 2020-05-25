@@ -1,0 +1,39 @@
+
+
+.quote_list {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.quote {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #202020;
+}
+
+.quote__text *:first-child {
+    margin-top: 0;
+}
+
+.quote__text *:last-child {
+    margin-bottom: 0;
+}
+
+.quote__info {
+    font-size: 13px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-top: 4px;
+}
+
+.quote__info__work {
+    font-style: italic;
+    margin-right: 8px;
+}
+
+.author {
+    font-size: 13px;
+    margin-right: 8px;
+}

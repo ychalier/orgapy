@@ -1,0 +1,42 @@
+
+
+.event_list {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.event_list__date {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background-color: #1A1A1A;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.event_list__date:last-child {
+    margin-bottom: 0;
+}
+
+.event__list__date__date {
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.event {
+    margin-bottom: 4px;
+}
+
+.event:last-child {
+    margin-bottom: 0;
+}
+
+.event__info {
+    font-size: 14px;
+    opacity: .6;
+}
+
+.now {
+    font-size: 14px;
+}

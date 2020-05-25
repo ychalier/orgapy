@@ -5,24 +5,23 @@
 
 {% block head %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/blog.css' %}" />
 {% endblock head %}
 
 {% block section %}
 <h1>Blog</h1>
 
-<section>
+<section class="publication_list">
 {% for publication in publications %}
-<a class="divlink" href="{% url 'orgapy:view_public_note' slug=publication.note.slug %}">
 <article class="publication">
-    <h2 class="publication__title">{{publication.note.title}}</h2>
+    <a href="{% url 'orgapy:view_public_note' slug=publication.note.slug %}"><h2 class="publication__title">{{publication.note.title}}</h2></a>
     <p class="publication__meta">
-        {{publication.author}} &middot; {{publication.date_publication|date}} 
+        {{publication.author}} &middot; {{publication.date_publication|date}}
     </p>
     <p class="publication__abstract">
         {{publication.abstract}}
     </p>
 </article>
-</a>
 {% endfor %}
 </<section>
 
