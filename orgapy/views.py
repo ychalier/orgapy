@@ -41,7 +41,10 @@ def parse_event(parsed):
     event["location"] = parsed.get("location")
     event["dt_type"] = type(parsed.get("dtstart").dt) == datetime.datetime
     dtstart = parsed.get("dtstart").dt
-    dtend = parsed.get("dtend").dt
+    if parsed.get("dtend") is None:
+        dtend = dtstart
+    else:
+        dtend = parsed.get("dtend").dt
     if not event["dt_type"]:
         dtstart = datetime.datetime.combine(
             dtstart, datetime.datetime.min.time())
