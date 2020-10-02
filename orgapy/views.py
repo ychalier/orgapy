@@ -1,5 +1,6 @@
 import re
 import datetime
+import pytz
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
@@ -60,7 +61,7 @@ def parse_event(parsed):
             "MONTHLY": relativedelta(months=+1),
             "YEARLY": relativedelta(years=+1)
         }[freq]
-        while dtend < datetime.datetime.now():
+        while dtend < pytz.UTC.localize(datetime.datetime.now()):  # pylint: disable=E1120
             dtstart += delta
             dtend += delta
     event["start_date"] = dtstart.date()
