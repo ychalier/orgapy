@@ -61,9 +61,14 @@ def parse_event(parsed):
             "MONTHLY": relativedelta(months=+1),
             "YEARLY": relativedelta(years=+1)
         }[freq]
-        while dtend < pytz.UTC.localize(datetime.datetime.now()):  # pylint: disable=E1120
-            dtstart += delta
-            dtend += delta
+        if dtend.tzinfo is not None:
+            while dtend < pytz.UTC.localize(datetime.datetime.now()):  # pylint: disable=E1120
+                dtstart += delta
+                dtend += delta
+        else:
+            while dtend < datetime.datetime.now():  # pylint: disable=E1120
+                dtstart += delta
+                dtend += delta
     event["start_date"] = dtstart.date()
     event["start_time"] = dtstart.time()
     event["end_date"] = dtend.date()
