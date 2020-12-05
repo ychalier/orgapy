@@ -78,35 +78,42 @@ def parse_event(parsed):
 
 def get_events():
     """Return upcoming events from CalDav server"""
-    settings = models.CalDavSettings.load()
-    if settings.host == "":
-        return list()
-    url = "%s://%s:%s@%s:%s" % (
-        settings.protocol,
-        settings.username,
-        settings.password,
-        settings.host,
-        settings.port
-    )
-    event_list = list()
-    client = caldav.DAVClient(url, ssl_verify_cert=False)
-    principal = client.principal()
-    calendars = principal.calendars()
-    for calendar in calendars:
-        for vevents in calendar.date_search(
-                datetime.datetime.today(),
-                datetime.datetime.today() + datetime.timedelta(days=7)
-        ):
-            for parsed in icalendar.Calendar.from_ical(vevents.data).walk("vevent"):
-                event = parse_event(parsed)
-                if event is not None:
-                    event_list.append(event)
     events = dict()
-    for event in event_list:
-        events.setdefault(event["start_date"], list())
-        events[event["start_date"]].append(event)
-    for day in events:
-        events[day].sort(key=lambda x: x["start_time"])
+    try:
+        settings = models.CalDavSettings.load()
+        if settings.host == "":
+            return list()
+        url = "%s://%s:%s@%s:%s" % (
+            settings.protocol,
+            settings.username,
+            settings.password,
+            settings.host,
+            settings.port
+        )
+        event_list = list()
+        client = caldav.DAVClient(url, ssl_verify_cert=False)
+        principal = client.principal()
+        calendars = principal.calendars()
+        for calendar in calendars:
+            for vevents in calendar.date_search(
+                    datetime.datetime.today(),
+                    datetime.datetime.today() + datetime.timedelta(days=7)
+            ):
+                for parsed in icalendar.Calendar.from_ical(vevents.data).walk("vevent"):
+                    event = parse_event(parsed)
+                    if event is not None:
+                        event_list.append(event)
+
+        for event in event_list:
+            events.setdefault(event["start_date"], list())
+            events[event["start_date"]].append(event)
+        for day in events:
+            events[day].sort(key=lambda x: x["start_time"])
+    except Exception as err:
+        events[datetime.datetime.now().date()] = [{
+            "title": "Error while fetching events",
+            "location": str(err),
+        }]
     return sorted(events.items(), key=lambda x: x[0])
 
 

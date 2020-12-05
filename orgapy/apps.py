@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class NotifpyConfig(AppConfig):
+class OrgapyConfig(AppConfig):
     name = 'orgapy'
