@@ -499,7 +499,7 @@ def publish_note(_, slug):
         note = models.Note.objects.get(slug=slug)
         if not hasattr(note, "publication"):
             models.Publication.objects.create(note=note)
-    return redirect("orgapy:blog")
+    return redirect("orgapy:notes")
 
 
 @login_required

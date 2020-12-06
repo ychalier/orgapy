@@ -27,6 +27,6 @@ urlpatterns = [
     path("quotes/<author>", views.view_quotes, name="quotes_author"),
     path("quotes/<author>/<work>", views.view_quotes, name="quotes_work"),
     path("create-quote", views.create_quote, name="create_quote"),
-    path("blog", views.blog, name="blog"),
+    # path("blog", views.blog, name="blog"),
     path("checkbox", views.checkbox, name="checkbox"),
 ]
