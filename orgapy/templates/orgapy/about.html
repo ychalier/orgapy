@@ -1,49 +1,40 @@
 {% extends "orgapy/skeleton.html" %}
 {% load static %}
 
-{% block section %}
-<h1>Welcome to Orgapy!</h1>
+{% block main_content %}
 
-<h2>What is this?</h2>
+<h1>Welcome to Orgapy</h1>
+
+<h2>What is it?</h2>
 
 <p>
     It is a <a href="https://www.djangoproject.com/">Django</a> application,
-    whose purpose is to act as a notebook. You can keep <b>notes</b> and manage
-    the <b>tasks</b> that you need to do. Also, notes can be arranged into a
-    <b>blog</b> for anyone to see!
+    whose purpose is to act as a notebook. You can keep <b>notes</b>, manage
+    <b>tasks</b> and track <b>objectives</b>.
     It is open-source, more precisely developped under the MIT License. You can
-    find the source code on GitHub (check out this repository:
-    <a href="https://github.com/ychalier/orgapy">https://github.com/ychalier/orgapy</a>).
-</p>
-
-<h2>Why would anyone use this?</h2>
-
-<p>
-    For the <b>DARK THEME!</b>
+    find the source code on <a href="https://github.com/ychalier/orgapy">GitHub</a>).
 </p>
 
 <p>
-    For real, mainly, because you can keep control over your data. No need to share your
-    thoughts with Google Keep or Microsoft's OneNote! Also, there are advanced
-    features you might want to use, such as
+    Originally, it was developped as an alternative to Google Keep.
+    It now has more advanced features you might want, such as
     <a href="https://en.wikipedia.org/wiki/Markdown">Markdown</a> markup, code
-    syntax highlighting, and much more!
-    Moreover, you can enter the code and tweak it the way you want, the way you need!
+    syntax highlighting, objective tracking, ...
 </p>
 
-<h2>Alright then, but how do I use it?</h2>
+<h2>Try it yourself</h2>
+
+<h3>Install the application on your Django server</h3>
 
 <p>
-    The answer is simple:
+    The repository's <a href="https://github.com/ychalier/orgapy/blob/master/README.rst">README</a>
+    contains all the information you need.
 </p>
 
-<div class="highlight">
-    <pre>pip install --extra-index-url https://packages.chalier.fr django-orgapy</pre>
-</div>
+<h3>Apply for a demo</h3>
 
 <p>
-    Then add <code>"orgapy"</code> to the <code>INSTALLED_APPS</code> of your
-    Django project, migrate the database, update your URLs, and voilà!
+    I can create demo accounts. <a href="https://chalier.fr/#contact">Feel free to contact me.</a> 
 </p>
 
-{% endblock section %}
+{% endblock main_content %}

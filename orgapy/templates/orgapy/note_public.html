@@ -1,27 +1,22 @@
 {% extends "orgapy/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}{{note.title}} | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}{{note.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block head %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/monokai.css' %}" />
+<link rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/styles/darcula.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/highlight.min.js"></script>
 {% endblock head %}
 
-{% block section %}
+{% block main_content %}
 <h1>{{note.title}}</h1>
 
 <div class="note_content">
     {{ note.markdown | safe }}
 </div>
 
-<footer>
-    <hr>
-    {% if note.publication %}
-    <p>
-        <b>{{note.publication.author}}</b>  &middot;  {{note.publication.date_publication|date}}
-    </p>
-    {% endif %}
-</footer>
+<script>hljs.initHighlightingOnLoad();</script>
 
-{% endblock section %}
+{% endblock main_content %}

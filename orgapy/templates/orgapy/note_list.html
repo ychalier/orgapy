@@ -1,21 +1,12 @@
 {% if notes %}
-<table class="note_list">
-    <tr>
-        <th class="col2">Title</th>
-        <th class="col3">Public</th>
-        <th class="col4">Categories</th>
-    </tr>
+<table class="table table table-striped table-hover table-condensed">
     {% for note in notes %}
     <tr>
-        <td class="col2">
-            <a href="{% url 'orgapy:view_note' slug=note.slug %}">{{note.title}}</a>
-        </td>
-        <td class="col3">
+        <td>
+            <a class="link-hidden" href="{% url 'orgapy:view_note' nid=note.id %}">{{note.title}}</a>
             {% if note.public %}
-            <a href="{% url 'orgapy:view_public_note' slug=note.slug %}">⁕</a>
+            &nbsp;&nbsp;<a href="{% url 'orgapy:view_public_note' nid=note.id %}" title="View public note"><i class="icon icon-external"></i></a>&nbsp;&nbsp;
             {% endif %}
-        </td>
-        <td class="col4">
             {% for category in note.categories.all %}
             <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
             {% endfor%}
@@ -24,7 +15,14 @@
     {% endfor %}
 </table>
 {% else %}
-<p>
-    No note to be shown.
-</p>
+<div class="empty">
+    <div class="empty-icon">
+        <i class="icon icon-note icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no note</p>
+    <p class="empty-subtitle">Click the button to write a note.</p>
+    <div class="empty-action">
+        <a class="btn btn-primary" href="{% url 'orgapy:create_note' %}">Create note</a>
+    </div>
+</div>
 {% endif %}

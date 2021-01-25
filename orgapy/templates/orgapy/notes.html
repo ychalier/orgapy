@@ -1,40 +1,24 @@
 {% extends "orgapy/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}Notes | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}Notes &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block head %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
-{% endblock head %}
+{% block main_content %}
 
-{% block section %}
-<h1>Notes</h1>
-
-<nav class="command_panel">
-    <form class="form--row" action="{% url 'orgapy:notes' %}" method="get">
-        <input type="text" name="query" placeholder="Search a note" value="{% if query %}{{query}}{% endif %}" />
-        <input class="button button--fixed" type="submit" name="" value="Search">
-    </form>
-    <a class="button button--fixed" href="{% url 'orgapy:create_note' %}">Create note</a>
-</nav>
+<form action="{% url 'orgapy:notes' %}" method="get">
+    <p>
+        <div class="input-group input-inline">
+            <input class="form-input" type="text" name="query" placeholder="Search a note" value="{% if query %}{{query}}{% endif %}" />
+            <button class="btn btn-primary input-group-btn">Search</button>
+        </div>
+        <div class="input-group input-inline">
+            <a class="btn btn-primary" href="{% url 'orgapy:create_note' %}">Create note</a>
+        </div>
+    </p>
+</form>
 
 {% include "orgapy/note_list.html" %}
 
-<nav class="navbar">
-    {% if notes.has_previous %}
-    <a href="?page=1{% if query %}&query={{query|urlencode}}{% endif %}">&laquo; first</a>
-    <a href="?page={{ notes.previous_page_number }}{% if query %}&query={{query|urlencode}}{% endif %}">previous</a>
-    {% endif %}
+{% include 'piweb/pagination.html' with paginator=note_paginator %}
 
-    <span class="current">
-        Page {{ notes.number }} of {{ notes.paginator.num_pages }}.
-    </span>
-
-    {% if notes.has_next %}
-    <a href="?page={{ notes.next_page_number }}{% if query %}&query={{query|urlencode}}{% endif %}">next</a>
-    <a href="?page={{ notes.paginator.num_pages }}{% if query %}&query={{query|urlencode}}{% endif %}">last &raquo;</a>
-    {% endif %}
-</nav>
-
-{% endblock section %}
+{% endblock main_content %}

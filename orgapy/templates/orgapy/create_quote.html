@@ -3,29 +3,33 @@
 
 {% block title %}{% block subtitle %}Create quote | {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block section %}
+{% block main_content %}
 <h1>{% block section__title %}Create quote{% endblock section__title %}</h1>
 
-<h2>Add an author</h2>
+<h2 class="m-top">Add an author</h2>
 
-<form class="form--column" action="{% url 'orgapy:create_quote' %}" method="post">
+<form action="{% url 'orgapy:create_quote' %}" method="post">
     {% csrf_token %}
-    <input type="text" name="author_name" placeholder="Author name" />
-    <input class="button" type="submit" name="form_author" value="Add author" />
+    <div class="input-group">
+        <input class="form-input" type="text" name="author_name" placeholder="Author name" />
+        <input class="btn btn-primary input-group-btn" type="submit" name="form_author" value="Add author" />
+    </div>
 </form>
 
-<h2>Add a work</h2>
+<h2 class="m-top">Add a work</h2>
 
 {% if authors %}
-<form class="form--column" action="{% url 'orgapy:create_quote' %}" method="post">
+<form action="{% url 'orgapy:create_quote' %}" method="post">
     {% csrf_token %}
-    <select name="work_author">
-        {% for author in authors %}
-        <option value="{{ author.id }}">{{ author.name }}</option>
-        {% endfor %}
-    </select>
-    <input type="text" name="work_title" placeholder="Work title" />
-    <input class="button" type="submit" name="form_work" value="Add work" />
+    <div class="input-group">
+        <select class="form-select" name="work_author">
+            {% for author in authors %}
+            <option value="{{ author.id }}">{{ author.name }}</option>
+            {% endfor %}
+        </select>
+        <input class="form-input" type="text" name="work_title" placeholder="Work title" />
+        <input class="btn btn-primary input-group-btn" type="submit" name="form_work" value="Add work" />
+    </div>
 </form>
 {% else %}
 <p>
@@ -33,19 +37,27 @@
 </p>
 {% endif %}
 
-<h2>Add a quote</h2>
+<h2 class="m-top">Add a quote</h2>
 
 {% if works %}
-<form class="form--column" action="{% url 'orgapy:create_quote' %}" method="post">
+<form action="{% url 'orgapy:create_quote' %}" method="post">
     {% csrf_token %}
-    <select name="quote_work">
-        {% for work in works %}
-        <option value="{{ work.id }}">{{ work.author.name }} &ndash; {{ work.title }}</option>
-        {% endfor %}
-    </select>
-    <textarea name="quote_content" placeholder="Quote content" rows="8"></textarea>
-    <input class="button" type="submit" name="form_quote_edit" value="Add quote and stay" />
-    <input class="button" type="submit" name="form_quote" value="Add quote" />
+    <div class="form-group">
+        <label class="form-label" for="input-work">Work</label>
+        <select class="form-select" id="input-work" name="quote_work">
+            {% for work in works %}
+            <option value="{{ work.id }}">{{ work.author.name }} &ndash; {{ work.title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="input-quote">Quote</label>
+        <textarea class="form-input" id="input-quote" name="quote_content" placeholder="Quote content" rows="8"></textarea>
+    </div>
+    <div class="btn-group">
+        <input class="btn btn-primary" type="submit" name="form_quote_edit" value="Add quote and stay" />
+        <input class="btn btn-primary" type="submit" name="form_quote" value="Add quote" />
+    </div>
 </form>
 {% else %}
 <p>
@@ -53,4 +65,4 @@
 </p>
 {% endif %}
 
-{% endblock section %}
+{% endblock main_content %}

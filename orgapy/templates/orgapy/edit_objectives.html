@@ -1,70 +1,90 @@
 {% extends "orgapy/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}Edit objectives | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}Edit objectives &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block section %}
+{% block main_content %}
+
 <h1>{% block section__title %}Edit objectives{% endblock section__title %}</h1>
-<h2>Add an objective</h2>
+
 <form class="command_panel" action="{% url 'orgapy:create_objective' %}" method="post">
     {% csrf_token %}
-    <input type="text" name="name" placeholder="Objective name" />
-    <select name="freq">
-        <option value="1" selected>Daily</option>
-        <option value="2">Weekly</option>
-    </select>
-    <input class="button  button--fixed" type="submit" value="Create" />
+    <p>
+        <div class="form-group">
+            <label class="form-label">Add an objective</label>
+            <div class="input-group">
+                <input class="form-input" type="text" name="name" placeholder="Objective name" />
+                <select class="form-select" name="freq">
+                    <option value="1" selected>Daily</option>
+                    <option value="2">Weekly</option>
+                </select>
+                <button class="btn btn-primary input-group-btn">Create</button>
+            </div>
+        </div>
+    </p>
 </form>
+
 <h2>Daily objectives</h2>
+
 {% if daily_objectives %}
-<section>
+<div>
     {% for objective in daily_objectives %}
-    <article class="command_panel">
-        <form class="form--row" action="{% url 'orgapy:save_objective' freq="daily" oid=objective.id %}" method="post">
+    <p>
+        <form class="form-inline" action="{% url 'orgapy:save_objective' freq="daily" oid=objective.id %}" method="post">
             {% csrf_token %}
-            <input type="hidden" name="id" value="{{objective.id}}" />
+            <input type="hidden" name="id" value="{{ objective.id }}" />
             <input type="hidden" name="freq" value="daily" />
-            <input type="text" name="name" value="{{objective.name}}" placeholder="Objective name" />
-            <input class="button  button--fixed" type="submit" value="Save" />
+            <div class="input-group input-inline">
+                <input class="form-input" type="text" name="name" value="{{objective.name}}" placeholder="Objective name" />
+                <button class="btn btn-primary input-group-btn">Save</button>
+            </div>
         </form>
-        {% if objective.is_current_done %}
-        <a class="button button--fixed" href="{% url 'orgapy:uncheck_objective' freq='daily' oid=objective.id %}">Uncheck</a>
-        {% else %}
-        <a class="button button--fixed" href="{% url 'orgapy:check_objective' freq='daily' oid=objective.id %}">Check</a>
-        {% endif %}
-        <a class="button button--fixed" href="{% url 'orgapy:delete_objective' freq='daily' oid=objective.id %}">Delete</a>
-    </article>
+        <div class="btn-group">
+            {% if objective.is_current_done %}
+            <a class="btn btn-primary" href="{% url 'orgapy:uncheck_objective' freq='daily' oid=objective.id %}" title="Uncheck"><i class="icon icon-stop"></i></a>
+            {% else %}
+            <a class="btn btn-primary" href="{% url 'orgapy:check_objective' freq='daily' oid=objective.id %}" title="Check"><i class="icon icon-check"></i></a>
+            {% endif %}
+            <a class="btn btn-primary" href="{% url 'orgapy:delete_objective' freq='daily' oid=objective.id %}" title="Delete"><i class="icon icon-cross"></i></a>
+        </div>
+    </p>
     {% endfor %}
-</section>
+</div>
 {% else %}
 <p>
     Nothing to show here.
 </p>
 {% endif %}
+
 <h2>Weekly objectives</h2>
+
 {% if weekly_objectives %}
-<section>
+<div>
     {% for objective in weekly_objectives %}
-    <article class="command_panel">
-        <form class="form--row" action="{% url 'orgapy:save_objective' freq='weekly' oid=objective.id %}" method="post">
+    <p>
+        <form class="form-inline" action="{% url 'orgapy:save_objective' freq='weekly' oid=objective.id %}" method="post">
             {% csrf_token %}
-            <input type="hidden" name="id" value="{{objective.id}}" />
+            <input type="hidden" name="id" value="{{ objective.id }}" />
             <input type="hidden" name="freq" value="weekly" />
-            <input type="text" name="name" value="{{objective.name}}" placeholder="Objective name" />
-            <input class="button" type="submit" value="Save" />
+            <div class="input-group input-inline">
+                <input class="form-input" type="text" name="name" value="{{ objective.name }}" placeholder="Objective name" />
+                <button class="btn btn-primary input-group-btn">Save</button>
+            </div>
         </form>
-        {% if objective.is_current_done %}
-        <a class="button" href="{% url 'orgapy:uncheck_objective' freq='weekly' oid=objective.id %}">Uncheck</a>
-        {% else %}
-        <a class="button" href="{% url 'orgapy:check_objective' freq='weekly' oid=objective.id %}">Check</a>
-        {% endif %}
-        <a class="button" href="{% url 'orgapy:delete_objective' freq='weekly' oid=objective.id %}">Delete</a>
-    </article>
+        <div class="btn-group">
+            {% if objective.is_current_done %}
+            <a class="btn btn-primary" href="{% url 'orgapy:uncheck_objective' freq='weekly' oid=objective.id %}" title="Uncheck"><i class="icon icon-stop"></i></a>
+            {% else %}
+            <a class="btn btn-primary" href="{% url 'orgapy:check_objective' freq='weekly' oid=objective.id %}" title="Check"><i class="icon icon-check"></i></a>
+            {% endif %}
+            <a class="btn btn-primary" href="{% url 'orgapy:delete_objective' freq='weekly' oid=objective.id %}" title="Delete"><i class="icon icon-cross"></i></a>
+        </div>
+    </p>
     {% endfor %}
-</section>
+</div>
 {% else %}
 <p>
     Nothing to show here.
 </p>
 {% endif %}
-{% endblock section %}
+{% endblock main_content %}

@@ -1,46 +1,50 @@
 {% if tasks %}
-<table class="note_list">
+<table class="table table table-striped table-hover table-condensed my-2">
     <tr>
-        <th class="col1">Due</th>
-        <th class="col2">Title</th>
-        <th class="col3">Public</th>
-        <th class="col4">Categories</th>
-        <th class="col5">Done</th>
+        <th>Due</th>
+        <th>Title</th>
+        <th class="text-center">Public</th>
+        <th class="text-center">Categories</th>
+        <th class="text-center">Done</th>
     </tr>
     {% for note in tasks %}
     <tr class="task{% if note.task.done %} task--done{% elif note.task.urgent %} task--urgent{% elif note.task.today %} task--today{% endif%}">
-        <td class="col1">
+        <td>
             {% if note.task.date_due %}
             {{note.task.date_due|date:"M. d"}}
             {% else %}
             &ndash;
             {% endif %}
         </td>
-        <td class="col2">
-            <a href="{% url 'orgapy:view_note' slug=note.slug %}">{{note.title}}</a>
+        <td>
+            <a class="link-hidden" href="{% url 'orgapy:view_note' nid=note.id %}">{{note.title}}</a>
         </td>
-        <td class="col3">
+        <td class="text-center">
             {% if note.public %}
-            <a href="{% url 'orgapy:view_public_note' slug=note.slug %}">⁕</a>
+            <a class="link-hidden" href="{% url 'orgapy:view_public_note' nid=note.id %}">⁕</a>
             {% endif %}
         </td>
-        <td class="col4">
+        <td class="text-center">
             {% for category in note.categories.all %}
-            <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+            <a class="link-hidden" href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
             {% endfor%}
         </td>
-        <td class="col5">
+        <td class="text-center">
             {% if note.task.done %}
-            <a href="{% url 'orgapy:delete_note' slug=note.slug %}">✕</a>
+            <a class="link-hidden" href="{% url 'orgapy:delete_note' nid=note.id %}">✕</a>
             {% else %}
-            <a href="{% url 'orgapy:task_done' note_id=note.id %}">✓</a>
+            <a class="link-hidden" href="{% url 'orgapy:task_done' note_id=note.id %}">✓</a>
             {% endif %}
         </td>
     </tr>
     {% endfor %}
 </table>
 {% else %}
-<p>
-    No task to be shown.
-</p>
+<div class="empty my-2">
+    <div class="empty-icon">
+        <i class="icon icon-task icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no task</p>
+    <p class="empty-subtitle">Use the above form to create a task.</p>
+</div>
 {% endif %}

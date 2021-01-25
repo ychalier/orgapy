@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-orgapy',
-    version='0.11.0',
+    version='1.0.0',
     packages=find_packages(),
     include_package_data=True,
     license='MIT License',
@@ -21,7 +21,7 @@ setup(
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
-        'Framework :: Django :: 3.0.4',
+        'Framework :: Django :: 3.1.5',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
@@ -31,15 +31,12 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        "urllib3==1.24.2",
-        "Pygments==2.3.1",
+        "urllib3",
+        "Pygments",
         "mistune==2.0.0a2",
-        "caldav==0.6.2",
-        "Django>=3.0.4",
-        "icalendar==4.0.4",
-        "python_dateutil==2.8.1",
-        "xhtml2pdf==0.2.4",
-        "django-visitors"
+        "Django>=3.1.5",
+        "python_dateutil",
+        "xhtml2pdf",
     ],
     dependency_links=[
         "https://packages.chalier.fr/"

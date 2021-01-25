@@ -1,31 +1,17 @@
 import re
 import datetime
 import mistune
+from piweb.utils import MarkdownRenderer
 from django.db import models
 from django.utils.text import slugify
-from pygments import highlight
-from pygments.lexers import get_lexer_by_name
-from pygments.formatters import html
-from pygments.util import ClassNotFound
+from django.conf import settings
 
 
-class HighlightRenderer(mistune.HTMLRenderer):
-    """Custom mistune renderder to handle syntax highlighting"""
+class CheckableMarkdownRenderer(MarkdownRenderer):
 
     def __init__(self, *args, **kwargs):
-        mistune.HTMLRenderer.__init__(self, *args, **kwargs)
+        MarkdownRenderer.__init__(self, *args, **kwargs)
         self.checkboxes_index = 0
-
-    def block_code(self, code, lang=None):
-        """Use pygments to highlight a markdown code block"""
-        if lang:
-            try:
-                lexer = get_lexer_by_name(lang, stripall=True)
-                formatter = html.HtmlFormatter()
-                return highlight(code, lexer, formatter)
-            except ClassNotFound:
-                return "<pre><code>" + mistune.escape(code) + "</code></pre>"
-        return "<pre><code>" + mistune.escape(code) + "</code></pre>"
 
     def list_item(self, text, level):
         """Render list item with task list support"""
@@ -55,6 +41,7 @@ class HighlightRenderer(mistune.HTMLRenderer):
 class Category(models.Model):
     """Represent a general note category"""
 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -67,12 +54,12 @@ class Category(models.Model):
 class Note(models.Model):
     """Represent a general note, ie. a title and a text"""
 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_access = models.DateTimeField(auto_now_add=True, auto_now=False)
     title = models.CharField(max_length=255)
     content = models.TextField()
-    slug = models.SlugField(unique=True, max_length=255)
     public = models.BooleanField(default=False)
     categories = models.ManyToManyField("Category", blank=True)
 
@@ -87,7 +74,7 @@ class Note(models.Model):
         self.date_access = datetime.datetime.now()
         self.save()
         factory = mistune.create_markdown(
-            renderer=HighlightRenderer(),
+            renderer=CheckableMarkdownRenderer(),
             escape=False,
             plugins=[
                 "strikethrough",
@@ -128,50 +115,6 @@ class Task(models.Model):
                 == self.date_due.strftime("%Y-%m-%d"))
 
 
-class Publication(models.Model):
-    """Represent the blog-related information associated to a note"""
-
-    note = models.OneToOneField(
-        "Note",
-        on_delete=models.CASCADE,
-        primary_key=True
-    )
-    date_publication = models.DateTimeField(auto_now_add=True, auto_now=False)
-    abstract = models.TextField(default="")
-    author = models.CharField(max_length=255)
-
-    def __str__(self):
-        return "Publication<%s>" % self.note
-
-
-class SingletonModel(models.Model):
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        self.pk = 1
-        super(SingletonModel, self).save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        pass
-
-    @classmethod
-    def load(cls):
-        """Return singleton and creates it if needed"""
-        obj, _ = cls.objects.get_or_create(pk=1)
-        return obj
-
-
-class CalDavSettings(SingletonModel):
-
-    username = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
-    host = models.CharField(max_length=255)
-    port = models.IntegerField(default=5232)
-    protocol = models.CharField(max_length=255, default="https")
-
-
 def daterange(start_date, end_date, step):
     """Iterate over datetime.date objects"""
     for i in range(0, int((end_date - start_date).days) + 1, step):
@@ -186,6 +129,7 @@ def last_day_of_month(any_day):
 
 class Objective(models.Model):
 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     history = models.TextField(default="", blank=True)
     date_start = models.DateField(auto_now_add=True, auto_now=False)
@@ -217,14 +161,16 @@ class Objective(models.Model):
                     "date": date,
                     "checked": str(self.history)[j] == "1",
                     "overflow": (self._cast(date) > current
-                                 or self._cast(date) < self._cast(self.date_start))
+                                 or self._cast(date) < self._cast(self.date_start)),
+                    "current": self._cast(date) == current,
                 })
             else:
                 array.append({
                     "date": date,
                     "checked": False,
                     "overflow": (self._cast(date) > current
-                                 or self._cast(date) < self._cast(self.date_start))
+                                 or self._cast(date) < self._cast(self.date_start)),
+                    "current": self._cast(date) == current,
                 })
         return array
 
@@ -251,6 +197,20 @@ class Objective(models.Model):
     def is_current_done(self):
         """Return if current index is checked"""
         return self.to_array(date_start=datetime.datetime.today())[0]["checked"]
+    
+    def current_year(self):
+        """Check array for the current year"""
+        epoch_year = datetime.date.today().year
+        date_start = datetime.date(epoch_year, 1, 1)
+        date_end = datetime.date(epoch_year, 12, 31)
+        while date_start.weekday() != 0:
+            date_start += datetime.timedelta(days=1)
+        while date_end.weekday() != 6:
+            date_end += datetime.timedelta(days=1)
+        return self.to_array(
+            date_start=date_start,
+            date_end=date_end
+        )
 
 
 class DailyObjective(Objective):
@@ -269,6 +229,10 @@ class DailyObjective(Objective):
             date_start=datetime.datetime.today().date().replace(day=1),
             date_end=last_day_of_month(datetime.datetime.today().date())
         )
+    
+    def freq(self):
+        return "daily"
+
 
 class WeeklyObjective(Objective):
 
@@ -279,17 +243,14 @@ class WeeklyObjective(Objective):
 
     def _step(self):
         return 7
+    
+    def freq(self):
+        return "weekly"
 
-    def current_year(self):
-        """Check array for the current year"""
-        epoch_year = datetime.date.today().year
-        return self.to_array(
-            date_start=datetime.date(epoch_year, 1, 1),
-            date_end=datetime.date(epoch_year, 12, 31)
-        )
 
 class Author(models.Model):
 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     slug = models.SlugField(blank=True, max_length=255)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -304,6 +265,7 @@ class Author(models.Model):
 
 class Work(models.Model):
 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     slug = models.SlugField(blank=True, max_length=255)
     author = models.ForeignKey("Author", on_delete=models.CASCADE)

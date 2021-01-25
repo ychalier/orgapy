@@ -1,26 +1,28 @@
 {% extends "orgapy/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}{{note.title}} | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %} {{note.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
 
 {% block head %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/monokai.css' %}" />
-<!--<link rel="stylesheet" href="{% static 'orgapy/css/markdown.css' %}" />-->
+<link rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/styles/darcula.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/highlight.min.js"></script>
 {% endblock head %}
 
-{% block section %}
+
+{% block main_content %}
 <h1>{{note.title}}</h1>
 
-<nav class="command_panel--wrap command_panel">
-    <a href="{% url 'orgapy:edit_note' slug=note.slug %}" class="button">Edit</a>
+<p>
+    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn btn-link" title="Edit"><i class="icon icon-edit"></i></a>
     {% if note.public %}
-    <a href="{% url 'orgapy:view_public_note' slug=note.slug %}" class="button">Share</a>
+    <a href="{% url 'orgapy:view_public_note' nid=note.id %}" class="btn btn-link" title="Sharable link"><i class="icon icon-external"></i></a>
     {% endif %}
-    <a href="{% url 'orgapy:export_note' slug=note.slug %}" class="button">Export</a>
-    <a href="{% url 'orgapy:publish_note' slug=note.slug %}" class="button">Publish</a>
-    <a href="{% url 'orgapy:delete_note' slug=note.slug %}" class="button">Delete</a>
-</nav>
+    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn btn-link" title="Download as PDF"><i class="icon icon-download"></i></a>
+    <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn btn-link" title="Delete"><i class="icon icon-delete"></i></a>
+</p>
 
 {% if note.content %}
 <div class="note_content">
@@ -69,6 +71,7 @@
     <input type="hidden" name="checkbox_state" />
 </form>
 
+<script>hljs.initHighlightingOnLoad();</script>
 <script type="text/javascript" src="{% static 'orgapy/js/checkbox.js' %}"></script>
 
-{% endblock section %}
+{% endblock main_content %}

@@ -1,45 +1,28 @@
+{% extends 'piweb/single_column.html' %}
+
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en-US">
+{% block title %}Orgapy{% endblock %}
 
-<head>
-    <title>{% block title %}Orgapy{% endblock title %}</title>
-    <meta name="viewport" content="width=device-width" />
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="icon" href="{% static 'orgapy/logo/32.png' %}" sizes="32x32">
-    <link rel="icon" href="{% static 'orgapy/logo/48.png' %}" sizes="48x48">
-    <link rel="icon" href="{% static 'orgapy/logo/96.png' %}" sizes="96x96">
-    <link rel="icon" href="{% static 'orgapy/logo/144.png' %}" sizes="144x144">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    {% block head %}
-    <link rel="stylesheet" href="{% static 'orgapy/css/main.css' %}" />
-    {% endblock head %}
-</head>
+{% block head %}
+{{ block.super }}
+<link rel="icon" href="{% static 'orgapy/logo/32.png' %}" sizes="32x32" />
+<link rel="icon" href="{% static 'orgapy/logo/48.png' %}" sizes="48x48" />
+<link rel="icon" href="{% static 'orgapy/logo/96.png' %}" sizes="96x96" />
+<link rel="icon" href="{% static 'orgapy/logo/144.png' %}" sizes="144x144" />
+<link rel="stylesheet" href="{% static 'orgapy/css/orgapy.css' %}" />
+{% endblock head %}
 
-<body>
-    {% block body %}
-    <div class="body_wrapper">
-        <div class="fullheight_padding"></div>
-        <header class="header header--inline">
-            <!--<nav class="header__nav navbar">-->
-            <a href="{% url 'orgapy:about' %}" class="header__title"><b>Orgapy</b></a>
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'orgapy:dashboard' %}">Dashboard</a>
-            <a href="{% url 'orgapy:notes' %}">Notes</a>
-            <a href="{% url 'orgapy:tasks' %}">Tasks</a>
-            <a href="{% url 'orgapy:quotes' %}">Quotes</a>
-            {% endif %}
-            <!--</nav>-->
-            <!--<span class="now">{% now "F jS, Y" %}</span>-->
-        </header>
-        <section class="main_section">
-            {% block section %}{% endblock section %}
-        </section>
-        <div class="fullheight_padding"></div>
-    </div>
-    {% endblock body %}
-</body>
+{% block body_class %}dark{% endblock body_class %}
 
-</html>
+{% block navbar %}
+<section class="navbar-section">
+    <a href="{% url 'orgapy:about' %}" class="navbar-brand mr-2">Orgapy</a>
+    <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% endif %}">Notes</a>
+    <a href="{% url 'orgapy:tasks' %}" class="btn {% if active != 'tasks' %}btn-link{% endif %}">Tasks</a>
+    <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% endif %}">Quotes</a>
+</section>
+<section class="navbar-section">
+    {% include 'piweb/user_icon.html' %}
+</section>
+{% endblock navbar %}

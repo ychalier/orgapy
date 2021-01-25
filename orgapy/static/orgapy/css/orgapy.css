@@ -1,0 +1,45 @@
+.task--urgent {
+    color: crimson;
+}
+
+.task--done {
+    opacity: .2;
+}
+
+.task--today,
+.task--urgent {
+    font-weight: bold;
+}
+
+.objective-grid {
+    overflow-x: scroll;
+    overflow-y: hidden;
+}
+
+.objective-cell {
+    background: #101010;
+    height: 32px;
+    margin: 1px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.objective-daily {
+    width: 32px;
+}
+
+.objective-weekly {
+    width: 236px;
+}
+
+.objective-names {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 6px;
+}
+
+.objective-name span {
+    height: 34px;
+    line-height: 34px;
+}

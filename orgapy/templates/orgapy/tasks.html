@@ -1,110 +1,64 @@
 {% extends "orgapy/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}Tasks | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}Tasks &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block head %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/tasks.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
-{% endblock head %}
+{% block main_content %}
 
-{% block section %}
-<h1>Tasks</h1>
-
-<form class="form--row" action="{% url 'orgapy:save_note' %}" method="post">
+<form action="{% url 'orgapy:save_note' %}" method="post">
     {% csrf_token %}
     <input type="hidden" name="task" value="">
-    <input type="text" name="title" value="" placeholder="Title">
-    <input type="date" name="due" value="">
-    <input class="button button--fixed" type="submit" value="Create task">
+    <p>
+        <div class="form-group">
+            <div class="input-group">
+                <input class="form-input" type="text" name="title" value="" placeholder="Title" />
+                <input class="form-input" type="date" name="due" value="" />
+                <input class="btn btn-primary input-group-btn" type="submit" value="Create task">
+            </div>
+        </div>
+    </p>
 </form>
 
 {% include "orgapy/task_list.html" %}
 
-<h2>Objectives</h2>
+<h2 class="m-top">Objectives <a class="btn btn-link" href="{% url 'orgapy:edit_objectives' %}" title="Edit objectives"><i class="icon icon-edit"></i></a></h2>
+
 {% if daily_objectives or weekly_objectives %}
-{% if not all_done %}
-<div class="objective_forms command_panel--wrap command_panel">
-{% for objective in daily_objectives %}
-    {% if not objective.is_current_done %}
-    <a class="button" href="{% url 'orgapy:check_objective' freq='daily' oid=objective.id %}">{{objective.name}} &check;</a>
-    {% endif %}
-{% endfor %}
-{% for objective in weekly_objectives %}
-    {% if not objective.is_current_done %}
-    <a class="button" href="{% url 'orgapy:check_objective' freq='weekly' oid=objective.id %}">{{objective.name}} &check;</a>
-    {% endif %}
-{% endfor %}
-</div>
-{% endif %}
-<h3>This month</h3>
-<div class="objective_grid">
-    <div class="objct_gr_shrinker"></div>
-    <div>
-        {% for objective in daily_objectives %}
-        {% if forloop.first %}
-        <div class="objct_gr">
-            <div class="objct_gr__name"></div>
-            <div class="objct_gr__line">
-                {% for entry in objective.current_month %}
-                <div class="objct_gr_c">{% if entry.date.day|divisibleby:5 %}{{entry.date|date:"j"}}{% endif %}</div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-        <div class="objct_gr">
-            <div class="objct_gr__name">
-                {{objective.name}}
-            </div>
-            <div class="objct_gr__line">
-                {% for entry in objective.current_month %}
-                <div class="objct_gr_c {% if entry.checked %}checked{% elif entry.overflow %}overflow{% else %}unchecked{% endif%}"></div>
-                {% endfor %}
-            </div>
+
+<div class="p-relative">
+    <div class="objective-grid scroll-to" scroll-x="{{ objective_grid_offset }}">
+        {% for objective in objectives %}
+        <div class="d-flex">
+            {% for entry in objective.current_year %}
+                <div class="objective-cell objective-{{ objective.freq }} {% if entry.checked %}bg-success{% elif entry.overflow %}{% elif not entry.current %}bg-dark{% endif %}">
+                {% if not entry.checked and entry.current %}
+                <a href="{% url 'orgapy:check_objective' freq=objective.freq oid=objective.id %}"><i class="icon icon-check"></i></a>
+                {% endif %}
+                </div>
+            {% endfor %}
         </div>
         {% endfor %}
     </div>
-    <div class="objct_gr_shrinker"></div>
-</div>
-<h3>This year</h3>
-<div class="objective_grid">
-    <div class="objct_gr_shrinker"></div>
-    <div>
-        {% for objective in weekly_objectives %}
-        {% if forloop.first %}
-        <div class="objct_gr">
-            <div class="objct_gr__name"></div>
-            <div class="objct_gr__line">
-                {% for entry in objective.current_year %}
-                <div class="objct_gr_c">{% if entry.date|date:"W"|divisibleby:5 %}{{entry.date|date:"W"}}{% endif %}</div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-        <div class="objct_gr">
-            <div class="objct_gr__name">
-                {{objective.name}}
-            </div>
-            <div class="objct_gr__line">
-                {% for entry in objective.current_year %}
-                <div class="objct_gr_c {% if entry.checked %}checked{% elif entry.overflow %}overflow{% else %}unchecked{% endif%}"></div>
-                {% endfor %}
-            </div>
+    <div class="objective-names">
+        {% for objective in objectives %}
+        <div class="objective-name">
+            <span class="text-secondary">{{ objective.name }}</span>
         </div>
         {% endfor %}
     </div>
-    <div class="objct_gr_shrinker"></div>
 </div>
+
 {% else %}
-<p>
-    Nothing to show here.
-</p>
+<div class="empty my-2">
+    <div class="empty-icon">
+        <i class="icon icon-event-busy icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no objectives</p>
+    <p class="empty-subtitle">Click the button below to create an objective.</p>
+    <div class="empty-action">
+        <a class="btn btn-primary" href="{% url 'orgapy:edit_objectives' %}">Create objective</a>
+    </div>
+</div>
 {% endif %}
 
-<nav class="command_panel">
-    <a class="button" href="{% url 'orgapy:edit_objectives' %}">Edit objectives</a>
-</nav>
-
-{% endblock section %}
+{% endblock main_content %}

@@ -1,23 +1,22 @@
 {% extends "orgapy/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}Quotes | {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}Quotes &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block head %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/quotes.css' %}" />
-{% endblock head %}
-
-{% block section %}
+{% block main_content %}
 <h1>Quotes</h1>
 
-<nav class="command_panel">
-    <form class="form--row" action="{% url 'orgapy:quotes' %}" method="get">
-        <input type="text" name="query" placeholder="Search a quote content" value="{% if query %}{{query}}{% endif %}" />
-        <input class="button button--fixed" type="submit" name="" value="Search">
-    </form>
-    <a class="button button--fixed" href="{% url 'orgapy:create_quote' %}">Create quote</a>
-</nav>
+<form action="{% url 'orgapy:quotes' %}" method="get">
+    <p>
+        <div class="input-group input-inline">
+            <input class="form-input" type="text" name="query" placeholder="Search a quote content" value="{% if query %}{{query}}{% endif %}" />
+            <button class="btn btn-primary input-group-btn">Search</button>
+        </div>
+        <div class="input-group input-inline">
+            <a class="btn btn-primary" href="{% url 'orgapy:create_quote' %}">Create quote</a>
+        </div>
+    </p>
+</form>
 
 {% if work %}
 <p>
@@ -33,49 +32,38 @@
 {% if authors %}
 <p>
     {% for author_ in authors %}
-    <a class="author" href="{% url 'orgapy:quotes_author' author=author_.slug %}">{{author_.name}}</a>
+    <a href="{% url 'orgapy:quotes_author' author=author_.slug %}"><span class="chip">{{ author_.name }}</span></a>
     {% endfor %}
 </p>
 {% endif %}
 
 {% if quotes %}
-<div class="quote_list">
+<div>
     {% for quote in quotes %}
-    <div class="quote">
-        <div class="quote__text">
-            {{ quote.markdown | safe }}
+    <div class="card my-2">
+        <div class="card-header">
+            <a href="{% url 'orgapy:quotes_work' author=quote.work.author.slug work=quote.work.slug %}">{{ quote.work.title }}</a>,
+            <a href="{% url 'orgapy:quotes_author' author=quote.work.author.slug %}">{{ quote.work.author.name }}</a>
         </div>
-        <div class="quote__info">
-            <div class="quote__info__work">
-                <a href="{% url 'orgapy:quotes_work' author=quote.work.author.slug work=quote.work.slug %}">{{ quote.work.title }}</a>
-            </div>
-            <div class="quote__info__author">
-                <a href="{% url 'orgapy:quotes_author' author=quote.work.author.slug %}">{{ quote.work.author.name }}</a>
-            </div>
+        <div class="card-body">
+            {{ quote.markdown | safe }}
         </div>
     </div>
     {% endfor %}
 </div>
 {% else %}
-<p>
-    No quote to be shown.
-</p>
+<div class="empty my-2">
+    <div class="empty-icon">
+        <i class="icon icon-quote icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no quote</p>
+    <p class="empty-subtitle">Click the button below to add a quote.</p>
+    <div class="empty-action">
+        <a class="btn btn-primary" href="{% url 'orgapy:create_quote' %}">Create quote</a>
+    </div>
+</div>
 {% endif %}
 
-<nav class="navbar">
-    {% if quotes.has_previous %}
-    <a href="?page=1{% if query %}&query={{query|urlencode}}{% endif %}">&laquo; first</a>
-    <a href="?page={{ quotes.previous_page_number }}{% if query %}&query={{query|urlencode}}{% endif %}">previous</a>
-    {% endif %}
+{% include 'piweb/pagination.html' with paginator=quote_paginator %}
 
-    <span class="current">
-        Page {{ quotes.number }} of {{ quotes.paginator.num_pages }}.
-    </span>
-
-    {% if quotes.has_next %}
-    <a href="?page={{ quotes.next_page_number }}{% if query %}&query={{query|urlencode}}{% endif %}">next</a>
-    <a href="?page={{ quotes.paginator.num_pages }}{% if query %}&query={{query|urlencode}}{% endif %}">last &raquo;</a>
-    {% endif %}
-</nav>
-
-{% endblock section %}
+{% endblock main_content %}
