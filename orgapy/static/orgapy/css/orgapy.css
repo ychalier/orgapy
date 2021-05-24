@@ -24,13 +24,11 @@
     text-align: center;
 }
 
-.objective-daily {
-    width: 32px;
-}
-
-.objective-weekly {
-    width: 236px;
-}
+/**
+ * .objective-n {
+ *     width: 32 * n + 2 * (n - 1);
+ * }
+ */
 
 .objective-names {
     position: absolute;

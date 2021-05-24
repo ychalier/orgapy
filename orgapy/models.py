@@ -133,15 +133,10 @@ class Objective(models.Model):
     name = models.CharField(max_length=255)
     history = models.TextField(default="", blank=True)
     date_start = models.DateField(auto_now_add=True, auto_now=False)
+    step = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return self.name
-
-    def _cast(self, _):
-        raise NotImplementedError
-
-    def _step(self):
-        raise NotImplementedError
 
     def to_array(self, date_start=None, date_end=None):
         """Convert text history to an array format"""
@@ -153,8 +148,8 @@ class Objective(models.Model):
         date_start = self._cast(date_start)
         date_end = self._cast(date_end)
         current = self._cast(datetime.datetime.today())
-        offset = (date_start - self._cast(self.date_start)).days // self._step()
-        for i, date in enumerate(daterange(date_start, date_end, self._step())):
+        offset = (date_start - self._cast(self.date_start)).days // self.step
+        for i, date in enumerate(daterange(date_start, date_end, self.step)):
             j = i + offset
             if 0 <= j < len(self.history):
                 array.append({
@@ -211,42 +206,18 @@ class Objective(models.Model):
             date_start=date_start,
             date_end=date_end
         )
-
-
-class DailyObjective(Objective):
-
+    
     def _cast(self, date):
-        if type(date) == datetime.date:
-            return date
-        return date.date()
-
-    def _step(self):
-        return 1
-
-    def current_month(self):
-        """Check array for the current month"""
-        return self.to_array(
-            date_start=datetime.datetime.today().date().replace(day=1),
-            date_end=last_day_of_month(datetime.datetime.today().date())
-        )
+        _date = date
+        if isinstance(date, datetime.datetime):
+            _date = date.date()
+        return _date - datetime.timedelta(days=(_date.timetuple().tm_yday - 1) % self.step)
     
     def freq(self):
-        return "daily"
+        return str(self.step)
 
-
-class WeeklyObjective(Objective):
-
-    def _cast(self, date):
-        if type(date) == datetime.date:
-            return date - datetime.timedelta(days=date.weekday())
-        return date.date() - datetime.timedelta(days=date.weekday())
-
-    def _step(self):
-        return 7
-    
-    def freq(self):
-        return "weekly"
-
+    def div_width(self):
+        return 32 * self.step + 2 * (self.step - 1)
 
 class Author(models.Model):
 

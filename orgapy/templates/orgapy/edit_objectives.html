@@ -14,38 +14,33 @@
             <label class="form-label">Add an objective</label>
             <div class="input-group">
                 <input class="form-input" type="text" name="name" placeholder="Objective name" />
-                <select class="form-select" name="freq">
-                    <option value="1" selected>Daily</option>
-                    <option value="2">Weekly</option>
-                </select>
+                <input class="form-input" type="number" name="step" value="1" />
                 <button class="btn btn-primary input-group-btn">Create</button>
             </div>
         </div>
     </p>
 </form>
 
-<h2>Daily objectives</h2>
-
-{% if daily_objectives %}
+{% if objectives %}
 <div>
-    {% for objective in daily_objectives %}
+    {% for objective in objectives %}
     <p>
-        <form class="form-inline" action="{% url 'orgapy:save_objective' freq="daily" oid=objective.id %}" method="post">
+        <form class="form-inline" action="{% url 'orgapy:save_objective' oid=objective.id %}" method="post">
             {% csrf_token %}
             <input type="hidden" name="id" value="{{ objective.id }}" />
-            <input type="hidden" name="freq" value="daily" />
             <div class="input-group input-inline">
                 <input class="form-input" type="text" name="name" value="{{objective.name}}" placeholder="Objective name" />
+                <input class="form-input" type="number" name="step" value="{{objective.step}}" />
                 <button class="btn btn-primary input-group-btn">Save</button>
             </div>
         </form>
         <div class="btn-group">
             {% if objective.is_current_done %}
-            <a class="btn btn-primary" href="{% url 'orgapy:uncheck_objective' freq='daily' oid=objective.id %}" title="Uncheck"><i class="icon icon-stop"></i></a>
+            <a class="btn btn-primary" href="{% url 'orgapy:uncheck_objective' oid=objective.id %}" title="Uncheck"><i class="icon icon-stop"></i></a>
             {% else %}
-            <a class="btn btn-primary" href="{% url 'orgapy:check_objective' freq='daily' oid=objective.id %}" title="Check"><i class="icon icon-check"></i></a>
+            <a class="btn btn-primary" href="{% url 'orgapy:check_objective' oid=objective.id %}" title="Check"><i class="icon icon-check"></i></a>
             {% endif %}
-            <a class="btn btn-primary" href="{% url 'orgapy:delete_objective' freq='daily' oid=objective.id %}" title="Delete"><i class="icon icon-cross"></i></a>
+            <a class="btn btn-primary" href="{% url 'orgapy:delete_objective' oid=objective.id %}" title="Delete"><i class="icon icon-cross"></i></a>
         </div>
     </p>
     {% endfor %}
@@ -56,35 +51,4 @@
 </p>
 {% endif %}
 
-<h2>Weekly objectives</h2>
-
-{% if weekly_objectives %}
-<div>
-    {% for objective in weekly_objectives %}
-    <p>
-        <form class="form-inline" action="{% url 'orgapy:save_objective' freq='weekly' oid=objective.id %}" method="post">
-            {% csrf_token %}
-            <input type="hidden" name="id" value="{{ objective.id }}" />
-            <input type="hidden" name="freq" value="weekly" />
-            <div class="input-group input-inline">
-                <input class="form-input" type="text" name="name" value="{{ objective.name }}" placeholder="Objective name" />
-                <button class="btn btn-primary input-group-btn">Save</button>
-            </div>
-        </form>
-        <div class="btn-group">
-            {% if objective.is_current_done %}
-            <a class="btn btn-primary" href="{% url 'orgapy:uncheck_objective' freq='weekly' oid=objective.id %}" title="Uncheck"><i class="icon icon-stop"></i></a>
-            {% else %}
-            <a class="btn btn-primary" href="{% url 'orgapy:check_objective' freq='weekly' oid=objective.id %}" title="Check"><i class="icon icon-check"></i></a>
-            {% endif %}
-            <a class="btn btn-primary" href="{% url 'orgapy:delete_objective' freq='weekly' oid=objective.id %}" title="Delete"><i class="icon icon-cross"></i></a>
-        </div>
-    </p>
-    {% endfor %}
-</div>
-{% else %}
-<p>
-    Nothing to show here.
-</p>
-{% endif %}
 {% endblock main_content %}

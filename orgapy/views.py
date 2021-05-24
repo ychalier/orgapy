@@ -67,28 +67,18 @@ def view_tasks(request):
     notes = models.Note.objects\
         .filter(task__isnull=False, user=request.user)\
         .order_by("task__date_done", F("task__date_due").asc(nulls_last=True), "date_creation")
-    daily_objectives = models.DailyObjective.objects\
-        .filter(user=request.user)\
-        .order_by("name")
-    weekly_objectives = models.WeeklyObjective.objects\
+    objectives = models.Objective.objects\
         .filter(user=request.user)\
         .order_by("name")
     all_done = True
-    for objective in daily_objectives:  
+    for objective in objectives:  
         if not objective.is_current_done():
             all_done = False
             break
-    for objective in weekly_objectives:
-        if not objective.is_current_done():
-            all_done = False
-            break
-
     objective_grid_offset = max(0, int(datetime.datetime.now().date().strftime("%V")) - 2) * 236 + 1
     return render(request, "orgapy/tasks.html", {
         "tasks": notes,
-        "daily_objectives": daily_objectives,
-        "weekly_objectives": weekly_objectives,
-        "objectives": list(weekly_objectives) + list(daily_objectives),
+        "objectives": objectives,
         "all_done": all_done,
         "active": "tasks",
         "objective_grid_offset": objective_grid_offset,
@@ -308,58 +298,53 @@ def delete_note(request, nid):
 @require_app_access("orgapy")
 def edit_objectives(request):
     """Edit daily and weekly objectives"""
-    daily_objectives = models.DailyObjective.objects.filter(user=request.user).order_by("name")
-    weekly_objectives = models.WeeklyObjective.objects.filter(user=request.user).order_by("name")
+    objectives = models.Objective.objects.filter(user=request.user).order_by("name")
     return render(request, "orgapy/edit_objectives.html", {
-        "daily_objectives": daily_objectives,
-        "weekly_objectives": weekly_objectives
+        "objectives": objectives,
     })
 
 
-def get_objective(request, freq, oid):
+def get_objective(request, oid):
     """Search for a corresponding objective in the database"""
-    if freq == "daily":
-        if models.DailyObjective.objects.filter(id=oid, user=request.user).exists():
-            return models.DailyObjective.objects.get(id=oid, user=request.user)
-    elif freq == "weekly":
-        if models.WeeklyObjective.objects.filter(id=oid, user=request.user).exists():
-            return models.WeeklyObjective.objects.get(id=oid, user=request.user)
+    if models.Objective.objects.filter(id=oid, user=request.user).exists():
+        return models.Objective.objects.get(id=oid, user=request.user)
     return None
 
 
 @require_app_access("orgapy")
-def check_objective(request, freq, oid):
+def check_objective(request, oid):
     """Set current objective to checked"""
-    objective = get_objective(request, freq, oid)
+    objective = get_objective(request, oid)
     if objective is not None:
         objective.check_current()
     return redirect("orgapy:tasks")
 
 
 @require_app_access("orgapy")
-def uncheck_objective(request, freq, oid):
+def uncheck_objective(request, oid):
     """Set current objective to unchecked"""
-    objective = get_objective(request, freq, oid)
+    objective = get_objective(request, oid)
     if objective is not None:
         objective.uncheck_current()
     return redirect("orgapy:tasks")
 
 
 @require_app_access("orgapy")
-def save_objective(request, freq, oid):
+def save_objective(request, oid):
     """Change an objective's name"""
     if request.method == "POST":
-        objective = get_objective(request, freq, oid)
+        objective = get_objective(request, oid)
         if objective is not None:
             objective.name = request.POST["name"].strip()
+            objective.step = int(request.POST["step"].strip())
             objective.save()
     return redirect("orgapy:edit_objectives")
 
 
 @require_app_access("orgapy")
-def delete_objective(request, freq, oid):
+def delete_objective(request, oid):
     """Delete an objective"""
-    objective = get_objective(request, freq, oid)
+    objective = get_objective(request, oid)
     if objective is not None:
         objective.delete()
     return redirect("orgapy:edit_objectives")
@@ -369,11 +354,11 @@ def delete_objective(request, freq, oid):
 def create_objective(request):
     """Create a new objective"""
     if request.method == "POST":
-        name = request.POST["name"].strip()
-        if request.POST["freq"] == "1":
-            models.DailyObjective.objects.create(name=name, user=request.user)
-        elif request.POST["freq"] == "2":
-            models.WeeklyObjective.objects.create(name=name, user=request.user)
+        models.Objective.objects.create(
+            name=request.POST["name"].strip(),
+            user=request.user,
+            step=int(request.POST["step"].strip())
+        )
     return redirect("orgapy:edit_objectives")
 
 

@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-orgapy',
-    version='1.0.0',
+    version='1.1.0',
     packages=find_packages(),
     include_package_data=True,
     license='MIT License',
@@ -33,7 +33,7 @@ setup(
     install_requires=[
         "urllib3",
         "Pygments",
-        "mistune==2.0.0a2",
+        "mistune",
         "Django>=3.1.5",
         "python_dateutil",
         "xhtml2pdf",

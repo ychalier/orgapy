@@ -23,16 +23,16 @@
 
 <h2 class="m-top">Objectives <a class="btn btn-link" href="{% url 'orgapy:edit_objectives' %}" title="Edit objectives"><i class="icon icon-edit"></i></a></h2>
 
-{% if daily_objectives or weekly_objectives %}
+{% if objectives %}
 
 <div class="p-relative">
     <div class="objective-grid scroll-to" scroll-x="{{ objective_grid_offset }}">
         {% for objective in objectives %}
         <div class="d-flex">
             {% for entry in objective.current_year %}
-                <div class="objective-cell objective-{{ objective.freq }} {% if entry.checked %}bg-success{% elif entry.overflow %}{% elif not entry.current %}bg-dark{% endif %}">
+                <div class="objective-cell {% if entry.checked %}bg-success{% elif entry.overflow %}{% elif not entry.current %}bg-dark{% endif %}" style="width: {{objective.div_width}}px">
                 {% if not entry.checked and entry.current %}
-                <a href="{% url 'orgapy:check_objective' freq=objective.freq oid=objective.id %}"><i class="icon icon-check"></i></a>
+                <a href="{% url 'orgapy:check_objective' oid=objective.id %}"><i class="icon icon-check"></i></a>
                 {% endif %}
                 </div>
             {% endfor %}
