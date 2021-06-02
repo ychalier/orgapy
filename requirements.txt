@@ -1,5 +1,5 @@
 --extra-index-url https://packages.chalier.fr
-urllib3==1.24.2
+urllib3==1.26.5
 Pygments==2.7.4
 mistune==2.0.0a2
 caldav==0.6.2
