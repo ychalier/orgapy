@@ -1,10 +1,31 @@
 import re
 import datetime
 import mistune
-from piweb.utils import MarkdownRenderer
 from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
+
+
+class MarkdownRenderer(mistune.HTMLRenderer):
+    """Custom mistune renderder to handle syntax highlighting"""
+
+    def __init__(self, *args, **kwargs):
+        mistune.HTMLRenderer.__init__(self, *args, **kwargs, escape=False)
+
+    def block_code(self, code, lang=None):
+        if lang:
+            return "<pre class='code' data-lang='%s'><code class='language-%s'>" % (lang, lang) + mistune.escape(code) + "</code></pre>"
+        return "<pre><code>" + mistune.escape(code) + "</code></pre>"
+
+    def table(self, raw):
+        super_method = super(MarkdownRenderer, self).__dict__["_methods"]["table"]
+        processed = super_method(raw)
+        return processed.replace("<table>", "<table class='table'>")
+    
+    def image(self, src, alt="", title=None):
+        if title is not None:
+            return """<img class="img-responsive" src="%s" alt="%s" title="%s" />""" % (src, alt, title)
+        return """<img class="img-responsive" src="%s" alt="%s" />""" % (src, alt)
 
 
 class CheckableMarkdownRenderer(MarkdownRenderer):

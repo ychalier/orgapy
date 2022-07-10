@@ -1,20 +1,46 @@
 import re
 import datetime
-import pytz
-from dateutil.relativedelta import relativedelta
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.text import slugify
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db.models import F
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.core.exceptions import PermissionDenied
-from piweb.decorators import require_app_access
-from piweb.utils import pretty_paginator
+import urllib
 from xhtml2pdf import pisa
 from . import models
+
+
+def pretty_paginator(page, **attrs):
+    to_show = sorted({
+        1,
+        max(1, page.number - 1),
+        page.number,
+        min(page.number + 1, page.paginator.num_pages),
+        page.paginator.num_pages,
+    })
+    attr_string = urllib.parse.urlencode(attrs)
+    if attr_string != "":
+        attr_string = "&" + attr_string
+    paginator = {
+        "prev": None,
+        "next": None,
+        "pages": list(),
+        "active": page.number,
+        "attr_string": attr_string,
+    }
+    for item in to_show:
+        if len(paginator["pages"]) > 0 and paginator["pages"][-1] < item - 1:
+            paginator["pages"].append(None)
+        paginator["pages"].append(item)
+    if page.has_previous():
+        paginator["prev"] = page.previous_page_number()
+    if page.has_next():
+        paginator["next"] = page.next_page_number()
+    return paginator
 
 
 def get_note_from_nid(nid, required_user=None):
@@ -31,7 +57,7 @@ def about(request):
     return render(request, "orgapy/about.html", {})
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_view_note")
 def view_notes(request):
     """View containing only the pure notes"""
     page_size = 25
@@ -61,7 +87,7 @@ def view_notes(request):
     })
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_view_task")
 def view_tasks(request):
     """View containing only tasks"""
     notes = models.Note.objects\
@@ -85,7 +111,7 @@ def view_tasks(request):
     })
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_view_note")
 def view_note(request, nid):
     """View showing a note"""
     note = get_note_from_nid(nid, request.user)
@@ -94,7 +120,7 @@ def view_note(request, nid):
     })
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_change_note")
 def checkbox(request):
     if request.method == "POST":
         note_id = request.POST["note_id"]
@@ -130,7 +156,7 @@ def view_public_note(request, nid):
     })
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_add_note")
 def create_note(request):
     """Create a new note"""
     categories_remain = models.Category.objects.filter(user=request.user)
@@ -139,7 +165,7 @@ def create_note(request):
     })
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_change_note")
 def edit_note(request, nid):
     """View to edit a note"""
     note = get_note_from_nid(nid, request.user)
@@ -229,7 +255,7 @@ def save_note_task(request, note):
         note.task.delete()
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_change_note")
 def save_note(request):
     """Main procedure to edit a note"""
     if request.method == "POST":
@@ -242,7 +268,7 @@ def save_note(request):
     raise PermissionDenied
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_change_task")
 def task_done(request, note_id):
     """View to indicate that a task has been done"""
     task = get_note_from_nid(note_id, request.user).task
@@ -252,7 +278,7 @@ def task_done(request, note_id):
     return redirect("orgapy:tasks")
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_view_note")
 def export_note(request, nid):
     """View to export a note's content as PDF"""
     # TODO: move this to a Markdown tool package for Piweb
@@ -284,7 +310,7 @@ def export_note(request, nid):
     return response
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_delete_note")
 def delete_note(request, nid):
     """View to delete a note"""
     note = get_note_from_nid(nid, request.user)
@@ -295,7 +321,7 @@ def delete_note(request, nid):
     return redirect("orgapy:notes")
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_change_objective")
 def edit_objectives(request):
     """Edit daily and weekly objectives"""
     objectives = models.Objective.objects.filter(user=request.user).order_by("name")
@@ -311,7 +337,7 @@ def get_objective(request, oid):
     return None
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_change_objective")
 def check_objective(request, oid):
     """Set current objective to checked"""
     objective = get_objective(request, oid)
@@ -320,7 +346,7 @@ def check_objective(request, oid):
     return redirect("orgapy:tasks")
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_change_objective")
 def uncheck_objective(request, oid):
     """Set current objective to unchecked"""
     objective = get_objective(request, oid)
@@ -329,7 +355,7 @@ def uncheck_objective(request, oid):
     return redirect("orgapy:tasks")
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_change_objective")
 def save_objective(request, oid):
     """Change an objective's name"""
     if request.method == "POST":
@@ -341,7 +367,7 @@ def save_objective(request, oid):
     return redirect("orgapy:edit_objectives")
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_delete_objective")
 def delete_objective(request, oid):
     """Delete an objective"""
     objective = get_objective(request, oid)
@@ -350,7 +376,7 @@ def delete_objective(request, oid):
     return redirect("orgapy:edit_objectives")
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_add_objective")
 def create_objective(request):
     """Create a new objective"""
     if request.method == "POST":
@@ -362,7 +388,7 @@ def create_objective(request):
     return redirect("orgapy:edit_objectives")
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_view_quote")
 def view_quotes(request, author=None, work=None):
     page_size = 10
     query = request.GET.get("query", "")
@@ -411,7 +437,7 @@ def add_note(request, work_id, content):
     return quote
 
 
-@require_app_access("orgapy")
+@permission_required("orgapy.can_add_quote")
 def create_quote(request):
     if request.method == "POST":
         if "form_author" in request.POST:

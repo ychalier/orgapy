@@ -1,4 +1,4 @@
-{% extends 'piweb/single_column.html' %}
+{% extends 'orgapy/single_column.html' %}
 
 {% load static %}
 
@@ -21,8 +21,5 @@
     <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% endif %}">Notes</a>
     <a href="{% url 'orgapy:tasks' %}" class="btn {% if active != 'tasks' %}btn-link{% endif %}">Tasks</a>
     <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% endif %}">Quotes</a>
-</section>
-<section class="navbar-section">
-    {% include 'piweb/user_icon.html' %}
 </section>
 {% endblock navbar %}
