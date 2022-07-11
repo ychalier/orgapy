@@ -1,7 +1,53 @@
+* {
+    --color-secondary-3: hsl(217, 16%, 88%) !important; /* hsl(217, 16%, 93%); */
+    --color-accent-0: hsl(200, 63%, 59%);
+    --color-accent-1: hsl(200, 64%, 61%);
+    --color-accent-2: hsl(200, 63%, 62%);
+    --color-accent-3: hsl(200, 63%, 64%);
+    --color-accent-4: hsl(200, 63%, 66%);
+    --color-accent-5: hsl(200, 63%, 69%);
+    --color-accent-6: hsla(200, 63%, 69%, 0.2);
+    --color-accent-7: hsla(200, 63%, 69%, 0.95);
+    --color-accent-8: hsl(200, 64%, 74%);
+    --color-accent-9: hsl(200, 63%, 79%);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+    margin: 0 0 .6em 0;
+}
+
+h3 {
+    font-size: 1rem;
+}
+
+h4 {
+    font-size: .9rem;
+}
+
+p,
+table,
+ul,
+ol {
+    margin-bottom: 24px;
+    font-size: 15px;
+    line-height: 24px;
+}
+
+table, pre {
+    overflow-x: auto;
+}
+
 .navbar {
+    margin: .8rem 0;
+}
+
+.blackblock {
     background: #101010;
     padding: .4rem .8rem;
-    margin: .8rem 0;
 }
 
 .task--urgent {
@@ -30,13 +76,6 @@
     text-align: center;
 }
 
-
-/**
- * .objective-n {
- *     width: 32 * n + 2 * (n - 1);
- * }
- */
-
 .objective-names {
     position: absolute;
     z-index: 1;
@@ -51,4 +90,42 @@
 
 .objective-cell.bg-dark {
     background: black !important;
+}
+
+.markdown {
+    background: #101010;
+}
+
+.markdown img {
+    max-width: 100%;
+}
+
+.side-menu-filler {
+    height: 12.8em;
+}
+
+.side-menu {
+    position: sticky;
+    top: 1em;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+@media (max-width: 840px) {
+    .side-menu {
+        position: relative;
+        top: 0;
+        left: 0;
+        flex-direction: row;
+    }
+}
+
+.code code {
+    background: #2b2b2b;
+}
+
+#input-content {
+    min-height: 50vh;
+    font-family: "Fira Code", monospace;
 }

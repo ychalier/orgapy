@@ -5,97 +5,65 @@
 
 {% block main_content %}
 
-<h1>{% block section__title %}Edit note{% endblock section__title %}</h1>
-
 <form action="{% url 'orgapy:save_note' %}" method="post">
     {% csrf_token %}
 
     {% if note %}<input type="hidden" name="id" value="{{note.id}}">{% endif %}
 
-    <div class="columns">
+    <button class="btn btn-primary my-4" style="width: 100%">Save</button>
 
-        <div class="column col-8 col-sm-12">
+    <div class="form-group">
+        <label class="form-label" for="input-title">Title</label>
+        <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{{ note.title }}" />
+    </div>
 
-            <div class="form-group">
-                <label class="form-label" for="input-title">Title</label>
-                <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{{ note.title }}" />
-            </div>
+    <div class="form-group">
+        <label class="form-label" for="input-content">Content (Markdown)</label>
+        <textarea class="form-input" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
+    </div>
 
-            <div class="form-group">
-                <label class="form-label" for="input-content">Content</label>
-                <textarea class="form-input" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
-            </div>
+    <div class="form-group">
+        <label class="form-switch">
+            <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
+            <i class="form-icon"></i> Make this note public
+        </label>
+    </div>
 
-        </div>
-        <div class="column col-4 col-sm-12">
+    <div class="form-group">
+        <label class="form-label" for="input-categories">Current Categories</label>
+        <select class="form-select" id="input-categories" name="categories" size="5" multiple>
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if category.id in note_category_ids %}selected{% endif %}/>#{{ category.name}}</option>
+            {% endfor %}
+        </select>
+        <p class="form-input-hint">Hold CTRL for multiple selection.</p>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="input-extra-categories">Extra Categories</label>
+        <input class="form-input" id="input-extra-categories" type="text" name="extra" placeholder="Extra categories" />
+        <p class="form-input-hint">Separate them with a semicolon.</p>
+    </div>
 
+    <div class="form-group">
+        <label class="form-switch">
+            <input type="checkbox" name="task" {% if note.task %}checked{% endif %} />
+            <i class="form-icon"></i> Make this note a task
+        </label>
+    </div>
 
-            <div class="form-group">
-                <label class="form-switch">
-                    <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
-                    <i class="form-icon"></i> Make this note public
-                </label>
-            </div>
+    <div class="form-group">
+        <label class="form-label" for="input-due">Due Date</label>
+        <input class="form-input" type="date" name="due" id="input-due" value="{% if note.task.date_due %}{{note.task.date_due|date:"Y-m-d"}}{% endif %}" />
+    </div>
 
-            <div class="card my-2">
-                <div class="card-header">
-                    <div class="card-title h5">Categories</div>
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label class="form-label" for="input-categories">Current Categories</label>
-                        <select class="form-select" id="input-categories" name="categories" size="5" multiple>
-                            {% for category in categories_selection %}
-                            <option value="{{category.id}}" selected>#{{ category.name }}</option>
-                            {% endfor %}
-                            {% for category in categories_remain %}
-                            <option value="{{ category.id }}">#{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <p class="form-input-hint">Hold CTRL for multiple selection.</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="input-extra-categories">Extra Categories</label>
-                        <input class="form-input" id="input-extra-categories" type="text" name="extra" placeholder="Extra categories" />
-                        <p class="form-input-hint">Separate them with a semicolon.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card my-2">
-                <div class="card-header">
-                    <div class="card-title h5">Task Settings</div>
-                </div>
-                <div class="card-body">
-
-                    <div class="form-group">
-                        <label class="form-switch">
-                            <input type="checkbox" name="task" {% if note.task %}checked{% endif %} />
-                            <i class="form-icon"></i> Make this note a task
-                        </label>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="input-due">Due Date</label>
-                        <input class="form-input" type="date" name="due" id="input-due" value="{% if note.task.date_due %}{{note.task.date_due|date:"Y-m-d"}}{% endif %}" />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-switch">
-                            <input type="checkbox" name="done" {% if note.task.done %}checked{% endif %} />
-                            <i class="form-icon"></i> This task is done
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <p>
-                <button class="btn btn-primary">Save</button>
-            </p>
-
-        </div>
-
+    <div class="form-group">
+        <label class="form-switch">
+            <input type="checkbox" name="done" {% if note.task.done %}checked{% endif %} />
+            <i class="form-icon"></i> This task is done
+        </label>
     </div>
 
 </form>
+
+<br>
 {% endblock main_content %}

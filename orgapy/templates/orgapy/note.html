@@ -6,72 +6,41 @@
 
 {% block head %}
 {{ block.super }}
-<link rel="stylesheet"
-      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/styles/darcula.min.css">
-<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.4.1/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
 {% endblock head %}
+
+
+{% block right_column %}
+<div class="side-menu container mt-1">
+    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn btn-primary btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
+    {% if note.public %}
+    <a href="{% url 'orgapy:view_public_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Sharable link"><i class="icon icon-external"></i></a>
+    {% endif %}
+    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Download as PDF"><i class="icon icon-download"></i></a>
+    <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Delete"><i class="icon icon-delete"></i></a>
+</div>
+{% endblock right_column %}
 
 
 {% block main_content %}
 <h1>{{note.title}}</h1>
 
 <p>
-    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn btn-link" title="Edit"><i class="icon icon-edit"></i></a>
-    {% if note.public %}
-    <a href="{% url 'orgapy:view_public_note' nid=note.id %}" class="btn btn-link" title="Sharable link"><i class="icon icon-external"></i></a>
-    {% endif %}
-    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn btn-link" title="Download as PDF"><i class="icon icon-download"></i></a>
-    <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn btn-link" title="Delete"><i class="icon icon-delete"></i></a>
+    <span class="chip">{{ note.date_modification | date }}</span>
+    {% for category in note.categories.all %}
+    <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+    {% endfor %}
 </p>
 
 {% if note.content %}
-<div class="note_content">
-    {{ note.markdown | safe }}
-</div>
-{% else %}
-<p>
-    This note has no content.
-</p>
+<div class="markdown p-4">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 {% endif %}
 
-<footer>
-    <hr>
-
-    <p>
-        <i>Last update: {{note.date_modification}}</i>
-    </p>
-
-    {% if note.categories %}
-    <p>
-        {% for category in note.categories.all %}
-        <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
-        {% endfor %}
-    </p>
-    {% endif %}
-
-    {% if note.task %}
-    <p>
-    {% if note.task.done %}
-    This task was done on {{note.task.date_done|date:"l, F j, Y"}}.
-    {% else %}
-    {% if note.task.date_due %}
-    The task is due to {{note.task.date_due|date:"l, F j, Y"}}.
-    {% else %}
-    This task has no deadline.
-    {% endif %}
-    {% endif %}
-    </p>
-    {% endif %}
-</footer>
-
-<form action="{% url 'orgapy:checkbox' %}" method="post" id="checkbox_form">
-    {% csrf_token %}
-    <input type="hidden" name="note_id" value="{{ note.id }}" />
-    <input type="hidden" name="checkbox_id" />
-    <input type="hidden" name="checkbox_state" />
-</form>
-
-<script>hljs.initHighlightingOnLoad();</script>
-<script type="text/javascript" src="{% static 'orgapy/js/checkbox.js' %}"></script>
-
 {% endblock main_content %}
+
+{% block body_scripts %}
+{{ block.super }}
+<script src="{% static 'orgapy/js/markdown.js' %}"></script>
+{% endblock body_scripts %}

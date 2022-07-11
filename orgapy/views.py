@@ -73,8 +73,8 @@ def view_notes(request):
     else:
         objects = base_objects
     paginator = Paginator(objects.order_by(
+        "-date_modification",
         "-date_access",
-        "-date_modification"
     ), page_size)
     page = request.GET.get("page")
     notes = paginator.get_page(page)
@@ -169,12 +169,12 @@ def create_note(request):
 def edit_note(request, nid):
     """View to edit a note"""
     note = get_note_from_nid(nid, request.user)
-    selection = set(category.id for category in note.categories.all())
-    categories_remain = models.Category.objects.exclude(user=request.user, id__in=selection)
+    categories = models.Category.objects.all().order_by("name")
+    note_category_ids = [category.id for category in note.categories.all()]
     return render(request, "orgapy/edit_note.html", {
         "note": note,
-        "categories_selection": note.categories.all().order_by("name"),
-        "categories_remain": categories_remain.order_by("name"),
+        "categories": categories,
+        "note_category_ids": note_category_ids,
     })
 
 

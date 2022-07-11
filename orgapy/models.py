@@ -1,62 +1,8 @@
 import re
 import datetime
-import mistune
 from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
-
-
-class MarkdownRenderer(mistune.HTMLRenderer):
-    """Custom mistune renderder to handle syntax highlighting"""
-
-    def __init__(self, *args, **kwargs):
-        mistune.HTMLRenderer.__init__(self, *args, **kwargs, escape=False)
-
-    def block_code(self, code, lang=None):
-        if lang:
-            return "<pre class='code' data-lang='%s'><code class='language-%s'>" % (lang, lang) + mistune.escape(code) + "</code></pre>"
-        return "<pre><code>" + mistune.escape(code) + "</code></pre>"
-
-    def table(self, raw):
-        super_method = super(MarkdownRenderer, self).__dict__["_methods"]["table"]
-        processed = super_method(raw)
-        return processed.replace("<table>", "<table class='table'>")
-    
-    def image(self, src, alt="", title=None):
-        if title is not None:
-            return """<img class="img-responsive" src="%s" alt="%s" title="%s" />""" % (src, alt, title)
-        return """<img class="img-responsive" src="%s" alt="%s" />""" % (src, alt)
-
-
-class CheckableMarkdownRenderer(MarkdownRenderer):
-
-    def __init__(self, *args, **kwargs):
-        MarkdownRenderer.__init__(self, *args, **kwargs)
-        self.checkboxes_index = 0
-
-    def list_item(self, text, level):
-        """Render list item with task list support"""
-        old_list_item = mistune.HTMLRenderer.list_item
-        new_list_item = lambda _, text: "<li class=\"task-list-item\">%s</li>\n" % text
-        task_list_re = re.compile(r"\[[xX ]\] ")
-        match = task_list_re.match(text)
-        if match is None:
-            return old_list_item(self, text, level)
-        prefix = match.group()
-        checked = False
-        checkbox_id = self.checkboxes_index
-        self.checkboxes_index += 1
-        if prefix[1].lower() == "x":
-            checked = True
-        checked_txt = ""
-        if checked:
-            checked_txt = "checked"
-        return new_list_item(self, "<input type=\"checkbox\" class=\"task-list-item-checkbox\" id=\"cb%s\" %s/> <label for=\"cb%s\">%s</label>" % (
-            checkbox_id,
-            checked_txt,
-            checkbox_id,
-            text[match.end():]
-        ))
 
 
 class Category(models.Model):
@@ -89,21 +35,6 @@ class Note(models.Model):
 
     def _content_preprocess(self):
         return self.content
-
-    def markdown(self):
-        """Produce html code from Markdown content"""
-        self.date_access = datetime.datetime.now()
-        self.save()
-        factory = mistune.create_markdown(
-            renderer=CheckableMarkdownRenderer(),
-            escape=False,
-            plugins=[
-                "strikethrough",
-                "table",
-                "footnotes"
-            ]
-        )
-        return factory(self._content_preprocess())
 
 
 class Task(models.Model):

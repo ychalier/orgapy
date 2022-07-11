@@ -1,25 +1,53 @@
-{% extends 'orgapy/single_column.html' %}
-
 {% load static %}
 
-{% block title %}Orgapy{% endblock %}
+<!DOCTYPE html>
 
-{% block head %}
-{{ block.super }}
-<link rel="icon" href="{% static 'orgapy/logo/32.png' %}" sizes="32x32" />
-<link rel="icon" href="{% static 'orgapy/logo/48.png' %}" sizes="48x48" />
-<link rel="icon" href="{% static 'orgapy/logo/96.png' %}" sizes="96x96" />
-<link rel="icon" href="{% static 'orgapy/logo/144.png' %}" sizes="144x144" />
-<link rel="stylesheet" href="{% static 'orgapy/css/orgapy.css' %}" />
-{% endblock head %}
+<html lang="en">
 
-{% block body_class %}dark-blue noise{% endblock body_class %}
+<head>
+    <title>{% block title %}Orgapy{% endblock title %}</title>
+    {% block head %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/ychalier/pifekit/pifekit.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/ychalier/pifekit/pifekit.min.js"></script>
+    <link rel="icon" href="{% static 'orgapy/logo/32.png' %}" sizes="32x32" />
+    <link rel="icon" href="{% static 'orgapy/logo/48.png' %}" sizes="48x48" />
+    <link rel="icon" href="{% static 'orgapy/logo/96.png' %}" sizes="96x96" />
+    <link rel="icon" href="{% static 'orgapy/logo/144.png' %}" sizes="144x144" />
+    <link rel="stylesheet" href="{% static 'orgapy/css/orgapy.css' %}" />
+    {% endblock head %}
+</head>
 
-{% block navbar %}
-<section class="navbar-section">
-    <a href="{% url 'orgapy:about' %}" class="navbar-brand mr-2">Orgapy</a>
-    <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% endif %}">Notes</a>
-    <a href="{% url 'orgapy:tasks' %}" class="btn {% if active != 'tasks' %}btn-link{% endif %}">Tasks</a>
-    <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% endif %}">Quotes</a>
-</section>
-{% endblock navbar %}
+<body class="dark-blue noise">
+    {% block body %}
+    <div class="columns">
+        <div class="column col-4 col-xl-3 col-lg-2 hide-md"></div>
+        <div class="column col-4 col-xl-6 col-lg-8 col-md-12 col-sm-12 col-xs-12">
+        {% block center_column %}
+            <div class="container">
+                <header class="navbar navbar-float blackblock">
+                    {% block navbar %}
+                    <section class="navbar-section">
+                        <a href="{% url 'orgapy:about' %}" class="navbar-brand mr-2">Orgapy</a>
+                        <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% endif %}">Notes</a>
+                        <a href="{% url 'orgapy:tasks' %}" class="btn {% if active != 'tasks' %}btn-link{% endif %}">Tasks</a>
+                        <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% endif %}">Quotes</a>
+                    </section>
+                    {% endblock navbar %}
+                </header>
+                <div>
+                {% block main_content_prev %}{% endblock main_content_prev %}
+                {% block main_content %}{% endblock main_content %}
+                {% block main_content_next %}{% endblock main_content_next %}
+                </div>
+            </div>
+        {% endblock center_column %}
+        </div>
+        <div class="column col-4 col-xl-3 col-lg-2 col-md-12 col-sm-12 col-xs-12 p-relative"><div class="hide-md" style="height: 4.2rem"></div>{% block right_column %}{% endblock right_column %}</div>
+    </div>
+    {% endblock body %}
+    {% block body_scripts %}{% endblock body_scripts %}
+</body>
+
+</html>

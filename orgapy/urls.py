@@ -4,14 +4,15 @@ from . import views
 app_name = "orgapy"
 
 urlpatterns = [
-    path("", views.about, name="about"),
+    path("about", views.about, name="about"),
     path("create-note", views.create_note, name="create_note"),
     path("save-note", views.save_note, name="save_note"),
     path("note/<nid>", views.view_note, name="view_note"),
     path("note/<nid>/edit", views.edit_note, name="edit_note"),
     path("note/<nid>/export", views.export_note, name="export_note"),
     path("note/<nid>/delete", views.delete_note, name="delete_note"),
-    path("notes", views.view_notes, name="notes"),
+    path("", views.view_notes, name="notes"),
+    path("notes", views.view_notes, name="notes_2"),
     path("public/<nid>", views.view_public_note, name="view_public_note"),
     path("tasks", views.view_tasks, name="tasks"),
     path("task/<note_id>/done", views.task_done, name="task_done"),
