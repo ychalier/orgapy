@@ -57,7 +57,7 @@ def about(request):
     return render(request, "orgapy/about.html", {})
 
 
-@permission_required("orgapy.can_view_note")
+@permission_required("orgapy.view_note")
 def view_notes(request):
     """View containing only the pure notes"""
     page_size = 25
@@ -87,7 +87,7 @@ def view_notes(request):
     })
 
 
-@permission_required("orgapy.can_view_task")
+@permission_required("orgapy.view_task")
 def view_tasks(request):
     """View containing only tasks"""
     notes = models.Note.objects\
@@ -111,7 +111,7 @@ def view_tasks(request):
     })
 
 
-@permission_required("orgapy.can_view_note")
+@permission_required("orgapy.view_note")
 def view_note(request, nid):
     """View showing a note"""
     note = get_note_from_nid(nid, request.user)
@@ -120,7 +120,7 @@ def view_note(request, nid):
     })
 
 
-@permission_required("orgapy.can_change_note")
+@permission_required("orgapy.change_note")
 def checkbox(request):
     if request.method == "POST":
         note_id = request.POST["note_id"]
@@ -156,7 +156,7 @@ def view_public_note(request, nid):
     })
 
 
-@permission_required("orgapy.can_add_note")
+@permission_required("orgapy.add_note")
 def create_note(request):
     """Create a new note"""
     categories_remain = models.Category.objects.filter(user=request.user)
@@ -165,7 +165,7 @@ def create_note(request):
     })
 
 
-@permission_required("orgapy.can_change_note")
+@permission_required("orgapy.change_note")
 def edit_note(request, nid):
     """View to edit a note"""
     note = get_note_from_nid(nid, request.user)
@@ -255,7 +255,7 @@ def save_note_task(request, note):
         note.task.delete()
 
 
-@permission_required("orgapy.can_change_note")
+@permission_required("orgapy.change_note")
 def save_note(request):
     """Main procedure to edit a note"""
     if request.method == "POST":
@@ -268,7 +268,7 @@ def save_note(request):
     raise PermissionDenied
 
 
-@permission_required("orgapy.can_change_task")
+@permission_required("orgapy.change_task")
 def task_done(request, note_id):
     """View to indicate that a task has been done"""
     task = get_note_from_nid(note_id, request.user).task
@@ -278,7 +278,7 @@ def task_done(request, note_id):
     return redirect("orgapy:tasks")
 
 
-@permission_required("orgapy.can_view_note")
+@permission_required("orgapy.view_note")
 def export_note(request, nid):
     """View to export a note's content as PDF"""
     # TODO: move this to a Markdown tool package for Piweb
@@ -310,7 +310,7 @@ def export_note(request, nid):
     return response
 
 
-@permission_required("orgapy.can_delete_note")
+@permission_required("orgapy.delete_note")
 def delete_note(request, nid):
     """View to delete a note"""
     note = get_note_from_nid(nid, request.user)
@@ -321,7 +321,7 @@ def delete_note(request, nid):
     return redirect("orgapy:notes")
 
 
-@permission_required("orgapy.can_change_objective")
+@permission_required("orgapy.change_objective")
 def edit_objectives(request):
     """Edit daily and weekly objectives"""
     objectives = models.Objective.objects.filter(user=request.user).order_by("name")
@@ -337,7 +337,7 @@ def get_objective(request, oid):
     return None
 
 
-@permission_required("orgapy.can_change_objective")
+@permission_required("orgapy.change_objective")
 def check_objective(request, oid):
     """Set current objective to checked"""
     objective = get_objective(request, oid)
@@ -346,7 +346,7 @@ def check_objective(request, oid):
     return redirect("orgapy:tasks")
 
 
-@permission_required("orgapy.can_change_objective")
+@permission_required("orgapy.change_objective")
 def uncheck_objective(request, oid):
     """Set current objective to unchecked"""
     objective = get_objective(request, oid)
@@ -355,7 +355,7 @@ def uncheck_objective(request, oid):
     return redirect("orgapy:tasks")
 
 
-@permission_required("orgapy.can_change_objective")
+@permission_required("orgapy.change_objective")
 def save_objective(request, oid):
     """Change an objective's name"""
     if request.method == "POST":
@@ -367,7 +367,7 @@ def save_objective(request, oid):
     return redirect("orgapy:edit_objectives")
 
 
-@permission_required("orgapy.can_delete_objective")
+@permission_required("orgapy.delete_objective")
 def delete_objective(request, oid):
     """Delete an objective"""
     objective = get_objective(request, oid)
@@ -376,7 +376,7 @@ def delete_objective(request, oid):
     return redirect("orgapy:edit_objectives")
 
 
-@permission_required("orgapy.can_add_objective")
+@permission_required("orgapy.add_objective")
 def create_objective(request):
     """Create a new objective"""
     if request.method == "POST":
@@ -388,7 +388,7 @@ def create_objective(request):
     return redirect("orgapy:edit_objectives")
 
 
-@permission_required("orgapy.can_view_quote")
+@permission_required("orgapy.view_quote")
 def view_quotes(request, author=None, work=None):
     page_size = 10
     query = request.GET.get("query", "")
@@ -437,7 +437,7 @@ def add_note(request, work_id, content):
     return quote
 
 
-@permission_required("orgapy.can_add_quote")
+@permission_required("orgapy.add_quote")
 def create_quote(request):
     if request.method == "POST":
         if "form_author" in request.POST:
