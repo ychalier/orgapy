@@ -159,9 +159,10 @@ def view_public_note(request, nid):
 @permission_required("orgapy.add_note")
 def create_note(request):
     """Create a new note"""
-    categories_remain = models.Category.objects.filter(user=request.user)
+    categories = models.Category.objects.filter(user=request.user)
     return render(request, "orgapy/create_note.html", {
-        "categories_remain": categories_remain,
+        "categories": categories,
+        "note_category_ids": {},
     })
 
 
@@ -169,7 +170,7 @@ def create_note(request):
 def edit_note(request, nid):
     """View to edit a note"""
     note = get_note_from_nid(nid, request.user)
-    categories = models.Category.objects.all().order_by("name")
+    categories = models.Category.objects.filter(user=request.user).order_by("name")
     note_category_ids = [category.id for category in note.categories.all()]
     return render(request, "orgapy/edit_note.html", {
         "note": note,
