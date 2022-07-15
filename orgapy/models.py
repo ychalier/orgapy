@@ -3,6 +3,7 @@ import datetime
 from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
+from django.urls import reverse
 
 
 class Category(models.Model):
@@ -11,11 +12,13 @@ class Category(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
 
-    def __str__(self):
-        return "#" + self.name
-
     class Meta:
-        order_with_respect_to = "name"
+
+        ordering = ["name"]
+    
+    def __str__(self):
+        return f"{ self.user } - { self.name }"
+
 
 
 class Note(models.Model):
@@ -30,9 +33,16 @@ class Note(models.Model):
     public = models.BooleanField(default=False)
     categories = models.ManyToManyField("Category", blank=True)
 
-    def __str__(self):
-        return str(self.id) + ". " + self.title
+    class Meta:
 
+        ordering = ["-date_modification"]
+
+    def __str__(self):
+        return f"{ self.user} - { self.id }. { self.title }"
+
+    def get_absolute_url(self):
+        return reverse("orgapy:view_note", kwargs={"nid": self.id})
+    
     def _content_preprocess(self):
         return self.content
 
@@ -49,22 +59,27 @@ class Task(models.Model):
     date_done = models.DateTimeField(blank=True, null=True)
     done = models.BooleanField(default=False)
 
+    class Meta:
+
+        ordering = ["date_due"]
+
     def __str__(self):
         return "Task<%s>" % self.note
+    
+    def get_absolute_url(self):
+        return reverse("orgapy:view_note", kwargs={"nid": self.note.id})
 
     def urgent(self):
         """Return whether the task has not been done in time"""
         if self.date_due is None:
             return False
-        return (datetime.datetime.now().strftime("%Y-%m-%d")
-                > self.date_due.strftime("%Y-%m-%d"))
+        return (datetime.datetime.now().strftime("%Y-%m-%d") > self.date_due.strftime("%Y-%m-%d"))
 
     def today(self):
         """Rerturn wether the task should be done today"""
         if self.date_due is None:
             return False
-        return (datetime.datetime.now().strftime("%Y-%m-%d")
-                == self.date_due.strftime("%Y-%m-%d"))
+        return (datetime.datetime.now().strftime("%Y-%m-%d") == self.date_due.strftime("%Y-%m-%d"))
 
 
 def daterange(start_date, end_date, step):
@@ -86,6 +101,10 @@ class Objective(models.Model):
     history = models.TextField(default="", blank=True)
     date_start = models.DateField(auto_now_add=True, auto_now=False)
     step = models.PositiveIntegerField(default=1)
+
+    class Meta:
+
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
