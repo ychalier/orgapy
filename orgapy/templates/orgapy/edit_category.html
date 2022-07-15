@@ -1,0 +1,26 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %} #{{ category.name }} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+
+{% block main_content %}
+
+<h1>#{{ category.name }}</h1>
+
+<p>{{ category.note_set.count }} note{{ category.note_set.count | pluralize }} with this tag.</p>
+
+<p>
+    <form method="post" action="">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label" for="input-name">Name</label>
+            <input class="form-input" id="input-name" type="text" name="name" value="{{ category.name }}" placeholder="Category name" />
+        </div>
+        <button class="btn">Save</button>
+    </form>
+</p>
+
+{# <p><a class="btn" href="{% url 'orgapy:delete_category' cid=category.id %}">Delete</a></p> #}
+
+{% endblock main_content %}

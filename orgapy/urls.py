@@ -27,4 +27,7 @@ urlpatterns = [
     path("quotes/<author>/<work>", views.view_quotes, name="quotes_work"),
     path("create-quote", views.create_quote, name="create_quote"),
     path("checkbox", views.checkbox, name="checkbox"),
+    path("categories", views.view_categories, name="categories"),
+    path("categories/<cid>/edit", views.edit_category, name="edit_category"),
+    path("categories/<cid>/delete", views.delete_category, name="delete_category"),
 ]

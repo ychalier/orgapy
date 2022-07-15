@@ -1,5 +1,6 @@
 import re
 import datetime
+from unicodedata import category
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -464,3 +465,35 @@ def create_quote(request):
         "authors": authors,
         "works": works,
     })
+
+
+@permission_required("orgapy.view_category")
+def view_categories(request):
+    return render(request, "orgapy/categories.html", {
+        "categories": models.Category.objects.filter(user=request.user)
+    })
+
+@permission_required("orgapy.change_category")
+def edit_category(request, cid):
+    query = models.Category.objects.filter(id=cid)
+    if query.exists():
+        category = query.get()
+        if category.user == request.user:
+            if request.method == "POST":
+                new_name = request.POST.get("name")
+                if len(new_name) > 0:
+                    category.name = new_name.lower()
+                    category.save()
+            return render(request, "orgapy/edit_category.html", {
+                "category": category
+            })
+    return redirect("orgapy:categories")
+
+@permission_required("orgapy.delete_category")
+def delete_category(request, cid):
+    query = models.Category.objects.filter(id=cid)
+    if query.exists():
+        category = query.get()
+        if category.user == request.user:
+            category.delete()
+    return redirect("orgapy:categories")

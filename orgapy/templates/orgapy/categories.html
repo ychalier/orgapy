@@ -1,0 +1,29 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %} Categories &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+
+{% block main_content %}
+
+<h1>Categories</h1>
+
+<table class="table table-hover table-striped table-condensed">
+
+    <thead>
+    </thead>
+
+    <tbody>
+        {% for category in categories %}
+        <tr>
+            <td><a href="{% url 'orgapy:notes' %}?query=%23{{ category.name }}">{{ category.name | capfirst }} ({{ category.note_set.count }})</a></td>
+            <td><a class="btn btn-action" href="{% url 'orgapy:edit_category' cid=category.id %}"><i class="icon icon-edit"></i></a> <a class="btn btn-action" href="{% url 'orgapy:delete_category' cid=category.id %}"><i class="icon icon-delete"></i></a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+
+</table>
+
+
+
+{% endblock main_content %}
