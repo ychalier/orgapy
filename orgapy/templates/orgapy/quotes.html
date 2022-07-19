@@ -3,6 +3,13 @@
 
 {% block title %}{% block subtitle %}Quotes &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
+{% block head %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+{% endblock head %}
+
 {% block main_content %}
 
 <form action="{% url 'orgapy:quotes' %}" method="get">
@@ -40,13 +47,11 @@
 <div>
     {% for quote in quotes %}
     <div class="card my-2">
-        <div class="card-header">
+        <div class="card-header" style="background: #101010;">
             <a href="{% url 'orgapy:quotes_work' author=quote.work.author.slug work=quote.work.slug %}">{{ quote.work.title }}</a>,
             <a href="{% url 'orgapy:quotes_author' author=quote.work.author.slug %}">{{ quote.work.author.name }}</a>
         </div>
-        <div class="card-body">
-            {{ quote.markdown | safe }}
-        </div>
+        <div class="card-body markdown">{{ quote.content | safe }}</div>
     </div>
     {% endfor %}
 </div>
@@ -66,3 +71,8 @@
 {% include 'orgapy/pagination.html' with paginator=quote_paginator %}
 
 {% endblock main_content %}
+
+{% block body_scripts %}
+{{ block.super }}
+<script src="{% static 'orgapy/js/markdown.js' %}"></script>
+{% endblock body_scripts %}
