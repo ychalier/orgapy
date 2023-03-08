@@ -85,6 +85,7 @@ def view_notes(request):
         "category": category,
         "note_paginator": pretty_paginator(notes, query=query),
         "active": "notes",
+        "categories": models.Category.objects.all().order_by("name"),
     })
 
 
