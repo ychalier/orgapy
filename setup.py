@@ -30,6 +30,5 @@ setup(
     ],
     install_requires=[
         "Django",
-        "xhtml2pdf",
     ],
 )

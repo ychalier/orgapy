@@ -66,7 +66,6 @@ The app uses Django built-in authentication framework, meaning that users need a
 ## Built With
 
 -  [Django](https://www.djangoproject.com/) - Web application framework for Python.
--  [xhtml2pdf](https://github.com/xhtml2pdf/xhtml2pdf) - A library for converting HTML into PDFs using ReportLab.
 -  [showdownjs](https://github.com/showdownjs/showdown) - A JavaScript library for parsing Markdown
 
 ## Contributing

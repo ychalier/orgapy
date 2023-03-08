@@ -18,7 +18,7 @@
     {% if note.public %}
     <a href="{% url 'orgapy:view_public_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Sharable link"><i class="icon icon-external"></i></a>
     {% endif %}
-    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Download as PDF"><i class="icon icon-download"></i></a>
+    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Download as Markdown"><i class="icon icon-download"></i></a>
     <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Delete"><i class="icon icon-delete"></i></a>
 </div>
 {% endblock right_column %}

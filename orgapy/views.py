@@ -1,6 +1,5 @@
 import re
 import datetime
-from unicodedata import category
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -11,7 +10,6 @@ from django.db.models import F
 from django.http import HttpResponse, Http404
 from django.core.exceptions import PermissionDenied
 import urllib
-from xhtml2pdf import pisa
 from . import models
 
 
@@ -283,33 +281,11 @@ def task_done(request, note_id):
 
 @permission_required("orgapy.view_note")
 def export_note(request, nid):
-    """View to export a note's content as PDF"""
-    # TODO: move this to a Markdown tool package for Piweb
+    """View to export a note's content as Markdown"""
     note = get_note_from_nid(nid, request.user)
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = "inline; filename=\"{}.pdf\"".format(slugify(note.title))
-    html = """
-    <html>
-        <head>
-            <style>
-                @page {
-                    margin: 2.5cm;
-                }
-            </style>
-            <title>%s</title>
-        </head>
-        <body>
-            <h1>%s</h1>
-            %s
-        </body>
-    </html>
-    """ % (note.title, note.title, note.markdown())
-    pisa_status = pisa.CreatePDF(html, dest=response)
-    if pisa_status.err:
-        return HttpResponse(
-            "We had some errors with code {} <pre>{}</pre>"
-            .format(pisa_status.err, html)
-        )
+    markdown = note.title + "\n\n" + note.content
+    response = HttpResponse(content=markdown, content_type="text/markdown")
+    response["Content-Disposition"] = "inline; filename=\"{}.md\"".format(slugify(note.title))
     return response
 
 
