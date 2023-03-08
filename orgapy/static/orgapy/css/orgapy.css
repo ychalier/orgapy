@@ -145,3 +145,11 @@ pre {
     font-size: 80%;
     line-height: 80%;
 }
+
+.right-column-panel {
+    position: sticky;
+    top: 0;
+    left: 0;
+    max-width: 24em;
+    margin: 0;
+}

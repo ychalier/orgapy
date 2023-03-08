@@ -25,11 +25,11 @@
 
 {% block right_column %}
 
-<div class="p-sticky container" style="top: 0">
+<div class="container right-column-panel">
     <b><a class="link-hidden" href="{% url 'orgapy:categories' %}">Categories</a></b>
     <br>
     {% for category in categories %}
-    <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+    <a class="mr-2" href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
     {% endfor %}
 </div>
 
