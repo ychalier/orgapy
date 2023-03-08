@@ -46,6 +46,12 @@ class Note(models.Model):
     def _content_preprocess(self):
         return self.content
 
+    def get_modification_date_display(self):
+        now = datetime.datetime.now()
+        if self.date_creation.date() == now.date():
+            return self.date_modification.strftime("%H:%M")
+        return self.date_modification.strftime("%Y-%m-%d")
+
 
 class Task(models.Model):
     """Represent the task-related information associated to a note"""

@@ -1,5 +1,6 @@
 * {
-    --color-secondary-3: hsl(217, 16%, 88%) !important; /* hsl(217, 16%, 93%); */
+    --color-secondary-3: hsl(217, 16%, 88%) !important;
+    /* hsl(217, 16%, 93%); */
     --color-accent-0: hsl(200, 63%, 59%);
     --color-accent-1: hsl(200, 64%, 61%);
     --color-accent-2: hsl(200, 63%, 62%);
@@ -37,7 +38,8 @@ ol {
     line-height: 24px;
 }
 
-table, pre {
+table,
+pre {
     overflow-x: auto;
 }
 
@@ -128,4 +130,18 @@ table, pre {
 #input-content {
     min-height: 50vh;
     font-family: "Fira Code", monospace;
+}
+
+.show-on-parent-hover {
+    display: none;
+}
+
+*:hover>.show-on-parent-hover {
+    display: unset;
+}
+
+.hint {
+    opacity: 80%;
+    font-size: 80%;
+    line-height: 80%;
 }
