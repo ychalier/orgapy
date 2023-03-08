@@ -4,15 +4,18 @@
     <tr>
         <td>
             <a class="link-hidden mr-2" href="{% url 'orgapy:view_note' nid=note.id %}">{{note.title}}</a>
-            {% if note.public %}
-            <a class="mr-2" href="{% url 'orgapy:view_public_note' nid=note.id %}" title="View public note"><i class="icon icon-external"></i></a>&nbsp;&nbsp;
-            {% endif %}
             {% if note.categories %}
                 <span class="mr-2">
                 {% for category in note.categories.all %}
                 <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
                 {% endfor%}
                 </span>
+            {% endif %}
+            {% if note.public %}
+            <a class="mr-2" href="{% url 'orgapy:view_public_note' nid=note.id %}" title="View public note"><i class="icon icon-external"></i></a>
+            {% endif %}
+            {% if note.pinned %}
+            <span class="mr-2" title="Pinned">📌</span>
             {% endif %}
             <span class="show-on-parent-hover hint">last&nbsp;edit:&nbsp;{{ note.get_modification_date_display }}</span>
         </td>

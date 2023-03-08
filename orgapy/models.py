@@ -32,6 +32,7 @@ class Note(models.Model):
     content = models.TextField()
     public = models.BooleanField(default=False)
     categories = models.ManyToManyField("Category", blank=True)
+    pinned = models.BooleanField(default=False)
 
     class Meta:
 

@@ -72,6 +72,7 @@ def view_notes(request):
     else:
         objects = base_objects
     paginator = Paginator(objects.order_by(
+        "-pinned",
         "-date_modification",
         "-date_access",
     ), page_size)
@@ -190,18 +191,21 @@ def save_note_core(request):
     title = request.POST.get("title", "").strip()
     content = request.POST.get("content", "").strip()
     is_public = "public" in request.POST
+    is_pinned = "pinned" in request.POST
     if original_note is None:
         note = models.Note.objects.create(
             user=request.user,
             title=title,
             content=content,
             public=is_public,
+            pinned=is_pinned
         )
     else:
         note = original_note
         note.title = title
         note.content = content
         note.public = is_public
+        note.pinned = is_pinned
         note.categories.clear()
     note.date_modification = datetime.datetime.now()
     note.save()
