@@ -49,7 +49,7 @@ class Note(models.Model):
 
     def get_modification_date_display(self):
         now = datetime.datetime.now()
-        if self.date_creation.date() == now.date():
+        if self.date_modification.date() == now.date():
             return self.date_modification.strftime("%H:%M")
         return self.date_modification.strftime("%Y-%m-%d")
 
