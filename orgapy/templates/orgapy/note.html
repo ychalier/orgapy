@@ -28,9 +28,9 @@
 <h1>{{note.title}}</h1>
 
 <p>
-    <span class="chip">{{ note.date_modification | date }}</span>
+    <span class="chip mr-2">{{ note.date_modification | date }}</span>
     {% for category in note.categories.all %}
-    <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+    <a class="mr-2" href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
     {% endfor %}
 </p>
 
