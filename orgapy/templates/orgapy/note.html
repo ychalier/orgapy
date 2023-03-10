@@ -14,7 +14,8 @@
 
 {% block right_column %}
 <div class="side-menu container mt-1">
-    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn btn-primary btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
+    <a href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if note.pinned %}btn-primary{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="icon icon-bookmark"></i></a>
+    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
     {% if note.public %}
     <a href="{% url 'orgapy:view_public_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Sharable link"><i class="icon icon-external"></i></a>
     {% endif %}
