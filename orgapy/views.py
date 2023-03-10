@@ -7,7 +7,7 @@ from django.utils.text import slugify
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db.models import F
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.core.exceptions import PermissionDenied
 import urllib
 from . import models
@@ -478,3 +478,22 @@ def delete_category(request, cid):
         if category.user == request.user:
             category.delete()
     return redirect("orgapy:categories")
+
+
+@permission_required("orgapy.view_note")
+def api_suggestions(request):
+    query = request.GET.get("q", "").strip()
+    results = []
+    if len(query) >= 2:
+        results = models.Note.objects.filter(title__startswith=query)[:5]
+    data = {
+        "results": [
+            {
+                "id": result.id,
+                "title": result.title,
+                "url": result.get_absolute_url()
+            }
+            for result in results
+        ]
+    }
+    return JsonResponse(data)
