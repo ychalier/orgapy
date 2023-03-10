@@ -11,15 +11,18 @@
                 {% endfor%}
                 </span>
             {% endif %}
-            {% if note.public %}
-            <a class="mr-2" href="{% url 'orgapy:view_public_note' nid=note.id %}" title="View public note"><i class="icon icon-external"></i></a>
-            {% endif %}
             {% if note.pinned %}
-            <a class="mr-2" href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Toggle pinned note"><i class="icon icon-bookmark"></i></a>
+            <a class="mr-2" href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Unpin"><i class="icon icon-bookmark"></i></a>
+            {% endif %}
+            {% if note.public %}
+            <a class="mr-2" href="{% url 'orgapy:toggle_public' nid=note.id %}?next={{ request.path }}" title="Make private"><i class="icon icon-lock"></i></a>
             {% endif %}
             <span class="show-on-parent-hover">
                 {% if not note.pinned %}
-                <a class="btn-inline" href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Toggle pinned note"><i class="icon icon-bookmark"></i></a>
+                <a class="btn-inline" href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Pin"><i class="icon icon-bookmark"></i></a>
+                {% endif %}
+                {% if not note.public %}
+                <a class="btn-inline" href="{% url 'orgapy:toggle_public' nid=note.id %}?next={{ request.path }}" title="Make public"><i class="icon icon-unlock"></i></a>
                 {% endif %}
                 <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
                 <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn-inline" title="Download as Markdown"><i class="icon icon-download"></i></a>

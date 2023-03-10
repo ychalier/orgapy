@@ -114,13 +114,14 @@ def view_tasks(request):
     })
 
 
-@permission_required("orgapy.view_note")
 def view_note(request, nid):
     """View showing a note"""
-    note = get_note_from_nid(nid, request.user)
-    return render(request, "orgapy/note.html", {
-        "note": note,
-    })
+    note = get_note_from_nid(nid)
+    if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
+        return render(request, "orgapy/note.html", { "note": note })
+    elif note.public:
+        return render(request, "orgapy/note_public.html", { "note": note })
+    raise PermissionDenied
 
 
 @permission_required("orgapy.change_note")
@@ -505,6 +506,16 @@ def api_suggestions(request):
 def toggle_pin(request, nid):
     note = get_note_from_nid(nid, request.user)
     note.pinned = not note.pinned
+    note.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:notes")
+
+
+@permission_required("orgapy.change_note")
+def toggle_public(request, nid):
+    note = get_note_from_nid(nid, request.user)
+    note.public = not note.public
     note.save()
     if "next" in request.GET:
         return redirect(request.GET["next"])
