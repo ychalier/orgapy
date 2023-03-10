@@ -30,7 +30,7 @@
     <p class="empty-title h5">You have no note</p>
     <p class="empty-subtitle">Click the button to write a note.</p>
     <div class="empty-action">
-        <a class="btn btn-primary" href="{% url 'orgapy:create_note' %}">Create note</a>
+        <a class="btn btn-primary" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}">Create note</a>
     </div>
 </div>
 {% endif %}

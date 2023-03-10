@@ -14,7 +14,7 @@
 
     <div class="form-group">
         <label class="form-label" for="input-title">Title</label>
-        <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{{ note.title }}" />
+        <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
     </div>
 
     <div class="form-group">
