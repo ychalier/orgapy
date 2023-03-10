@@ -3,15 +3,13 @@
 
 {% block title %}{% block subtitle %}Edit note &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block main_content %}
-
+{% block before_columns %}
 <form action="{% url 'orgapy:save_note' %}" method="post">
-    {% csrf_token %}
+{% csrf_token %}
+{% if note %}<input type="hidden" name="id" value="{{note.id}}">{% endif %}
+{% endblock before_columns %}
 
-    {% if note %}<input type="hidden" name="id" value="{{note.id}}">{% endif %}
-
-    <button class="btn btn-primary my-4" style="width: 100%">Save</button>
-
+{% block main_content %}
     <div class="form-group">
         <label class="form-label" for="input-title">Title</label>
         <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
@@ -21,18 +19,24 @@
         <label class="form-label" for="input-content">Content (Markdown)</label>
         <textarea class="form-input" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
     </div>
+    <br>
+{% endblock main_content %}
+
+{% block right_column %}
+<div class="side-menu-xl container mt-1">
+    <button class="btn btn-primary my-4">Save</button>   
 
     <div class="form-group">
         <label class="form-switch">
             <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
-            <i class="form-icon"></i> Pin this note
+            <i class="form-icon"></i> Pinned
         </label>
     </div>
 
     <div class="form-group">
         <label class="form-switch">
             <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
-            <i class="form-icon"></i> Make this note public
+            <i class="form-icon"></i> Public
         </label>
     </div>
 
@@ -43,34 +47,44 @@
             <option value="{{ category.id }}" {% if category.id in note_category_ids %}selected{% endif %}/>#{{ category.name}}</option>
             {% endfor %}
         </select>
-        <p class="form-input-hint">Hold CTRL for multiple selection.</p>
+        <div class="form-input-hint">Hold CTRL for multiple selection.</div>
     </div>
+
     <div class="form-group">
         <label class="form-label" for="input-extra-categories">Extra Categories</label>
         <input class="form-input" id="input-extra-categories" type="text" name="extra" placeholder="Extra categories" />
-        <p class="form-input-hint">Separate them with a semicolon.</p>
+        <div class="form-input-hint">Separate them with a semicolon.</div>
     </div>
 
-    <div class="form-group">
-        <label class="form-switch">
-            <input type="checkbox" name="task" {% if note.task %}checked{% endif %} />
-            <i class="form-icon"></i> Make this note a task
-        </label>
-    </div>
+    <div class="show-on-switch-container">
 
-    <div class="form-group">
-        <label class="form-label" for="input-due">Due Date</label>
-        <input class="form-input" type="date" name="due" id="input-due" value="{% if note.task.date_due %}{{note.task.date_due|date:"Y-m-d"}}{% endif %}" />
-    </div>
+        <div class="form-group">
+            <label class="form-switch">
+                <input type="checkbox" name="task" {% if note.task %}checked{% endif %} class="show-on-switch-input" />
+                <i class="form-icon"></i> Make this note a task
+            </label>
+        </div>
 
-    <div class="form-group">
-        <label class="form-switch">
-            <input type="checkbox" name="done" {% if note.task.done %}checked{% endif %} />
-            <i class="form-icon"></i> This task is done
-        </label>
-    </div>
+        <div class="show-on-switch-target hidden">
 
+            <div class="form-group">
+                <label class="form-label" for="input-due">Due Date</label>
+                <input class="form-input" type="date" name="due" id="input-due" value="{% if note.task.date_due %}{{note.task.date_due|date:"Y-m-d"}}{% endif %}" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-switch">
+                    <input type="checkbox" name="done" {% if note.task.done %}checked{% endif %} />
+                    <i class="form-icon"></i> This task is done
+                </label>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock right_column %}
+
+{% block after_columns %}
 </form>
-
-<br>
-{% endblock main_content %}
+{% endblock after_columns %}

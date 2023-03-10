@@ -121,6 +121,9 @@ pre {
         left: 0;
         flex-direction: row;
     }
+    .side-menu-xl {
+        flex-direction: column;
+    }
 }
 
 .code code {

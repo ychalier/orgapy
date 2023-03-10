@@ -7,4 +7,18 @@ window.addEventListener("load", () => {
             }
         });
     });
+    document.querySelectorAll(".show-on-switch-container").forEach(container => {
+        const input = container.querySelector(".show-on-switch-input");
+        const target = container.querySelector(".show-on-switch-target");
+
+        function update_target_visibility() {
+            if (input.checked) {
+                target.classList.remove("hidden");
+            } else {
+                target.classList.add("hidden");
+            }
+        }
+        update_target_visibility();
+        input.addEventListener("input", update_target_visibility);
+    });
 });
