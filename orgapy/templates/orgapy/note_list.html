@@ -15,9 +15,17 @@
             <a class="mr-2" href="{% url 'orgapy:view_public_note' nid=note.id %}" title="View public note"><i class="icon icon-external"></i></a>
             {% endif %}
             {% if note.pinned %}
-            <span class="mr-2" title="Pinned">📌</span>
+            <a class="mr-2" href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Toggle pinned note"><i class="icon icon-bookmark"></i></a>
             {% endif %}
-            <span class="show-on-parent-hover hint">last&nbsp;edit:&nbsp;{{ note.get_modification_date_display }}</span>
+            <span class="show-on-parent-hover">
+                {% if not note.pinned %}
+                <a class="btn-inline" href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Toggle pinned note"><i class="icon icon-bookmark"></i></a>
+                {% endif %}
+                <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
+                <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn-inline" title="Download as Markdown"><i class="icon icon-download"></i></a>
+                <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn-inline link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
+                <span class="hint">last&nbsp;edit:&nbsp;{{ note.get_modification_date_display }}</span>
+            </span>
         </td>
     </tr>
     {% endfor %}

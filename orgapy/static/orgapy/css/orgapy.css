@@ -179,7 +179,7 @@ pre {
     margin-left: .2rem;
 }
 
-.autocomplete-items > a {
+.autocomplete-items>a {
     display: block;
     color: inherit;
     text-decoration: none;
@@ -201,4 +201,21 @@ pre {
 .autocomplete-item:hover {
     cursor: pointer;
     background: black;
+}
+
+.btn-inline {
+    margin: 0 .4rem 0 0;
+    opacity: .6;
+}
+
+.btn-inline:hover {
+    opacity: 1;
+}
+
+.btn-inline i {
+    vertical-align: 0;
+}
+
+tr a i.icon {
+    vertical-align: 0;
 }

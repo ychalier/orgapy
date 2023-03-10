@@ -499,3 +499,13 @@ def api_suggestions(request):
         ]
     }
     return JsonResponse(data)
+
+
+@permission_required("orgapy.change_note")
+def toggle_pin(request, nid):
+    note = get_note_from_nid(nid, request.user)
+    note.pinned = not note.pinned
+    note.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:notes")
