@@ -29,7 +29,7 @@ window.addEventListener("load", () => {
             check_if_searchbar_is_empty();
             close_all_lists()
             const query = bar.value;
-            if (query.length < 2) return;
+            if (query.length == 0) return;
             fetch(URL_API_SUGGESTIONS + `?q=${ query }`).then(res => res.json()).then(data => {
                 if (data.results.length > 0) {
                     const autocomplete_items = document.createElement("div");

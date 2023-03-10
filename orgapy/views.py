@@ -484,8 +484,8 @@ def delete_category(request, cid):
 def api_suggestions(request):
     query = request.GET.get("q", "").strip()
     results = []
-    if len(query) >= 2:
-        results = models.Note.objects.filter(title__startswith=query)[:5]
+    if len(query) >= 1:
+        results = models.Note.objects.filter(~Q(categories__name__exact="quote"), task=None, user=request.user, title__startswith=query)[:5]
     data = {
         "results": [
             {
