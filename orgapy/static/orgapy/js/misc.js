@@ -41,4 +41,39 @@ window.addEventListener("load", () => {
         });
         input_categories.value = input_categories_array.join(";");
     }
+
+    function row_is_lower(x, y) {
+        const float_x = parseFloat(x.textContent);
+        const float_y = parseFloat(y.textContent);
+        if (!isNaN(float_x) && !isNaN(float_y)) {
+            return float_x < float_y;
+        } else {
+            return x.textContent.toLowerCase() > y.textContent.toLowerCase();
+        }
+    }
+
+    document.querySelectorAll("table.sortable").forEach(table => {
+        table.querySelectorAll("thead th").forEach((th, thi) => {
+            th.addEventListener("click", () => {
+                let switching = true;
+                while (switching) {
+                    switching = false;
+                    rows = table.rows;
+                    for (i = 1; i < (rows.length - 1); i++) {
+                        shouldSwitch = false;
+                        x = rows[i].getElementsByTagName("TD")[thi];
+                        y = rows[i + 1].getElementsByTagName("TD")[thi];
+                        if (row_is_lower(x, y)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                    if (shouldSwitch) {
+                        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                        switching = true;
+                    }
+                }
+            });
+        });
+    });
 });
