@@ -33,6 +33,15 @@
             </td>           
         </tr>
         {% endfor %}
+        <tr>
+            <td>
+                <span class="label">{{ uncategorized }}</span>
+            </td>
+            <td>
+                <a class="link-hidden" href="{% url 'orgapy:notes' %}?uncategorized=1">Uncategorized</a>
+            </td>
+            <td></td>       
+        </tr>
     </tbody>
 
 </table>

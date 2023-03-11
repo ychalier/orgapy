@@ -4,12 +4,14 @@
     <tr>
         <td>
             <a class="link-hidden mr-2" href="{% url 'orgapy:view_note' nid=note.id %}">{{note.title}}</a>
-            {% if note.categories %}
+            {% if note.categories.all %}
                 <span class="mr-2">
                 {% for category in note.categories.all %}
                 <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
                 {% endfor%}
                 </span>
+            {% else %}
+                <span class="chip mr-2"><a class="link-hidden" href="{% url 'orgapy:notes' %}?uncategorized=1">uncategorized</a></span>
             {% endif %}
             {% if note.pinned %}
             <a class="mr-2" href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Unpin"><i class="icon icon-bookmark"></i></a>

@@ -62,9 +62,12 @@ def view_notes(request):
     page_size = 25
     query = request.GET.get("query", "")
     category = request.GET.get("category", "")
+    
     if len(query) > 0 and query[0] == "#":
         category = query[1:]
     base_objects = models.Note.objects.filter(~Q(categories__name__exact="quote"), task=None, user=request.user)
+    if "uncategorized" in request.GET:
+        base_objects = base_objects.filter(categories__isnull=True)
     if len(category) > 0:
         objects = base_objects.filter(categories__name__exact=category)
     elif len(query) > 0:
@@ -452,8 +455,10 @@ def create_quote(request):
 @permission_required("orgapy.view_category")
 def view_categories(request):
     return render(request, "orgapy/categories.html", {
-        "categories": models.Category.objects.filter(user=request.user)
+        "categories": models.Category.objects.filter(user=request.user),
+        "uncategorized": models.Note.objects.filter(task=None, user=request.user, categories__isnull=True).count()
     })
+
 
 @permission_required("orgapy.change_category")
 def edit_category(request, cid):
