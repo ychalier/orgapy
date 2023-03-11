@@ -4,7 +4,7 @@
     <tr>
         <td>
             <a class="link-hidden mr-2" href="{% url 'orgapy:view_note' nid=note.id %}">{{note.title}}</a>
-            {% if note.categories.length %}
+            {% if note.categories %}
                 <span class="mr-2">
                 {% for category in note.categories.all %}
                 <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>

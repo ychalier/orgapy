@@ -217,10 +217,8 @@ def save_note_core(request):
 
 def save_note_categories(request, note):
     """Edit note procedure: Category objects"""
-    for category_id in request.POST.getlist("categories"):
-        category = models.Category.objects.get(id=int(category_id), user=request.user)
-        note.categories.add(category)
-    for dirty_name in request.POST.get("extra", "").split(";"):
+    name_list = request.POST.get("categories", "").split(";") + request.POST.get("extra", "").split(";")
+    for dirty_name in name_list:
         name = dirty_name.lower().strip()
         if name == "":
             continue

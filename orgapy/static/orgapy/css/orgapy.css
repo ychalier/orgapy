@@ -222,3 +222,8 @@ pre {
 tr a i.icon {
     vertical-align: 0;
 }
+
+.category-chip {
+    cursor: pointer;
+    user-select: none;
+}
