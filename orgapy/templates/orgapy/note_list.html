@@ -29,7 +29,6 @@
                 <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
                 <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn-inline" title="Download as Markdown"><i class="icon icon-download"></i></a>
                 <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn-inline link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
-                <span class="hint">last&nbsp;edit:&nbsp;{{ note.get_modification_date_display }}</span>
             </span>
         </td>
     </tr>
