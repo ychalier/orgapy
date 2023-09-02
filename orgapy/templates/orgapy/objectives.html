@@ -1,0 +1,50 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Objectives &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block main_content %}
+
+{% if objectives %}
+
+<div class="p-relative">
+    <div class="objective-grid scroll-to" scroll-x="{{ objective_grid_offset }}">
+        {% for objective in objectives %}
+        <div class="d-flex">
+            {% for entry in objective.current_year %}
+                <div class="objective-cell {% if entry.checked %}bg-success{% elif entry.overflow %}{% elif not entry.current %}bg-dark{% endif %}" style="width: {{objective.div_width}}px">
+                {% if not entry.checked and entry.current %}
+                <a href="{% url 'orgapy:check_objective' oid=objective.id %}"><i class="icon icon-check"></i></a>
+                {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="objective-names">
+        {% for objective in objectives %}
+        <div class="objective-name">
+            <span class="text-secondary">{{ objective.name }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<p>
+    <a class="btn btn-link" href="{% url 'orgapy:edit_objectives' %}" title="Edit objectives">Edit objectives</a>
+</p>
+
+{% else %}
+<div class="empty my-2">
+    <div class="empty-icon">
+        <i class="icon icon-event-busy icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no objectives</p>
+    <p class="empty-subtitle">Click the button below to create an objective.</p>
+    <div class="empty-action">
+        <a class="btn btn-primary" href="{% url 'orgapy:edit_objectives' %}">Create objective</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock main_content %}

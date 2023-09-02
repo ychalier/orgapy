@@ -18,6 +18,7 @@ urlpatterns = [
     path("public/<nid>", views.view_public_note, name="view_public_note"),
     path("tasks", views.view_tasks, name="tasks"),
     path("task/<note_id>/done", views.task_done, name="task_done"),
+    path("objectives", views.view_objectives, name="objectives"),
     path("objective/<oid>/check", views.check_objective, name="check_objective"),
     path("objective/<oid>/uncheck", views.uncheck_objective, name="uncheck_objective"),
     path("objective/<oid>/save", views.save_objective, name="save_objective"),

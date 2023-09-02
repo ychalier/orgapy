@@ -117,6 +117,26 @@ def view_tasks(request):
     })
 
 
+@permission_required("orgapy.view_objective")
+def view_objectives(request):
+    """View objectives"""
+    objectives = models.Objective.objects\
+        .filter(user=request.user)\
+        .order_by("name")
+    all_done = True
+    for objective in objectives:  
+        if not objective.is_current_done():
+            all_done = False
+            break
+    objective_grid_offset = max(0, int(datetime.datetime.now().date().strftime("%V")) - 2) * 236 + 1
+    return render(request, "orgapy/objectives.html", {
+        "objectives": objectives,
+        "all_done": all_done,
+        "active": "objectives",
+        "objective_grid_offset": objective_grid_offset,
+    })
+
+
 def view_note(request, nid):
     """View showing a note"""
     note = get_note_from_nid(nid)
@@ -330,7 +350,7 @@ def check_objective(request, oid):
     objective = get_objective(request, oid)
     if objective is not None:
         objective.check_current()
-    return redirect("orgapy:tasks")
+    return redirect("orgapy:objectives")
 
 
 @permission_required("orgapy.change_objective")
@@ -339,7 +359,7 @@ def uncheck_objective(request, oid):
     objective = get_objective(request, oid)
     if objective is not None:
         objective.uncheck_current()
-    return redirect("orgapy:tasks")
+    return redirect("orgapy:objectives")
 
 
 @permission_required("orgapy.change_objective")
