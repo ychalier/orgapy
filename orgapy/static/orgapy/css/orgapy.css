@@ -50,10 +50,14 @@ h4 {
 }
 
 p,
-table,
 ul,
 ol {
     margin-bottom: 24px;
+    font-size: 15px;
+    line-height: 24px;
+}
+
+table {
     font-size: 15px;
     line-height: 24px;
 }
@@ -63,13 +67,20 @@ pre {
     overflow-x: auto;
 }
 
-.navbar {
-    margin: .8rem 0;
+.table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 24px;
 }
 
 .blackblock {
     background: #101010;
     padding: .4rem .8rem;
+}
+
+.navbar {
+    margin: .8rem 0;
+    padding: .4rem;
+    justify-content: flex-start;
 }
 
 .task--urgent {
@@ -148,6 +159,10 @@ pre {
 
 .code code {
     background: #2b2b2b;
+}
+
+code {
+    word-break: break-all;
 }
 
 #input-content {

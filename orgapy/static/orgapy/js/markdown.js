@@ -14,7 +14,12 @@ let converter = new showdown.Converter({
         {
             type: "output",
             regex: /<table>/g,
-            replace: `<table class="table">`,
+            replace: `<div class="table-wrapper"><table class="table">`,
+        },
+        {
+            type: "output",
+            regex: /<\/table>/g,
+            replace: `</table></div>`,
         },
         {
             type: "output",
