@@ -14,6 +14,13 @@ window.addEventListener("load", () => {
         "Finished",
     ];
 
+    const STATUS_ORDERING = {
+        "Ongoing": 0,
+        "Paused": 1,
+        "Idea": 2,
+        "Finished": 3,
+    }
+
     var projects = {};
 
     class Project {
@@ -587,10 +594,11 @@ window.addEventListener("load", () => {
     function inflate_projects() {
         let container = document.getElementById("projects");
         container.innerHTML = "";
-        for (let project_id in projects) {
-            let project_container = projects[project_id].create();
-            container.appendChild(project_container);
-        }
+        let project_indices = [...Object.keys(projects)];
+        project_indices.sort((a, b) => STATUS_ORDERING[projects[a].status] - STATUS_ORDERING[projects[b].status])
+        project_indices.forEach(project_id => {
+            container.appendChild(projects[project_id].create());
+        });
     }
 
     fetch(URL_API_PROJECT_LIST).then(res => res.json()).then(data => {
