@@ -1,12 +1,5 @@
 window.addEventListener("load", () => {
 
-    const STATUS_OPTIONS = [
-        "Idea",
-        "Ongoing",
-        "Paused",
-        "Finished",
-    ];
-
     function clear_context_menus() {
         let context_menus = document.querySelectorAll(".contextmenu");
         for (let i = 0; i < context_menus.length; i++) {
@@ -14,522 +7,545 @@ window.addEventListener("load", () => {
         }
     }
 
-    var checkbox_id = 0;
+    const STATUS_CHOICES = [
+        "Idea",
+        "Ongoing",
+        "Paused",
+        "Finished",
+    ];
+
     var projects = {};
 
-    function bind_input(container, element, project_id, create_input, set_value, save_onkeydown, resize_details) {
-        element.addEventListener("click", (event) => {
-            event.stopPropagation();
-            let input = create_input();
-            element.replaceWith(input);
-            if (resize_details) {
-                set_details_height(container);
-            }
-            input.focus();
-            function save() {
-                set_value(input);
-                let was_opened = container.classList.contains("open");
-                inflate_project(container, project_id, was_opened);
-            }
-            input.addEventListener("focusout", () => {save();});
-            if (save_onkeydown) {
-                input.addEventListener("keydown", (e) => {if (e.key == "Enter") {save();}});
-            }
-            return false;
-        });
-    }
+    class Project {
 
-    function inflate_project(container, project_id, force_open) {
-
-        if (!(project_id in projects)) return;
-        let project = projects[project_id];
-
-        container.innerHTML = "";
-
-        let title = document.createElement("div");
-        title.classList.add("project-title");
-        title.textContent = project.title;
-        container.appendChild(title);
-        bind_input(container, title, project_id, () => {
-            let input = document.createElement("input");
-            input.classList.add("project-title");
-            input.classList.add("input-seamless");
-            input.type = "text";
-            input.value = project.title;
-            input.placeholder = "Title";
-            return input;
-        }, (input) => {
-            projects[project_id].title = input.value;
-        }, true, false);
-
-        let corner_wrapper = document.createElement("div");
-        corner_wrapper.classList.add("project-corner");
-        container.appendChild(corner_wrapper);
-
-        let category = document.createElement("div");
-        category.classList.add("project-category");
-        category.textContent = project.category;
-        corner_wrapper.appendChild(category);
-        bind_input(container, category, project_id, () => {
-            let input = document.createElement("input");
-            input.classList.add("project-category");
-            input.classList.add("input-seamless");
-            input.type = "text";
-            input.value = project.category;
-            input.placeholder = "Category";
-            return input;
-        }, (input) => {
-            projects[project_id].category = input.value;
-        }, true, false);
-
-        let status = document.createElement("div");
-        status.classList.add("project-status");
-        status.textContent = project.status;
-        corner_wrapper.appendChild(status);
-        bind_input(container, status, project_id, () => {
-            let select = document.createElement("select");
-            select.classList.add("project-status");
-            select.classList.add("input-seamless");
-            STATUS_OPTIONS.forEach(option_value => {
-                let option = document.createElement("option");
-                option.value = option_value;
-                option.textContent = option_value;
-                if (option_value == projects[project_id].status) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
-            });
-            return select;
-        }, (select) => {
-            select.querySelectorAll("option").forEach(option => {
-                if (option.selected) {
-                    projects[project_id].status = option.value;
-                }
-            });
-        }, false, false);
-
-        let summary = document.createElement("div");
-        summary.classList.add("project-summary");
-        if (project.limit_date || project.description || project.checklist) {
-            container.appendChild(summary);
+        constructor(data) {
+            this.id = data.id;
+            this.title = data.title;
+            this.category = data.category;
+            this.status = data.status;
+            this.limit_date = data.limit_date;
+            this.progress = data.progress;
+            this.description = data.description;
+            this.checklist = data.checklist;
+            this.checklist_items = null;
+            this.split_checklist();
+            this.expanded = false;
+            this.container = null;
         }
 
-        if (project.limit_date) {
-            let now = new Date();
-            let date = new Date(project.limit_date);
-            now.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
-
-            let is_soon = now >= date && now <= date;
-            let is_overdue = now > date;
-
-            let date_display = null;
-            if (now.getFullYear() == date.getFullYear()) {
-                date_display = date.toLocaleString(date.locales, {day: "numeric", month: "short"})
+        get_limit_date_display() {
+            if (this.limit_date == null) return null;
+            let d1 = new Date();
+            let d2 = new Date(this.limit_date);
+            if (d1.getFullYear() == d2.getFullYear()) {
+                return d2.toLocaleString(d2.locales, {day: "numeric", month: "short"});
             } else {
-                date_display = date.toLocaleString(date.locales, {day: "numeric", month: "short", year: "numeric"})
+                return d2.toLocaleString(d2.locales, {day: "numeric", month: "short", year: "numeric"});
             }
+        }
 
-            let limit_date = document.createElement("div");
+        is_limit_date_soon() {
+            let d1 = new Date();
+            let d2 = new Date(this.limit_date);
+            return d1.getFullYear() == d2.getFullYear() && d1.getMonth() == d2.getMonth() && d1.getDate() == d2.getDate();
+        }
+
+        is_limit_date_overdue() {
+            let d1 = new Date();
+            let d2 = new Date(this.limit_date);
+            d1.setHours(d2.getHours(), d2.getMinutes(), d2.getSeconds(), d2.getMilliseconds());
+            return d1 > d2;
+        }
+
+        split_checklist() {
+            this.checklist_items = [];
+            if (this.checklist == null) return;
+            this.checklist.trim().split("\n").forEach(line => {
+                this.checklist_items.push({
+                    state: line.trim().charAt("1") == "x",
+                    text: line.trim().slice(3).trim(),
+                })
+            });
+        }
+
+        concat_checklist() {
+            let lines = [];
+            this.checklist_items.forEach(item => {
+                lines.push(`[${item.state ? "x" : " "}] ${item.text}`);
+            });
+            this.checklist = lines.join("\n");
+        }
+
+        set_checklist_item_state(i, state) {
+            this.checklist_items[i].state = state;
+            this.concat_checklist();
+        }
+
+        set_checklist_item_text(i, text) {
+            this.checklist_items[i].text = text;
+            this.concat_checklist();
+        }
+
+        inflate_title(header) {
+            var self = this;
+            let title = header.appendChild(document.createElement("div"));
+            title.classList.add("project-title");
+            title.textContent = this.title;
+            title.addEventListener("click", (event) => {
+                event.stopPropagation();
+                let input = document.createElement("input");
+                input.classList.add("project-title-input");
+                input.value = self.title;
+                input.placeholder = "Title";
+                input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
+                function callback() {
+                    self.title = input.value.trim();
+                    self.update();
+                }
+                input.addEventListener("focusout", callback);
+                input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
+                title.replaceWith(input);
+                input.focus();
+                return false;
+            });
+        }
+
+        inflate_category(corner) {
+            var self = this;
+            let category = corner.appendChild(document.createElement("div"));
+            category.classList.add("project-category");
+            category.textContent = this.category;
+            category.addEventListener("click", (event) => {
+                event.stopPropagation();
+                let input = document.createElement("input");
+                input.classList.add("project-category-input");
+                input.value = self.category;
+                input.placeholder = "Category";
+                input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
+                function callback() {
+                    self.category = input.value.trim();
+                    self.update();
+                }
+                input.addEventListener("focusout", callback);
+                input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
+                category.replaceWith(input);
+                input.focus();
+                return false;
+            });
+        }
+
+        inflate_status(corner) {
+            var self = this;
+            let status = corner.appendChild(document.createElement("div"));
+            status.classList.add("project-status");
+            status.textContent = this.status;
+            status.addEventListener("click", (event) => {
+                event.stopPropagation();
+                let select = document.createElement("select");
+                select.classList.add("project-status-select");
+                select.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    return false;
+                });
+                STATUS_CHOICES.forEach(option_value => {
+                    let option = document.createElement("option");
+                    option.classList.add("project-status-option");
+                    option.value = option_value;
+                    option.textContent = option_value;
+                    if (option_value == self.status) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+                function callback() {
+                    select.querySelectorAll("option").forEach(option => {
+                        if (option.selected) {
+                            self.status = option.value;
+                        }
+                    });
+                    self.update();
+                }
+                select.addEventListener("focusout", callback);
+                select.addEventListener("change", callback);
+                status.replaceWith(select);
+                select.focus();
+                return false;
+            });
+        }
+
+        inflate_limit_date(summary) {
+            var self = this;
+            let limit_date = summary.appendChild(document.createElement("div"));
             limit_date.classList.add("project-limitdate");
-            if (is_soon) {
+            if (this.is_limit_date_soon()) {
                 limit_date.classList.add("project-limitdate-soon");
-            } else if (is_overdue) {
+            } else if (this.is_limit_date_overdue()) {
                 limit_date.classList.add("project-limitdate-overdue");
             }
-            summary.appendChild(limit_date);
             let limit_date_icon = document.createElement("i");
             limit_date_icon.classList.add("icon");
             limit_date_icon.classList.add("icon-clock");
             limit_date.appendChild(limit_date_icon);
             let limit_date_text = document.createElement("span");
-            limit_date_text.textContent = date_display;
+            limit_date_text.textContent = this.get_limit_date_display();
             limit_date.appendChild(limit_date_text);
-
-            bind_input(container, limit_date, project_id, () => {
+            limit_date.addEventListener("click", (event) => {
+                event.stopPropagation();
                 let input = document.createElement("input");
-                input.classList.add("project-limitdate");
-                input.classList.add("input-seamless");
+                input.classList.add("project-limitdate-input");
                 input.type = "date";
-                input.value = project.limit_date;
-                return input;
-            }, (input) => {
-                projects[project_id].limit_date = input.value;
-            }, false, false);
-
+                input.value = self.limit_date;
+                function callback() {
+                    self.limit_date = input.value;
+                    self.update();
+                }
+                input.addEventListener("focusout", callback);
+                limit_date.replaceWith(input);
+                input.focus();
+                return false;
+            });
         }
 
-        if (project.checklist) {
+        inflate_checklist_summary(summary) {
             let total = 0;
             let completed = 0;
-            project.checklist.split("\n").forEach(line => {
-                if (line.trim() != "") {
-                    if (line.startsWith("[x]")) {
-                        completed++;
-                    }
-                    total++;
-                }
+            this.checklist_items.forEach(item => {
+                total++;
+                if (item.state) completed++;
             });
-            if (total > 0)
-            {
-                let checklist_summary = document.createElement("div");
-                checklist_summary.classList.add("project-checklist-summary");
-                if (completed == total) {
-                    checklist_summary.classList.add("project-checklist-summary-done");
+            let checklist_summary = summary.appendChild(document.createElement("div"));
+            checklist_summary.classList.add("project-checklist-summary");
+            if (completed == total) {
+                checklist_summary.classList.add("project-checklist-summary-done");
+            }
+            let checklist_summary_icon = document.createElement("i");
+            checklist_summary_icon.classList.add("icon");
+            checklist_summary_icon.classList.add("icon-task");
+            checklist_summary.appendChild(checklist_summary_icon);
+            let checklist_text = document.createElement("span");
+            checklist_text.textContent = `${completed}/${total}`;
+            checklist_summary.appendChild(checklist_text);
+        }
+
+        inflate_description_summary(summary) {
+            let icon = summary.appendChild(document.createElement("i"));
+            icon.classList.add("icon");
+            icon.classList.add("icon-note");
+        }
+
+        inflate_header() {
+            var self = this;
+            let header = document.createElement("div");
+            header.classList.add("project-header");
+            if (this.description != null || this.checklist != null) {
+                header.classList.add("c-hand");
+            }
+            this.container.appendChild(header);
+            this.inflate_title(header);
+            let corner = header.appendChild(document.createElement("div"));
+            corner.classList.add("project-corner");
+            this.inflate_category(corner);
+            this.inflate_status(corner);
+            if (this.limit_date == null && this.description == null && this.checklist == null) return;
+            let summary = header.appendChild(document.createElement("div"));
+            summary.classList.add("project-summary");
+            if (this.limit_date != null) this.inflate_limit_date(summary);
+            if (this.checklist != null) this.inflate_checklist_summary(summary);
+            if (this.description != null) this.inflate_description_summary(summary);
+            header.addEventListener("click", (event) => {
+                self.toggle_expanded();
+            });
+        }
+
+        inflate_description(body) {
+            var self = this;
+            let description = body.appendChild(document.createElement("div"));
+            description.classList.add("project-description");
+            description.innerHTML = converter.makeHtml(this.description);
+            description.addEventListener("click", (event) => {
+                event.stopPropagation();
+                let textarea = document.createElement("textarea");
+                textarea.classList.add("project-description-textarea");
+                textarea.value = self.description;
+                textarea.placeholder = "Description (Markdown)";
+                function callback() {
+                    self.description = textarea.value.trim();
+                    self.update();
                 }
-                summary.appendChild(checklist_summary);
-                let checklist_summary_icon = document.createElement("i");
-                checklist_summary_icon.classList.add("icon");
-                checklist_summary_icon.classList.add("icon-task");
-                checklist_summary.appendChild(checklist_summary_icon);
-                let checklist_text = document.createElement("span");
-                checklist_text.textContent = `${completed}/${total}`;
-                checklist_summary.appendChild(checklist_text);
+                textarea.addEventListener("focusout", callback);
+                description.replaceWith(textarea);
+                textarea.focus();
+                self.update_expansion();
+                return false;
+            });
+        }
+
+        inflate_checklist(body) {
+            var self = this;
+            let checklist = body.appendChild(document.createElement("div"));
+            checklist.classList.add("project-checklist");
+            this.checklist_items.forEach((item, i) => {
+                let checklist_item = checklist.appendChild(document.createElement("div"));
+                checklist_item.classList.add("project-checklist-item");
+                let checkbox = checklist_item.appendChild(document.createElement("input"));
+                checkbox.type = "checkbox";
+                let label = checklist_item.appendChild(document.createElement("label"));
+                label.textContent = converter.makeHtml(item.text).slice(3, -4); // slice to remove <p> tag
+                if (item.state) {
+                    checkbox.checked = true;
+                    checklist_item.classList.add("project-checklist-item-checked");
+                }
+                checkbox.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    self.set_checklist_item_state(i, !item.state);
+                    self.update();
+                    return false;
+                });
+                label.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    let input = document.createElement("input");
+                    input.classList.add("project-checklist-item-input");
+                    input.value = item.text;
+                    input.placeholder = "Checklist item";
+                    function callback() {
+                        let value = input.value.trim();
+                        if (value == "") {
+                            self.checklist_items.splice(i, 1);
+                            if (self.checklist_items.length == 0) {
+                                self.checklist = null;
+                                self.checklist_items = [];
+                            } else {
+                                self.concat_checklist();
+                            }
+                        } else {
+                            self.set_checklist_item_text(i, value);
+                        }
+                        self.update();
+                    }
+                    input.addEventListener("focusout", callback);
+                    input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
+                    label.replaceWith(input);
+                    input.focus();
+                    self.update_expansion();
+                    return false;
+                });
+            });
+            let button_add_item = checklist.appendChild(document.createElement("button"));
+            button_add_item.classList.add("project-button");
+            button_add_item.innerHTML = `<i class="icon icon-plus"></i> Add`;
+            button_add_item.addEventListener("click", (event) => {
+                event.stopPropagation();
+                self.checklist_items.push({state: false, text: "Item"});
+                self.concat_checklist();
+                self.update();
+                return false;
+            });
+        }
+
+        expand() {
+            let body = this.container.querySelector(".project-body");
+            if (!body) return;
+            let height = 0;
+            this.container.querySelectorAll(".project-body > *").forEach(child => {
+                let bounds = child.getBoundingClientRect();
+                height += bounds.height;
+                let style = child.currentStyle || window.getComputedStyle(child);
+                height += parseFloat(style.marginTop.replace("px", "")) + parseFloat(style.marginBottom.replace("px", ""));
+            });
+            body.style.height = height + "px";
+        }
+
+        contract() {
+            let body = this.container.querySelector(".project-body");
+            if (!body) return;
+            body.style.height = 0;
+        }
+
+        update_expansion() {
+            if (this.expanded) {
+                this.expand();
+            } else {
+                this.contract();
             }
         }
 
-        if (project.description) {
-            let description_icon = document.createElement("i");
-            description_icon.classList.add("icon");
-            description_icon.classList.add("icon-note");
-            summary.appendChild(description_icon);
+        toggle_expanded() {
+            this.expanded = !this.expanded;
+            this.update_expansion();
         }
 
-        if (project.progress) {
-            container.classList.add("has_progress");
-            let progress = document.createElement("progress");
+        inflate_body() {
+            let body = document.createElement("div");
+            body.classList.add("project-body");
+            this.container.appendChild(body);
+            if (this.description != null) this.inflate_description(body);
+            if (this.checklist != null) this.inflate_checklist(body);
+            this.update_expansion();
+        }
+
+        inflate_progress() {
+            var self = this;
+            this.container.classList.add("has_progress");
+            let wrapper = this.container.appendChild(document.createElement("div"));
+            wrapper.classList.add("project-progress-wrapper");
+            let progress = wrapper.appendChild(document.createElement("progress"));
             progress.classList.add("project-progress");
-            progress.min = project.progress.min;
-            progress.max = project.progress.max;
-            progress.value = project.progress.current;
-            progress.title = `${progress.value}/${progress.max}`
-            container.appendChild(progress);
+            progress.min = this.progress.min;
+            progress.max = this.progress.max;
+            progress.value = this.progress.current;
+            wrapper.title = `${progress.value}/${progress.max}`;
+            let button_sub = wrapper.appendChild(document.createElement("div"));
+            button_sub.classList.add("project-progress-sub");
+            button_sub.textContent = "−";
+            button_sub.addEventListener("click", (event) => {
+                event.stopPropagation();
+                self.progress.current = Math.max(self.progress.min, self.progress.current - 1);
+                self.update();
+                return false;
+            });
+            let button_add = wrapper.appendChild(document.createElement("div"));
+            button_add.classList.add("project-progress-add");
+            button_add.textContent = "+";
+            button_add.addEventListener("click", (event) => {
+                event.stopPropagation();
+                self.progress.current = Math.min(self.progress.max, self.progress.current + 1);
+                self.update();
+                return false;
+            });
         }
 
-        let details = document.createElement("div");
-        details.classList.add("project-details");
-        details.addEventListener("click", (e) => {
-            e.stopPropagation();
-            return false;
-        });
-        if (project.description || project.checklist) {
-            container.appendChild(details);
-            container.classList.add("openable");
+        inflate() {
+            this.container.innerHTML = "";
+            this.container.className = "project";
+            this.inflate_header();
+            if (this.description != null || this.checklist != null) {
+                this.inflate_body();
+            } else {
+                this.expanded = false;
+            }
+            if (this.progress != null) this.inflate_progress();
         }
 
-        if (project.description) {
-            let description = document.createElement("div");
-            description.classList.add("project-description");
-            description.innerHTML = converter.makeHtml(project.description);
-            details.appendChild(description);
-            bind_input(container, description, project_id, () => {
-                let textarea = document.createElement("textarea");
-                textarea.value = projects[project_id].description;
-                textarea.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    return false;
+        inflate_contextmenu(event) {
+            var self = this;
+            clear_context_menus();
+            let menu = document.createElement("div");
+            menu.classList.add("contextmenu");
+
+            function add_contextmenu_option(label, callback) {
+                let option = menu.appendChild(document.createElement("span"));
+                option.classList.add("contextmenu-entry");
+                option.textContent = label;
+                option.addEventListener("click", callback);
+            }
+
+            if (this.limit_date == null) {
+                add_contextmenu_option("Add limit date", () => {
+                    let now = new Date();
+                    self.limit_date = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
+                    self.update();
                 });
-                return textarea;
-            }, (textarea) => {
-                projects[project_id].description = textarea.value.trim();
-            }, false, true);
-        }
+            } else {
+                add_contextmenu_option("Remove limit date", () => {
+                    self.limit_date = null;
+                    self.update();
+                })
+            }
 
-        if (project.checklist) {
-            let checklist = document.createElement("div");
-            checklist.classList.add("project-checklist");
-            project.checklist.split("\n").forEach((line, line_index) => {
-                if (line.trim() != "") {
-                    let checklist_item = document.createElement("div");
-                    checklist_item.classList.add("project-checklist-item");
-                    let checkbox = document.createElement("input");
-                    checkbox.id = `checkbox-${checkbox_id}`;
-                    checkbox.type = "checkbox";
-                    checklist_item.appendChild(checkbox);
-                    let label = document.createElement("label");
-                    let line_html = converter.makeHtml(line.trim().slice(3).trim());
-                    label.textContent = line_html.slice(3, line_html.length - 4);
-                    if (line.trim().charAt(1) == "x") {
-                        checkbox.checked = true;
-                        checklist_item.classList.add("checked");
-                    }
-                    checklist_item.appendChild(label);
-                    checklist.appendChild(checklist_item);
-                    checkbox_id++;
+            if (this.description == null) {
+                add_contextmenu_option("Add description", () => {
+                    self.description = "Description";
+                    self.expanded = true;
+                    self.update();
+                });
+            } else {
+                add_contextmenu_option("Remove description", () => {
+                    self.description = null;
+                    self.update();
+                })
+            }
 
-                    checkbox.addEventListener("click", (e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        let split = projects[project_id].checklist.split("\n");
-                        if (line.trim().charAt(1) == "x") {
-                            split[line_index] = "[ ] " + line.trim().slice(3).trim();
-                        } else {
-                            split[line_index] = "[x] " + line.trim().slice(3).trim();
-                        }
-                        projects[project_id].checklist = split.join("\n");
-                        inflate_project(container, project_id, container.classList.contains("open"));
-                        return false;
-                    });
+            if (this.checklist == null) {
+                add_contextmenu_option("Add checklist", () => {
+                    self.checklist = "[ ] Item";
+                    self.split_checklist();
+                    self.expanded = true;
+                    self.update();
+                });
+            } else {
+                add_contextmenu_option("Remove checklist", () => {
+                    self.checklist = null;
+                    self.update();
+                })
+            }
 
-                    bind_input(container, label, project_id, () => {
-                        let input = document.createElement("input");
-                        input.type = "text";
-                        input.value = line.trim().slice(3).trim();
-                        input.classList.add("input-seamless");
-                        input.addEventListener("click", (e) => {
-                            e.stopPropagation();
-                            return false;
-                        });
-                        return input;
-                    }, (input) => {
-                        let new_value = input.value.trim();
-                        let split = projects[project_id].checklist.split("\n");
-                        if (new_value == "") {
-                            split.splice(line_index, 1);
-                        } else {
-                            if (line.trim().charAt(1) == "x") {
-                                split[line_index] = "[x] " + new_value;
-                            } else {
-                                split[line_index] = "[ ] " + new_value;
-                            }
-                        }
-                        projects[project_id].checklist = split.join("\n");
-                        if (projects[project_id].checklist.trim() == "") {
-                            projects[project_id].checklist = null;
-                        }
-                    }, true, true);
-                }
+            if (this.progress == null) {
+                add_contextmenu_option("Add progress", () => {
+                    self.progress = {min: 0, max: parseInt(prompt("Number of steps", 10)), current: 0};
+                    self.update();
+                });
+            } else {
+                add_contextmenu_option("Remove progress", () => {
+                    self.progress = null;
+                    self.update();
+                });
+            }
+
+            add_contextmenu_option("Delete project", () => {
+                self.delete();
             });
-            let add_checklist_item_button = document.createElement("button");
-            add_checklist_item_button.classList.add("btn");
-            add_checklist_item_button.classList.add("s-rounded");
-            add_checklist_item_button.classList.add("btn-sm");
-            add_checklist_item_button.innerHTML = `<i class="icon icon-plus"></i> Add`;
-            add_checklist_item_button.addEventListener("click", () => {
-                projects[project_id].checklist += "\n[ ] Checklist item";
-                inflate_project(container, project_id, true);
+
+            document.body.appendChild(menu);
+            let bounds = menu.getBoundingClientRect();
+            menu.style.left = event.clientX + "px";
+            menu.style.top = Math.min(event.clientY, window.innerHeight - bounds.height) + "px";
+        }
+
+        create() {
+            this.container = document.createElement("div");
+            this.container.setAttribute("project_id", this.id);
+            this.inflate();
+            var self = this;
+            this.container.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                self.inflate_contextmenu(event); // cursor position required to position the menu
             });
-            checklist.appendChild(add_checklist_item_button);
-            details.appendChild(checklist);
+            return this.container;
         }
 
-        if (force_open) {
-            container.classList.add("open");
-            set_details_height(container);
-        } else {
-            container.classList.remove("open");
-            set_details_height(container, 0);
+        delete() {
+            if (confirm("Are you sure?") == true) {
+                //TODO: send server request
+                delete projects[this.id];
+                this.container.parentElement.removeChild(this.container);
+            }
         }
 
-    }
-
-    function set_details_height(container, exact_value) {
-        let details = container.querySelector(".project-details");
-        if (!details) return;
-        if (exact_value != undefined) {
-            details.style.height = exact_value + "px";
-            return;
+        save() {
+            //TODO: send server request
         }
-        let total_height = 0;
-        container.querySelectorAll(".project-details > *").forEach(child => {
-            let bounds = child.getBoundingClientRect();
-            total_height += bounds.height;
-            let style = child.currentStyle || window.getComputedStyle(child);
-            total_height += parseFloat(style.marginTop.replace("px", "")) + parseFloat(style.marginBottom.replace("px", ""));
-        });
-        details.style.height = total_height + "px";
+
+        update() {
+            this.save();
+            this.inflate();
+        }
+
     }
 
     function inflate_projects() {
         let container = document.getElementById("projects");
         container.innerHTML = "";
         for (let project_id in projects) {
-            let project_container = document.createElement("div");
-            project_container.classList.add("project");
-            project_container.setAttribute("project_id", project_id);
-            inflate_project(project_container, project_id);
-
-            project_container.addEventListener("click", () => {
-                if (project_container.classList.contains("open")) {
-                    project_container.classList.remove("open");
-                    set_details_height(project_container, 0);
-                } else {
-                    project_container.classList.add("open");
-                    set_details_height(project_container);
-                }
-            });
-
-            project_container.addEventListener("contextmenu", (event) => {
-                event.preventDefault();
-                clear_context_menus();
-                let menu = document.createElement("div");
-                menu.classList.add("contextmenu");
-                let options = [];
-                function create_contextmenu_option(label, callback) {
-                    let option = document.createElement("span");
-                    option.classList.add("contextmenu-entry");
-                    option.textContent = label;
-                    option.addEventListener("click", callback);
-                    return option;
-                }
-
-                if (projects[project_id].limit_date == null) {
-                    options.push(create_contextmenu_option("Add limit date", (e) => {
-                        let now = new Date();
-                        projects[project_id].limit_date = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
-                        inflate_project(project_container, project_id, project_container.classList.contains("open"));
-                    }));
-                } else {
-                    options.push(create_contextmenu_option("Remove limit date", (e) => {
-                        projects[project_id].limit_date = null;
-                        inflate_project(project_container, project_id, project_container.classList.contains("open"));
-                    }));
-                }
-
-                if (projects[project_id].description == null) {
-                    options.push(create_contextmenu_option("Add description", (e) => {
-                        projects[project_id].description = "Description";
-                        inflate_project(project_container, project_id, true);
-                    }));
-                } else {
-                    options.push(create_contextmenu_option("Remove description", (e) => {
-                        projects[project_id].description = null;
-                        inflate_project(project_container, project_id, project_container.classList.contains("open"));
-                    }));
-                }
-
-                if (projects[project_id].checklist == null) {
-                    options.push(create_contextmenu_option("Add checklist", (e) => {
-                        projects[project_id].checklist = "[ ] Step 1";
-                        inflate_project(project_container, project_id, true);
-                    }));
-                } else {
-                    options.push(create_contextmenu_option("Remove checklist", (e) => {
-                        projects[project_id].checklist = null;
-                        inflate_project(project_container, project_id, project_container.classList.contains("open"));
-                    }));
-                }
-
-                if (projects[project_id].progress == null) {
-                    options.push(create_contextmenu_option("Add progress", (e) => {
-                        projects[project_id].progress = {
-                            min: 0,
-                            max: 10,
-                            current: 0
-                        }
-                        inflate_project(project_container, project_id, project_container.classList.contains("open"));
-                        project_container.classList.add("has_progress");
-                    }));
-                } else {
-                    options.push(create_contextmenu_option("Remove progress", (e) => {
-                        projects[project_id].progress = null;
-                        inflate_project(project_container, project_id, project_container.classList.contains("open"));
-                        project_container.classList.remove("has_progress");
-                    }));
-                    options.push(create_contextmenu_option("Edit progress", (e) => {
-                        let modal = document.createElement("div");
-                        modal.classList.add("modal");
-                        modal.classList.add("active");
-                        let modal_container = document.createElement("div");
-                        modal_container.classList.add("modal-container");
-                        modal.appendChild(modal_container);
-                        let modal_header = document.createElement("div");
-                        modal_header.classList.add("modal-header");
-                        modal_header.classList.add("h5");
-                        modal_header.innerHTML = `<div class="modal-title">Edit progress</div>`;
-                        modal_container.appendChild(modal_header);
-                        let modal_body = document.createElement("div");
-                        modal_body.classList.add("modal-body");
-                        modal_container.appendChild(modal_body);
-                        
-                        let form_group_current = document.createElement("div");
-                        form_group_current.classList.add("form-group");
-
-                        let label_current = document.createElement("label");
-                        label_current.textContent = "Current";
-                        label_current.classList.add("form-label");
-                        form_group_current.appendChild(label_current);
-                        
-                        let input_current = document.createElement("input");
-                        input_current.classList.add("form-input");
-                        input_current.type = "number";
-                        input_current.min = projects[project_id].progress.min;
-                        input_current.value = projects[project_id].progress.current;
-                        form_group_current.appendChild(input_current);
-
-                        modal_body.appendChild(form_group_current);
-
-                        let form_group_max = document.createElement("div");
-                        form_group_max.classList.add("form-group");
-
-                        let label_max = document.createElement("label");
-                        label_max.textContent = "Max";
-                        label_max.classList.add("form-label");
-                        form_group_max.appendChild(label_max);
-                        
-                        let input_max = document.createElement("input");
-                        input_max.classList.add("form-input");
-                        input_max.type = "number";
-                        input_max.min = projects[project_id].progress.min+1;
-                        input_max.value = projects[project_id].progress.max;
-                        form_group_max.appendChild(input_max);
-
-                        modal_body.appendChild(form_group_max);
-
-                        let modal_footer = document.createElement("div");
-                        modal_footer.classList.add("modal-footer");
-                        modal_container.appendChild(modal_footer);
-
-                        let modal_button_save = document.createElement("button");
-                        modal_button_save.classList.add("btn");
-                        modal_button_save.classList.add("btn-primary");
-                        modal_button_save.classList.add("mr-2");
-                        modal_button_save.textContent = "Save";
-                        modal_footer.appendChild(modal_button_save);
-
-                        modal_button_save.addEventListener("click", () => {
-                            projects[project_id].progress.current = parseInt(input_current.value);
-                            projects[project_id].progress.max = parseInt(input_max.value);
-                            inflate_project(project_container, project_id, project_container.classList.contains("open"));
-                            document.body.removeChild(modal);
-                        });
-
-                        let modal_button_cancel = document.createElement("button");
-                        modal_button_cancel.classList.add("btn");
-                        modal_button_cancel.textContent = "Cancel";
-                        modal_footer.appendChild(modal_button_cancel);
-
-                        modal_button_cancel.addEventListener("click", () => {
-                            document.body.removeChild(modal);
-                        });
-
-                        document.body.appendChild(modal);
-                        inflate_project(project_container, project_id, project_container.classList.contains("open"));
-                    }));
-                }
-
-                options.push(create_contextmenu_option("Delete project", (e) => {
-                    //TODO: ask for confirmation
-                    container.removeChild(project_container);
-                    delete projects[project_id];
-                }));
-
-                options.forEach(option => {
-                    menu.appendChild(option);
-                });
-                document.body.appendChild(menu);
-                let bounds = menu.getBoundingClientRect();
-                menu.style.left = event.clientX + "px";
-                menu.style.top = Math.min(event.clientY, window.innerHeight - bounds.height) + "px";
-            });
-
-            container.appendChild(project_container);
+            let project_container = projects[project_id].create();
+            container.appendChild(project_container)
         }
     }
-    
+
     fetch(URL_API_PROJECTS_LIST).then(res => res.json()).then(data => {
         projects = {};
-        data.projects.forEach(project => {
-            projects[project.id] = project;
+        data.projects.forEach(project_data => {
+            projects[project_data.id] = new Project(project_data);
         });
         inflate_projects();
     });

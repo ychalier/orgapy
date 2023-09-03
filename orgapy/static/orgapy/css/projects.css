@@ -14,21 +14,20 @@
 .project {
     position: relative;
     box-sizing: border-box;
-    background: #101010;
-    border-radius: .4rem;
-    padding: .4rem;
+    background: #22272b;
     margin-bottom: .4rem;
     width: 100%;
     border: 1px solid #080808;
+    border-radius: .4rem;
+    overflow: hidden;
 }
 
-.project.openable {
-    cursor: pointer;
+.project-header {
+    padding: .8rem;
 }
 
 .project-title {
     color: white;
-    line-height: 1;
     width: fit-content;
 }
 
@@ -40,14 +39,15 @@
     position: absolute;
     top: .2rem;
     right: .4rem;
-    opacity: .8;
 }
 
-.project-category {
+.project-category,
+.project-category-input {
     margin-right: .2rem;
 }
 
-.project-category::after {
+.project-category::after,
+.project-category-input::after {
     margin-left: .2rem;
     content: "·";
 }
@@ -105,20 +105,57 @@
     background: var(--color-success-5);
 }
 
-.project-progress {
+.project-progress-wrapper {
     width: 100%;
     position: absolute;
     left: 0;
     bottom: 0;
     background: #080808;
-    border-bottom-left-radius: .4rem;
-    border-bottom-right-radius: .4rem;
+    height: .8rem;
+    overflow: hidden;
+    width: 100%;
+}
+
+.project-progress {
+    width: inherit;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    background: none;
     border: none;
-    height: .2rem;
+    height: inherit;
+}
+
+.project-progress-sub,
+.project-progress-add {
+    position: absolute;
+    top: 0;
+    font-size: small;
+    background: #131329;
+    padding: 0 .4rem;
+    height: inherit;
+    user-select: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: .1s ease;
+    line-height: .8rem;
+}
+
+.project-progress-wrapper:hover .project-progress-sub,
+.project-progress-wrapper:hover .project-progress-add {
+    opacity: 1;
+}
+
+.project-progress-sub {
+    left: 0;
+}
+
+.project-progress-add {
+    right: 0;
 }
 
 .project.has_progress {
-    padding-bottom: .6rem;
+    padding-bottom: .8rem;
 }
 
 .project-progress::-moz-progress-bar,
@@ -126,17 +163,28 @@
     background: var(--color-secondary-3);
 }
 
-.project-details {
+.project-body {
+    padding: 0 .8rem;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     overflow-y: hidden;
     transition: .2s ease;
-    cursor: default !important;
+    background: #101010;
+    border-top-left-radius: .4rem;
+    border-top-right-radius: .4rem;
 }
 
-.project-details >* {
-    margin-top: .4rem;
+.project-body >*:first-child {
+    margin-top: .8rem;
+}
+
+.project-body >* {
+    margin-bottom: .4rem;
+}
+
+.project-body >*:last-child {
+    margin-bottom: .8rem;
 }
 
 .project-description p,
@@ -156,7 +204,7 @@
     margin-right: .2rem;
 }
 
-.project-checklist-item.checked label {
+.project-checklist-item-checked label {
     text-decoration: line-through;
     opacity: .5;
 }
@@ -166,36 +214,87 @@
     width: fit-content;
 }
 
-.input-seamless {
-    color: inherit;
-    background: #101010;
+.project-title-input,
+.project-category-input,
+.project-status-select,
+.project-limitdate-input,
+.project-checklist-item-input {
+    background: none;
     border: none;
-    padding: none;
-    line-height: inherit;
+    padding: 0;
+    font: inherit;
+    color: inherit;
 }
 
-.project textarea {
+.project-title-input {
+    color: white;
+}
+
+.project-category-input {
+    text-align: right;
+}
+
+.project-status-select {
+    background: #22272b;
+}
+
+.project-description-textarea {
     margin: .2rem;
     color: inherit;
-    background: #101010;
+    background: none;
     border: none;
     font-family: "Fira Code", monospace;
     min-height: 5em;
-    height: 100%;
     resize: none;
 }
+
+.project-title-input:focus,
+.project-category-input:focus,
+.project-status-select:focus,
+.project-limitdate-input:focus,
+.project-description-textarea:focus,
+.project-checklist-item-input:focus {
+    outline: none;
+}
+
+.project-button {
+    font-size: small;
+    background: none;
+    color: inherit;
+    border: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+    padding: .2rem;
+    border-radius: .2rem;
+    transition: .2s ease;
+    cursor: pointer;
+    margin-top: .2rem;
+}
+
+.project-button:hover {
+    background: #22272b;
+}
+
+.project-button i {
+    margin-right: .4rem;
+}
+
 
 .contextmenu {
     position: fixed;
     display: flex;
     flex-direction: column;
-    border: 1px solid white;
+    border: 1px solid black;
+    border-radius: .4rem;
+    overflow: hidden;
 }
 
 .contextmenu-entry {
-    background: black;
+    background: #0f1112;
     padding: .4rem;
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid black;
     cursor: pointer;
 }
 
