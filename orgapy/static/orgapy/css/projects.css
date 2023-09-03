@@ -337,3 +337,7 @@
 #btn-project-create i {
     margin-right: .4rem;
 }
+
+.filters {
+    user-select: none;
+}

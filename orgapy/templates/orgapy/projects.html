@@ -24,9 +24,20 @@
 
 <button id="btn-project-create"><i class="icon icon-plus"></i> Add project</button>
 
+<br>
+
 <div id="snackbar"></div>
 
 {% endblock main_content %}
+
+{% block right_column %}
+<div class="container">
+    <b>Status</b>
+    <div id="filter-status" class="filters mb-4"></div>
+    <b>Category</b>
+    <div id="filter-category" class="filters"></div>
+</div>
+{% endblock right_column %}
 
 {% block body_scripts %}
 {{ block.super }}

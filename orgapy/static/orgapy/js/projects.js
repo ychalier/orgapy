@@ -587,6 +587,7 @@ window.addEventListener("load", () => {
         update() {
             this.save();
             this.inflate();
+            inflate_filters();
         }
 
     }
@@ -601,12 +602,57 @@ window.addEventListener("load", () => {
         });
     }
 
+    function create_filter(container, attr, value) {
+        let wrapper = container.appendChild(document.createElement("div"));
+        let input = wrapper.appendChild(document.createElement("input"));
+        input.classList.add("mr-1");
+        input.type = "checkbox";
+        input.checked = true;
+        input.id = `filter-${attr}-${value}`;
+        input.classList.add("c-hand");
+        let label = wrapper.appendChild(document.createElement("label"));
+        label.setAttribute("for", `filter-${attr}-${value}`);
+        label.textContent = value.toLowerCase();
+        label.classList.add("c-hand");
+        input.addEventListener("input", () => {
+            document.querySelectorAll(".project").forEach(project => {
+                if (projects[project.getAttribute("project_id")][attr] == value) {
+                    if (input.checked) {
+                        project.style.display = "unset";
+                    } else {
+                        project.style.display = "none";
+                    }
+                }
+            });
+        });
+    }
+
+    function inflate_filters() {
+        let filter_status_container = document.getElementById("filter-status");
+        filter_status_container.innerHTML = "";
+        STATUS_CHOICES.forEach(status => {
+            create_filter(filter_status_container, "status", status);
+        });
+
+        let category_set = new Set();
+        for (let project_id in projects) {
+            category_set.add(projects[project_id].category);
+        }
+        let categories = Array.from(category_set).toSorted();
+        let category_status_container = document.getElementById("filter-category");
+        category_status_container.innerHTML = "";
+        categories.forEach(category => {
+            create_filter(category_status_container, "category", category);
+        })
+    }
+
     fetch(URL_API_PROJECT_LIST).then(res => res.json()).then(data => {
         projects = {};
         data.projects.forEach(project_data => {
-            projects[project_data.id] = new Project(project_data);
+            projects[project_data.id] = new Project(project_data);;
         });
         inflate_projects();
+        inflate_filters();
     });
 
     window.addEventListener("click", clear_context_menus);
