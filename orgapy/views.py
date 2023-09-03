@@ -1,3 +1,4 @@
+import json
 import re
 import datetime
 from django.contrib.auth.decorators import permission_required
@@ -8,7 +9,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db.models import F
 from django.http import HttpResponse, Http404, JsonResponse
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, BadRequest
 import urllib
 from . import models
 
@@ -553,7 +554,7 @@ def view_projects(request):
 
 
 @permission_required("orgapy.view_project")
-def api_projects_list(request):
+def api_project_list(request):
     projects = []
     for project in models.Project.objects.filter(user=request.user):
         progress = None
@@ -574,3 +575,55 @@ def api_projects_list(request):
             "checklist": project.checklist if project.checklist else None,
         })
     return JsonResponse({"projects": projects})
+
+
+@permission_required("orgapy.change_project")
+def api_project_edit(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    project_id = request.POST.get("project_id")
+    project_data = request.POST.get("project_data")
+    if project_id is None or project_data is None:
+        raise BadRequest("Missing fields")
+    try:
+        project_id = int(project_id)
+        project_data = json.loads(project_data)
+    except:
+        raise BadRequest("Invalid values")
+    if not models.Project.objects.filter(id=project_id, user=request.user).exists():
+        raise Http404("Project not found")
+    project = models.Project.objects.get(id=project_id, user=request.user)
+    project.title = project_data["title"]
+    project.category = project_data["category"]
+    if project_data["status"] == "Idea":
+        project.status = models.Project.IDEA
+    elif project_data["status"] == "Ongoing":
+        project.status = models.Project.ONGOING
+    elif project_data["status"] == "Paused":
+        project.status = models.Project.PAUSED
+    elif project_data["status"] == "Finished":
+        project.status = models.Project.FINISHED
+    else:
+        raise BadRequest("Invalid status")
+    if project_data["limit_date"] is not None:
+        project.limit_date = datetime.datetime.strptime(project_data["limit_date"], "%Y-%m-%d").date()
+    else:
+        project.limit_date = None
+    if project_data["progress"] is not None:
+        project.progress_min = project_data["progress"]["min"]
+        project.progress_max = project_data["progress"]["max"]
+        project.progress_current = project_data["progress"]["current"]
+    else:
+        project.progress_min = None
+        project.progress_max = None
+        project.progress_current = None
+    if project_data["description"] is not None:
+        project.description = project_data["description"]
+    else:
+        project.description = None
+    if project_data["checklist"] is not None:
+        project.checklist = project_data["checklist"]
+    else:
+        project.checklist = None
+    project.save()
+    return JsonResponse({"success": True})

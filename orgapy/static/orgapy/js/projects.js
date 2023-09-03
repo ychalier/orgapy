@@ -522,8 +522,38 @@ window.addEventListener("load", () => {
             }
         }
 
+        to_dict() {
+            return {
+                title: this.title,
+                category: this.category,
+                status: this.status,
+                limit_date: this.limit_date,
+                progress: this.progress,
+                description: this.description,
+                checklist: this.checklist,
+            }
+        }
+
         save() {
-            //TODO: send server request
+            let form_data = new FormData();
+            form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+            form_data.set("project_id", this.id);
+            form_data.set("project_data", JSON.stringify(this.to_dict()));
+            fetch(URL_API_PROJECT_EDIT, {
+                method: "post",
+                body: form_data
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("success!");
+                    } else {
+                        console.log("error...");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                });
         }
 
         update() {
@@ -542,7 +572,7 @@ window.addEventListener("load", () => {
         }
     }
 
-    fetch(URL_API_PROJECTS_LIST).then(res => res.json()).then(data => {
+    fetch(URL_API_PROJECT_LIST).then(res => res.json()).then(data => {
         projects = {};
         data.projects.forEach(project_data => {
             projects[project_data.id] = new Project(project_data);

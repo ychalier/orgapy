@@ -35,5 +35,6 @@ urlpatterns = [
     path("categories/<cid>/delete", views.delete_category, name="delete_category"),
     path("api/suggestions", views.api_suggestions, name="api_suggestions"),
     path("projects", views.view_projects, name="projects"),
-    path("api/projects/list", views.api_projects_list, name="api_projects_list"),
+    path("api/project/list", views.api_project_list, name="api_project_list"),
+    path("api/project/edit", views.api_project_edit, name="api_project_edit"),
 ]
