@@ -18,6 +18,21 @@ let converter = new showdown.Converter({
         },
         {
             type: "output",
+            regex: /&lt;/g,
+            replace: `<`,
+        },
+        {
+            type: "output",
+            regex: /&gt;/g,
+            replace: `>`,
+        },
+        {
+            type: "output",
+            regex: /&amp;/g,
+            replace: `&`,
+        },
+        {
+            type: "output",
             regex: /<\/table>/g,
             replace: `</table></div>`,
         },
