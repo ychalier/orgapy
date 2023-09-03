@@ -627,3 +627,21 @@ def api_project_edit(request):
         project.checklist = None
     project.save()
     return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.delete_project")
+def api_project_delete(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    project_id = request.POST.get("project_id")
+    if project_id is None:
+        raise BadRequest("Missing field")
+    try:
+        project_id = int(project_id)
+    except:
+        raise BadRequest("Invalid value")
+    if not models.Project.objects.filter(id=project_id, user=request.user).exists():
+        raise Http404("Project not found")
+    project = models.Project.objects.get(id=project_id, user=request.user)
+    project.delete()
+    return JsonResponse({"success": True})

@@ -515,10 +515,28 @@ window.addEventListener("load", () => {
         }
 
         delete() {
+            var self = this;
             if (confirm("Are you sure?") == true) {
-                //TODO: send server request
-                delete projects[this.id];
-                this.container.parentElement.removeChild(this.container);
+                let form_data = new FormData();
+                form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+                form_data.set("project_id", this.id);
+                fetch(URL_API_PROJECT_DELETE, {
+                    method: "post",
+                    body: form_data
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log("success!");
+                            delete projects[self.id];
+                            self.container.parentElement.removeChild(self.container);
+                        } else {
+                            console.log("error...");
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    });
             }
         }
 

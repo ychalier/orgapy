@@ -37,4 +37,5 @@ urlpatterns = [
     path("projects", views.view_projects, name="projects"),
     path("api/project/list", views.api_project_list, name="api_project_list"),
     path("api/project/edit", views.api_project_edit, name="api_project_edit"),
+    path("api/project/delete", views.api_project_delete, name="api_project_delete"),
 ]
