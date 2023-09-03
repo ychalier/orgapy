@@ -29,6 +29,7 @@
 .project-title {
     color: white;
     line-height: 1;
+    width: fit-content;
 }
 
 .project-corner {
@@ -109,7 +110,7 @@
     position: absolute;
     left: 0;
     bottom: 0;
-    background: none;
+    background: #080808;
     border-bottom-left-radius: .4rem;
     border-bottom-right-radius: .4rem;
     border: none;
@@ -129,9 +130,9 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    height: 0;
     overflow-y: hidden;
     transition: .2s ease;
+    cursor: default !important;
 }
 
 .project-details >* {
@@ -158,4 +159,50 @@
 .project-checklist-item.checked label {
     text-decoration: line-through;
     opacity: .5;
+}
+
+.project-description,
+.project-checklist {
+    width: fit-content;
+}
+
+.input-seamless {
+    color: inherit;
+    background: #101010;
+    border: none;
+    padding: none;
+    line-height: inherit;
+}
+
+.project textarea {
+    margin: .2rem;
+    color: inherit;
+    background: #101010;
+    border: none;
+    font-family: "Fira Code", monospace;
+    min-height: 5em;
+    height: 100%;
+    resize: none;
+}
+
+.contextmenu {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid white;
+}
+
+.contextmenu-entry {
+    background: black;
+    padding: .4rem;
+    border-bottom: 1px solid white;
+    cursor: pointer;
+}
+
+.contextmenu-entry:hover {
+    background: grey;
+}
+
+.contextmenu-entry:last-child {
+    border-bottom: none;
 }
