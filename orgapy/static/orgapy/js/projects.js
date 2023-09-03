@@ -200,6 +200,7 @@ window.addEventListener("load", () => {
                     self.update();
                 }
                 input.addEventListener("focusout", callback);
+                input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
                 limit_date.replaceWith(input);
                 input.focus();
                 return false;
@@ -417,7 +418,7 @@ window.addEventListener("load", () => {
 
         inflate() {
             this.container.innerHTML = "";
-            this.container.className = "project";
+            this.container.className = `project project-${this.status.toLowerCase()}`;
             this.inflate_header();
             if (this.description != null || this.checklist != null) {
                 this.inflate_body();

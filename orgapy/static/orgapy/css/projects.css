@@ -14,12 +14,21 @@
 .project {
     position: relative;
     box-sizing: border-box;
-    background: #22272b;
+    background: #0a1b29;
     margin-bottom: .4rem;
     width: 100%;
     border: 1px solid #080808;
     border-radius: .4rem;
     overflow: hidden;
+}
+
+.project-idea,
+.project-paused {
+    background: #262728;
+}
+
+.project-finished {
+    background: #22272b;
 }
 
 .project-header {
@@ -304,4 +313,27 @@
 
 .contextmenu-entry:last-child {
     border-bottom: none;
+}
+
+#btn-project-create {
+    border: 1px solid black;
+    background: #101010;
+    border-radius: .4rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    width: fit-content;
+    color: white;
+    padding: .8rem;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+#btn-project-create:hover {
+    background: #272729;
+}
+
+#btn-project-create i {
+    margin-right: .4rem;
 }
