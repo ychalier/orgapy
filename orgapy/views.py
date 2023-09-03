@@ -645,3 +645,25 @@ def api_project_delete(request):
     project = models.Project.objects.get(id=project_id, user=request.user)
     project.delete()
     return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.add_project")
+def api_project_create(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    project = models.Project.objects.create(
+        user=request.user,
+        title="New Project",
+        category="general",
+        status=models.Project.IDEA
+    )
+    return JsonResponse({"success": True, "project": {
+        "id": project.id,
+        "title": project.title,
+        "category": project.category,
+        "status": project.get_status_display(),
+        "limit_date": None,
+        "progress": None,
+        "description": None,
+        "checklist": None,
+    }})

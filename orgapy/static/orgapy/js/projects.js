@@ -527,15 +527,15 @@ window.addEventListener("load", () => {
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            console.log("success!");
+                            console.log("success!"); //TODO: show nicely
                             delete projects[self.id];
                             self.container.parentElement.removeChild(self.container);
                         } else {
-                            console.log("error...");
+                            console.log("error..."); //TODO: show nicely
                         }
                     })
                     .catch(err => {
-                        console.error(err);
+                        console.error(err); //TODO: show nicely
                     });
             }
         }
@@ -564,13 +564,13 @@ window.addEventListener("load", () => {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        console.log("success!");
+                        console.log("success!"); //TODO: show nicely
                     } else {
-                        console.log("error...");
+                        console.log("error..."); //TODO: show nicely
                     }
                 })
                 .catch(err => {
-                    console.error(err);
+                    console.error(err); //TODO: show nicely
                 });
         }
 
@@ -586,7 +586,7 @@ window.addEventListener("load", () => {
         container.innerHTML = "";
         for (let project_id in projects) {
             let project_container = projects[project_id].create();
-            container.appendChild(project_container)
+            container.appendChild(project_container);
         }
     }
 
@@ -599,5 +599,25 @@ window.addEventListener("load", () => {
     });
 
     window.addEventListener("click", clear_context_menus);
+
+    document.getElementById("btn-project-create").addEventListener("click", () => {
+        let form_data = new FormData();
+        form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+        fetch(URL_API_PROJECT_CREATE, {method: "post", body: form_data})
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    projects[data.project.id] = new Project(data.project);
+                    let container = document.getElementById("projects");
+                    let project_container = projects[data.project.id].create();
+                    container.appendChild(project_container);
+                } else {
+                    console.error("error..."); //TODO: show nicely
+                }
+            })
+            .catch(err => {
+                console.error(err); //TODO: show nicely
+            });
+    });
 
 });
