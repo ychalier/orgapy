@@ -543,3 +543,34 @@ def toggle_public(request, nid):
     if "next" in request.GET:
         return redirect(request.GET["next"])
     return redirect("orgapy:notes")
+
+
+@permission_required("orgapy.view_project")
+def view_projects(request):
+    return render(request, "orgapy/projects.html", {
+        "active": "projects"
+    })
+
+
+@permission_required("orgapy.view_project")
+def api_projects_list(request):
+    projects = []
+    for project in models.Project.objects.filter(user=request.user):
+        progress = None
+        if project.progress_min is not None and project.progress_max is not None and project.progress_current is not None:
+            progress = {
+                "min": project.progress_min,
+                "max": project.progress_max,
+                "current": project.progress_current,
+            }
+        projects.append({
+            "id": project.id,
+            "title": project.title,
+            "category": project.category,
+            "status": project.get_status_display(),
+            "limit_date": project.limit_date,
+            "progress": progress,
+            "description": project.description if project.description else None,
+            "checklist": project.checklist if project.checklist else None,
+        })
+    return JsonResponse({"projects": projects})

@@ -234,3 +234,37 @@ class Quote(Note):
 
     def _content_preprocess(self):
         return re.sub("^ ?- ", "&mdash; ", self.content.replace("\n", "\n\n"), flags=re.MULTILINE)
+
+
+class Project(models.Model):
+
+    IDEA = "ID"
+    ONGOING = "ON"
+    PAUSED = "PA"
+    FINISHED = "FI"
+    STATUS_CHOICES = (
+        (IDEA, "Idea"),
+        (ONGOING, "Ongoing"),
+        (PAUSED, "Paused"),
+        (FINISHED, "Finished"),
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
+    date_modification = models.DateTimeField(auto_now_add=False, auto_now=True)
+    title = models.CharField(max_length=255)
+    category = models.CharField(max_length=255, default="general")
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=IDEA)
+    limit_date = models.DateField(blank=True, null=True)
+    progress_min = models.PositiveIntegerField(blank=True, null=True)
+    progress_max = models.PositiveIntegerField(blank=True, null=True)
+    progress_current = models.PositiveIntegerField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    checklist = models.TextField(blank=True, null=True)
+
+    class Meta:
+
+        ordering = ["-date_creation"]
+
+    def __str__(self):
+        return f"{ self.user} - { self.id }. { self.title }"

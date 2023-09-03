@@ -34,4 +34,6 @@ urlpatterns = [
     path("categories/<cid>/edit", views.edit_category, name="edit_category"),
     path("categories/<cid>/delete", views.delete_category, name="delete_category"),
     path("api/suggestions", views.api_suggestions, name="api_suggestions"),
+    path("projects", views.view_projects, name="projects"),
+    path("api/projects/list", views.api_projects_list, name="api_projects_list"),
 ]

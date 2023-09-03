@@ -35,10 +35,10 @@
                 <header class="navbar navbar-float blackblock">
                     {% block navbar %}
                     <section class="navbar-section">
-                        <a href="{% url 'orgapy:about' %}" class="navbar-brand mr-2">Orgapy</a>
+                        <a href="{% url 'orgapy:projects' %}" class="btn {% if active != 'projects' %}btn-link{% else %}mr-2{% endif %}">Projects</a>
                         <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% else %}mr-2 ml-2{% endif %}">Notes</a>
                         <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% else %}mr-2 ml-2{% endif %}">Quotes</a>
-                        <a href="{% url 'orgapy:objectives' %}" class="btn {% if active != 'objectives' %}btn-link{% else %}mr-2 ml-2{% endif %}">Objectives</a>
+                        <a href="{% url 'orgapy:objectives' %}" class="btn {% if active != 'objectives' %}btn-link{% else %}ml-2{% endif %}">Objectives</a>
                     </section>
                     {% endblock navbar %}
                 </header>
