@@ -527,15 +527,16 @@ window.addEventListener("load", () => {
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            console.log("success!"); //TODO: show nicely
+                            toast("Deleted!", 600);
                             delete projects[self.id];
                             self.container.parentElement.removeChild(self.container);
                         } else {
-                            console.log("error..."); //TODO: show nicely
+                            toast("An error occured", 600);
                         }
                     })
                     .catch(err => {
-                        console.error(err); //TODO: show nicely
+                        console.error(err);
+                        toast("An error occured", 600);
                     });
             }
         }
@@ -564,13 +565,14 @@ window.addEventListener("load", () => {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        console.log("success!"); //TODO: show nicely
+                        toast("Saved!", 600);
                     } else {
-                        console.log("error..."); //TODO: show nicely
+                        toast("An error occured", 600);
                     }
                 })
                 .catch(err => {
-                    console.error(err); //TODO: show nicely
+                    console.error(err);
+                    toast("An error occured", 600);
                 });
         }
 
@@ -612,11 +614,12 @@ window.addEventListener("load", () => {
                     let project_container = projects[data.project.id].create();
                     container.appendChild(project_container);
                 } else {
-                    console.error("error..."); //TODO: show nicely
+                    toast("An error occured", 600);
                 }
             })
             .catch(err => {
-                console.error(err); //TODO: show nicely
+                console.error(err);
+                toast("An error occured", 600);
             });
     });
 
