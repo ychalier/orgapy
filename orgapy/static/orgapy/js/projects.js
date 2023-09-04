@@ -38,6 +38,7 @@ window.addEventListener("load", () => {
             this.split_checklist();
             this.expanded = false;
             this.container = null;
+            this.previous_project_data = this.to_json_string();
         }
 
         get_limit_date_display() {
@@ -561,11 +562,21 @@ window.addEventListener("load", () => {
             }
         }
 
+        to_json_string() {
+            return JSON.stringify(this.to_dict());
+        }
+
         save() {
+            let project_data = this.to_json_string();
+            if (project_data == this.previous_project_data) {
+                console.log("No change detected, skipping save");
+                return;
+            }
+            this.previous_project_data = project_data;
             let form_data = new FormData();
             form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
             form_data.set("project_id", this.id);
-            form_data.set("project_data", JSON.stringify(this.to_dict()));
+            form_data.set("project_data", project_data);
             fetch(URL_API_PROJECT_EDIT, {
                 method: "post",
                 body: form_data
