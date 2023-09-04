@@ -181,6 +181,7 @@
     background: #101010;
     border-top-left-radius: .4rem;
     border-top-right-radius: .4rem;
+    min-height: 0;
 }
 
 .project-body >*:first-child {
@@ -347,4 +348,8 @@
 .sticky-top {
     position: sticky;
     top: 0;
+}
+
+.glimpse {
+    min-height: .8rem;
 }

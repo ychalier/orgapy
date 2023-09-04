@@ -246,9 +246,6 @@ window.addEventListener("load", () => {
             var self = this;
             let header = document.createElement("div");
             header.classList.add("project-header");
-            if (this.description != null || this.checklist != null) {
-                header.classList.add("c-hand");
-            }
             this.container.appendChild(header);
             this.inflate_title(header);
             let corner = header.appendChild(document.createElement("div"));
@@ -258,11 +255,26 @@ window.addEventListener("load", () => {
             if (this.limit_date == null && this.description == null && this.checklist == null) return;
             let summary = header.appendChild(document.createElement("div"));
             summary.classList.add("project-summary");
+            if (this.description != null || this.checklist != null) {
+                summary.classList.add("c-hand");
+            }
             if (this.limit_date != null) this.inflate_limit_date(summary);
             if (this.checklist != null) this.inflate_checklist_summary(summary);
             if (this.description != null) this.inflate_description_summary(summary);
-            header.addEventListener("click", (event) => {
+            summary.addEventListener("click", (event) => {
                 self.toggle_expanded();
+            });
+            summary.addEventListener("mouseenter", (event) => {
+                let body = self.container.querySelector(".project-body");
+                if (body && !self.expanded) {
+                    body.classList.add("glimpse");
+                }
+            });
+            summary.addEventListener("mouseleave", (event) => {
+                let body = self.container.querySelector(".project-body");
+                if (body) {
+                    body.classList.remove("glimpse");
+                }
             });
         }
 
@@ -355,6 +367,7 @@ window.addEventListener("load", () => {
         expand() {
             let body = this.container.querySelector(".project-body");
             if (!body) return;
+            body.classList.remove("glimpse");
             let height = 0;
             this.container.querySelectorAll(".project-body > *").forEach(child => {
                 let bounds = child.getBoundingClientRect();
@@ -368,6 +381,7 @@ window.addEventListener("load", () => {
         contract() {
             let body = this.container.querySelector(".project-body");
             if (!body) return;
+            body.classList.remove("glimpse");
             body.style.height = 0;
         }
 
