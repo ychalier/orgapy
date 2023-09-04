@@ -623,8 +623,14 @@ window.addEventListener("load", () => {
         input.classList.add("c-hand");
         let label = wrapper.appendChild(document.createElement("label"));
         label.setAttribute("for", `filter-${attr}-${value}`);
-        label.textContent = value.toLowerCase();
         label.classList.add("c-hand");
+        let concerned = 0;
+        for (let project_id in projects) {
+            if (projects[project_id][attr] == value) {
+                concerned++;
+            }
+        }
+        label.textContent = `${value.toLowerCase()} (${concerned})`;
         input.addEventListener("input", () => {
             document.querySelectorAll(".project").forEach(project => {
                 if (projects[project.getAttribute("project_id")][attr] == value) {
@@ -636,6 +642,7 @@ window.addEventListener("load", () => {
                 }
             });
         });
+        document.getElementById("project-count").textContent = [...Object.keys(projects)].length;
     }
 
     function inflate_filters() {

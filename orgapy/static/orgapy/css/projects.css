@@ -343,3 +343,8 @@
 .filters {
     user-select: none;
 }
+
+.sticky-top {
+    position: sticky;
+    top: 0;
+}
