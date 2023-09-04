@@ -98,7 +98,7 @@ window.addEventListener("load", () => {
             var self = this;
             let title = header.appendChild(document.createElement("div"));
             title.classList.add("project-title");
-            title.textContent = this.title;
+            title.innerHTML = converter.makeHtml(this.title).slice(3, -4);
             title.addEventListener("click", (event) => {
                 event.stopPropagation();
                 let input = document.createElement("input");
