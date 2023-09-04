@@ -201,14 +201,21 @@
 .project-description ol {
     margin-bottom: 8px;
     font-size: 15px;
-    line-height: unset;
+    line-height: inherit;
 }
 
 .project-description>*:last-child {
     margin-bottom: 0;
 }
 
-.project-checklist-item input {
+.project-checklist-item {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.project-checklist-item input[type="checkbox"] {
     margin-right: .2rem;
 }
 
@@ -217,15 +224,11 @@
     opacity: .5;
 }
 
-.project-description,
-.project-checklist {
-    width: fit-content;
-}
-
 .project-title-input,
 .project-category-input,
 .project-status-select,
 .project-limitdate-input,
+.project-description-textarea,
 .project-checklist-item-input {
     background: none;
     border: none;
@@ -236,6 +239,7 @@
 
 .project-title-input {
     color: white;
+    width: 100%;
 }
 
 .project-category-input {
@@ -247,13 +251,12 @@
 }
 
 .project-description-textarea {
-    margin: .2rem;
-    color: inherit;
-    background: none;
-    border: none;
-    font-family: "Fira Code", monospace;
     min-height: 5em;
     resize: none;
+}
+
+.project-checklist-item-input {
+    width: 100%;
 }
 
 .project-title-input:focus,
