@@ -103,7 +103,7 @@ def view_tasks(request):
         .order_by("task__date_done", F("task__date_due").asc(nulls_last=True), "date_creation")
     return render(request, "orgapy/tasks.html", {
         "tasks": notes,
-        "active": "tasks",
+        "active": "notes",
     })
 
 
@@ -111,9 +111,9 @@ def view_note(request, nid):
     """View showing a note"""
     note = get_note_from_nid(nid)
     if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
-        return render(request, "orgapy/note.html", { "note": note })
+        return render(request, "orgapy/note.html", { "note": note, "active": "notes" })
     elif note.public:
-        return render(request, "orgapy/note_public.html", { "note": note })
+        return render(request, "orgapy/note_public.html", { "note": note, "active": "notes" })
     raise PermissionDenied
 
 
@@ -150,6 +150,7 @@ def view_public_note(request, nid):
         raise PermissionDenied
     return render(request, "orgapy/note_public.html", {
         "note": note,
+        "active": "notes"
     })
 
 
@@ -160,6 +161,7 @@ def create_note(request):
     return render(request, "orgapy/create_note.html", {
         "categories": categories,
         "note_category_ids": {},
+        "active": "notes",
     })
 
 
@@ -173,6 +175,7 @@ def edit_note(request, nid):
         "note": note,
         "categories": categories,
         "note_category_ids": note_category_ids,
+        "active": "notes",
     })
 
 
@@ -372,6 +375,7 @@ def create_quote(request):
     return render(request, "orgapy/create_quote.html", {
         "authors": authors,
         "works": works,
+        "active": "quotes",
     })
 
 
@@ -379,7 +383,8 @@ def create_quote(request):
 def view_categories(request):
     return render(request, "orgapy/categories.html", {
         "categories": models.Category.objects.filter(user=request.user),
-        "uncategorized": models.Note.objects.filter(task=None, user=request.user, categories__isnull=True).count()
+        "uncategorized": models.Note.objects.filter(task=None, user=request.user, categories__isnull=True).count(),
+        "active": "notes",
     })
 
 
