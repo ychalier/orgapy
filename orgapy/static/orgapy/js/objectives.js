@@ -25,6 +25,7 @@ window.addEventListener("load", () => {
         let objgraph_head = objgraph.appendChild(document.createElement("div"));
         objgraph_head.classList.add("objgraph-head");
         let year_start = get_year_start();
+        let today = new Date();
         for (let i = 0; i < 365; i++) { //TODO: leap year check
             let day = (new Date(year_start));
             day.setDate(year_start.getDate() + i);
@@ -35,6 +36,9 @@ window.addEventListener("load", () => {
             }
             if (day.getDay() == 1) {
                 objgraph_day.classList.add("objgraph-head-week");
+            }
+            if (day.getDate() == today.getDate() && day.getMonth() == today.getMonth()) {
+                objgraph_day.classList.add("objgraph-head-today");
             }
         }
     }
@@ -131,13 +135,13 @@ window.addEventListener("load", () => {
                         dom_goal.classList.add("bg-success");
                     } else if (past) {
                         dom_goal.classList.add("bg-error");
-                    } else if (current) {
+                    } else if (current && i == accomplished) {
                         let dom_btncheck = dom_goal.appendChild(document.createElement("button"));
                         dom_btncheck.innerHTML = `<i class="icon icon-check"></i>`;
                         dom_btncheck.addEventListener("click", () => {
                             on_objective_check(objective_id);
                         });
-                    } else if (future) {
+                    } else if (future || ((current && i > accomplished))) {
                         dom_goal.classList.add("bg-dark");
                     }
                 }

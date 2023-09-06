@@ -32,6 +32,23 @@
     border-left: 2px solid white;
 }
 
+.objgraph-head-today {
+    background: var(--color-accent-5);
+    border-right: 1px solid #ccc;
+    border-radius: .2rem;
+}
+
+.objgraph-head-today::after {
+    content: "⇣";
+    color: black;
+    text-align: center;
+    padding-left: 10px;
+}
+
+.objgraph-head-today + .objgraph-head-day {
+    border-left: none;
+}
+
 .objgraph-objective {
     display: flex;
     flex-direction: row;
