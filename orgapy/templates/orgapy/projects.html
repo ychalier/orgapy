@@ -32,11 +32,17 @@
 
 {% block right_column %}
 <div class="container sticky-top">
-    <div class="mb-4"><span id="project-count">–</span> projects</div>
-    <b>Status</b>
-    <div id="filter-status" class="filters mb-4"></div>
-    <b>Category</b>
-    <div id="filter-category" class="filters"></div>
+    <div class="mb-2"><span id="project-count">–</span> projects</div>
+    <div class="filters-wrapper">
+        <div>
+            <b>Status</b>
+            <div id="filter-status" class="filters"></div>
+        </div>
+        <div>
+            <b>Category</b>
+            <div id="filter-category" class="filters"></div>
+        </div>
+    </div>
 </div>
 {% endblock right_column %}
 

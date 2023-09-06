@@ -353,3 +353,34 @@
 .glimpse {
     min-height: .8rem;
 }
+
+.filters-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.filters-wrapper >* {
+    margin-bottom: .4rem;
+}
+
+.filters-wrapper >*:last-child {
+    margin-bottom: 0;
+}
+
+@media(max-width: 840px) {
+    
+    .filters-wrapper {
+        flex-direction: row;
+    }
+
+    .filters-wrapper >* {
+        margin-right: .8rem;
+        margin-bottom: 0;
+    }
+
+    .filters-wrapper >*:last-child {
+        margin-right: 0;
+    }
+
+}
