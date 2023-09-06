@@ -278,6 +278,28 @@ window.addEventListener("load", () => {
             });
         }
 
+        inflate_description_textarea(element) {
+            var self = this;
+            let textarea = document.createElement("textarea");
+            textarea.classList.add("project-description-textarea");
+            textarea.value = "";
+            if (this.description != null) {
+                textarea.value = this.description;
+            }
+            textarea.placeholder = "Description (Markdown)";
+            function callback() {
+                self.description = textarea.value.trim();
+                if (self.description == "") {
+                    self.description = null;
+                }
+                self.update();
+            }
+            textarea.addEventListener("focusout", callback);
+            element.replaceWith(textarea);
+            textarea.focus();
+            this.update_expansion();
+        }
+
         inflate_description(body) {
             var self = this;
             let description = body.appendChild(document.createElement("div"));
@@ -285,26 +307,42 @@ window.addEventListener("load", () => {
             description.innerHTML = converter.makeHtml(this.description);
             description.addEventListener("click", (event) => {
                 event.stopPropagation();
-                let textarea = document.createElement("textarea");
-                textarea.classList.add("project-description-textarea");
-                textarea.value = self.description;
-                textarea.placeholder = "Description (Markdown)";
-                function callback() {
-                    self.description = textarea.value.trim();
-                    self.update();
-                }
-                textarea.addEventListener("focusout", callback);
-                description.replaceWith(textarea);
-                textarea.focus();
-                self.update_expansion();
+                self.inflate_description_textarea(description);
                 return false;
             });
         }
 
-        inflate_checklist(body) {
+        inflate_checklist_item_label_input(element, initial_value, entry_index) {
             var self = this;
-            let checklist = body.appendChild(document.createElement("div"));
-            checklist.classList.add("project-checklist");
+            let input = document.createElement("input");
+            input.classList.add("project-checklist-item-input");
+            input.value = initial_value;
+            input.placeholder = "Checklist item";
+            function callback() {
+                let value = input.value.trim();
+                if (value == "") {
+                    self.checklist_items.splice(entry_index, 1);
+                    if (self.checklist_items.length == 0) {
+                        self.checklist = null;
+                        self.checklist_items = [];
+                    } else {
+                        self.concat_checklist();
+                    }
+                } else {
+                    self.set_checklist_item_text(entry_index, value);
+                }
+                self.update();
+            }
+            input.addEventListener("focusout", callback);
+            input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
+            element.replaceWith(input);
+            input.focus();
+            this.update_expansion();
+        }
+
+        inflate_checklist_items(checklist) {
+            var self = this;
+            checklist.innerHTML = "";
             this.checklist_items.forEach((item, i) => {
                 let checklist_item = checklist.appendChild(document.createElement("div"));
                 checklist_item.classList.add("project-checklist-item");
@@ -325,41 +363,27 @@ window.addEventListener("load", () => {
                 });
                 label.addEventListener("click", (event) => {
                     event.stopPropagation();
-                    let input = document.createElement("input");
-                    input.classList.add("project-checklist-item-input");
-                    input.value = item.text;
-                    input.placeholder = "Checklist item";
-                    function callback() {
-                        let value = input.value.trim();
-                        if (value == "") {
-                            self.checklist_items.splice(i, 1);
-                            if (self.checklist_items.length == 0) {
-                                self.checklist = null;
-                                self.checklist_items = [];
-                            } else {
-                                self.concat_checklist();
-                            }
-                        } else {
-                            self.set_checklist_item_text(i, value);
-                        }
-                        self.update();
-                    }
-                    input.addEventListener("focusout", callback);
-                    input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
-                    label.replaceWith(input);
-                    input.focus();
-                    self.update_expansion();
+                    self.inflate_checklist_item_label_input(label, item.text, i);
                     return false;
                 });
             });
+        }
+
+        inflate_checklist(body) {
+            var self = this;
+            let checklist = body.appendChild(document.createElement("div"));
+            checklist.classList.add("project-checklist");
+            this.inflate_checklist_items(checklist);
             let button_add_item = checklist.appendChild(document.createElement("button"));
             button_add_item.classList.add("project-button");
             button_add_item.innerHTML = `<i class="icon icon-plus"></i> Add`;
             button_add_item.addEventListener("click", (event) => {
                 event.stopPropagation();
-                self.checklist_items.push({state: false, text: "Item"});
+                self.checklist_items.push({state: false, text: ""});
                 self.concat_checklist();
-                self.update();
+                self.inflate_checklist_items(checklist);
+                let element = checklist.querySelector(".project-checklist-item:last-child label");
+                self.inflate_checklist_item_label_input(element, "", self.checklist_items.length - 1);
                 return false;
             });
         }
@@ -399,9 +423,13 @@ window.addEventListener("load", () => {
         }
 
         inflate_body() {
-            let body = document.createElement("div");
-            body.classList.add("project-body");
-            this.container.appendChild(body);
+            let body = this.container.querySelector(".project-body");
+            if (body == null) {
+                body = this.container.appendChild(document.createElement("div"));
+            } else {
+                body.innerHTML = "";
+            }
+            body.className = "project-body";
             if (this.description != null) this.inflate_description(body);
             if (this.checklist != null) this.inflate_checklist(body);
             this.update_expansion();
@@ -478,9 +506,11 @@ window.addEventListener("load", () => {
 
             if (this.description == null) {
                 add_contextmenu_option("Add description", () => {
-                    self.description = "Description";
                     self.expanded = true;
-                    self.update();
+                    self.description = "";
+                    self.inflate_body();
+                    let description_element = self.container.querySelector(".project-description");
+                    self.inflate_description_textarea(description_element);
                 });
             } else {
                 add_contextmenu_option("Remove description", () => {
@@ -491,10 +521,12 @@ window.addEventListener("load", () => {
 
             if (this.checklist == null) {
                 add_contextmenu_option("Add checklist", () => {
-                    self.checklist = "[ ] Item";
-                    self.split_checklist();
                     self.expanded = true;
-                    self.update();
+                    self.checklist = "[ ] ";
+                    self.split_checklist();
+                    self.inflate_body();
+                    let checklist_item_element = self.container.querySelector(".project-checklist-item label");
+                    self.inflate_checklist_item_label_input(checklist_item_element, "", 0);
                 });
             } else {
                 add_contextmenu_option("Remove checklist", () => {
