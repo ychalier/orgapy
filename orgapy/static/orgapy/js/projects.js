@@ -553,6 +553,7 @@ window.addEventListener("load", () => {
                             toast("Deleted!", 600);
                             delete projects[self.id];
                             self.container.parentElement.removeChild(self.container);
+                            inflate_filters();
                         } else {
                             toast("An error occured", 600);
                         }
@@ -700,6 +701,7 @@ window.addEventListener("load", () => {
                     let container = document.getElementById("projects");
                     let project_container = projects[data.project.id].create();
                     container.appendChild(project_container);
+                    inflate_filters();
                 } else {
                     toast("An error occured", 600);
                 }
