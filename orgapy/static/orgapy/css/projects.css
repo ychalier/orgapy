@@ -14,12 +14,16 @@
 .project {
     position: relative;
     box-sizing: border-box;
-    background: #0a1b29;
+    background: #101010;
     margin-bottom: .4rem;
     width: 100%;
     border: 1px solid #080808;
     border-radius: .4rem;
     overflow: hidden;
+}
+
+.project-ongoing {
+    background: hsl(207, 61%, 10%);
 }
 
 .project-idea,
@@ -28,7 +32,7 @@
 }
 
 .project-finished {
-    background: #22272b;
+    background: #222222;
 }
 
 .project-header {
@@ -37,6 +41,10 @@
 
 .project-title {
     color: white;
+}
+
+.project-title a {
+    color: hsl(200, 63%, 79%);
 }
 
 .project-corner {
