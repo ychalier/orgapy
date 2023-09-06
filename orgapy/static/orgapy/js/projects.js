@@ -213,6 +213,7 @@ window.addEventListener("load", () => {
                 input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
                 limit_date.replaceWith(input);
                 input.focus();
+                input.showPicker();
                 return false;
             });
         }
