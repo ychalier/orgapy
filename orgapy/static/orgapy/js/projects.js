@@ -17,8 +17,8 @@ window.addEventListener("load", () => {
     const STATUS_ORDERING = {
         "Ongoing": 0,
         "Paused": 1,
-        "Idea": 2,
-        "Finished": 3,
+        "Idea": 1,
+        "Finished": 2,
     }
 
     var projects = {};
@@ -27,6 +27,8 @@ window.addEventListener("load", () => {
 
         constructor(data) {
             this.id = data.id;
+            this.creation = data.creation;
+            this.modification = data.modification;
             this.title = data.title;
             this.category = data.category;
             this.status = data.status;
@@ -654,7 +656,13 @@ window.addEventListener("load", () => {
         let container = document.getElementById("projects");
         container.innerHTML = "";
         let project_indices = [...Object.keys(projects)];
-        project_indices.sort((a, b) => STATUS_ORDERING[projects[a].status] - STATUS_ORDERING[projects[b].status])
+        project_indices.sort((a, b) => {
+            let status_ordering = STATUS_ORDERING[projects[a].status] - STATUS_ORDERING[projects[b].status];
+            if (status_ordering == 0) {
+                return projects[b].modification - projects[a].modification;
+            }
+            return status_ordering;
+        });
         project_indices.forEach(project_id => {
             container.appendChild(projects[project_id].create());
         });

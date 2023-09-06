@@ -566,6 +566,8 @@ def api_project_list(request):
             }
         projects.append({
             "id": project.id,
+            "creation": project.date_creation.timestamp(),
+            "modification": project.date_modification.timestamp(),
             "title": project.title,
             "category": project.category,
             "status": project.get_status_display(),
@@ -666,4 +668,6 @@ def api_project_create(request):
         "progress": None,
         "description": None,
         "checklist": None,
+        "creation": project.date_creation.timestamp(),
+        "modification": project.date_modification.timestamp(),
     }})
