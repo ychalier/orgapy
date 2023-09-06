@@ -1,6 +1,7 @@
 import json
 import re
 import datetime
+import calendar
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -100,41 +101,9 @@ def view_tasks(request):
     notes = models.Note.objects\
         .filter(task__isnull=False, user=request.user)\
         .order_by("task__date_done", F("task__date_due").asc(nulls_last=True), "date_creation")
-    objectives = models.Objective.objects\
-        .filter(user=request.user)\
-        .order_by("name")
-    all_done = True
-    for objective in objectives:  
-        if not objective.is_current_done():
-            all_done = False
-            break
-    objective_grid_offset = max(0, int(datetime.datetime.now().date().strftime("%V")) - 2) * 236 + 1
     return render(request, "orgapy/tasks.html", {
         "tasks": notes,
-        "objectives": objectives,
-        "all_done": all_done,
         "active": "tasks",
-        "objective_grid_offset": objective_grid_offset,
-    })
-
-
-@permission_required("orgapy.view_objective")
-def view_objectives(request):
-    """View objectives"""
-    objectives = models.Objective.objects\
-        .filter(user=request.user)\
-        .order_by("name")
-    all_done = True
-    for objective in objectives:  
-        if not objective.is_current_done():
-            all_done = False
-            break
-    objective_grid_offset = max(0, int(datetime.datetime.now().date().strftime("%V")) - 2) * 236 + 1
-    return render(request, "orgapy/objectives.html", {
-        "objectives": objectives,
-        "all_done": all_done,
-        "active": "objectives",
-        "objective_grid_offset": objective_grid_offset,
     })
 
 
@@ -327,73 +296,6 @@ def delete_note(request, nid):
     if had_task:
         return redirect("orgapy:tasks")
     return redirect("orgapy:notes")
-
-
-@permission_required("orgapy.change_objective")
-def edit_objectives(request):
-    """Edit daily and weekly objectives"""
-    objectives = models.Objective.objects.filter(user=request.user).order_by("name")
-    return render(request, "orgapy/edit_objectives.html", {
-        "objectives": objectives,
-    })
-
-
-def get_objective(request, oid):
-    """Search for a corresponding objective in the database"""
-    if models.Objective.objects.filter(id=oid, user=request.user).exists():
-        return models.Objective.objects.get(id=oid, user=request.user)
-    return None
-
-
-@permission_required("orgapy.change_objective")
-def check_objective(request, oid):
-    """Set current objective to checked"""
-    objective = get_objective(request, oid)
-    if objective is not None:
-        objective.check_current()
-    return redirect("orgapy:objectives")
-
-
-@permission_required("orgapy.change_objective")
-def uncheck_objective(request, oid):
-    """Set current objective to unchecked"""
-    objective = get_objective(request, oid)
-    if objective is not None:
-        objective.uncheck_current()
-    return redirect("orgapy:objectives")
-
-
-@permission_required("orgapy.change_objective")
-def save_objective(request, oid):
-    """Change an objective's name"""
-    if request.method == "POST":
-        objective = get_objective(request, oid)
-        if objective is not None:
-            objective.name = request.POST["name"].strip()
-            objective.step = int(request.POST["step"].strip())
-            objective.save()
-    return redirect("orgapy:edit_objectives")
-
-
-@permission_required("orgapy.delete_objective")
-def delete_objective(request, oid):
-    """Delete an objective"""
-    objective = get_objective(request, oid)
-    if objective is not None:
-        objective.delete()
-    return redirect("orgapy:edit_objectives")
-
-
-@permission_required("orgapy.add_objective")
-def create_objective(request):
-    """Create a new objective"""
-    if request.method == "POST":
-        models.Objective.objects.create(
-            name=request.POST["name"].strip(),
-            user=request.user,
-            step=int(request.POST["step"].strip())
-        )
-    return redirect("orgapy:edit_objectives")
 
 
 @permission_required("orgapy.view_quote")
@@ -671,3 +573,38 @@ def api_project_create(request):
         "creation": project.date_creation.timestamp(),
         "modification": project.date_modification.timestamp(),
     }})
+
+
+@permission_required("orgapy.view_objective")
+def api_objective_list(request):
+    objectives = []
+    for objective in models.Objective.objects.filter(user=request.user):
+        objectives.append({
+            "id": objective.id,
+            "name": objective.name,
+            "history": objective.history,
+            "date_start": objective.date_start,
+            "period": objective.period,
+            "goal": objective.goal,
+        })
+    return JsonResponse({"objectives": objectives})
+
+
+@permission_required("orgapy.change_objective")
+def api_objective_history(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    objective_id = request.POST.get("objective_id")
+    objective_history = request.POST.get("objective_history")
+    if objective_id is None or objective_history is None:
+        raise BadRequest("Missing fields")
+    try:
+        objective_id = int(objective_id)
+    except:
+        raise BadRequest("Invalid values")
+    if not models.Objective.objects.filter(id=objective_id, user=request.user).exists():
+        raise Http404("Project not found")
+    objective = models.Objective.objects.get(id=objective_id, user=request.user)
+    objective.history = objective_history
+    objective.save()
+    return JsonResponse({"success": True})

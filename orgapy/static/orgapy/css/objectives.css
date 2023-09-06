@@ -1,0 +1,94 @@
+.objgraph-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: rgb(38, 39, 40);
+    border-radius: .4rem;
+    padding: .4rem .4rem .8rem .4rem;
+    border: 1px solid black;
+}
+
+.objgraph-head {
+    margin-bottom: .4rem;
+}
+
+.objgraph-head,
+.objgraph-objective {
+    display: flex;
+    flex-direction: row;
+}
+
+.objgraph-head-day {
+    box-sizing: border-box;
+    border-left: 1px solid #ccc;
+    width: 32px;
+    height: 16px;
+    flex-shrink: 0;
+    font-size: small;
+    line-height: 16px;
+    padding-left: 2px;
+}
+
+.objgraph-head-week {
+    border-left: 2px solid white;
+}
+
+.objgraph-objective {
+    display: flex;
+    flex-direction: row;
+}
+
+.objgraph-period {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    height: 32px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.objgraph-goal {
+    width: 100%;
+    margin: .1rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    border-radius: .2rem;
+    overflow: hidden;
+}
+
+.objgraph-goal-accomplished {
+    background: green;
+}
+
+.objgraph-goal-missed {
+    background: red;
+}
+
+.bg-dark {
+    background: #101010 !important;
+}
+
+.objgraph-goal button {
+    border: none;
+    background: transparent;
+    color: black;
+    cursor: pointer;
+    width: 100%;
+    padding: 0;
+    background: #ccc;
+}
+
+.objgraph-ref {
+    position: relative;
+}
+
+.objgraph-name {
+    position: absolute;
+    left: .4rem;
+    margin-top: 4px;
+    line-height: 24px;
+    background: black;
+    padding: 0 .4rem;
+    border-radius: .4rem;    
+}

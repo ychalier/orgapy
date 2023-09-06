@@ -9,20 +9,31 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
+<link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
 <script>
     const CSRF_TOKEN = "{{ csrf_token }}";
     const URL_API_PROJECT_LIST = "{% url 'orgapy:api_project_list' %}";
     const URL_API_PROJECT_EDIT = "{% url 'orgapy:api_project_edit' %}";
     const URL_API_PROJECT_DELETE = "{% url 'orgapy:api_project_delete' %}";
     const URL_API_PROJECT_CREATE = "{% url 'orgapy:api_project_create' %}";
+    const URL_API_OBJECTIVE_LIST = "{% url 'orgapy:api_objective_list' %}";
+    const URL_API_OBJECTIVE_HISTORY = "{% url 'orgapy:api_objective_history' %}";
 </script>
 {% endblock head %}
 
 {% block main_content %}
 
+<div class="objgraph-ref"><div id="objgraph-wrapper" class="objgraph-wrapper"></div></div>
+
+<br>
+
 <div id="projects" class="projects"></div>
 
-<button id="btn-project-create"><i class="icon icon-plus"></i> Add project</button>
+<div class="d-flex">
+    <button id="btn-project-create" class="projects-button"><i class="icon icon-plus"></i> Add project</button>
+     
+    <a id="btn-edit-objectives" href="{% url 'admin:orgapy_objective_changelist' %}" class="projects-button"><i class="icon icon-edit"></i> Edit objectives</a>
+</div>
 
 <br>
 
@@ -50,4 +61,5 @@
 {{ block.super }}
 <script src="{% static 'orgapy/js/markdown.js' %}"></script>
 <script src="{% static 'orgapy/js/projects.js' %}"></script>
+<script src="{% static 'orgapy/js/objectives.js' %}"></script>
 {% endblock body_scripts %}

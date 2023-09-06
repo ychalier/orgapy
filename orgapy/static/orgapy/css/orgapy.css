@@ -96,35 +96,6 @@ pre {
     font-weight: bold;
 }
 
-.objective-grid {
-    overflow-x: scroll;
-    overflow-y: hidden;
-}
-
-.objective-cell {
-    background: #101010;
-    height: 32px;
-    margin: 1px;
-    flex-shrink: 0;
-    text-align: center;
-}
-
-.objective-names {
-    position: absolute;
-    z-index: 1;
-    top: 0;
-    left: 6px;
-}
-
-.objective-name span {
-    height: 34px;
-    line-height: 34px;
-}
-
-.objective-cell.bg-dark {
-    background: black !important;
-}
-
 .markdown {
     background: #101010;
 }

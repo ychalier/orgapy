@@ -106,8 +106,9 @@ class Objective(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     history = models.TextField(default="", blank=True)
-    date_start = models.DateField(auto_now_add=True, auto_now=False)
-    step = models.PositiveIntegerField(default=1)
+    date_start = models.DateField()
+    period = models.PositiveIntegerField(default=1)
+    goal = models.PositiveIntegerField(default=1)
 
     class Meta:
 
@@ -116,86 +117,6 @@ class Objective(models.Model):
     def __str__(self):
         return self.name
 
-    def to_array(self, date_start=None, date_end=None):
-        """Convert text history to an array format"""
-        array = list()
-        if date_start is None:
-            date_start = self.date_start
-        if date_end is None:
-            date_end = datetime.datetime.today()
-        date_start = self._cast(date_start)
-        date_end = self._cast(date_end)
-        current = self._cast(datetime.datetime.today())
-        offset = (date_start - self._cast(self.date_start)).days // self.step
-        for i, date in enumerate(daterange(date_start, date_end, self.step)):
-            j = i + offset
-            if 0 <= j < len(self.history):
-                array.append({
-                    "date": date,
-                    "checked": str(self.history)[j] == "1",
-                    "overflow": (self._cast(date) > current
-                                 or self._cast(date) < self._cast(self.date_start)),
-                    "current": self._cast(date) == current,
-                })
-            else:
-                array.append({
-                    "date": date,
-                    "checked": False,
-                    "overflow": (self._cast(date) > current
-                                 or self._cast(date) < self._cast(self.date_start)),
-                    "current": self._cast(date) == current,
-                })
-        return array
-
-    def from_array(self, array):
-        """Write history from the array"""
-        self.history = "".join(map(
-            lambda x: {True: "1", False: "0"}[x["checked"]],
-            array
-        ))
-        self.save()
-
-    def check_current(self):
-        """Check current index"""
-        array = self.to_array()
-        array[-1]["checked"] = True
-        self.from_array(array)
-
-    def uncheck_current(self):
-        """Uncheck current index"""
-        array = self.to_array()
-        array[-1]["checked"] = False
-        self.from_array(array)
-
-    def is_current_done(self):
-        """Return if current index is checked"""
-        return self.to_array(date_start=datetime.datetime.today())[0]["checked"]
-    
-    def current_year(self):
-        """Check array for the current year"""
-        epoch_year = datetime.date.today().year
-        date_start = datetime.date(epoch_year, 1, 1)
-        date_end = datetime.date(epoch_year, 12, 31)
-        while date_start.weekday() != 0:
-            date_start += datetime.timedelta(days=1)
-        while date_end.weekday() != 6:
-            date_end += datetime.timedelta(days=1)
-        return self.to_array(
-            date_start=date_start,
-            date_end=date_end
-        )
-    
-    def _cast(self, date):
-        _date = date
-        if isinstance(date, datetime.datetime):
-            _date = date.date()
-        return _date - datetime.timedelta(days=(_date.timetuple().tm_yday - 1) % self.step)
-    
-    def freq(self):
-        return str(self.step)
-
-    def div_width(self):
-        return 32 * self.step + 2 * (self.step - 1)
 
 class Author(models.Model):
 

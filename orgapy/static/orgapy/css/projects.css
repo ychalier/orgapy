@@ -326,7 +326,7 @@
     border-bottom: none;
 }
 
-#btn-project-create {
+.projects-button {
     border: 1px solid black;
     background: #101010;
     border-radius: .4rem;
@@ -341,11 +341,11 @@
     transition: .2s ease;
 }
 
-#btn-project-create:hover {
+.projects-button:hover {
     background: #272729;
 }
 
-#btn-project-create i {
+.projects-button i {
     margin-right: .4rem;
 }
 
