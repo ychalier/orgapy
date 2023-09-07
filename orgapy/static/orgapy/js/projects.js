@@ -183,6 +183,23 @@ window.addEventListener("load", () => {
             });
         }
 
+        inflate_limit_date_input(element) {
+            var self = this;
+            let input = document.createElement("input");
+            input.classList.add("project-limitdate-input");
+            input.type = "date";
+            input.value = this.limit_date;
+            function callback() {
+                self.limit_date = input.value == "" ? null : input.value;
+                self.update();
+            }
+            input.addEventListener("focusout", callback);
+            input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
+            element.replaceWith(input);
+            input.focus();
+            input.showPicker();
+        }
+
         inflate_limit_date(summary) {
             var self = this;
             let limit_date = summary.appendChild(document.createElement("div"));
@@ -201,19 +218,7 @@ window.addEventListener("load", () => {
             limit_date.appendChild(limit_date_text);
             limit_date.addEventListener("click", (event) => {
                 event.stopPropagation();
-                let input = document.createElement("input");
-                input.classList.add("project-limitdate-input");
-                input.type = "date";
-                input.value = self.limit_date;
-                function callback() {
-                    self.limit_date = input.value;
-                    self.update();
-                }
-                input.addEventListener("focusout", callback);
-                input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
-                limit_date.replaceWith(input);
-                input.focus();
-                input.showPicker();
+                inflate_limit_date_input(limit_date);
                 return false;
             });
         }
@@ -247,12 +252,17 @@ window.addEventListener("load", () => {
 
         inflate_header() {
             var self = this;
-            let header = this.container.appendChild(document.createElement("div"));
-            header.classList.add("project-header");
-            header.addEventListener("contextmenu", (event) => {
-                event.preventDefault();
-                self.inflate_contextmenu(event); // cursor position required to position the menu
-            });
+            let header = this.container.querySelector(".project-header");
+            if (header == null) {
+                header = this.container.appendChild(document.createElement("div"));
+                header.addEventListener("contextmenu", (event) => {
+                    event.preventDefault();
+                    self.inflate_contextmenu(event); // cursor position required to position the menu
+                });
+            } else {
+                header.innerHTML = "";
+            }
+            header.className = "project-header";
             this.inflate_title(header);
             let corner = header.appendChild(document.createElement("div"));
             corner.classList.add("project-corner");
@@ -501,7 +511,9 @@ window.addEventListener("load", () => {
                 add_contextmenu_option("Add limit date", () => {
                     let now = new Date();
                     self.limit_date = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
-                    self.update();
+                    self.inflate_header();
+                    let limit_date_element = self.container.querySelector(".project-limitdate");
+                    self.inflate_limit_date_input(limit_date_element);
                 });
             } else {
                 add_contextmenu_option("Remove limit date", () => {
