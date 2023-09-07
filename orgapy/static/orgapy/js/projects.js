@@ -247,9 +247,12 @@ window.addEventListener("load", () => {
 
         inflate_header() {
             var self = this;
-            let header = document.createElement("div");
+            let header = this.container.appendChild(document.createElement("div"));
             header.classList.add("project-header");
-            this.container.appendChild(header);
+            header.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                self.inflate_contextmenu(event); // cursor position required to position the menu
+            });
             this.inflate_title(header);
             let corner = header.appendChild(document.createElement("div"));
             corner.classList.add("project-corner");
@@ -564,11 +567,6 @@ window.addEventListener("load", () => {
             this.container = document.createElement("div");
             this.container.setAttribute("project_id", this.id);
             this.inflate();
-            var self = this;
-            this.container.addEventListener("contextmenu", (event) => {
-                event.preventDefault();
-                self.inflate_contextmenu(event); // cursor position required to position the menu
-            });
             return this.container;
         }
 
