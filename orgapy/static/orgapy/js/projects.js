@@ -365,7 +365,7 @@ window.addEventListener("load", () => {
                 let checkbox = checklist_item.appendChild(document.createElement("input"));
                 checkbox.type = "checkbox";
                 let label = checklist_item.appendChild(document.createElement("label"));
-                label.textContent = converter.makeHtml(item.text).slice(3, -4); // slice to remove <p> tag
+                label.innerHTML = converter.makeHtml(item.text).slice(3, -4); // slice to remove <p> tag
                 if (item.state) {
                     checkbox.checked = true;
                     checklist_item.classList.add("project-checklist-item-checked");
