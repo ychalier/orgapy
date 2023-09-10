@@ -213,6 +213,11 @@
     line-height: inherit;
 }
 
+.project-description > *:first-child,
+.project-description > *:first-child > *:first-child {
+    margin-top: 0;
+}
+
 .project-description>*:last-child {
     margin-bottom: 0;
 }
