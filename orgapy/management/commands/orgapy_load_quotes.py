@@ -23,7 +23,7 @@ class Command(BaseCommand):
             work = models.Work.objects.get(id=entry_data["work_id"])
             date_creation = datetime.datetime.fromisoformat(entry_data["date_creation"])
             date_modification = datetime.datetime.fromisoformat(entry_data["date_modification"])
-            models.Quote.objects.create(
+            quote = models.Quote.objects.create(
                 user=user,
                 from_work=work,
                 date_creation=date_creation,
@@ -31,4 +31,6 @@ class Command(BaseCommand):
                 title=entry_data["title"],
                 content=entry_data["content"],
             )
+            quote.date_creation = date_creation
+            quote.save()
         

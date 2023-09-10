@@ -112,7 +112,7 @@ class Quote(models.Model):
 
     class Meta:
 
-        ordering = ["-date_modification"]
+        ordering = ["-date_creation"]
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
