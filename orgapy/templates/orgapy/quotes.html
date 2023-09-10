@@ -48,8 +48,8 @@
     {% for quote in quotes %}
     <div class="card my-2">
         <div class="card-header" style="background: #101010;">
-            <a href="{% url 'orgapy:quotes_work' author=quote.work.author.slug work=quote.work.slug %}">{{ quote.work.title }}</a>,
-            <a href="{% url 'orgapy:quotes_author' author=quote.work.author.slug %}">{{ quote.work.author.name }}</a>
+            <a href="{% url 'orgapy:quotes_work' author=quote.from_work.author.slug work=quote.from_work.slug %}">{{ quote.from_work.title }}</a>,
+            <a href="{% url 'orgapy:quotes_author' author=quote.from_work.author.slug %}">{{ quote.from_work.author.name }}</a>
         </div>
         <div class="card-body markdown">{{ quote.content | safe }}</div>
     </div>

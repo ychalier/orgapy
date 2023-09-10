@@ -1,6 +1,6 @@
 import json
-import re
 import datetime
+from django.utils import timezone
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -60,14 +60,14 @@ def about(request):
 
 @permission_required("orgapy.view_note")
 def view_notes(request):
-    """View containing only the pure notes"""
+    """View notes"""
     page_size = 25
     query = request.GET.get("query", "")
     category = request.GET.get("category", "")
     
     if len(query) > 0 and query[0] == "#":
         category = query[1:]
-    base_objects = models.Note.objects.filter(~Q(categories__name__exact="quote"), task=None, user=request.user)
+    base_objects = models.Note.objects.filter(user=request.user)
     if "uncategorized" in request.GET:
         base_objects = base_objects.filter(categories__isnull=True)
     if len(category) > 0:
@@ -95,18 +95,6 @@ def view_notes(request):
     })
 
 
-@permission_required("orgapy.view_task")
-def view_tasks(request):
-    """View containing only tasks"""
-    notes = models.Note.objects\
-        .filter(task__isnull=False, user=request.user)\
-        .order_by("task__date_done", F("task__date_due").asc(nulls_last=True), "date_creation")
-    return render(request, "orgapy/tasks.html", {
-        "tasks": notes,
-        "active": "notes",
-    })
-
-
 def view_note(request, nid):
     """View showing a note"""
     note = get_note_from_nid(nid)
@@ -115,32 +103,6 @@ def view_note(request, nid):
     elif note.public:
         return render(request, "orgapy/note_public.html", { "note": note, "active": "notes" })
     raise PermissionDenied
-
-
-@permission_required("orgapy.change_note")
-def checkbox(request):
-    if request.method == "POST":
-        note_id = request.POST["note_id"]
-        checkbox_id = int(request.POST["checkbox_id"])
-        checkbox_state = request.POST["checkbox_state"]
-        replacement = {
-            "true": "[x]",
-            "false": "[ ]",
-        }[checkbox_state]
-        note = models.Note.objects.get(id=note_id)
-        if note.user != request.user:
-            raise PermissionDenied
-        matches = re.finditer(r"^ ?- \[([xX ])\]", note.content, flags=re.MULTILINE)
-        for index, match in enumerate(matches):
-            if index != checkbox_id:
-                continue
-            note.content =\
-                note.content[:match.start()]\
-                + re.sub(r"\[[xX ]\]", replacement, match.group(0))\
-                + note.content[match.end():]
-            note.save()
-            return redirect("orgapy:view_note", nid=note.id)
-    return redirect("orgapy:notes")
 
 
 def view_public_note(request, nid):
@@ -206,7 +168,7 @@ def save_note_core(request):
         note.public = is_public
         note.pinned = is_pinned
         note.categories.clear()
-    note.date_modification = datetime.datetime.now()
+    note.date_modification = timezone.now()
     note.save()
     return note
 
@@ -226,58 +188,14 @@ def save_note_categories(request, note):
     note.save()
 
 
-def save_note_task(request, note):
-    """Edit note procedure: Task object"""
-    is_task = "task" in request.POST
-    is_done = "done" in request.POST
-    date_due = request.POST.get("due", "")
-    if is_task:
-        if len(date_due) == 10:
-            date_due = datetime.datetime.strptime(date_due, "%Y-%m-%d").date()
-        else:
-            date_due = None
-        if hasattr(note, "task"):
-            task = note.task
-            task.date_due = date_due
-            if is_done and not task.done:
-                task.date_done = datetime.datetime.now()
-            task.done = is_done
-            if not is_done:
-                task.date_done = None
-        else:
-            task = models.Task.objects.create(
-                date_due=date_due,
-                note=note,
-                done=is_done,
-            )
-            if is_done:
-                task.date_done = datetime.datetime.now()
-        task.save()
-    elif hasattr(note, "task"):
-        note.task.delete()
-
-
 @permission_required("orgapy.change_note")
 def save_note(request):
     """Main procedure to edit a note"""
     if request.method == "POST":
         note = save_note_core(request)
         save_note_categories(request, note)
-        save_note_task(request, note)
-        if "task" in request.POST:
-            return redirect("orgapy:tasks")
         return redirect("orgapy:view_note", nid=note.id)
     raise PermissionDenied
-
-
-@permission_required("orgapy.change_task")
-def task_done(request, note_id):
-    """View to indicate that a task has been done"""
-    task = get_note_from_nid(note_id, request.user).task
-    task.done = True
-    task.date_done = datetime.datetime.now()
-    task.save()
-    return redirect("orgapy:tasks")
 
 
 @permission_required("orgapy.view_note")
@@ -294,10 +212,7 @@ def export_note(request, nid):
 def delete_note(request, nid):
     """View to delete a note"""
     note = get_note_from_nid(nid, request.user)
-    had_task = hasattr(note, "task")
     note.delete()
-    if had_task:
-        return redirect("orgapy:tasks")
     return redirect("orgapy:notes")
 
 
@@ -308,10 +223,10 @@ def view_quotes(request, author=None, work=None):
     objects = models.Quote.objects.filter(user=request.user)
     if author is not None:
         author = models.Author.objects.get(slug=author, user=request.user)
-        objects = objects.filter(work__author=author)
+        objects = objects.filter(from_work__author=author)
     if work is not None:
         work = models.Work.objects.get(slug=work, user=request.user)
-        objects = objects.filter(work=work)
+        objects = objects.filter(from_work=work)
     if len(query) > 0:
         objects = objects.filter(Q(title__contains=query) | Q(content__contains=query))
     paginator = Paginator(objects.order_by(
@@ -331,22 +246,15 @@ def view_quotes(request, author=None, work=None):
     })
 
 
-def add_note(request, work_id, content):
+def add_quote(request, work_id, content):
     work = models.Work.objects.get(id=work_id)
     title = "%s - %s" % (work.author.name, work.title)
     quote = models.Quote.objects.create(
         user=request.user,
-        work=work,
+        from_work=work,
         title=title,
         content=content,
-        public=False,
     )
-    if models.Category.objects.filter(name="quote").exists():
-        category = models.Category.objects.get(name="quote", user=request.user)
-    else:
-        category = models.Category.objects.create(name="quote", user=request.user)
-    quote.categories.add(category)
-    quote.save()
     return quote
 
 
@@ -367,7 +275,7 @@ def create_quote(request):
         elif "form_quote" or "form_quote_edit" in request.POST:
             work_id = request.POST.get("quote_work", "").strip()
             if models.Work.objects.filter(id=work_id, user=request.user).exists():
-                add_note(request, work_id, request.POST.get("quote_content").strip())
+                add_quote(request, work_id, request.POST.get("quote_content").strip())
         if "form_quote" in request.POST:
             return redirect("orgapy:quotes")
     authors = models.Author.objects.filter(user=request.user).order_by("-date_creation")
@@ -383,7 +291,7 @@ def create_quote(request):
 def view_categories(request):
     return render(request, "orgapy/categories.html", {
         "categories": models.Category.objects.filter(user=request.user),
-        "uncategorized": models.Note.objects.filter(task=None, user=request.user, categories__isnull=True).count(),
+        "uncategorized": models.Note.objects.filter(user=request.user, categories__isnull=True).count(),
         "active": "notes",
     })
 
@@ -404,6 +312,7 @@ def edit_category(request, cid):
             })
     return redirect("orgapy:categories")
 
+
 @permission_required("orgapy.delete_category")
 def delete_category(request, cid):
     query = models.Category.objects.filter(id=cid)
@@ -419,7 +328,7 @@ def api_suggestions(request):
     query = request.GET.get("q", "").strip()
     results = []
     if len(query) >= 1:
-        results = models.Note.objects.filter(~Q(categories__name__exact="quote"), task=None, user=request.user, title__startswith=query)[:5]
+        results = models.Note.objects.filter(user=request.user, title__startswith=query)[:5]
     data = {
         "results": [
             {
@@ -477,7 +386,6 @@ def api_project_list(request):
             "modification": project.date_modification.timestamp(),
             "title": project.title,
             "category": project.category,
-            "status": project.get_status_display(),
             "limit_date": project.limit_date,
             "progress": progress,
             "description": project.description if project.description else None,
@@ -557,14 +465,12 @@ def api_project_create(request):
         user=request.user,
         title="New Project",
         category="general",
-        status=models.Project.IDEA,
         rank=int(max_rank) + 1
     )
     return JsonResponse({"success": True, "project": {
         "id": project.id,
         "title": project.title,
         "category": project.category,
-        "status": project.get_status_display(),
         "limit_date": None,
         "progress": None,
         "description": None,

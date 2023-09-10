@@ -83,19 +83,6 @@ pre {
     justify-content: flex-start;
 }
 
-.task--urgent {
-    color: crimson;
-}
-
-.task--done {
-    opacity: .2;
-}
-
-.task--today,
-.task--urgent {
-    font-weight: bold;
-}
-
 .markdown {
     background: #101010;
 }
