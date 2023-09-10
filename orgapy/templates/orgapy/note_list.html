@@ -19,17 +19,22 @@
             {% if note.public %}
             <a class="mr-2" href="{% url 'orgapy:toggle_public' nid=note.id %}?next={{ request.path }}" title="Make private"><i class="icon icon-lock"></i></a>
             {% endif %}
-            <span class="show-on-parent-hover">
-                {% if not note.pinned %}
-                <a class="btn-inline" href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Pin"><i class="icon icon-bookmark"></i></a>
-                {% endif %}
-                {% if not note.public %}
-                <a class="btn-inline" href="{% url 'orgapy:toggle_public' nid=note.id %}?next={{ request.path }}" title="Make public"><i class="icon icon-unlock"></i></a>
-                {% endif %}
+            <div class="show-on-parent-hover">
                 <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
-                <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn-inline" title="Download as Markdown"><i class="icon icon-download"></i></a>
-                <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn-inline link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
-            </span>
+                <div class="dropdown">
+                    <a class="btn-inline c-hand dropdown-toggle" title="More options" tabindex="0"><i class="icon icon-more-horiz"></i></a>
+                    <ul class="menu">
+                        {% if not note.pinned %}
+                        <li class="menu-item"><a href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" title="Mark as favorite"><i class="icon icon-bookmark"></i> Pin</a></li>
+                        {% endif %}
+                        {% if not note.public %}
+                        <li class="menu-item"><a href="{% url 'orgapy:toggle_public' nid=note.id %}?next={{ request.path }}" title="Make public"><i class="icon icon-unlock"></i> Publish</a></li>
+                        {% endif %}
+                        <li class="menu-item"><a href="{% url 'orgapy:export_note' nid=note.id %}" title="Download as Markdown"><i class="icon icon-download"></i> Download</a></li>
+                        <li class="menu-item"><a href="{% url 'orgapy:delete_note' nid=note.id %}" class="link-confirm" title="Delete"><i class="icon icon-delete"></i> Delete</a></li>
+                    </ul>
+                </div>
+            </div>
         </td>
     </tr>
     {% endfor %}
