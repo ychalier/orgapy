@@ -379,3 +379,11 @@
     }
 
 }
+
+#todays-plan .project {
+    background: #101010;
+}
+
+#todays-plan .project .project-header {
+    padding-bottom: 0;
+}

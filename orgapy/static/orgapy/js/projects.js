@@ -8,6 +8,14 @@ window.addEventListener("load", () => {
     }
 
     var projects = {};
+    var todays_plan = null;
+
+    function add_contextmenu_option(menu, label, callback) {
+        let option = menu.appendChild(document.createElement("span"));
+        option.classList.add("contextmenu-entry");
+        option.textContent = label;
+        option.addEventListener("click", callback);
+    }
 
     class Project {
 
@@ -285,8 +293,7 @@ window.addEventListener("load", () => {
                 if (value == "") {
                     self.checklist_items.splice(entry_index, 1);
                     if (self.checklist_items.length == 0) {
-                        self.checklist = null;
-                        self.checklist_items = [];
+                        self.on_empty_checklist();
                     } else {
                         self.concat_checklist();
                     }
@@ -445,21 +452,10 @@ window.addEventListener("load", () => {
             if (this.progress != null) this.inflate_progress();
         }
 
-        inflate_contextmenu(event) {
+        inflate_contextmenu_items(menu) {
             var self = this;
-            clear_context_menus();
-            let menu = document.createElement("div");
-            menu.classList.add("contextmenu");
-
-            function add_contextmenu_option(label, callback) {
-                let option = menu.appendChild(document.createElement("span"));
-                option.classList.add("contextmenu-entry");
-                option.textContent = label;
-                option.addEventListener("click", callback);
-            }
-
             if (this.limit_date == null) {
-                add_contextmenu_option("Add limit date", () => {
+                add_contextmenu_option(menu, "Add limit date", () => {
                     let now = new Date();
                     self.limit_date = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
                     self.inflate_header();
@@ -467,14 +463,14 @@ window.addEventListener("load", () => {
                     self.inflate_limit_date_input(limit_date_element);
                 });
             } else {
-                add_contextmenu_option("Remove limit date", () => {
+                add_contextmenu_option(menu, "Remove limit date", () => {
                     self.limit_date = null;
                     self.update();
                 })
             }
 
             if (this.description == null) {
-                add_contextmenu_option("Add description", () => {
+                add_contextmenu_option(menu, "Add description", () => {
                     self.expanded = true;
                     self.description = "";
                     self.inflate_body();
@@ -482,14 +478,14 @@ window.addEventListener("load", () => {
                     self.inflate_description_textarea(description_element);
                 });
             } else {
-                add_contextmenu_option("Remove description", () => {
+                add_contextmenu_option(menu, "Remove description", () => {
                     self.description = null;
                     self.update();
                 })
             }
 
             if (this.checklist == null) {
-                add_contextmenu_option("Add checklist", () => {
+                add_contextmenu_option(menu, "Add checklist", () => {
                     self.expanded = true;
                     self.checklist = "[ ] ";
                     self.split_checklist();
@@ -498,32 +494,38 @@ window.addEventListener("load", () => {
                     self.inflate_checklist_item_label_input(checklist_item_element, "", 0);
                 });
             } else {
-                add_contextmenu_option("Remove checklist", () => {
+                add_contextmenu_option(menu, "Remove checklist", () => {
                     self.checklist = null;
                     self.update();
                 })
             }
 
             if (this.progress == null) {
-                add_contextmenu_option("Add progress", () => {
+                add_contextmenu_option(menu, "Add progress", () => {
                     self.progress = {min: 0, max: parseInt(prompt("Number of steps", 10)), current: 0};
                     self.update();
                 });
             } else {
-                add_contextmenu_option("Remove progress", () => {
+                add_contextmenu_option(menu, "Remove progress", () => {
                     self.progress = null;
                     self.update();
                 });
             }
 
-            add_contextmenu_option("Delete project", () => {
+            add_contextmenu_option(menu, "Delete project", () => {
                 self.delete();
             });
+        }
 
-            document.body.appendChild(menu);
+        inflate_contextmenu(event) {
+            clear_context_menus();
+            let menu = document.createElement("div");
+            menu.classList.add("contextmenu");
+            this.inflate_contextmenu_items(menu);
             let bounds = menu.getBoundingClientRect();
             menu.style.left = event.clientX + "px";
             menu.style.top = Math.min(event.clientY, window.innerHeight - bounds.height) + "px";
+            document.body.appendChild(menu);
         }
 
         create() {
@@ -612,6 +614,65 @@ window.addEventListener("load", () => {
             inflate_filters();
         }
 
+        on_empty_checklist() {
+            this.checklist = null;
+            this.checklist_items = []; 
+        }
+
+    }
+
+    class TodaysPlanProject extends Project {
+
+        constructor(data) {
+            super(data);
+            this.title = "Today's Plan";
+            this.limit_date = null;
+            this.progress = null;
+            this.description = null;
+            if (this.checklist == null) {
+                this.on_empty_checklist();
+            }
+            this.rank = -1;
+        }
+
+        inflate_title(header) {
+            let title = header.appendChild(document.createElement("div"));
+            title.classList.add("project-title");
+            title.textContent = this.title;            
+        }
+
+        inflate_header() {
+            var self = this;
+            let header = this.container.querySelector(".project-header");
+            if (header == null) {
+                header = this.container.appendChild(document.createElement("div"));
+                header.addEventListener("contextmenu", (event) => {
+                    event.preventDefault();
+                    self.inflate_contextmenu(event); // cursor position required to position the menu
+                });
+            } else {
+                header.innerHTML = "";
+            }
+            header.className = "project-header";
+            this.inflate_title(header);
+        }
+
+        on_empty_checklist() {
+            this.checklist = "[ ] Default Item";
+            this.split_checklist();
+        }
+
+        update_expansion() {
+            this.expand();
+        }
+
+        inflate_contextmenu_items(menu) {
+            var self = this;
+            add_contextmenu_option(menu, "Delete project", () => {
+                self.delete();
+            });
+        }
+
     }
 
     function save_ranks(ordering) {
@@ -645,6 +706,11 @@ window.addEventListener("load", () => {
 
     function inflate_projects() {
         dragrank_clear();
+        let todays_plan_container = document.getElementById("todays-plan");
+        todays_plan_container.innerHTML = "";
+        if (todays_plan != null) {
+            todays_plan_container.appendChild(todays_plan.create());
+        }
         let container = document.getElementById("projects");
         container.innerHTML = "";
         let project_indices = [...Object.keys(projects)];
@@ -704,8 +770,13 @@ window.addEventListener("load", () => {
 
     fetch(URL_API_PROJECT_LIST).then(res => res.json()).then(data => {
         projects = {};
+        todays_plan = null;
         data.projects.forEach(project_data => {
-            projects[project_data.id] = new Project(project_data);;
+            if (project_data["title"] == "Today's Plan") {
+                todays_plan = new TodaysPlanProject(project_data);
+            } else {
+                projects[project_data.id] = new Project(project_data);
+            }
         });
         inflate_projects();
         inflate_filters();

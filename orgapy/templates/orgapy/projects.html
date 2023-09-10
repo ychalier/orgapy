@@ -24,21 +24,17 @@
 
 {% block main_content %}
 
-<div class="objgraph-ref"><div id="objgraph-wrapper" class="objgraph-wrapper"></div></div>
+<div id="todays-plan"></div>
 
-<br>
+<div class="objgraph-ref my-4"><div id="objgraph-wrapper" class="objgraph-wrapper"></div></div>
 
-<div id="projects" class="projects"></div>
+<div id="projects" class="projects my-4"></div>
 
-<br>
-
-<div class="d-flex">
+<div class="d-flex my-4">
     <button id="btn-project-create" class="projects-button"><i class="icon icon-plus"></i> Add project</button>
      
     <a id="btn-edit-objectives" href="{% url 'admin:orgapy_objective_changelist' %}" class="projects-button"><i class="icon icon-edit"></i> Edit objectives</a>
 </div>
-
-<br>
 
 {% endblock main_content %}
 
