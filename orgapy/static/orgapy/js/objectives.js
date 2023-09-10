@@ -24,6 +24,9 @@ window.addEventListener("load", () => {
     function inflate_objgraph_head(objgraph) {
         let objgraph_head = objgraph.appendChild(document.createElement("div"));
         objgraph_head.classList.add("objgraph-head");
+        objgraph_head.addEventListener("dblclick", () => {
+            reset_objgraph_scroll();
+        });
         let year_start = get_year_start();
         let today = new Date();
         for (let i = 0; i < 365; i++) { //TODO: leap year check
@@ -162,6 +165,18 @@ window.addEventListener("load", () => {
         }
     }
 
+    var is_initial_scroll = true;
+    function reset_objgraph_scroll() {
+        let container = document.getElementById("objgraph-wrapper");
+        let target = day_offset(new Date()) - container.getBoundingClientRect().width / 2 + DAYW;
+        if (is_initial_scroll) {
+            container.scrollLeft = target;
+            is_initial_scroll = false;
+        } else {
+            container.scrollTo({top: 0, left: target, behavior: "smooth"});
+        }
+    }
+
     function create_objgraph() {
         let container = document.getElementById("objgraph-wrapper");
         container.innerHTML = "";
@@ -169,7 +184,7 @@ window.addEventListener("load", () => {
         objgraph.classList.add("objgraph");
         inflate_objgraph_head(objgraph);
         inflate_objgraph_body(objgraph);
-        container.scrollLeft = day_offset(new Date()) - container.getBoundingClientRect().width / 2 + DAYW;
+        reset_objgraph_scroll();
     }
 
     fetch(URL_API_OBJECTIVE_LIST).then(res => res.json()).then(data => {

@@ -9,6 +9,7 @@
 
 .objgraph-head {
     margin-bottom: .4rem;
+    user-select: none;
 }
 
 .objgraph-head,
