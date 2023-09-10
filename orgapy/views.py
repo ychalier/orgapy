@@ -8,6 +8,7 @@ from django.utils.text import slugify
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db.models import F
+from django.db.models import Max
 from django.http import HttpResponse, Http404, JsonResponse
 from django.core.exceptions import PermissionDenied, BadRequest
 import urllib
@@ -481,6 +482,7 @@ def api_project_list(request):
             "progress": progress,
             "description": project.description if project.description else None,
             "checklist": project.checklist if project.checklist else None,
+            "rank": project.rank,
         })
     return JsonResponse({"projects": projects})
 
@@ -503,16 +505,7 @@ def api_project_edit(request):
     project = models.Project.objects.get(id=project_id, user=request.user)
     project.title = project_data["title"]
     project.category = project_data["category"]
-    if project_data["status"] == "Idea":
-        project.status = models.Project.IDEA
-    elif project_data["status"] == "Ongoing":
-        project.status = models.Project.ONGOING
-    elif project_data["status"] == "Paused":
-        project.status = models.Project.PAUSED
-    elif project_data["status"] == "Finished":
-        project.status = models.Project.FINISHED
-    else:
-        raise BadRequest("Invalid status")
+    project.rank = float(project_data["rank"])
     if project_data["limit_date"] is not None:
         project.limit_date = datetime.datetime.strptime(project_data["limit_date"], "%Y-%m-%d").date()
     else:
@@ -559,11 +552,13 @@ def api_project_delete(request):
 def api_project_create(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
+    max_rank = models.Project.objects.filter(user=request.user).aggregate(Max("rank"))["rank__max"]
     project = models.Project.objects.create(
         user=request.user,
         title="New Project",
         category="general",
-        status=models.Project.IDEA
+        status=models.Project.IDEA,
+        rank=int(max_rank) + 1
     )
     return JsonResponse({"success": True, "project": {
         "id": project.id,
@@ -576,6 +571,7 @@ def api_project_create(request):
         "checklist": None,
         "creation": project.date_creation.timestamp(),
         "modification": project.date_modification.timestamp(),
+        "rank": project.rank,
     }})
 
 
@@ -611,4 +607,28 @@ def api_objective_history(request):
     objective = models.Objective.objects.get(id=objective_id, user=request.user)
     objective.history = objective_history
     objective.save()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.change_project")
+def api_project_edit_ranks(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    ranks_data = request.POST.get("ranks")
+    if ranks_data is None:
+        raise BadRequest("Missing fields")
+    try:
+        ranks_data = json.loads(ranks_data)
+    except:
+        raise BadRequest("Invalid values")
+    projects, ranks = [], []
+    for project_id, rank in ranks_data.items():
+        if not models.Project.objects.filter(id=int(project_id), user=request.user).exists():
+            raise Http404("Project not found")
+        project = models.Project.objects.get(id=int(project_id), user=request.user)
+        projects.append(project)
+        ranks.append(float(rank))
+    for project, rank in zip(projects, ranks):
+        project.rank = rank
+        project.save()
     return JsonResponse({"success": True})

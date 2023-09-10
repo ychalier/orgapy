@@ -14,25 +14,12 @@
 .project {
     position: relative;
     box-sizing: border-box;
-    background: #101010;
+    background: #262728;
     margin-bottom: .4rem;
     width: 100%;
     border: 1px solid #080808;
     border-radius: .4rem;
     overflow: hidden;
-}
-
-.project-ongoing {
-    background: hsl(207, 61%, 10%);
-}
-
-.project-idea,
-.project-paused {
-    background: #262728;
-}
-
-.project-finished {
-    background: #222222;
 }
 
 .project-header {
@@ -41,6 +28,7 @@
 
 .project-title {
     color: white;
+    width: fit-content;
 }
 
 .project-title a {
@@ -60,12 +48,6 @@
 .project-category,
 .project-category-input {
     margin-right: .2rem;
-}
-
-.project-category::after,
-.project-category-input::after {
-    margin-left: .2rem;
-    content: "·";
 }
 
 .project-summary {

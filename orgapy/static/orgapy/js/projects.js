@@ -7,20 +7,6 @@ window.addEventListener("load", () => {
         }
     }
 
-    const STATUS_CHOICES = [
-        "Idea",
-        "Ongoing",
-        "Paused",
-        "Finished",
-    ];
-
-    const STATUS_ORDERING = {
-        "Ongoing": 0,
-        "Paused": 1,
-        "Idea": 1,
-        "Finished": 2,
-    }
-
     var projects = {};
 
     class Project {
@@ -31,11 +17,11 @@ window.addEventListener("load", () => {
             this.modification = data.modification;
             this.title = data.title;
             this.category = data.category;
-            this.status = data.status;
             this.limit_date = data.limit_date;
             this.progress = data.progress;
             this.description = data.description;
             this.checklist = data.checklist;
+            this.rank = data.rank;
             this.checklist_items = null;
             this.split_checklist();
             this.expanded = false;
@@ -144,45 +130,6 @@ window.addEventListener("load", () => {
             });
         }
 
-        inflate_status(corner) {
-            var self = this;
-            let status = corner.appendChild(document.createElement("div"));
-            status.classList.add("project-status");
-            status.textContent = this.status;
-            status.addEventListener("click", (event) => {
-                event.stopPropagation();
-                let select = document.createElement("select");
-                select.classList.add("project-status-select");
-                select.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    return false;
-                });
-                STATUS_CHOICES.forEach(option_value => {
-                    let option = document.createElement("option");
-                    option.classList.add("project-status-option");
-                    option.value = option_value;
-                    option.textContent = option_value;
-                    if (option_value == self.status) {
-                        option.selected = true;
-                    }
-                    select.appendChild(option);
-                });
-                function callback() {
-                    select.querySelectorAll("option").forEach(option => {
-                        if (option.selected) {
-                            self.status = option.value;
-                        }
-                    });
-                    self.update();
-                }
-                select.addEventListener("focusout", callback);
-                select.addEventListener("change", callback);
-                status.replaceWith(select);
-                select.focus();
-                return false;
-            });
-        }
-
         inflate_limit_date_input(element) {
             var self = this;
             let input = document.createElement("input");
@@ -267,7 +214,6 @@ window.addEventListener("load", () => {
             let corner = header.appendChild(document.createElement("div"));
             corner.classList.add("project-corner");
             this.inflate_category(corner);
-            this.inflate_status(corner);
             if (this.limit_date == null && this.description == null && this.checklist == null) return;
             let summary = header.appendChild(document.createElement("div"));
             summary.classList.add("project-summary");
@@ -489,7 +435,7 @@ window.addEventListener("load", () => {
 
         inflate() {
             this.container.innerHTML = "";
-            this.container.className = `project project-${this.status.toLowerCase()}`;
+            this.container.className = `project`;
             this.inflate_header();
             if (this.description != null || this.checklist != null) {
                 this.inflate_body();
@@ -619,11 +565,11 @@ window.addEventListener("load", () => {
             return {
                 title: this.title,
                 category: this.category,
-                status: this.status,
                 limit_date: this.limit_date,
                 progress: this.progress,
                 description: this.description,
                 checklist: this.checklist,
+                rank: this.rank,
             }
         }
 
@@ -668,19 +614,46 @@ window.addEventListener("load", () => {
 
     }
 
+    function save_ranks(ordering) {
+        let ranks = {};
+        document.querySelectorAll("#projects .project").forEach((project, i) => {
+            let project_id = project.getAttribute("project_id");
+            ranks[project_id] = ordering[i];
+            projects[project_id].rank = ordering[i];
+        }); 
+        inflate_projects();
+        let form_data = new FormData();
+        form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+        form_data.set("ranks", JSON.stringify(ranks));
+        fetch(URL_API_PROJECT_RANKS, {
+            method: "post",
+            body: form_data
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toast("Saved!", 600);
+                } else {
+                    toast("An error occured", 600);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
+    }
+
     function inflate_projects() {
+        dragrank_clear();
         let container = document.getElementById("projects");
         container.innerHTML = "";
         let project_indices = [...Object.keys(projects)];
-        project_indices.sort((a, b) => {
-            let status_ordering = STATUS_ORDERING[projects[a].status] - STATUS_ORDERING[projects[b].status];
-            if (status_ordering == 0) {
-                return projects[b].modification - projects[a].modification;
-            }
-            return status_ordering;
-        });
+        project_indices.sort((a, b) => projects[a].rank - projects[b].rank);
         project_indices.forEach(project_id => {
             container.appendChild(projects[project_id].create());
+        });
+        dragrank(container, ".project", (ordering, permutation) => {
+            setTimeout(() => {save_ranks(ordering)}, 300);
         });
     }
 
@@ -717,21 +690,15 @@ window.addEventListener("load", () => {
     }
 
     function inflate_filters() {
-        let filter_status_container = document.getElementById("filter-status");
-        filter_status_container.innerHTML = "";
-        STATUS_CHOICES.forEach(status => {
-            create_filter(filter_status_container, "status", status);
-        });
-
         let category_set = new Set();
         for (let project_id in projects) {
             category_set.add(projects[project_id].category);
         }
         let categories = Array.from(category_set).toSorted();
-        let category_status_container = document.getElementById("filter-category");
-        category_status_container.innerHTML = "";
+        let category_filter_container = document.getElementById("filter-category");
+        category_filter_container.innerHTML = "";
         categories.forEach(category => {
-            create_filter(category_status_container, "category", category);
+            create_filter(category_filter_container, "category", category);
         })
     }
 

@@ -182,6 +182,7 @@ class Project(models.Model):
     progress_current = models.PositiveIntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     checklist = models.TextField(blank=True, null=True)
+    rank = models.FloatField()
 
     class Meta:
 

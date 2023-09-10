@@ -16,6 +16,7 @@
     const URL_API_PROJECT_EDIT = "{% url 'orgapy:api_project_edit' %}";
     const URL_API_PROJECT_DELETE = "{% url 'orgapy:api_project_delete' %}";
     const URL_API_PROJECT_CREATE = "{% url 'orgapy:api_project_create' %}";
+    const URL_API_PROJECT_RANKS = "{% url 'orgapy:api_project_edit_ranks' %}"
     const URL_API_OBJECTIVE_LIST = "{% url 'orgapy:api_objective_list' %}";
     const URL_API_OBJECTIVE_HISTORY = "{% url 'orgapy:api_objective_history' %}";
 </script>
@@ -28,6 +29,8 @@
 <br>
 
 <div id="projects" class="projects"></div>
+
+<br>
 
 <div class="d-flex">
     <button id="btn-project-create" class="projects-button"><i class="icon icon-plus"></i> Add project</button>
@@ -43,10 +46,6 @@
 <div class="container sticky-top">
     <div class="mb-2"><span id="project-count">–</span> projects</div>
     <div class="filters-wrapper">
-        <div>
-            <b>Status</b>
-            <div id="filter-status" class="filters"></div>
-        </div>
         <div>
             <b>Category</b>
             <div id="filter-category" class="filters"></div>
