@@ -383,6 +383,11 @@ window.addEventListener("load", () => {
                     return false;
                 });
             });
+            dragrank(checklist, ".project-checklist-item", (ordering, permutation) => {
+                reorder(self.checklist_items, permutation);
+                self.concat_checklist();
+                self.update();
+            });
         }
 
         inflate_checklist(body) {
