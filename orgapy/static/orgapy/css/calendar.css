@@ -36,10 +36,21 @@
 }
 
 .event-sync {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
     margin-top: .4rem;
     font-size: small;
     color: #888;
     font-style: italic;
+}
+
+.event-sync-btn {
+    cursor: pointer;
+    display: none;
+    margin-top: -1px;
+    margin-left: .4rem;
+    font-size: small;
 }
 
 .event-delete {
@@ -50,10 +61,12 @@
     font-size: small;
 }
 
+.event-sync-btn:hover,
 .event-delete:hover {
     color: var(--color-accent-5);
 }
 
-.event:hover .event-delete {
+.event:hover .event-delete,
+.event-sync:hover .event-sync-btn {
     display: block;
 }

@@ -109,9 +109,19 @@ window.addEventListener("load", () => {
                 event.inflate(container);
             });
         });
-        let sync_date_el = container.appendChild(document.createElement("div"));
-        sync_date_el.classList.add("event-sync");
-        sync_date_el.textContent = new Date(sync_date).toLocaleString();
+        let event_sync = container.appendChild(document.createElement("div"));
+        event_sync.classList.add("event-sync");
+        let event_sync_date = event_sync.appendChild(document.createElement("div"));
+        event_sync_date.classList.add("event-sync-date");
+        event_sync_date.textContent = new Date(sync_date).toLocaleString();
+        event_sync_date.title = "Last synchronization";
+        let event_sync_btn = event_sync.appendChild(document.createElement("div"));
+        event_sync_btn.title = "Refresh";
+        event_sync_btn.classList.add("event-sync-btn");
+        event_sync_btn.innerHTML = `<i class="icon icon-refresh"></i>`;
+        event_sync_btn.addEventListener("click", () => {
+            fetch_events(true);
+        });
     }
 
 });
