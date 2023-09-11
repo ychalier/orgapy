@@ -3,6 +3,10 @@ from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
+
+import caldav
+import json
 
 
 class Category(models.Model):
@@ -145,3 +149,61 @@ class Project(models.Model):
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
+
+
+class Calendar(models.Model):
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    url = models.URLField(max_length=255)
+    username = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    calendar_name = models.CharField(max_length=255)
+    lookahead = models.PositiveIntegerField(default=14)
+    last_sync = models.DateTimeField(blank=True, null=True)
+    sync_period = models.PositiveIntegerField(default=86400)
+    events = models.TextField(blank=True, null=True)
+
+    class Meta:
+
+        ordering = ["user"]
+
+    def __str__(self):
+        return f"{ self.user } - { self.id }. { self.calendar_name }"
+    
+    def fetch_events(self):
+        self.last_sync = timezone.now()
+        events = []
+        with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
+            principal = client.principal()
+            for calendar in principal.calendars():
+                if calendar.name != self.calendar_name:
+                    continue
+                events = calendar.search(
+                    start=datetime.datetime.now().date(),
+                    end=datetime.datetime.now().date() + datetime.timedelta(days=self.lookahead),
+                    event=True,
+                    expand=True)
+        data = []
+        for event in events:
+            for subcomponent in event.icalendar_instance.subcomponents:
+                if "SUMMARY" not in subcomponent:
+                    continue
+                location = subcomponent.get("LOCATION")
+                data.append({
+                    "url": event.url,
+                    "title": str(subcomponent["SUMMARY"]),
+                    "dtstart": subcomponent["DTSTART"].dt.isoformat(),
+                    "dtend": subcomponent["DTEND"].dt.isoformat(),
+                    "location": None if location is None else str(location)
+                })
+        self.events = json.dumps(data, default=str)
+        self.save()
+
+    def get_events(self, force=False):
+        now = timezone.now()
+        if force or self.last_sync is None or (now - self.last_sync).total_seconds() > self.sync_period:
+            self.fetch_events()
+        if self.events is None:
+            return []
+        return json.loads(self.events)
+

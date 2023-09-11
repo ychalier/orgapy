@@ -538,3 +538,13 @@ def api_project_edit_ranks(request):
         project.rank = rank
         project.save()
     return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.view_calendar")
+def api_calendar_list(request):
+    if not models.Calendar.objects.filter(user=request.user).exists():
+        raise Http404("No calendar found for user")
+    calendar = models.Calendar.objects.get(user=request.user)
+    events = calendar.get_events(force="force" in request.GET)
+    return JsonResponse({"events": events, "last_sync": calendar.last_sync})
+

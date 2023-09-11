@@ -1,0 +1,43 @@
+.event {
+    display: flex;
+    flex-direction: row;
+}
+
+.event-time + .event-title {
+    margin-left: .4rem;
+}
+
+.event-date {
+    font-weight: bold;
+    font-size: small;
+}
+
+.event + .event-date {
+    margin-top: .4rem;
+}
+
+.event-over {
+    opacity: 0.5;
+}
+
+.event-dot-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-right: .2rem;
+}
+
+.event-dot {
+    margin-top: .1rem;
+    width: 8px;
+    height: 8px;
+    background: var(--color-accent-5);
+    border-radius: 50%;
+}
+
+.event-sync {
+    margin-top: .4rem;
+    font-size: small;
+    color: #888;
+    font-style: italic;
+}

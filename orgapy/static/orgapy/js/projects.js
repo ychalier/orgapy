@@ -551,7 +551,6 @@ window.addEventListener("load", () => {
                             toast("Deleted!", 600);
                             delete projects[self.id];
                             self.container.parentElement.removeChild(self.container);
-                            inflate_filters();
                         } else {
                             toast("An error occured", 600);
                         }
@@ -611,7 +610,6 @@ window.addEventListener("load", () => {
         update() {
             this.save();
             this.inflate();
-            inflate_filters();
         }
 
         on_empty_checklist() {
@@ -675,6 +673,10 @@ window.addEventListener("load", () => {
 
     }
 
+    function update_project_count() {
+        document.getElementById("project-count").textContent = [...Object.keys(projects)].length;
+    }
+
     function save_ranks(ordering) {
         let ranks = {};
         document.querySelectorAll("#projects .project").forEach((project, i) => {
@@ -721,51 +723,7 @@ window.addEventListener("load", () => {
         dragrank(container, ".project", (ordering, permutation) => {
             setTimeout(() => {save_ranks(ordering)}, 300);
         });
-    }
-
-    function create_filter(container, attr, value) {
-        let wrapper = container.appendChild(document.createElement("div"));
-        let input = wrapper.appendChild(document.createElement("input"));
-        input.classList.add("mr-1");
-        input.type = "checkbox";
-        input.checked = true;
-        input.id = `filter-${attr}-${value}`;
-        input.classList.add("c-hand");
-        let label = wrapper.appendChild(document.createElement("label"));
-        label.setAttribute("for", `filter-${attr}-${value}`);
-        label.classList.add("c-hand");
-        let concerned = 0;
-        for (let project_id in projects) {
-            if (projects[project_id][attr] == value) {
-                concerned++;
-            }
-        }
-        label.textContent = `${value.toLowerCase()} (${concerned})`;
-        input.addEventListener("input", () => {
-            document.querySelectorAll(".project").forEach(project => {
-                if (projects[project.getAttribute("project_id")][attr] == value) {
-                    if (input.checked) {
-                        project.style.display = "unset";
-                    } else {
-                        project.style.display = "none";
-                    }
-                }
-            });
-        });
-        document.getElementById("project-count").textContent = [...Object.keys(projects)].length;
-    }
-
-    function inflate_filters() {
-        let category_set = new Set();
-        for (let project_id in projects) {
-            category_set.add(projects[project_id].category);
-        }
-        let categories = Array.from(category_set).toSorted();
-        let category_filter_container = document.getElementById("filter-category");
-        category_filter_container.innerHTML = "";
-        categories.forEach(category => {
-            create_filter(category_filter_container, "category", category);
-        })
+        update_project_count();
     }
 
     fetch(URL_API_PROJECT_LIST).then(res => res.json()).then(data => {
@@ -779,7 +737,6 @@ window.addEventListener("load", () => {
             }
         });
         inflate_projects();
-        inflate_filters();
     });
 
     window.addEventListener("click", clear_context_menus);
@@ -795,7 +752,6 @@ window.addEventListener("load", () => {
                     let container = document.getElementById("projects");
                     let project_container = projects[data.project.id].create();
                     container.appendChild(project_container);
-                    inflate_filters();
                 } else {
                     toast("An error occured", 600);
                 }
