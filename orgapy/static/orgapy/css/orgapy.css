@@ -81,6 +81,11 @@ pre {
     margin: .8rem 0;
     padding: .4rem;
     justify-content: flex-start;
+    border-radius: .4rem;
+}
+
+.navbar .btn {
+    border-radius: .4rem;
 }
 
 .markdown {

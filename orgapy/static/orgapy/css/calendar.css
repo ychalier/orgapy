@@ -48,7 +48,7 @@
 .event-sync-btn {
     cursor: pointer;
     display: none;
-    margin-top: -1px;
+    margin-top: -3px;
     margin-left: .4rem;
     font-size: small;
 }

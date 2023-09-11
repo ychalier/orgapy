@@ -336,6 +336,11 @@
     margin-right: .4rem;
 }
 
+a.projects-button:hover {
+    text-decoration: inherit;
+    color: inherit;
+}
+
 .filters {
     user-select: none;
 }
