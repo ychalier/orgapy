@@ -36,18 +36,56 @@ window.addEventListener("load", () => {
             if (this.location != null) {
                 element.title = this.location;
             }
+            let delete_button = element.appendChild(document.createElement("div"));
+            delete_button.classList.add("event-delete");
+            delete_button.innerHTML = `<i class="icon icon-delete"></i>`;
+            delete_button.title = "Delete";
+            var self = this;
+            delete_button.addEventListener("click", () => {
+                self.delete();
+            });
+        }
+
+        delete() {
+            let form_data = new FormData();
+            form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+            form_data.set("href", this.url);
+            fetch(URL_API_CALENDAR_DELETE, {
+                method: "post",
+                body: form_data
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        toast("Event deleted", 600);
+                        fetch_events(false);
+                    } else {
+                        toast("An error occured", 600);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    toast("An error occured", 600);
+                });
         }
     }
-    
-    fetch(URL_API_CALENDAR_LIST).then(res => res.json()).then(data => {
-        events = [];
-        sync_date = data.last_sync;
-        data.events.forEach(event => {
-            events.push(new CalendarEvent(event));
+
+    function fetch_events(force=false) {
+        let url = URL_API_CALENDAR_LIST;
+        if (force) {
+            url = `${url}?force=1`;
+        }
+        fetch(url).then(res => res.json()).then(data => {
+            events = [];
+            sync_date = data.last_sync;
+            data.events.forEach(event => {
+                events.push(new CalendarEvent(event));
+            });
+            inflate_events();
         });
-        inflate_events();
-    });
+    }
     
+    fetch_events(false);
 
     function inflate_events() {
         let container = document.getElementById("events");

@@ -548,3 +548,16 @@ def api_calendar_list(request):
     events = calendar.get_events(force="force" in request.GET)
     return JsonResponse({"events": events, "last_sync": calendar.last_sync})
 
+
+@permission_required("orgapy.change_calendar")
+def api_calendar_delete(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    href = request.POST.get("href")
+    if href is None:
+        raise BadRequest("Missing fields")
+    if not models.Calendar.objects.filter(user=request.user).exists():
+        raise Http404("No calendar found for user")
+    calendar = models.Calendar.objects.get(user=request.user)
+    success = calendar.delete_event(href)
+    return JsonResponse({"success": success})

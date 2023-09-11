@@ -206,4 +206,19 @@ class Calendar(models.Model):
         if self.events is None:
             return []
         return json.loads(self.events)
+    
+    def delete_event(self, href):
+        success = False
+        with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
+            principal = client.principal()
+            for calendar in principal.calendars():
+                if calendar.name != self.calendar_name:
+                    continue
+                calendar.event_by_url(href).delete()
+                events_data = json.loads(self.events)
+                self.events = json.dumps(list(filter(lambda e: e["url"] != href, events_data)))
+                self.save()
+                success = True
+                break
+        return success
 

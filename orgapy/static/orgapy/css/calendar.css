@@ -41,3 +41,19 @@
     color: #888;
     font-style: italic;
 }
+
+.event-delete {
+    cursor: pointer;
+    display: none;
+    margin-top: 1px;
+    margin-left: .4rem;
+    font-size: small;
+}
+
+.event-delete:hover {
+    color: var(--color-accent-5);
+}
+
+.event:hover .event-delete {
+    display: block;
+}
