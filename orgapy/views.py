@@ -561,3 +561,32 @@ def api_calendar_delete(request):
     calendar = models.Calendar.objects.get(user=request.user)
     success = calendar.delete_event(href)
     return JsonResponse({"success": success})
+
+
+def parse_dt(date_string, time_string):
+    dt_date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+    dt_time = datetime.datetime.strptime(time_string, "%H:%M").time()
+    return datetime.datetime.combine(dt_date, dt_time)
+
+
+@permission_required("orgapy.change_calendar")
+def api_calendar_add(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    title = request.POST.get("title")
+    dtstart_date = request.POST.get("dtstart-date")
+    dtstart_time = request.POST.get("dtstart-time")
+    dtend_date = request.POST.get("dtend-date")
+    dtend_time = request.POST.get("dtend-time")
+    location = request.POST.get("location")
+    if title is None or dtstart_date is None or dtstart_time is None or dtend_date is None or dtend_time is None:
+        raise BadRequest("Missing fields")
+    if not models.Calendar.objects.filter(user=request.user).exists():
+        raise Http404("No calendar found for user")
+    if location.strip() == "":
+        location = None
+    dtstart = parse_dt(dtstart_date, dtstart_time)
+    dtend = parse_dt(dtend_date, dtend_time)
+    calendar = models.Calendar.objects.get(user=request.user)
+    success = calendar.add_event(title, dtstart, dtend, location)
+    return JsonResponse({"success": success})

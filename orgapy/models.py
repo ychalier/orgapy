@@ -221,4 +221,30 @@ class Calendar(models.Model):
                 success = True
                 break
         return success
+    
+    def add_event(self, title, dtstart, dtend, location):
+        success = False
+        with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
+            principal = client.principal()
+            for calendar in principal.calendars():
+                if calendar.name != self.calendar_name:
+                    continue
+                event = calendar.save_event(
+                    dtstart=dtstart,
+                    dtend=dtend,
+                    summary=title,
+                    location=location)
+                events_data = json.loads(self.events)
+                events_data.append({
+                    "url": event.url,
+                    "title": title,
+                    "dtstart": dtstart.isoformat(),
+                    "dtend": dtend.isoformat(),
+                    "location": location
+                })
+                self.events = json.dumps(events_data, default=str)
+                self.save()
+                success = True
+                break
+        return success
 

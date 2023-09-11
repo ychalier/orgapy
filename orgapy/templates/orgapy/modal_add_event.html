@@ -1,0 +1,39 @@
+<div id="modal-add-event" class="modal">
+    <span class="modal-overlay" onclick="closeModal('modal-add-event')"></span>
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title h5">Add Event</div>
+        </div>
+        <div class="modal-body">
+            <form id="form-add-event" method="post" action="{% url 'orgapy:api_calendar_add' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date start</label>
+                    <div class="input-group">
+                        <input class="form-input" name="dtstart-date" type="date" />
+                        <input class="form-input" name="dtstart-time" type="time" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date end</label>
+                    <div class="input-group">
+                        <input class="form-input" name="dtend-date" type="date" />
+                        <input class="form-input" name="dtend-time" type="time" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" id="btn-add-event">Add</button>
+            <button class="btn" onclick="closeModal('modal-add-event')">Cancel</button>
+        </div>
+    </div>
+</div>

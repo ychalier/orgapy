@@ -42,7 +42,9 @@ window.addEventListener("load", () => {
             delete_button.title = "Delete";
             var self = this;
             delete_button.addEventListener("click", () => {
-                self.delete();
+                if (confirm("Are you sure?") == true) {
+                    self.delete();
+                }
             });
         }
 
@@ -109,6 +111,15 @@ window.addEventListener("load", () => {
                 event.inflate(container);
             });
         });
+        
+        let event_modal_btn = container.appendChild(document.createElement("button"));
+        event_modal_btn.innerHTML = `<i class="icon icon-plus"></i> Add`;
+        event_modal_btn.title = "Add Event";
+        event_modal_btn.classList.add("event-modal-btn");
+        event_modal_btn.addEventListener("click", () => {
+            showModal("modal-add-event");
+        });
+
         let event_sync = container.appendChild(document.createElement("div"));
         event_sync.classList.add("event-sync");
         let event_sync_date = event_sync.appendChild(document.createElement("div"));
@@ -123,5 +134,24 @@ window.addEventListener("load", () => {
             fetch_events(true);
         });
     }
+
+    document.getElementById("btn-add-event").addEventListener("click", () => {
+        let form = document.getElementById("form-add-event");
+        let form_data = new FormData(form);
+        closeModal('modal-add-event');
+        fetch(form.action, {method: form.method, body: form_data}).then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toast("Event added", 600);
+                    fetch_events(false);
+                } else {
+                    toast("An error occured", 600);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
+    });
 
 });

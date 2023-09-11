@@ -70,3 +70,27 @@
 .event-sync:hover .event-sync-btn {
     display: block;
 }
+
+.event-modal-btn {
+    font-size: small;
+    background: none;
+    color: inherit;
+    border: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+    padding: .2rem;
+    border-radius: .2rem;
+    transition: .2s ease;
+    cursor: pointer;
+    margin-top: .2rem;
+}
+
+.event-modal-btn:hover {
+    background: #22272b;
+}
+
+.event-modal-btn i {
+    margin-right: .4rem;
+}

@@ -41,6 +41,8 @@
     <a id="btn-edit-objectives" href="{% url 'admin:orgapy_objective_changelist' %}" class="projects-button"><i class="icon icon-edit"></i> Edit objectives</a>
 </div>
 
+{% include "orgapy/modal_add_event.html" %}
+
 {% endblock main_content %}
 
 {% block right_column %}
