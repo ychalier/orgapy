@@ -523,6 +523,10 @@ window.addEventListener("load", () => {
                 });
             }
 
+            add_contextmenu_option(menu, "Edit in admin", () => {
+                window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
+            });
+
             add_contextmenu_option(menu, "Delete project", () => {
                 self.delete();
             });
