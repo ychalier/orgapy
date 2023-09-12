@@ -461,6 +461,8 @@ def api_project_create(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     max_rank = models.Project.objects.filter(user=request.user).aggregate(Max("rank"))["rank__max"]
+    if max_rank is None:
+        max_rank = 1
     project = models.Project.objects.create(
         user=request.user,
         title="New Project",
