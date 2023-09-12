@@ -438,6 +438,17 @@ window.addEventListener("load", () => {
                 self.update();
                 return false;
             });
+            progress.addEventListener("dblclick", (event) => {
+                let user_value = prompt("Current value:", self.progress.current);
+                if (user_value != null && user_value != "") {
+                    try {
+                        self.progress.current = parseFloat(user_value);
+                        self.update();
+                    } catch {
+
+                    }
+                }
+            });
         }
 
         inflate() {
