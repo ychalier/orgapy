@@ -523,6 +523,11 @@ window.addEventListener("load", () => {
                 });
             }
 
+            add_contextmenu_option(menu, "Copy as Markdown", () => {
+                navigator.clipboard.writeText(this.to_markdown());
+                toast("Copied to clipboard!", 600);
+            });
+
             add_contextmenu_option(menu, "Edit in admin", () => {
                 window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
             });
@@ -576,6 +581,30 @@ window.addEventListener("load", () => {
                         toast("An error occured", 600);
                     });
             }
+        }
+
+        to_markdown() {
+            let rows = [];
+            rows.push(`# ${this.title}\n`);
+            rows.push(`Category: ${this.category}`);
+            if (this.limit_date != null) {
+                rows.push(`Limit date: ${new Date(this.limit_date).toLocaleDateString()}`);
+            }
+            if (this.progress != null) {
+                rows.push(`Progress: ${this.progress.current}/${this.progress.max}`);
+            }
+            rows.push("");
+            if (this.description != null) {
+                rows.push("## Description" + "\n");
+                rows.push(this.description + "\n");
+            }
+            if (this.checklist != null) {
+                rows.push("## Checklist" + "\n");
+                this.checklist_items.forEach(item => {
+                    rows.push("- [" + (item.state ? "x" : " ") + "] " + item.text);
+                });
+            }
+            return rows.join("\n");
         }
 
         to_dict() {
