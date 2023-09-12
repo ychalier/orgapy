@@ -562,6 +562,7 @@ window.addEventListener("load", () => {
                             toast("Deleted!", 600);
                             delete projects[self.id];
                             self.container.parentElement.removeChild(self.container);
+                            update_project_count();
                         } else {
                             toast("An error occured", 600);
                         }
@@ -685,7 +686,14 @@ window.addEventListener("load", () => {
     }
 
     function update_project_count() {
-        document.getElementById("project-count").textContent = [...Object.keys(projects)].length;
+        let count = [...Object.keys(projects)].length;
+        if (count == 0) {
+            document.getElementById("project-count").textContent = "No project";
+        } else if (count == 1) {
+            document.getElementById("project-count").textContent = "1 project";
+        } else {
+            document.getElementById("project-count").textContent = count + " projects";
+        }
     }
 
     function save_ranks(ordering) {
@@ -763,6 +771,7 @@ window.addEventListener("load", () => {
                     let container = document.getElementById("projects");
                     let project_container = projects[data.project.id].create();
                     container.appendChild(project_container);
+                    update_project_count();
                 } else {
                     toast("An error occured", 600);
                 }
