@@ -43,6 +43,12 @@
     </span>
 </p>
 
+{% if note.project_set.all %}
+<p style="margin-top: -24px">
+Project{{ note.project_set.count | pluralize }}: {% for project in note.project_set.all %}<a href="{{ project.get_absolute_url }}">{{ project.title }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+</p>
+{% endif %}
+
 {% if note.content %}
 <div class="markdown p-4">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 {% endif %}

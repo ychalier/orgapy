@@ -7,6 +7,7 @@ window.addEventListener("load", () => {
         }
     }
 
+    var note_titles = {};
     var projects = {};
     var todays_plan = null;
 
@@ -15,6 +16,21 @@ window.addEventListener("load", () => {
         option.classList.add("contextmenu-entry");
         option.textContent = label;
         option.addEventListener("click", callback);
+    }
+
+    function set_note_title(note_span, note_id) {
+        if (note_id in note_titles) {
+            note_span.textContent = note_titles[note_id];
+            note_span.title = note_titles[note_id];
+        } else {
+            fetch(URL_API_NOTE_TITLE + `?nid=${note_id}`).then(res => res.text()).then(title => {
+                note_titles[note_id] = title;
+                note_span.textContent = title;
+                note_span.title = title;
+            }).catch(err => {
+                note_span.textContent = "Error";
+            });
+        }
     }
 
     class Project {
@@ -30,6 +46,7 @@ window.addEventListener("load", () => {
             this.description = data.description;
             this.checklist = data.checklist;
             this.rank = data.rank;
+            this.note = data.note;
             this.checklist_items = null;
             this.split_checklist();
             this.expanded = false;
@@ -94,16 +111,32 @@ window.addEventListener("load", () => {
             var self = this;
             let title = header.appendChild(document.createElement("div"));
             title.classList.add("project-title");
-            title.innerHTML = converter.makeHtml(this.title).slice(3, -4);
+            let title_span = title.appendChild(document.createElement("span"));
+            title_span.innerHTML = converter.makeHtml(this.title).slice(3, -4);
+            if (this.note != null) {
+                let note_span = title.appendChild(document.createElement("a"));
+                note_span.classList.add("ml-2");
+                note_span.classList.add("note-link");
+                note_span.textContent = `@${this.note}`;
+                set_note_title(note_span, this.note);
+                note_span.href = URL_ORGAPY_NOTE.replace("NID", this.note);
+            }
             title.addEventListener("click", (event) => {
                 event.stopPropagation();
                 let input = document.createElement("input");
                 input.classList.add("project-title-input");
-                input.value = self.title;
+                input.value = self.title + (self.note == null ? "" : ` @${self.note}`);
                 input.placeholder = "Title";
                 input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
                 function callback() {
-                    self.title = input.value.trim();
+                    let title_string = input.value.trim();
+                    let match = title_string.match(/^(.+?)(?:@(\d+))? *$/);
+                    self.title = match[1].trim();
+                    if (match[2] == undefined) {
+                        self.note = null;
+                    } else {
+                        self.note = parseInt(match[2]);
+                    }
                     self.update();
                 }
                 input.addEventListener("focusout", callback);
@@ -551,6 +584,7 @@ window.addEventListener("load", () => {
         create() {
             this.container = document.createElement("div");
             this.container.setAttribute("project_id", this.id);
+            this.container.setAttribute("id", `project-${this.id}`);
             this.inflate();
             return this.container;
         }
@@ -616,6 +650,7 @@ window.addEventListener("load", () => {
                 description: this.description,
                 checklist: this.checklist,
                 rank: this.rank,
+                note: this.note,
             }
         }
 

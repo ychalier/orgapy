@@ -142,6 +142,7 @@ class Project(models.Model):
     description = models.TextField(blank=True, null=True)
     checklist = models.TextField(blank=True, null=True)
     rank = models.FloatField()
+    note = models.ForeignKey("Note", on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
 
@@ -149,6 +150,9 @@ class Project(models.Model):
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
+    
+    def get_absolute_url(self):
+        return reverse("orgapy:projects") + f"#project-{self.id}"
 
 
 class Calendar(models.Model):

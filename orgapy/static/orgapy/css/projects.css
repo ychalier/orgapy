@@ -29,10 +29,26 @@
 .project-title {
     color: white;
     width: fit-content;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
 }
 
 .project-title a {
     color: hsl(200, 63%, 79%);
+}
+
+.note-link {
+    display: inline-block;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: #101010;
+    border-radius: .4rem;
+    padding: 0 .4rem;
+    font-size: small;
 }
 
 .project-corner {

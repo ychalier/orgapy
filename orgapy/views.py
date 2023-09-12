@@ -391,6 +391,7 @@ def api_project_list(request):
             "description": project.description if project.description else None,
             "checklist": project.checklist if project.checklist else None,
             "rank": project.rank,
+            "note": None if project.note is None else project.note.id
         })
     return JsonResponse({"projects": projects})
 
@@ -434,6 +435,10 @@ def api_project_edit(request):
         project.checklist = project_data["checklist"]
     else:
         project.checklist = None
+    if project_data["note"] is not None and models.Note.objects.filter(user=request.user, id=int(project_data["note"])).exists():
+        project.note = models.Note.objects.get(user=request.user, id=int(project_data["note"]))
+    else:
+        project.note = None
     project.save()
     return JsonResponse({"success": True})
 
@@ -480,6 +485,7 @@ def api_project_create(request):
         "creation": project.date_creation.timestamp(),
         "modification": project.date_modification.timestamp(),
         "rank": project.rank,
+        "note": None,
     }})
 
 
@@ -592,3 +598,14 @@ def api_calendar_add(request):
     calendar = models.Calendar.objects.get(user=request.user)
     success = calendar.add_event(title, dtstart, dtend, location)
     return JsonResponse({"success": success})
+
+
+@permission_required("orgapy.view_note")
+def api_note_title(request):
+    nid = request.GET.get("nid")
+    if nid is None:
+        raise BadRequest()
+    query = models.Note.objects.filter(user=request.user, id=int(nid))
+    if not query.exists():
+        raise Http404("Not found")
+    return HttpResponse(query.get().title, content_type="text/plain")
