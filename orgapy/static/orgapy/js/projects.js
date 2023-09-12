@@ -533,10 +533,10 @@ window.addEventListener("load", () => {
             let menu = document.createElement("div");
             menu.classList.add("contextmenu");
             this.inflate_contextmenu_items(menu);
+            document.body.appendChild(menu);
             let bounds = menu.getBoundingClientRect();
             menu.style.left = event.clientX + "px";
-            menu.style.top = Math.min(event.clientY, window.innerHeight - bounds.height) + "px";
-            document.body.appendChild(menu);
+            menu.style.top = Math.min(event.clientY, window.innerHeight - (bounds.height + 8)) + "px";
         }
 
         create() {
