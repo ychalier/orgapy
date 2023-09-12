@@ -163,6 +163,13 @@ window.addEventListener("load", () => {
         for (let objective_id in objectives) {
             inflate_objgraph_objective(objgraph_body, objective_id);
         }
+        if ([...Object.keys(objectives)].length == 0) {
+            objgraph_body.textContent = "No objective";
+            objgraph_body.style.position = "absolute";
+            objgraph_body.style.left = "50%";
+            objgraph_body.style.transform = "translateX(-50%)";
+            objgraph.style.paddingBottom = "24px";
+        }
     }
 
     var is_initial_scroll = true;
