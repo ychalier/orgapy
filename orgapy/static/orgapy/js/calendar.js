@@ -84,6 +84,10 @@ window.addEventListener("load", () => {
                 events.push(new CalendarEvent(event));
             });
             inflate_events();
+        }).catch(err => {
+            events = [];
+            sync_date = null;
+            inflate_events();
         });
     }
     
@@ -92,6 +96,12 @@ window.addEventListener("load", () => {
     function inflate_events() {
         let container = document.getElementById("events");
         container.innerHTML = "";
+        
+        if (events.length == 0) {
+            container.innerHTML = "No events";
+            return;
+        }
+        
         let days = {};
         events.forEach(event => {
             if (!(event.day in days)) {
