@@ -225,3 +225,7 @@ tr a i.icon {
     cursor: pointer;
     user-select: none;
 }
+
+.markdown a {
+    word-break: break-all;
+}
