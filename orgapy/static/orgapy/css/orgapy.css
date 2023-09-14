@@ -118,6 +118,9 @@ pre {
     .side-menu-xl {
         flex-direction: column;
     }
+    .markdown a {
+        word-break: break-all;
+    }
 }
 
 .code code {
@@ -224,8 +227,4 @@ tr a i.icon {
 .category-chip {
     cursor: pointer;
     user-select: none;
-}
-
-.markdown a {
-    word-break: break-all;
 }

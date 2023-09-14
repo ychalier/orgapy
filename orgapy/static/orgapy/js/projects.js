@@ -577,7 +577,7 @@ window.addEventListener("load", () => {
             this.inflate_contextmenu_items(menu);
             document.body.appendChild(menu);
             let bounds = menu.getBoundingClientRect();
-            menu.style.left = event.clientX + "px";
+            menu.style.left = Math.min(event.clientX, window.innerWidth - (bounds.width + 8)) + "px";
             menu.style.top = Math.min(event.clientY, window.innerHeight - (bounds.height + 8)) + "px";
         }
 
