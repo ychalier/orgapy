@@ -76,7 +76,7 @@ def view_notes(request):
         objects = base_objects.filter(Q(title__contains=query) | Q(content__contains=query))
     else:
         objects = base_objects
-    if len(objects) == 1:
+    if len(objects) == 1 and models.Note.objects.count() > 1:
         return redirect("orgapy:view_note", nid=objects[0].id)
     paginator = Paginator(objects.order_by(
         "-pinned",
