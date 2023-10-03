@@ -130,6 +130,7 @@ window.addEventListener("load", () => {
                 input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
                 function callback() {
                     let title_string = input.value.trim();
+                    let should_inflate_projects = title_string == "Today's Plan" && self.title != title_string;
                     let match = title_string.match(/^(.+?)(?:@(\d+))? *$/);
                     self.title = match[1].trim();
                     if (match[2] == undefined) {
@@ -137,7 +138,11 @@ window.addEventListener("load", () => {
                     } else {
                         self.note = parseInt(match[2]);
                     }
-                    self.update();
+                    if (should_inflate_projects) {
+                        self.save(true);
+                    } else {
+                        self.update();
+                    }
                 }
                 input.addEventListener("focusout", callback);
                 input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
@@ -603,8 +608,11 @@ window.addEventListener("load", () => {
                     .then(data => {
                         if (data.success) {
                             toast("Deleted!", 600);
+                            if (self.title == "Today's Plan") {
+                                todays_plan = null;
+                            }
                             delete projects[self.id];
-                            self.container.parentElement.removeChild(self.container);
+                            inflate_projects();
                             update_project_count();
                         } else {
                             toast("An error occured", 600);
@@ -658,7 +666,7 @@ window.addEventListener("load", () => {
             return JSON.stringify(this.to_dict());
         }
 
-        save() {
+        save(refresh_list=false) {
             let project_data = this.to_json_string();
             if (project_data == this.previous_project_data) {
                 console.log("No change detected, skipping save");
@@ -677,6 +685,9 @@ window.addEventListener("load", () => {
                 .then(data => {
                     if (data.success) {
                         toast("Saved!", 600);
+                        if (refresh_list) {
+                            fetch_projects_and_inflate();
+                        }
                     } else {
                         toast("An error occured", 600);
                     }
@@ -813,18 +824,22 @@ window.addEventListener("load", () => {
         update_project_count();
     }
 
-    fetch(URL_API_PROJECT_LIST).then(res => res.json()).then(data => {
-        projects = {};
-        todays_plan = null;
-        data.projects.forEach(project_data => {
-            if (project_data["title"] == "Today's Plan") {
-                todays_plan = new TodaysPlanProject(project_data);
-            } else {
-                projects[project_data.id] = new Project(project_data);
-            }
+    function fetch_projects_and_inflate() {
+        fetch(URL_API_PROJECT_LIST).then(res => res.json()).then(data => {
+            projects = {};
+            todays_plan = null;
+            data.projects.forEach(project_data => {
+                if (project_data["title"] == "Today's Plan") {
+                    todays_plan = new TodaysPlanProject(project_data);
+                } else {
+                    projects[project_data.id] = new Project(project_data);
+                }
+            });
+            inflate_projects();
         });
-        inflate_projects();
-    });
+    }
+
+    fetch_projects_and_inflate();
 
     window.addEventListener("click", clear_context_menus);
 
@@ -836,9 +851,7 @@ window.addEventListener("load", () => {
             .then(data => {
                 if (data.success) {
                     projects[data.project.id] = new Project(data.project);
-                    let container = document.getElementById("projects");
-                    let project_container = projects[data.project.id].create();
-                    container.appendChild(project_container);
+                    inflate_projects();
                     update_project_count();
                 } else {
                     toast("An error occured", 600);
