@@ -296,6 +296,7 @@ window.addEventListener("load", () => {
             }
             textarea.placeholder = "Description (Markdown)";
             function callback() {
+                self.container.classList.remove("editing");
                 self.description = textarea.value.trim();
                 if (self.description == "") {
                     self.description = null;
@@ -315,6 +316,7 @@ window.addEventListener("load", () => {
             description.innerHTML = converter.makeHtml(this.description);
             description.addEventListener("click", (event) => {
                 event.stopPropagation();
+                self.container.classList.add("editing");
                 self.inflate_description_textarea(description);
                 return false;
             });
@@ -820,6 +822,8 @@ window.addEventListener("load", () => {
         });
         dragrank(container, ".project", (ordering, permutation) => {
             setTimeout(() => {save_ranks(ordering)}, 300);
+        }, (element) => {
+            return !element.classList.contains("editing");
         });
         update_project_count();
     }

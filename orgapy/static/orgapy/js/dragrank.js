@@ -6,7 +6,7 @@ function dragrank_clear() {
     });
 }
 
-function dragrank(container, element_selector, callback, options={}) {
+function dragrank(container, element_selector, callback, drag_allowed, options={}) {
     
     if (!("zIndex" in options)) options.zIndex = 0;
     if (!("transition" in options)) options.transition = ".3s ease";
@@ -17,6 +17,10 @@ function dragrank(container, element_selector, callback, options={}) {
     var margin = null;
     var prev_ordering = [];
     var ordering = [];
+    var is_drag_allowed = drag_allowed;
+    if (is_drag_allowed == null) {
+        is_drag_allowed = () => { return true; }
+    }
     
     function reset_positions() {
         if (heights.length == 0) return;
@@ -45,34 +49,36 @@ function dragrank(container, element_selector, callback, options={}) {
         element.style.transition = options.transition;
         element.style.top = 0;
         element.addEventListener("mousedown", (event) => {
-            event.stopPropagation();
-            if (heights.length == 0) {
-                let top0 = null;
-                elements.forEach(e => {
-                    let bounds = e.getBoundingClientRect();
-                    let style = e.currentStyle || window.getComputedStyle(e);
-                    if (margin == null) {
-                        margin = parseFloat(style.marginBottom.replace("px", ""));
-                    }
-                    heights.push(bounds.height + margin);
-                    if (top0 == null) top0 = bounds.top;
-                    tops.push(bounds.top - top0);
-                });
+            if (is_drag_allowed(element)) {
+                event.stopPropagation();
+                if (heights.length == 0) {
+                    let top0 = null;
+                    elements.forEach(e => {
+                        let bounds = e.getBoundingClientRect();
+                        let style = e.currentStyle || window.getComputedStyle(e);
+                        if (margin == null) {
+                            margin = parseFloat(style.marginBottom.replace("px", ""));
+                        }
+                        heights.push(bounds.height + margin);
+                        if (top0 == null) top0 = bounds.top;
+                        tops.push(bounds.top - top0);
+                    });
+                }
+                dragging = {
+                    e: element,
+                    i: i,
+                    x: event.clientX,
+                    y: event.clientY,
+                    j: ordering[i],
+                    o: ordering[i],
+                    s: window.scrollY,
+                    top: parseFloat(element.style.top.replace("px", "")),
+                };
+                element.style.cursor = "grabbing";
+                element.style.zIndex = options.zIndex + 1;
+                element.style.transition = "none";
+                return false;
             }
-            dragging = {
-                e: element,
-                i: i,
-                x: event.clientX,
-                y: event.clientY,
-                j: ordering[i],
-                o: ordering[i],
-                s: window.scrollY,
-                top: parseFloat(element.style.top.replace("px", "")),
-            };
-            element.style.cursor = "grabbing";
-            element.style.zIndex = options.zIndex + 1;
-            element.style.transition = "none";
-            return false;
         });
     });
 
