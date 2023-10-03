@@ -303,6 +303,11 @@ window.addEventListener("load", () => {
                 }
                 self.update();
             }
+            textarea.addEventListener("keydown", (event) => {
+                if (event.ctrlKey && event.key == "Enter") {
+                    callback();
+                }
+            });
             textarea.addEventListener("focusout", callback);
             element.replaceWith(textarea);
             textarea.focus();
