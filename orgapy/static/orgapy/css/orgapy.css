@@ -170,11 +170,19 @@ code {
 }
 
 .search-create-bar input {
+    border-top-left-radius: .4rem;
+    border-bottom-left-radius: .4rem;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }
 
-.search-create-bar button {
+.search-create-bar .btn {
+    border-radius: .4rem;
+}
+
+.search-create-bar .input-group-btn {
+    border-top-right-radius: .4rem;
+    border-bottom-right-radius: .4rem;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }

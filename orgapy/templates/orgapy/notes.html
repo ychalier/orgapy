@@ -5,16 +5,7 @@
 
 {% block main_content %}
 
-<form action="{% url 'orgapy:notes' %}" method="get">
-    <div class="search-create-bar">
-        <div class="searchbar-with-clear-button has-icon-right">         
-            <input autocomplete="off" class="form-input" type="text" name="query" placeholder="Search a note" value="{% if query %}{{query}}{% endif %}" />
-            <i class="form-icon icon icon-cross c-hand"></i>
-        </div>
-        <button class="btn btn-primary input-group-btn">Search</button>
-        <a class="btn btn-primary" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}">Create note</a>
-    </div>
-</form>
+{% include "orgapy/note_searchbar.html" %}
 
 {% include "orgapy/note_list.html" %}
 
