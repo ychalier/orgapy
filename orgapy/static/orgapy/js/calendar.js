@@ -145,6 +145,19 @@ window.addEventListener("load", () => {
         });
     }
 
+    let allday_input = document.querySelector("#modal-add-event input[name='allday']");
+    function on_allday_input_change() {
+        if (allday_input.checked) {
+            document.querySelector("#modal-add-event input[name='dtstart-time']").disabled = true;
+            document.querySelector("#modal-add-event input[name='dtend-time']").disabled = true;
+        } else {
+            document.querySelector("#modal-add-event input[name='dtstart-time']").removeAttribute("disabled");
+            document.querySelector("#modal-add-event input[name='dtend-time']").removeAttribute("disabled");
+        }
+    }
+    on_allday_input_change();
+    allday_input.addEventListener("change", on_allday_input_change);
+
     document.getElementById("btn-add-event").addEventListener("click", () => {
         let form = document.getElementById("form-add-event");
         let form_data = new FormData(form);

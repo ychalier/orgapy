@@ -244,13 +244,16 @@ class Calendar(models.Model):
                 break
         return success
     
-    def add_event(self, title, dtstart, dtend, location):
+    def add_event(self, title, dtstart, dtend, location, allday):
         success = False
         with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
             principal = client.principal()
             for calendar in principal.calendars():
                 if calendar.name != self.calendar_name:
                     continue
+                if allday:
+                    dt_start = dt_start.date()
+                    dtend = dtend.date()
                 event = calendar.save_event(
                     dtstart=dtstart,
                     dtend=dtend,

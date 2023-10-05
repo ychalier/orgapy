@@ -582,6 +582,10 @@ def api_calendar_add(request):
     dtend_date = request.POST.get("dtend-date")
     dtend_time = request.POST.get("dtend-time")
     location = request.POST.get("location")
+    allday = "allday" in request.POST
+    if allday:
+        dtstart_time = "00:00"
+        dtend_time = "00:00"
     if title is None or dtstart_date is None or dtstart_time is None or dtend_date is None or dtend_time is None:
         raise BadRequest("Missing fields")
     if not models.Calendar.objects.filter(user=request.user).exists():
@@ -591,7 +595,7 @@ def api_calendar_add(request):
     dtstart = parse_dt(dtstart_date, dtstart_time)
     dtend = parse_dt(dtend_date, dtend_time)
     calendar = models.Calendar.objects.get(user=request.user)
-    success = calendar.add_event(title, dtstart, dtend, location)
+    success = calendar.add_event(title, dtstart, dtend, location, allday)
     return JsonResponse({"success": success})
 
 
