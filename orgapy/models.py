@@ -252,7 +252,7 @@ class Calendar(models.Model):
                 if calendar.name != self.calendar_name:
                     continue
                 if allday:
-                    dt_start = dt_start.date()
+                    dtstart = dtstart.date()
                     dtend = dtend.date()
                 event = calendar.save_event(
                     dtstart=dtstart,
