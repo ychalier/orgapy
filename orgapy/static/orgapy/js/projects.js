@@ -349,7 +349,13 @@ window.addEventListener("load", () => {
                 self.update();
             }
             input.addEventListener("focusout", callback);
-            input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
+            input.addEventListener("keydown", (e) => { if (e.key == "Enter") { 
+                callback();
+                if (e.ctrlKey) {
+                    let checklist = self.container.querySelector(".project-checklist");
+                    self.add_new_checklist_item(checklist);
+                }
+            } });
             element.replaceWith(input);
             input.focus();
             this.update_expansion();
@@ -392,6 +398,14 @@ window.addEventListener("load", () => {
             });
         }
 
+        add_new_checklist_item(checklist) {
+            this.checklist_items.push({state: false, text: ""});
+            this.concat_checklist();
+            this.inflate_checklist_items(checklist);
+            let element = checklist.querySelector(".project-checklist-item:last-child label");
+            this.inflate_checklist_item_label_input(element, "", this.checklist_items.length - 1);
+        }
+
         inflate_checklist(body) {
             var self = this;
             let checklist = body.appendChild(document.createElement("div"));
@@ -402,11 +416,7 @@ window.addEventListener("load", () => {
             button_add_item.innerHTML = `<i class="icon icon-plus"></i> Add`;
             button_add_item.addEventListener("click", (event) => {
                 event.stopPropagation();
-                self.checklist_items.push({state: false, text: ""});
-                self.concat_checklist();
-                self.inflate_checklist_items(checklist);
-                let element = checklist.querySelector(".project-checklist-item:last-child label");
-                self.inflate_checklist_item_label_input(element, "", self.checklist_items.length - 1);
+                self.add_new_checklist_item(checklist);
                 return false;
             });
         }
