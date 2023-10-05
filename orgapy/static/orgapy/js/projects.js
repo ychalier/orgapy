@@ -334,6 +334,7 @@ window.addEventListener("load", () => {
             input.value = initial_value;
             input.placeholder = "Checklist item";
             function callback() {
+                input.parentElement.classList.remove("editing");
                 let value = input.value.trim();
                 if (value == "") {
                     self.checklist_items.splice(entry_index, 1);
@@ -377,6 +378,7 @@ window.addEventListener("load", () => {
                 });
                 label.addEventListener("click", (event) => {
                     event.stopPropagation();
+                    checklist_item.classList.add("editing");
                     self.inflate_checklist_item_label_input(label, item.text, i);
                     return false;
                 });
@@ -385,6 +387,8 @@ window.addEventListener("load", () => {
                 reorder(self.checklist_items, permutation);
                 self.concat_checklist();
                 self.update();
+            }, (element) => {
+                return !element.classList.contains("editing");
             });
         }
 
