@@ -160,7 +160,7 @@ class Project(models.Model):
     description = models.TextField(blank=True, null=True)
     checklist = models.TextField(blank=True, null=True)
     rank = models.FloatField()
-    note = models.ForeignKey("Note", on_delete=models.CASCADE, null=True, blank=True)
+    note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
 
