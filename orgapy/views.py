@@ -493,19 +493,14 @@ def api_project_create(request):
 def api_objective_list(request):
     objectives = []
     for objective in models.Objective.objects.filter(user=request.user):
-        objectives.append({
-            "id": objective.id,
-            "name": objective.name,
-            "history": objective.history,
-            "date_start": objective.date_start,
-            "period": objective.period,
-            "goal": objective.goal,
-        })
+        objectives.append(objective.to_dict())
     return JsonResponse({"objectives": objectives})
 
 
 @permission_required("orgapy.change_objective")
 def api_objective_history(request):
+    """Objective history must be a JSON string
+    """
     if request.method != "POST":
         raise BadRequest("Wrong method")
     objective_id = request.POST.get("objective_id")

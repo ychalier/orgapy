@@ -1,7 +1,7 @@
 window.addEventListener("load", () => {
 
     var objectives = null;
-    const DAYW = 32; // Day widht in pixels
+    const DAYW = 32; // Day width in pixels
 
     function get_year_start() {
         let year_start = new Date();
@@ -10,12 +10,10 @@ window.addEventListener("load", () => {
         return year_start;
     }
 
-    function get_year_end() {
-        let year_end = new Date();
-        year_end.setTime(0);
-        year_end.setFullYear((new Date()).getFullYear() + 1);
-        return year_end;
-    }
+    const TODAY = new Date();
+    TODAY.setHours(0, 0, 0, 0);
+    const NOW = new Date();
+    const DAYMS = 24 * 3600 * 1000;
 
     function day_offset(d) {
         return Math.floor((d - get_year_start()) / 3600 / 24 / 1000) * DAYW;
@@ -46,11 +44,146 @@ window.addEventListener("load", () => {
         }
     }
 
-    function save_objective_history(objective_id, objective_history) {
+    const SLOT_STATE_COMPLETE = 0;
+    const SLOT_STATE_MISSED = 1;
+    const SLOT_STATE_BUTTON = 2;
+
+    class Slot {
+
+        constructor(start, length, state, early=false, late=false) {
+            this.start = new Date(start);
+            this.length = length;
+            this.state = state;
+            this.early = early;
+            this.late = late;
+        }
+
+    }
+
+    function argmin(arr) {
+        if (arr.length == 0) return null;
+        let i = null;
+        for (let j = 0; j < arr.length; j++) {
+            if (arr[j] != null && (i == null || arr[j] < arr[i])) i = j;
+        }
+        return i;
+    }
+
+    class Objective {
+        
+        constructor(data) {
+            this.id = data.id;
+            this.name = data.name;
+            this.history = data.history;
+            if (this.history == null) {
+                this.history = [];
+            }
+            this.rules = data.rules;
+            this.history.sort();
+        }
+
+        get_slots_strict() {
+            let date_start = new Date(this.history[0] * 1000);
+            date_start.setHours(0, 0, 0, 0);
+            let slots = [];
+            let history_index = 0;
+            while (true) {
+                let date_end = new Date(date_start.getTime() + this.rules.period * 24 * 3600 * 1000);
+                let state = null;
+                let date_start_ts = Math.floor(date_start / 1000);
+                let date_end_ts = Math.floor(date_end / 1000);
+                let extension_days = 0;
+                let last_completion = null;
+                while (history_index < this.history.length && this.history[history_index] < date_end_ts) {
+                    if (this.history[history_index] >= date_start_ts) {
+                        last_completion = new Date(this.history[history_index] * 1000);
+                    }
+                    history_index++;
+                }
+                let complete = last_completion != null;
+                let current = NOW >= date_start && NOW < date_end;
+                if (complete) {
+                    let days_before_end = (date_end - last_completion) / DAYMS;
+                    if (days_before_end < this.rules.cooldown) {
+                        extension_days = Math.ceil(this.rules.cooldown - days_before_end);
+                    }
+                    state = SLOT_STATE_COMPLETE;
+                } else if (current) {
+                    state = SLOT_STATE_BUTTON;
+                } else {
+                    state = SLOT_STATE_MISSED;
+                }
+                slots.push(new Slot(date_start, this.rules.period + extension_days, state));
+                if (current) break;
+                date_start = new Date(date_end.getTime() + extension_days * DAYMS);
+                if (NOW < date_start) break;
+            }
+            return slots;
+        }
+
+        get_slots_flexible() {
+            let date_start = new Date(this.history[0] * 1000);
+            date_start.setHours(0, 0, 0, 0);
+            let slots = [];
+            let next_history_index = 1;
+            let next_slot_state = SLOT_STATE_COMPLETE;
+            while (date_start <= TODAY) {
+                let date_end_history = null;
+                if (next_history_index < this.history.length) {
+                    date_end_history = new Date(this.history[next_history_index] * 1000);
+                    date_end_history.setHours(0, 0, 0, 0);
+                }
+                let date_end_today = new Date(TODAY.getTime());
+                let date_end_period = new Date(date_start.getTime() + DAYMS * this.rules.period);
+                let date_ends = [date_end_history, date_end_today, date_end_period];
+                if (next_slot_state == SLOT_STATE_MISSED) {
+                    date_ends.pop();
+                }
+                let i = argmin(date_ends);
+                let date_end = date_ends[i];
+                let minimum_size = 1;
+                if (next_slot_state != SLOT_STATE_BUTTON) {
+                    minimum_size += this.rules.cooldown;
+                }
+                if ((date_end - date_start) / DAYMS < minimum_size) {
+                    date_end = new Date(date_end.getTime() + (minimum_size - (date_end - date_start) / DAYMS) * DAYMS);
+                }
+                let length = (date_end - date_start) / DAYMS;
+                let early = next_slot_state == SLOT_STATE_BUTTON && slots[slots.length - 1].length < this.rules.period;
+                let late = next_slot_state == SLOT_STATE_BUTTON && slots[slots.length - 1].length > this.rules.period;
+                slots.push(new Slot(date_start, length, next_slot_state, early, late));
+                if (i == 0) {
+                    next_history_index++;
+                    next_slot_state = SLOT_STATE_COMPLETE;
+                } else if (i == 1) {
+                    next_slot_state = SLOT_STATE_BUTTON;
+                } else {
+                    next_slot_state = SLOT_STATE_MISSED;
+                }
+                date_start = new Date(date_end.getTime());
+            }
+            return slots;
+        }
+
+        get_slots() {
+            if (this.history == null || this.history.length == 0) {
+                return [new Slot(TODAY, 1, SLOT_STATE_BUTTON)];
+            }
+            switch (this.rules.type) {
+                case "strict":
+                    return this.get_slots_strict();
+                case "flexible":
+                    return this.get_slots_flexible();    
+            }            
+        }
+
+    }
+
+    function save_objective_history(objective_id) {
         let form_data = new FormData();
         form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
         form_data.set("objective_id", objective_id);
-        form_data.set("objective_history", objective_history);
+        form_data.set("objective_history", JSON.stringify(objectives[objective_id].history));
         fetch(URL_API_OBJECTIVE_HISTORY, {
             method: "post",
             body: form_data
@@ -71,97 +204,61 @@ window.addEventListener("load", () => {
 
     function on_objective_check(objective_id) {
         let obj = objectives[objective_id];
-        let history = [];
-        for (let i = 0; i < obj.history.length; i++) {
-            history.push(obj.history.charCodeAt(i) - 32);
-        }
-        let today = new Date();
-        let date_start = new Date(obj.date_start);
-        let i = 0;
-        let objective_history_codes = [];
-        while (true) {
-            let date_end = new Date(date_start);
-            date_end.setDate(date_end.getDate() + obj.period);
-            let current = today >= date_start && today < date_end;
-            let accomplished = 0;
-            if (i < history.length) {
-                accomplished = history[i];
-            }
-            if (current) {
-                accomplished++;
-            }
-            objective_history_codes.push(32 + accomplished);
-            if (current) {
-                break;
-            }
-            i++;
-            date_start.setDate(date_start.getDate() + obj.period);
-        }
-        let objective_history = String.fromCharCode(...objective_history_codes);
-        objectives[objective_id].history = objective_history;
-        save_objective_history(objective_id, objective_history);
+        let ts = Math.floor((new Date()).getTime() / 1000);
+        obj.history.push(ts);
+        save_objective_history(objective_id);
         create_objgraph();
     }
 
-    function inflate_objgraph_objective(objgraph_body, objective_id) {
-        let objgraph_objective = objgraph_body.appendChild(document.createElement("div"));
-        objgraph_objective.classList.add("objgraph-objective");
+    function inflate_objgraph_objective(objgraph_body, objective_id, index) {
+        let dom_obj = objgraph_body.appendChild(document.createElement("div"));
+        dom_obj.classList.add("objgraph-objective");
         let obj = objectives[objective_id];
-        let history = [];
-        for (let i = 0; i < obj.history.length; i++) {
-            history.push(obj.history.charCodeAt(i) - 32);
-        }
-        let today = new Date();
-        let date_start = new Date(obj.date_start);
-        let year_start = get_year_start();
-        let year_end = get_year_end();
-        objgraph_objective.style.marginLeft = day_offset(date_start) + "px";
-        let i = 0;
-        while (date_start < year_end) {
-            let date_end = new Date(date_start);
-            date_end.setDate(date_end.getDate() + obj.period);
-            if (date_end >= year_start) {
-                let past =  date_end <= today;
-                let current = today >= date_start && today < date_end;
-                let future = date_start > today;
-                let accomplished = 0;
-                if (i < history.length) {
-                    accomplished = history[i];
+        let slots = obj.get_slots();
+        let date_start = new Date(slots[0].start.getTime() + DAYMS);
+        dom_obj.style.marginLeft = day_offset(date_start) + "px";
+        obj.history.forEach(ts => {
+            dom_completion = dom_obj.appendChild(document.createElement("div"));
+            dom_completion.classList.add("objgraph-completion");
+            dom_completion.title = new Date(ts * 1000 + DAYMS);
+            dom_completion.style.left = (((ts * 1000 + DAYMS - date_start.getTime()) / DAYMS) * DAYW) + "px";
+        });
+        slots.forEach(slot => {
+            let dom_slot = dom_obj.appendChild(document.createElement("div"));
+            dom_slot.classList.add("objgraph-slot");
+            dom_slot.style.width = `${DAYW * slot.length}px`;
+            let dom_slot_background = dom_slot.appendChild(document.createElement("div"));
+            dom_slot_background.classList.add("objgraph-slot-background");
+            if (slot.state == SLOT_STATE_COMPLETE) {
+                dom_slot_background.classList.add("bg-success");
+            } else if (slot.state == SLOT_STATE_MISSED) {
+                dom_slot_background.classList.add("bg-error");
+            } else if (slot.state == SLOT_STATE_BUTTON) {
+                let dom_btncheck = dom_slot_background.appendChild(document.createElement("button"));
+                if (slot.early) {
+                    dom_btncheck.classList.add("early");
+                } else if (slot.late) {
+                    dom_btncheck.classList.add("late");
                 }
-                let dom_period = objgraph_objective.appendChild(document.createElement("div"));
-                dom_period.classList.add("objgraph-period");
-                dom_period.style.width = `${32 * obj.period}px`;
-                for (let i = 0; i < obj.goal; i++) {
-                    let dom_goal = dom_period.appendChild(document.createElement("div"));
-                    dom_goal.classList.add("objgraph-goal");
-                    if (i < accomplished && !future) {
-                        dom_goal.classList.add("bg-success");
-                    } else if (past) {
-                        dom_goal.classList.add("bg-error");
-                    } else if (current && i == accomplished) {
-                        let dom_btncheck = dom_goal.appendChild(document.createElement("button"));
-                        dom_btncheck.innerHTML = `<i class="icon icon-check"></i>`;
-                        dom_btncheck.addEventListener("click", () => {
-                            on_objective_check(objective_id);
-                        });
-                    } else if (future || ((current && i > accomplished))) {
-                        dom_goal.classList.add("bg-dark");
-                    }
-                }
+                dom_btncheck.innerHTML = `<i class="icon icon-check"></i>`;
+                dom_btncheck.addEventListener("click", () => {
+                    on_objective_check(objective_id);
+                });
             }
-            i++;
-            date_start.setDate(date_start.getDate() + obj.period);
-        }
-        let dom_name = objgraph_objective.appendChild(document.createElement("div"));
+        });
+        let dom_name = objgraph_body.appendChild(document.createElement("div"));
         dom_name.classList.add("objgraph-name");
         dom_name.textContent = obj.name;
+        dom_name.style.top = ((index + 1) * 32 + 1) + "px";
     }
 
     function inflate_objgraph_body(objgraph) {
         let objgraph_body = objgraph.appendChild(document.createElement("div"));
         objgraph_body.classList.add("objgraph-body");
+        let i = 0;
         for (let objective_id in objectives) {
-            inflate_objgraph_objective(objgraph_body, objective_id);
+            inflate_objgraph_objective(objgraph_body, objective_id, i);
+            i++;
         }
         if ([...Object.keys(objectives)].length == 0) {
             objgraph_body.textContent = "No objective";
@@ -196,8 +293,8 @@ window.addEventListener("load", () => {
 
     fetch(URL_API_OBJECTIVE_LIST).then(res => res.json()).then(data => {
         objectives = {};
-        data.objectives.forEach(objective => {
-            objectives[objective.id] = objective;
+        data.objectives.forEach(data => {
+            objectives[data.id] = new Objective(data);
         });
         create_objgraph();
     });

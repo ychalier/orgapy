@@ -61,10 +61,8 @@ class Objective(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    history = models.TextField(default="", blank=True)
-    date_start = models.DateField()
-    period = models.PositiveIntegerField(default=1)
-    goal = models.PositiveIntegerField(default=1)
+    history = models.TextField(blank=True, null=True)
+    rules = models.TextField(blank=True, null=True)
 
     class Meta:
 
@@ -72,6 +70,26 @@ class Objective(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def to_dict(self):
+        history_dict = None
+        if self.history is not None:
+            try:
+                history_dict = json.loads(self.history)
+            except:
+                history_dict = None
+        rules_dict = None
+        if self.rules is not None:
+            try:
+                rules_dict = json.loads(self.rules)
+            except:
+                rules_dict = None
+        return {
+            "id": self.id,
+            "name": self.name,
+            "history": history_dict,
+            "rules": rules_dict,
+        }
 
 
 class Author(models.Model):

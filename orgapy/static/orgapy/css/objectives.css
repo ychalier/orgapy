@@ -53,21 +53,21 @@
 .objgraph-objective {
     display: flex;
     flex-direction: row;
+    position: relative;
 }
 
-.objgraph-period {
-    flex-shrink: 0;
+.objgraph-slot {
     box-sizing: border-box;
-    height: 32px;
     flex-shrink: 0;
+    height: 32px;
     display: flex;
     flex-direction: row;
     justify-content: center;
 }
 
-.objgraph-goal {
-    width: 100%;
+.objgraph-slot-background {
     margin: .1rem;
+    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -75,26 +75,26 @@
     overflow: hidden;
 }
 
-.objgraph-goal-accomplished {
-    background: green;
-}
-
-.objgraph-goal-missed {
-    background: red;
-}
-
-.bg-dark {
-    background: #101010 !important;
-}
-
-.objgraph-goal button {
+.objgraph-slot button {
     border: none;
-    background: transparent;
     color: black;
     cursor: pointer;
     width: 100%;
     padding: 0;
     background: #ccc;
+    height: 100%;
+}
+
+.objgraph-slot button.early {
+    background: #8CCD94 !important
+}
+
+.objgraph-slot button.late {
+    background: #E69D73 !important
+}
+
+.bg-dark {
+    background: #101010 !important;
 }
 
 .objgraph-ref {
@@ -109,4 +109,29 @@
     background: black;
     padding: 0 .4rem;
     border-radius: .4rem;    
+    z-index: 2;
+}
+
+.objgraph-completion {
+    position: absolute;
+    height: 100%;
+    width: .2rem;
+    overflow: hidden;
+    top: 0;
+    padding-top: .2rem;
+    padding-bottom: .2rem;
+    cursor: help;
+}
+
+.objgraph-completion::after {
+    display: block;
+    content: " ";
+    background: #389b45;
+    border-radius: .2rem;
+    height: 100%;
+    opacity: 0;
+}
+
+.objgraph:hover .objgraph-completion::after{
+    opacity: 1;
 }
