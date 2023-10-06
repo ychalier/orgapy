@@ -1,14 +1,6 @@
 # Orgapy
 
-It is a Django application, whose purpose is to act as a notebook, allowing to
-keep **notes** and manage **tasks**. Here are some features:
-
-- Markdown markup support (with checklists)
-- Code syntax highlighting
-- Share note publicly
-- Export note as PDF
-- Tasks tracking
-- Habits tracking
+A web application for storing **notes** and keeping track of **tasks** and **habits**.
 
 ## Getting Started
 
@@ -30,7 +22,6 @@ You'll need Python 3, and a [Django](https://www.djangoproject.com/) project.
     INSTALLED_APPS = [
         '...',
         'orgapy',
-        '...',
     ]
     ```  
 
@@ -53,7 +44,7 @@ You'll need Python 3, and a [Django](https://www.djangoproject.com/) project.
     import orgapy.urls
     urlpatterns = [
         ...,
-        path("orgapy/", include("orgapy.urls")),
+        path("orgapy/", include("orgapy.urls", namespace="orgapy")),
     ]
     ```
 
