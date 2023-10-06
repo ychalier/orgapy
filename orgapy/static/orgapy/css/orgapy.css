@@ -201,7 +201,7 @@ code {
 .autocomplete-items {
     position: absolute;
     left: 0;
-    z-index: 2;
+    z-index: 3;
 }
 
 .autocomplete-item {
