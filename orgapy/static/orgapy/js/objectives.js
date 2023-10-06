@@ -272,7 +272,7 @@ window.addEventListener("load", () => {
     var is_initial_scroll = true;
     function reset_objgraph_scroll() {
         let container = document.getElementById("objgraph-wrapper");
-        let target = day_offset(new Date()) - container.getBoundingClientRect().width / 2 + DAYW;
+        let target = day_offset(new Date()) - 0.75 * container.getBoundingClientRect().width;
         if (is_initial_scroll) {
             container.scrollLeft = target;
             is_initial_scroll = false;
