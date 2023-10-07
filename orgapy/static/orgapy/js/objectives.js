@@ -10,6 +10,9 @@ window.addEventListener("load", () => {
         return year_start;
     }
 
+    const YEAR_START = get_year_start();
+    const YEAR_END = new Date(YEAR_START.getTime());
+    YEAR_END.setFullYear(YEAR_START.getFullYear() + 1);
     const TODAY = new Date();
     TODAY.setHours(0, 0, 0, 0);
     const NOW = new Date();
@@ -48,6 +51,7 @@ window.addEventListener("load", () => {
     const SLOT_STATE_MISSED = 1;
     const SLOT_STATE_BUTTON = 2;
     const SLOT_STATE_COOLDOWN = 3;
+    const SLOT_STATE_FUTURE = 4;
 
     class Slot {
 
@@ -57,6 +61,10 @@ window.addEventListener("load", () => {
             this.state = state;
             this.early = early;
             this.late = late;
+        }
+
+        end() {
+            return new Date(this.start.getTime() + this.length * DAYMS);
         }
 
     }
@@ -164,12 +172,21 @@ window.addEventListener("load", () => {
             if (this.history == null || this.history.length == 0) {
                 return [new Slot(TODAY, 1, SLOT_STATE_BUTTON)];
             }
+            let slots;
             switch (this.rules.type) {
                 case "strict":
-                    return this.get_slots_strict();
+                    slots = this.get_slots_strict();
+                    break;
                 case "flexible":
-                    return this.get_slots_flexible();    
-            }            
+                    slots = this.get_slots_flexible();
+                    break;
+            }
+            while (true) {
+                let slot = new Slot(slots[slots.length - 1].end(), this.rules.period, SLOT_STATE_FUTURE);
+                if (slot.start >= YEAR_END) break;
+                slots.push(slot);
+            }
+            return slots;
         }
 
     }
@@ -230,6 +247,8 @@ window.addEventListener("load", () => {
                 dom_slot_background.classList.add("bg-error");
             } else if (slot.state == SLOT_STATE_COOLDOWN) {
                 dom_slot_background.classList.add("bg-cooldown");
+            } else if (slot.state == SLOT_STATE_FUTURE) {
+                dom_slot_background.classList.add("bg-future");
             } else if (slot.state == SLOT_STATE_BUTTON) {
                 let dom_btncheck = dom_slot_background.appendChild(document.createElement("button"));
                 if (slot.early) {
@@ -269,7 +288,7 @@ window.addEventListener("load", () => {
     var is_initial_scroll = true;
     function reset_objgraph_scroll() {
         let container = document.getElementById("objgraph-wrapper");
-        let target = day_offset(new Date()) - 0.75 * container.getBoundingClientRect().width;
+        let target = day_offset(new Date()) - 0.5 * container.getBoundingClientRect().width;
         if (is_initial_scroll) {
             container.scrollLeft = target;
             is_initial_scroll = false;
