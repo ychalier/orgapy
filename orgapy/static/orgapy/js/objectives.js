@@ -47,6 +47,7 @@ window.addEventListener("load", () => {
     const SLOT_STATE_COMPLETE = 0;
     const SLOT_STATE_MISSED = 1;
     const SLOT_STATE_BUTTON = 2;
+    const SLOT_STATE_COOLDOWN = 3;
 
     class Slot {
 
@@ -87,12 +88,12 @@ window.addEventListener("load", () => {
             date_start.setHours(0, 0, 0, 0);
             let slots = [];
             let history_index = 0;
+            let is_under_cooldown = (NOW - new Date(this.history[this.history.length - 1] * 1000)) / DAYMS < this.rules.cooldown;
             while (true) {
                 let date_end = new Date(date_start.getTime() + this.rules.period * 24 * 3600 * 1000);
                 let state = null;
                 let date_start_ts = Math.floor(date_start / 1000);
                 let date_end_ts = Math.floor(date_end / 1000);
-                let extension_days = 0;
                 let last_completion = null;
                 while (history_index < this.history.length && this.history[history_index] < date_end_ts) {
                     if (this.history[history_index] >= date_start_ts) {
@@ -103,19 +104,15 @@ window.addEventListener("load", () => {
                 let complete = last_completion != null;
                 let current = NOW >= date_start && NOW < date_end;
                 if (complete) {
-                    let days_before_end = (date_end - last_completion) / DAYMS;
-                    if (days_before_end < this.rules.cooldown) {
-                        extension_days = Math.ceil(this.rules.cooldown - days_before_end);
-                    }
                     state = SLOT_STATE_COMPLETE;
                 } else if (current) {
-                    state = SLOT_STATE_BUTTON;
+                    state = is_under_cooldown ? SLOT_STATE_COOLDOWN : SLOT_STATE_BUTTON;
                 } else {
                     state = SLOT_STATE_MISSED;
                 }
-                slots.push(new Slot(date_start, this.rules.period + extension_days, state));
+                slots.push(new Slot(date_start, this.rules.period, state));
                 if (current) break;
-                date_start = new Date(date_end.getTime() + extension_days * DAYMS);
+                date_start = new Date(date_end.getTime());
                 if (NOW < date_start) break;
             }
             return slots;
@@ -127,6 +124,7 @@ window.addEventListener("load", () => {
             let slots = [];
             let next_history_index = 1;
             let next_slot_state = SLOT_STATE_COMPLETE;
+            let is_under_cooldown = (NOW - new Date(this.history[this.history.length - 1] * 1000)) / DAYMS < this.rules.cooldown;
             while (date_start <= TODAY) {
                 let date_end_history = null;
                 if (next_history_index < this.history.length) {
@@ -142,9 +140,6 @@ window.addEventListener("load", () => {
                 let i = argmin(date_ends);
                 let date_end = date_ends[i];
                 let minimum_size = 1;
-                if (next_slot_state != SLOT_STATE_BUTTON) {
-                    minimum_size += this.rules.cooldown;
-                }
                 if ((date_end - date_start) / DAYMS < minimum_size) {
                     date_end = new Date(date_end.getTime() + (minimum_size - (date_end - date_start) / DAYMS) * DAYMS);
                 }
@@ -156,7 +151,7 @@ window.addEventListener("load", () => {
                     next_history_index++;
                     next_slot_state = SLOT_STATE_COMPLETE;
                 } else if (i == 1) {
-                    next_slot_state = SLOT_STATE_BUTTON;
+                    next_slot_state = is_under_cooldown ? SLOT_STATE_COOLDOWN : SLOT_STATE_BUTTON;
                 } else {
                     next_slot_state = SLOT_STATE_MISSED;
                 }
@@ -233,6 +228,8 @@ window.addEventListener("load", () => {
                 dom_slot_background.classList.add("bg-success");
             } else if (slot.state == SLOT_STATE_MISSED) {
                 dom_slot_background.classList.add("bg-error");
+            } else if (slot.state == SLOT_STATE_COOLDOWN) {
+                dom_slot_background.classList.add("bg-cooldown");
             } else if (slot.state == SLOT_STATE_BUTTON) {
                 let dom_btncheck = dom_slot_background.appendChild(document.createElement("button"));
                 if (slot.early) {

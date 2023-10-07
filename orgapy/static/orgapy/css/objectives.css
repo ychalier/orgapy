@@ -135,3 +135,7 @@
 .objgraph:hover .objgraph-completion::after{
     opacity: 1;
 }
+
+.bg-cooldown {
+    background: #aaa;
+}
