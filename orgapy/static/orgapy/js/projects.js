@@ -566,10 +566,19 @@ window.addEventListener("load", () => {
                     self.inflate_checklist_item_label_input(checklist_item_element, "", 0);
                 });
             } else {
+                add_contextmenu_option(menu, "Clear checklist", () => {
+                    for (let i = this.checklist_items.length - 1; i >= 0; i--) {
+                        if (this.checklist_items[i].state) {
+                            this.checklist_items.splice(i, 1);
+                        }
+                    }
+                    self.concat_checklist();
+                    self.update();
+                });
                 add_contextmenu_option(menu, "Remove checklist", () => {
                     self.checklist = null;
                     self.update();
-                })
+                });
             }
 
             if (this.progress == null) {
