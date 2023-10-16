@@ -232,7 +232,7 @@ window.addEventListener("load", () => {
         obj.history.forEach(ts => {
             dom_completion = dom_obj.appendChild(document.createElement("div"));
             dom_completion.classList.add("objgraph-completion");
-            dom_completion.title = new Date(ts * 1000 + DAYMS);
+            dom_completion.title = (new Date(ts * 1000)).toLocaleString();
             dom_completion.style.left = (((ts * 1000 + DAYMS - date_start.getTime()) / DAYMS) * DAYW) + "px";
         });
         slots.forEach(slot => {
