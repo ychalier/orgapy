@@ -123,12 +123,14 @@ window.addEventListener("load", () => {
             }
             title.addEventListener("click", (event) => {
                 event.stopPropagation();
+                self.container.classList.add("editing");
                 let input = document.createElement("input");
                 input.classList.add("project-title-input");
                 input.value = self.title + (self.note == null ? "" : ` @${self.note}`);
                 input.placeholder = "Title";
                 input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
                 function callback() {
+                    self.container.classList.remove("editing");
                     let title_string = input.value.trim();
                     let should_inflate_projects = title_string == "Today's Plan" && self.title != title_string;
                     let match = title_string.match(/^(.+?)(?:@(\d+))? *$/);
