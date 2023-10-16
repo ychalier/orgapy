@@ -107,6 +107,41 @@ window.addEventListener("load", () => {
             this.concat_checklist();
         }
 
+        on_title_input_change(input) {
+            this.container.classList.remove("editing");
+            let title_string = input.value.trim();
+            let should_inflate_projects = title_string == "Today's Plan" && this.title != title_string;
+            let match = title_string.match(/^(.+?)(?:@(\d+))? *$/);
+            this.title = match[1].trim();
+            if (match[2] == undefined) {
+                this.note = null;
+            } else {
+                this.note = parseInt(match[2]);
+            }
+            if (should_inflate_projects) {
+                this.save(true);
+            } else {
+                this.update();
+            }
+        }
+
+        inflate_title_input(title) {
+            var self = this;
+            this.container.classList.add("editing");
+            let input = document.createElement("input");
+            input.classList.add("project-title-input");
+            input.value = self.title + (self.note == null ? "" : ` @${self.note}`);
+            input.placeholder = "Title";
+            input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
+            function callback() {
+                self.on_title_input_change(input);
+            }
+            input.addEventListener("focusout", callback);
+            input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
+            title.replaceWith(input);
+            input.focus();
+        }
+
         inflate_title(header) {
             var self = this;
             let title = header.appendChild(document.createElement("div"));
@@ -123,33 +158,7 @@ window.addEventListener("load", () => {
             }
             title.addEventListener("click", (event) => {
                 event.stopPropagation();
-                self.container.classList.add("editing");
-                let input = document.createElement("input");
-                input.classList.add("project-title-input");
-                input.value = self.title + (self.note == null ? "" : ` @${self.note}`);
-                input.placeholder = "Title";
-                input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
-                function callback() {
-                    self.container.classList.remove("editing");
-                    let title_string = input.value.trim();
-                    let should_inflate_projects = title_string == "Today's Plan" && self.title != title_string;
-                    let match = title_string.match(/^(.+?)(?:@(\d+))? *$/);
-                    self.title = match[1].trim();
-                    if (match[2] == undefined) {
-                        self.note = null;
-                    } else {
-                        self.note = parseInt(match[2]);
-                    }
-                    if (should_inflate_projects) {
-                        self.save(true);
-                    } else {
-                        self.update();
-                    }
-                }
-                input.addEventListener("focusout", callback);
-                input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
-                title.replaceWith(input);
-                input.focus();
+                self.inflate_title_input(title);
                 return false;
             });
         }
@@ -798,6 +807,69 @@ window.addEventListener("load", () => {
 
     }
 
+    class TemporaryProject extends Project {
+
+        constructor() {
+            super({
+                id: null,
+                creation: new Date(),
+                modification: new Date(),
+                title: "",
+                category: "general",
+                limit_date: null,
+                progress: null,
+                description: null,
+                checklist: null,
+                rank: null,
+                note: null,
+            });
+        }
+
+        on_title_input_change(input) {
+            this.container.classList.remove("editing");
+            let title_string = input.value.trim();
+            if (title_string.trim() == "") {
+                this.container.parentElement.removeChild(this.container);
+                return;
+            }
+            let match = title_string.match(/^(.+?)(?:@(\d+))? *$/);
+            let title = match[1].trim();
+            let note = null;
+            if (match[2] != undefined) {
+                note = parseInt(match[2]);
+            }
+            let form_data = new FormData();
+            form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+            fetch(URL_API_PROJECT_CREATE, {method: "post", body: form_data})
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        projects[data.project.id] = new Project(data.project);
+                        projects[data.project.id].title = title;
+                        projects[data.project.id].note = note;
+                        inflate_projects();
+                        update_project_count();
+                        projects[data.project.id].save();
+                    } else {
+                        toast("An error occured", 600);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    toast("An error occured", 600);
+                });
+        }
+
+        create() {
+            super.create();
+            let title = this.container.querySelector(".project-title");
+            this.inflate_title_input(title);
+            this.container.querySelector("input").focus();
+            return this.container;
+        }
+
+    }
+
     function update_project_count() {
         let count = [...Object.keys(projects)].length;
         if (count == 0) {
@@ -880,23 +952,13 @@ window.addEventListener("load", () => {
     window.addEventListener("click", clear_context_menus);
 
     document.getElementById("btn-project-create").addEventListener("click", () => {
-        let form_data = new FormData();
-        form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-        fetch(URL_API_PROJECT_CREATE, {method: "post", body: form_data})
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    projects[data.project.id] = new Project(data.project);
-                    inflate_projects();
-                    update_project_count();
-                } else {
-                    toast("An error occured", 600);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                toast("An error occured", 600);
-            });
+        let container = document.getElementById("projects");
+        let temp_project = new TemporaryProject();
+        let temp_project_element = temp_project.create();
+        container.appendChild(temp_project_element);
+        setTimeout(() => {
+            temp_project_element.querySelector("input").focus();
+        }, 1);
     });
 
 });
