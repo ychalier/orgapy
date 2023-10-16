@@ -545,11 +545,22 @@ def api_project_edit_ranks(request):
 
 @permission_required("orgapy.view_calendar")
 def api_calendar_list(request):
-    if not models.Calendar.objects.filter(user=request.user).exists():
-        return JsonResponse({"events": [], "last_sync": None})
-    calendar = models.Calendar.objects.get(user=request.user)
-    events = calendar.get_events(force="force" in request.GET)
-    return JsonResponse({"events": events, "last_sync": calendar.last_sync})
+    events = []
+    calendars = []
+    for calendar in models.Calendar.objects.filter(user=request.user):
+        for event in calendar.get_events(force="force" in request.GET):
+            event["calendar_id"] = calendar.id
+            events.append(event)
+        calendars.append({
+            "name": calendar.calendar_name,
+            "id": calendar.id,
+            "type": calendar.type,
+        })
+    return JsonResponse({
+        "calendars": calendars,
+        "events": events,
+        "last_sync": calendar.last_sync
+    })
 
 
 @permission_required("orgapy.change_calendar")
@@ -557,11 +568,12 @@ def api_calendar_delete(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     href = request.POST.get("href")
-    if href is None:
+    calendarid = request.POST.get("calendarid")
+    if href is None or calendarid is None:
         raise BadRequest("Missing fields")
-    if not models.Calendar.objects.filter(user=request.user).exists():
+    if not models.Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
         raise Http404("No calendar found for user")
-    calendar = models.Calendar.objects.get(user=request.user)
+    calendar = models.Calendar.objects.get(user=request.user, id=int(calendarid))
     success = calendar.delete_event(href)
     return JsonResponse({"success": success})
 
@@ -576,6 +588,7 @@ def parse_dt(date_string, time_string):
 def api_calendar_add(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
+    calendarid = request.POST.get("calendarid")
     title = request.POST.get("title")
     dtstart_date = request.POST.get("dtstart-date")
     dtstart_time = request.POST.get("dtstart-time")
@@ -586,15 +599,15 @@ def api_calendar_add(request):
     if allday:
         dtstart_time = "00:00"
         dtend_time = "00:00"
-    if title is None or dtstart_date is None or dtstart_time is None or dtend_date is None or dtend_time is None:
+    if title is None or dtstart_date is None or dtstart_time is None or dtend_date is None or dtend_time is None or calendarid is None:
         raise BadRequest("Missing fields")
-    if not models.Calendar.objects.filter(user=request.user).exists():
+    if not models.Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
         raise Http404("No calendar found for user")
     if location.strip() == "":
         location = None
     dtstart = parse_dt(dtstart_date, dtstart_time)
     dtend = parse_dt(dtend_date, dtend_time)
-    calendar = models.Calendar.objects.get(user=request.user)
+    calendar = models.Calendar.objects.get(user=request.user, id=int(calendarid))
     success = calendar.add_event(title, dtstart, dtend, location, allday)
     return JsonResponse({"success": success})
 

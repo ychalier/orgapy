@@ -175,7 +175,14 @@ class Project(models.Model):
 
 class Calendar(models.Model):
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    CALENDAR = "CD"
+    TASKS = "TK"
+    TYPE_CHOICES = [
+        (CALENDAR, "Calendar"),
+        (TASKS, "Tasks"),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     url = models.URLField(max_length=255)
     username = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
@@ -184,6 +191,7 @@ class Calendar(models.Model):
     last_sync = models.DateTimeField(blank=True, null=True)
     sync_period = models.PositiveIntegerField(default=86400)
     events = models.TextField(blank=True, null=True)
+    type = models.CharField(max_length=2, choices=TYPE_CHOICES, default=CALENDAR)
 
     class Meta:
 

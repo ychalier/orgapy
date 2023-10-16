@@ -1,5 +1,6 @@
 window.addEventListener("load", () => {
 
+    var calendars = {};
     var events = [];
     var sync_date = null;
     
@@ -7,6 +8,7 @@ window.addEventListener("load", () => {
         constructor(data) {
             this.url = data.url;
             this.title = data.title;
+            this.calendar_id = data.calendar_id;
             this.dtstart = new Date(data.dtstart);
             this.dtend = new Date(data.dtend);
             this.day = `${this.dtstart.getFullYear()}-${(this.dtstart.getMonth()+1).toString().padStart(2, "0")}-${this.dtstart.getDate().toString().padStart(2, "0")}`;
@@ -52,6 +54,7 @@ window.addEventListener("load", () => {
             let form_data = new FormData();
             form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
             form_data.set("href", this.url);
+            form_data.set("calendarid", this.calendar_id);
             fetch(URL_API_CALENDAR_DELETE, {
                 method: "post",
                 body: form_data
@@ -78,6 +81,15 @@ window.addEventListener("load", () => {
             url = `${url}?force=1`;
         }
         fetch(url).then(res => res.json()).then(data => {
+            let calendar_input = document.querySelector("#modal-add-event select[name='calendarid']");
+            calendar_input.innerHTML = "";
+            calendars = {};
+            data.calendars.forEach(calendar => {
+                calendars[calendar.id] = calendar;
+                let option = calendar_input.appendChild(document.createElement("option"));
+                option.value = calendar.id;
+                option.textContent = calendar.name;
+            });
             events = [];
             sync_date = data.last_sync;
             data.events.forEach(event => {

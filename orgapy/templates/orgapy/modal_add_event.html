@@ -8,6 +8,10 @@
             <form id="form-add-event" method="post" action="{% url 'orgapy:api_calendar_add' %}">
                 {% csrf_token %}
                 <div class="form-group">
+                    <label class="form-label">Calendar</label>
+                    <select class="form-select" name="calendarid"></select>
+                </div>
+                <div class="form-group">
                     <label class="form-label">Title</label>
                     <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
                 </div>
