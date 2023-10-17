@@ -546,19 +546,24 @@ def api_project_edit_ranks(request):
 @permission_required("orgapy.view_calendar")
 def api_calendar_list(request):
     events = []
+    tasks = []
     calendars = []
     for calendar in models.Calendar.objects.filter(user=request.user):
-        for event in calendar.get_events(force="force" in request.GET):
+        eventsd, tasksd = calendar.get_events_and_tasks(force="force" in request.GET)
+        for event in eventsd:
             event["calendar_id"] = calendar.id
             events.append(event)
+        for task in tasksd:
+            task["calendar_id"] = calendar.id
+            tasks.append(task)
         calendars.append({
             "name": calendar.calendar_name,
             "id": calendar.id,
-            "type": calendar.type,
         })
     return JsonResponse({
         "calendars": calendars,
         "events": events,
+        "tasks": tasks,
         "last_sync": calendar.last_sync
     })
 
