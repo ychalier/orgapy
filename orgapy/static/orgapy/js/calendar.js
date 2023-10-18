@@ -2,6 +2,7 @@ window.addEventListener("load", () => {
 
     var calendars = {};
     var events = [];
+    var tasks = [];
     var sync_date = null;
     
     class CalendarEvent {
@@ -63,7 +64,7 @@ window.addEventListener("load", () => {
                 .then(data => {
                     if (data.success) {
                         toast("Event deleted", 600);
-                        fetch_events(false);
+                        fetch_calendar(false);
                     } else {
                         toast("An error occured", 600);
                     }
@@ -75,7 +76,43 @@ window.addEventListener("load", () => {
         }
     }
 
-    function fetch_events(force=false) {
+    class CalendarTask {
+
+        constructor(data) {
+            this.uid = data.uid;
+            this.title = data.title;
+            this.calendar_id = data.calendar_id;
+            this.dtstart = new Date(data.dtstart);
+            this.due = null;
+            if (data.due != null) {
+                this.due = new Date(data.due);
+            }
+        }
+
+        inflate(container) {
+            let element = container.appendChild(document.createElement("div"));
+            element.classList.add("task");
+            if (this.due != null && this.due < new Date()) {
+                element.classList.add("task-overdue");
+            }
+            let button = element.appendChild(document.createElement("button"));
+            button.classList.add("task-button-complete");
+            button.title = "Complete";
+            button.addEventListener("click", () => {
+                //TODO
+            });
+            button.innerHTML = `<i class="icon icon-check"></i>`;
+            let title = element.appendChild(document.createElement("span"));
+            title.textContent = this.title;
+            title.title = `Start: ${this.dtstart.toLocaleString()}`;
+            if (this.due) {
+                title.title += `\nDue: ${this.due.toLocaleString()}`;
+            }
+        }
+
+    }
+
+    function fetch_calendar(force=false) {
         let url = URL_API_CALENDAR_LIST;
         if (force) {
             url = `${url}?force=1`;
@@ -91,26 +128,30 @@ window.addEventListener("load", () => {
                 option.textContent = calendar.name;
             });
             events = [];
+            tasks = [];
             sync_date = data.last_sync;
             data.events.forEach(event => {
                 events.push(new CalendarEvent(event));
             });
-            inflate_events();
+            data.tasks.forEach(task => {
+                tasks.push(new CalendarTask(task));
+            })
+            inflate_calendar();
         }).catch(err => {
             events = [];
             sync_date = null;
-            inflate_events();
+            inflate_calendar();
         });
     }
     
-    fetch_events(false);
+    fetch_calendar(false);
 
     function inflate_events() {
         let container = document.getElementById("events");
         container.innerHTML = "";
         
         if (events.length == 0) {
-            container.innerHTML = "No events";
+            container.innerHTML = "No event";
             return;
         }
         
@@ -142,6 +183,63 @@ window.addEventListener("load", () => {
             showModal("modal-add-event");
         });
 
+    }
+
+    function inflate_tasks() {
+        let container = document.getElementById("tasks");
+        container.innerHTML = "";
+
+        if (tasks.length == 0) {
+            container.innerHTML = "No task";
+            return;
+        }
+
+        tasks.sort((a, b) => a.dtstart - b.dtstart);
+
+        let seen = new Set();
+        let current_tasks = [];
+        let future_tasks = [];
+        const now = new Date();
+
+        tasks.forEach(task => {
+            if (task.dtstart <= now) {
+                seen.add(task.uid);
+                current_tasks.push(task);
+            } else if (!seen.has(task.uid)) {
+                seen.add(task.uid);
+                future_tasks.push(task);
+            }
+        });
+
+        console.log(current_tasks);
+
+        let task_title = container.appendChild(document.createElement("div"));
+        task_title.classList.add("event-date");
+        if (current_tasks.length > 0) {
+            task_title.textContent = `Current tasks (${future_tasks.length})`;
+            current_tasks.forEach(task => {
+                task.inflate(container);
+            });
+        } else {
+            task_title.textContent = `No current task`;
+        }
+
+        if (future_tasks.length > 0) {
+            let details = container.appendChild(document.createElement("details"));
+            let summary = details.appendChild(document.createElement("summary"));
+            summary.textContent = `Future tasks (${future_tasks.length})`;
+            summary.classList.add("event-date");
+            if (current_tasks.length > 0) summary.classList.add("mt-2");
+            future_tasks.forEach(task => {
+                task.inflate(details);
+            });
+        }
+        
+    }
+
+    function inflate_sync() {
+        let container = document.getElementById("calendar-sync");
+        container.innerHTML = "";
         let event_sync = container.appendChild(document.createElement("div"));
         event_sync.classList.add("event-sync");
         let event_sync_date = event_sync.appendChild(document.createElement("div"));
@@ -153,8 +251,14 @@ window.addEventListener("load", () => {
         event_sync_btn.classList.add("event-sync-btn");
         event_sync_btn.innerHTML = `<i class="icon icon-refresh"></i>`;
         event_sync_btn.addEventListener("click", () => {
-            fetch_events(true);
+            fetch_calendar(true);
         });
+    }
+
+    function inflate_calendar() {
+        inflate_events();
+        inflate_tasks();
+        inflate_sync();
     }
 
     let allday_input = document.querySelector("#modal-add-event input[name='allday']");
@@ -178,7 +282,7 @@ window.addEventListener("load", () => {
             .then(data => {
                 if (data.success) {
                     toast("Event added", 600);
-                    fetch_events(false);
+                    fetch_calendar(false);
                 } else {
                     toast("An error occured", 600);
                 }

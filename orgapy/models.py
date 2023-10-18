@@ -231,7 +231,7 @@ class Calendar(models.Model):
                 if "SUMMARY" not in subcomponent or "COMPLETED" in subcomponent:
                     continue
                 tasks_data.append({
-                    "url": str(todo.url),
+                    "uid": subcomponent["UID"],
                     "title": subcomponent["SUMMARY"],
                     "dtstart": subcomponent.get("DTSTART").dt.isoformat(),
                     "due": subcomponent["DUE"].dt.isoformat() if "DUE" in subcomponent else None,

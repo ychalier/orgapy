@@ -94,3 +94,31 @@
 .event-modal-btn i {
     margin-right: .4rem;
 }
+
+.task-overdue {
+    color: var(--color-error-5);
+}
+
+.task-button-complete {
+    background: #262728;
+    border: 1px solid black;
+    border-radius: .2rem;
+    margin-right: .3rem;
+    color: inherit;
+    font-size: 9px;
+    height: 19px;
+    width: 19px;
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
+    top: -2px;
+    cursor: pointer;
+}
+
+.task-button-complete .icon {
+    visibility: hidden;
+}
+
+.task-button-complete:hover .icon {
+    visibility: visible;
+}
