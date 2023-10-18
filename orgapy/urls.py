@@ -34,6 +34,7 @@ urlpatterns = [
     path("api/objective/history", views.api_objective_history, name="api_objective_history"),
     path("api/calendar/list", views.api_calendar_list, name="api_calendar_list"),
     path("api/calendar/delete", views.api_calendar_delete, name="api_calendar_delete"),
+    path("api/calendar/complete", views.api_calendar_complete, name="api_calendar_complete"),
     path("api/calendar/add", views.api_calendar_add, name="api_calendar_add"),
     path("api/note-title", views.api_note_title, name="api_note_title"),
 ]

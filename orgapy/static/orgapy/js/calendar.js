@@ -45,7 +45,7 @@ window.addEventListener("load", () => {
             delete_button.title = "Delete";
             var self = this;
             delete_button.addEventListener("click", () => {
-                if (confirm("Are you sure?") == true) {
+                if (confirm("Are you sure you want to delete this event?") == true) {
                     self.delete();
                 }
             });
@@ -90,6 +90,7 @@ window.addEventListener("load", () => {
         }
 
         inflate(container) {
+            var self = this;
             let element = container.appendChild(document.createElement("div"));
             element.classList.add("task");
             if (this.due != null && this.due < new Date()) {
@@ -99,7 +100,9 @@ window.addEventListener("load", () => {
             button.classList.add("task-button-complete");
             button.title = "Complete";
             button.addEventListener("click", () => {
-                //TODO
+                if (confirm("Are you sure you want to complete this task?") == true) {
+                    self.complete();
+                }
             });
             button.innerHTML = `<i class="icon icon-check"></i>`;
             let title = element.appendChild(document.createElement("span"));
@@ -108,6 +111,30 @@ window.addEventListener("load", () => {
             if (this.due) {
                 title.title += `\nDue: ${this.due.toLocaleString()}`;
             }
+        }
+
+        complete() {
+            let form_data = new FormData();
+            form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+            form_data.set("uid", this.uid);
+            form_data.set("calendarid", this.calendar_id);
+            fetch(URL_API_CALENDAR_COMPLETE, {
+                method: "post",
+                body: form_data
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        toast("Task completed!", 600);
+                        fetch_calendar(false);
+                    } else {
+                        toast("An error occured", 600);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    toast("An error occured", 600);
+                });
         }
 
     }
@@ -211,12 +238,10 @@ window.addEventListener("load", () => {
             }
         });
 
-        console.log(current_tasks);
-
         let task_title = container.appendChild(document.createElement("div"));
         task_title.classList.add("event-date");
         if (current_tasks.length > 0) {
-            task_title.textContent = `Current tasks (${future_tasks.length})`;
+            task_title.textContent = `Current tasks (${current_tasks.length})`;
             current_tasks.forEach(task => {
                 task.inflate(container);
             });
@@ -229,7 +254,7 @@ window.addEventListener("load", () => {
             let summary = details.appendChild(document.createElement("summary"));
             summary.textContent = `Future tasks (${future_tasks.length})`;
             summary.classList.add("event-date");
-            if (current_tasks.length > 0) summary.classList.add("mt-2");
+            summary.classList.add("mt-2");
             future_tasks.forEach(task => {
                 task.inflate(details);
             });

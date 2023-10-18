@@ -583,6 +583,21 @@ def api_calendar_delete(request):
     return JsonResponse({"success": success})
 
 
+@permission_required("orgapy.change_calendar")
+def api_calendar_complete(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    uid = request.POST.get("uid")
+    calendarid = request.POST.get("calendarid")
+    if uid is None or calendarid is None:
+        raise BadRequest("Missing fields")
+    if not models.Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
+        raise Http404("No calendar found for user")
+    calendar = models.Calendar.objects.get(user=request.user, id=int(calendarid))
+    success = calendar.complete_task(uid)
+    return JsonResponse({"success": success})
+
+
 def parse_dt(date_string, time_string):
     dt_date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
     dt_time = datetime.datetime.strptime(time_string, "%H:%M").time()
