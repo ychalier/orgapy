@@ -36,5 +36,6 @@ urlpatterns = [
     path("api/calendar/delete", views.api_calendar_delete, name="api_calendar_delete"),
     path("api/calendar/complete", views.api_calendar_complete, name="api_calendar_complete"),
     path("api/calendar/add", views.api_calendar_add, name="api_calendar_add"),
+    path("api/calendar/add-task", views.api_calendar_add_task, name="api_calendar_add_task"),
     path("api/note-title", views.api_note_title, name="api_note_title"),
 ]

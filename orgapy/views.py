@@ -632,6 +632,27 @@ def api_calendar_add(request):
     return JsonResponse({"success": success})
 
 
+@permission_required("orgapy.change_calendar")
+def api_calendar_add_task(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    calendarid = request.POST.get("calendarid")
+    title = request.POST.get("title")
+    dtstart_date = request.POST.get("dtstart-date")
+    dtstart_time = request.POST.get("dtstart-time")
+    due_date = request.POST.get("due-date")
+    due_time = request.POST.get("due-time")
+    if title is None or dtstart_date is None or dtstart_time is None or due_date is None or due_time is None or calendarid is None:
+        raise BadRequest("Missing fields")
+    if not models.Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
+        raise Http404("No calendar found for user")
+    dtstart = parse_dt(dtstart_date, dtstart_time)
+    due = parse_dt(due_date, due_time)
+    calendar = models.Calendar.objects.get(user=request.user, id=int(calendarid))
+    success = calendar.add_task(title, dtstart, due)
+    return JsonResponse({"success": success})
+
+
 @permission_required("orgapy.view_note")
 def api_note_title(request):
     nid = request.GET.get("nid")

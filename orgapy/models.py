@@ -292,6 +292,35 @@ class Calendar(models.Model):
                 success = True
                 break
         return success
+    
+    def add_task(self, title, dtstart, due):
+        success = False
+        with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
+            principal = client.principal()
+            for calendar in principal.calendars():
+                if calendar.name != self.calendar_name:
+                    continue
+                todo = calendar.save_todo(
+                    dtstart=dtstart,
+                    due=due,
+                    summary=title)
+                uid = None
+                for subcomponent in todo.icalendar_instance.subcomponents:
+                    if "UID" in subcomponent:
+                        uid = str(subcomponent["UID"])
+                        break
+                tasks_data = json.loads(self.tasks)
+                tasks_data.append({
+                    "uid": uid,
+                    "title": title,
+                    "dtstart": dtstart.isoformat(),
+                    "due": due.isoformat(),
+                })
+                self.tasks = json.dumps(tasks_data, default=str)
+                self.save()
+                success = True
+                break
+        return success
 
     def complete_task(self, uid):
         success = False

@@ -145,14 +145,19 @@ window.addEventListener("load", () => {
             url = `${url}?force=1`;
         }
         fetch(url).then(res => res.json()).then(data => {
-            let calendar_input = document.querySelector("#modal-add-event select[name='calendarid']");
-            calendar_input.innerHTML = "";
+            let calendar_input_events = document.querySelector("#modal-add-event select[name='calendarid']");
+            let calendar_input_tasks = document.querySelector("#modal-add-task select[name='calendarid']");
+            calendar_input_events.innerHTML = "";
+            calendar_input_tasks.innerHTML = "";
             calendars = {};
             data.calendars.forEach(calendar => {
                 calendars[calendar.id] = calendar;
-                let option = calendar_input.appendChild(document.createElement("option"));
+                let option = calendar_input_events.appendChild(document.createElement("option"));
                 option.value = calendar.id;
                 option.textContent = calendar.name;
+                let option2 = calendar_input_tasks.appendChild(document.createElement("option"));
+                option2.value = calendar.id;
+                option2.textContent = calendar.name;
             });
             events = [];
             tasks = [];
@@ -259,6 +264,14 @@ window.addEventListener("load", () => {
                 task.inflate(details);
             });
         }
+
+        let event_modal_btn = container.appendChild(document.createElement("button"));
+        event_modal_btn.innerHTML = `<i class="icon icon-plus"></i> Add`;
+        event_modal_btn.title = "Add Task";
+        event_modal_btn.classList.add("event-modal-btn");
+        event_modal_btn.addEventListener("click", () => {
+            showModal("modal-add-task");
+        });
         
     }
 
@@ -307,6 +320,25 @@ window.addEventListener("load", () => {
             .then(data => {
                 if (data.success) {
                     toast("Event added", 600);
+                    fetch_calendar(false);
+                } else {
+                    toast("An error occured", 600);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
+    });
+
+    document.getElementById("btn-add-task").addEventListener("click", () => {
+        let form = document.getElementById("form-add-task");
+        let form_data = new FormData(form);
+        closeModal('modal-add-task');
+        fetch(form.action, {method: form.method, body: form_data}).then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toast("Task added", 600);
                     fetch_calendar(false);
                 } else {
                     toast("An error occured", 600);
