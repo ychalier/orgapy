@@ -1,9 +1,10 @@
 * {
-    --sheet-color-border: #e3e3e3;
-    --sheet-color-head-background: white;
-    --sheet-color-head-hover-background: #f3f3f3;
-    --sheet-color-selected-background: #e7f0fd;
-    --sheet-color-selected-border: #1a73e8;
+    --sheet-color-background: hsl(0, 0%, 6%);
+    --sheet-color-border: hsl(0, 0%, 11%);
+    --sheet-color-head-background: hsl(0, 0%, 6%);
+    --sheet-color-head-hover-background: hsl(0, 0%, 0%);
+    --sheet-color-selected-background: hsl(213, 77%, 5%);
+    --sheet-color-selected-border: hsl(214, 82%, 49%);
 }
 
 .sheet {
@@ -46,6 +47,7 @@
     white-space: nowrap;
     overflow: hidden;
     font-size: 14px;
+    background: var(--sheet-color-background);
 }
 
 .sheet-cell-content {
@@ -60,7 +62,7 @@
 }
 
 .sheet-cell-content b {
-    color: black;
+    color: white;
 }
 
 .sheet-row-head {
@@ -123,6 +125,7 @@
     padding: 8px;
     resize: none;
     line-height: 1;
+    color: inherit;
 }
 
 .sheet-cell-input:focus {
@@ -254,7 +257,7 @@
 .sheet-column-name {
     overflow: hidden;
     text-overflow: ellipsis;
-    color: black;
+    color: white;
 }
 
 .sheet-column-name-input {
