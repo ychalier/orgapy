@@ -81,6 +81,22 @@
     cursor: default;
 }
 
+.sheet-row-head .sheet-cell:first-child {
+    border-top-left-radius: .4rem;
+}
+
+.sheet-row-head .sheet-cell:last-of-type {
+    border-top-right-radius: .4rem;
+}
+
+tbody .sheet-row:last-of-type .sheet-cell:first-child {
+    border-bottom-left-radius: .4rem;
+}
+
+tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
+    border-bottom-right-radius: .4rem;
+}
+
 .selected {
     background: var(--sheet-color-selected-background) !important;
 }
