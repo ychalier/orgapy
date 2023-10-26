@@ -1,0 +1,18 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %} {{sheet.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/sheets.css' %}" />
+{% endblock head %}
+
+{% block main_content %}
+<div id="sheet"></div>
+{% endblock main_content %}
+
+{% block body_scripts %}
+{{ block.super }}
+<script src="{% static 'orgapy/js/sheets.js' %}"></script>
+{% endblock body_scripts %}

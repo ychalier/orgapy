@@ -334,3 +334,26 @@ class Calendar(models.Model):
                 success = True
                 break
         return success
+
+
+class Sheet(models.Model):
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
+    date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
+    date_access = models.DateTimeField(auto_now_add=True, auto_now=False)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    data = models.TextField(blank=True, null=True)
+    styles = models.TextField(blank=True, null=True)
+    public = models.BooleanField(default=False)
+
+    class Meta:
+
+        ordering = ["-date_modification"]
+
+    def __str__(self):
+        return f"{ self.user} - { self.id }. { self.title }"
+
+    def get_absolute_url(self):
+        return reverse("orgapy:view_sheet", kwargs={"sid": self.id})

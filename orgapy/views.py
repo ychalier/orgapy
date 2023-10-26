@@ -662,3 +662,22 @@ def api_note_title(request):
     if not query.exists():
         raise Http404("Not found")
     return HttpResponse(query.get().title, content_type="text/plain")
+
+
+def get_sheet_from_sid(sid, required_user=None):
+    if not models.Sheet.objects.filter(id=sid).exists():
+        raise Http404("Sheet does not exist")
+    sheet = models.Sheet.objects.get(id=sid)
+    if required_user is not None and sheet.user != required_user:
+        raise PermissionDenied
+    return sheet
+
+
+@permission_required("orgapy.view_sheet")
+def view_sheet(request, sid):
+    sheet = get_sheet_from_sid(sid)
+    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet"):
+        return render(request, "orgapy/sheet.html", { "sheet": sheet, "active": "sheets" })
+    elif sheet.public:
+        pass # TODO
+    raise PermissionDenied
