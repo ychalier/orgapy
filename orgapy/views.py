@@ -790,3 +790,10 @@ def view_sheet_raw(request, sid):
         response['Content-Disposition'] = f'attachment; filename="{sheet.title}.tsv"'
         return response
     raise PermissionDenied
+
+
+@permission_required("orgapy.delete_sheet")
+def delete_sheet(request, sid):
+    sheet = get_sheet_from_sid(sid, request.user)
+    sheet.delete()
+    return redirect("orgapy:sheets")

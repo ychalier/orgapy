@@ -16,7 +16,7 @@
                         <li class="menu-item"><a href="?next={{ request.path }}" title="Make public"><i class="icon icon-unlock"></i> Publish</a></li>
                         {% endif %}
                         <li class="menu-item"><a href="{% url 'orgapy:view_sheet_raw' sid=sheet.id %}" title="Download as Markdown"><i class="icon icon-download"></i> Download</a></li>
-                        <li class="menu-item"><a href="" class="link-confirm" title="Delete"><i class="icon icon-delete"></i> Delete</a></li>
+                        <li class="menu-item"><a href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" class="link-confirm" title="Delete"><i class="icon icon-delete"></i> Delete</a></li>
                     </ul>
                 </div>
             </div>

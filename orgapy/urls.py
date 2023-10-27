@@ -19,6 +19,7 @@ urlpatterns = [
     path("sheet/<sid>", views.view_sheet, name="view_sheet"),
     path("sheet/<sid>/raw", views.view_sheet_raw, name="view_sheet_raw"),
     path("sheet/<sid>/edit", views.edit_sheet, name="edit_sheet"),
+    path("sheet/<sid>/delete", views.delete_sheet, name="delete_sheet"),
     path("", views.view_projects, name="projects_2"),
     path("notes", views.view_notes, name="notes"),
     path("public/<nid>", views.view_public_note, name="view_public_note"),
