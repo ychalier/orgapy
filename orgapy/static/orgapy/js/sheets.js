@@ -1327,7 +1327,7 @@ class ContextMenu {
 
 class Sheet {
 
-    constructor(container) {
+    constructor(container, on_change_callback) {
         // Config
         this.width = 4;
         this.height = 10;
@@ -1365,6 +1365,15 @@ class Sheet {
         this.filtered_rows = new Set();
         this.script = null;
         this.shrunk = false;
+
+        this.on_change_callback = on_change_callback;
+    }
+
+    on_change(data_changed, config_changed) {
+        if (data_changed) {
+            this.evaluate_script();
+        }
+        this.on_change_callback(this, data_changed, config_changed);
     }
 
     index_of_rows(row_name) {
@@ -1514,7 +1523,7 @@ class Sheet {
         this.values[root.i][root.j] = value;
         remove(input);
         this.set_cell_content(root.i, root.j);
-        this.evaluate_script();
+        this.on_change(true, false);
     }
 
     get_cursor_row(y) {
@@ -1570,6 +1579,7 @@ class Sheet {
             x += this.column_widths[k] - 1;
             this.column_handles[k].style.left = (x - HANDLE_SIZE/2) + "px";
         }
+        this.on_change(false, true);
     }
 
     set_row_height(i, height) {
@@ -1582,6 +1592,7 @@ class Sheet {
             }
             this.row_handles[k].style.top = (y - HANDLE_SIZE/2) + "px";
         }
+        this.on_change(false, true);
     }
 
     update_resizing_row(event) {
@@ -1645,6 +1656,7 @@ class Sheet {
             this.values[i].splice(j, 0, null);
         }
         this.inflate();
+        this.on_change(true, false);
     }
 
     delete_column(j) {
@@ -1665,6 +1677,7 @@ class Sheet {
             this.values[i].splice(j, 1);
         }
         this.inflate();
+        this.on_change(true, false);
     }
 
     insert_row(i) {
@@ -1677,6 +1690,7 @@ class Sheet {
         }
         this.values.splice(i, 0, row);
         this.inflate();
+        this.on_change(true, false);
     }
 
     delete_row(i) {
@@ -1687,9 +1701,11 @@ class Sheet {
         this.row_heights.splice(i, 1);
         this.values.splice(i, 1);
         this.inflate();
+        this.on_change(true, false);
     }
 
     toggle_filter(j, value) {
+        this.on_change(false, true);
         if (this.filters[j].has(value)) {
             this.filters[j].delete(value);
             return false;
@@ -1779,12 +1795,13 @@ class Sheet {
             this.values[i][j] = new_ctype.parse(old_ctype.format_text(this.values[i][j]));
             this.set_cell_content(i, j);
         }
-        this.evaluate_script();
+        this.on_change(true, true);
     }
 
     set_column_name(j, name) {
         this.column_names[j] = name.trim() == "" ? colname(j) : name.trim();
         this.column_heads[j].querySelector(".sheet-column-name").textContent = this.column_names[j];
+        this.on_change(true, false);
     }
 
     sort_rows(j, ascending) {
@@ -1966,7 +1983,7 @@ class Sheet {
                 this.set_cell_content(i, j);
             }
         });
-        this.evaluate_script();
+        this.on_change(true, false);
     }
 
     toggle_bold() {
@@ -2002,7 +2019,7 @@ class Sheet {
                         self.set_cell_content(i, j);
                     });
                 }
-                self.evaluate_script();
+                self.on_change(true, false);
             }
         });
         document.addEventListener("mousemove", (event) => {
@@ -2033,6 +2050,7 @@ class Sheet {
                         let textarea = self.cells[root.i][root.j].querySelector(".sheet-cell-input");
                         textarea.value += "\n";
                         textarea.scrollTop = textarea.scrollHeight;
+                        self.on_change(true, false);
                     } else {
                         if (self.editing) self.stop_editing();
                         self.selection.move(1, 0);
@@ -2070,7 +2088,7 @@ class Sheet {
                         self.values[i][j] = null;
                         self.set_cell_content(i, j);
                     });
-                    self.evaluate_script();
+                    self.on_change(true, false);
                 } else if (event.key == "Tab") {
                     if (self.editing) self.stop_editing();
                     if (event.shiftKey) {
@@ -2086,23 +2104,25 @@ class Sheet {
                     event.preventDefault();
                     self.toggle_italic();
                 } else if (event.key == "k" && event.ctrlKey) {
-                    let root = this.selection.root();
-                    let value = this.values[root.i][root.j];
+                    let root = self.selection.root();
+                    let value = self.values[root.i][root.j];
                     if (value != null && typeof(value) == typeof("")) {
                         if (value.match(MARKDOWN_PATTERN_LINK)) {
                             let match = MARKDOWN_PATTERN_LINK.exec(value);
                             let url = prompt("Current URL:", match[2]);
                             if (url == null) {
-                                this.values[root.i][root.j] = match[1];
+                                self.values[root.i][root.j] = match[1];
                             } else {
-                                this.values[root.i][root.j] = `[${match[1]}](${url})`;
+                                self.values[root.i][root.j] = `[${match[1]}](${url})`;
                             }
-                            this.set_cell_content(root.i, root.j);
+                            self.set_cell_content(root.i, root.j);
+                            self.on_change(true, false);
                         } else {
                             let url = prompt("Enter a URL:");
                             if (url != null) {
-                                this.values[root.i][root.j] = `[${value}](${url})`;
-                                this.set_cell_content(root.i, root.j);
+                                self.values[root.i][root.j] = `[${value}](${url})`;
+                                self.set_cell_content(root.i, root.j);
+                                self.on_change(true, false);
                             }
                         }
                     }
@@ -2134,8 +2154,7 @@ class Sheet {
                             self.set_cell_content(i, j);
                         });
                     }
-                    
-                    
+                    self.on_change(false, true);
                 } else if (!self.editing && event.key.length == 1) {
                     // console.log(event.key);
                     self.start_editing();
@@ -2154,6 +2173,7 @@ class Sheet {
     }
 
     toggle_shrink() {
+        //TODO: add to config
         this.shrunk = !this.shrunk;
         for (let i = 0; i < this.height; i++) {
             if (this.shrunk && this.row_heights[i] == DEFAULT_ROW_HEIGHT) {
@@ -2163,6 +2183,7 @@ class Sheet {
             }
         }
         this.inflate();
+        this.on_change(false, true);
     }
 
     inflate() {
@@ -2290,6 +2311,7 @@ class Sheet {
         if (this.script != null) delete this.script;
         this.script = Script.from_string(script_string);
         this.evaluate_script();
+        this.on_change(false, true);
     }
 
     evaluate_script() {
@@ -2376,8 +2398,8 @@ class Sheet {
 }
 
 
-function initialize_sheet(container, data_string, config_string) {
-    let sheet = new Sheet(container);
+function initialize_sheet(container, data_string, config_string, on_change_callback) {
+    let sheet = new Sheet(container, on_change_callback);
     let data = null;
     if (data_string != null && data_string.trim() != "") {
         data = parse_tsv(data_string);
@@ -2404,8 +2426,15 @@ window.addEventListener("load", () => {
         })
         .then(res => res.json())
         .then(sheet_data => {
-            sheet = initialize_sheet(sheet_seed, sheet_data.data.replaceAll("\r", ""), sheet_data.config);
+            sheet = initialize_sheet(
+                sheet_seed,
+                sheet_data.data.replaceAll("\r", ""),
+                sheet_data.config,
+                (data_changed, config_changed) => {
+                    document.getElementById("btn-save-sheet").removeAttribute("disabled");
+                });
         });
+    document.getElementById("btn-save-sheet").setAttribute("disabled", true);
     document.getElementById("btn-save-sheet").addEventListener("click", () => {
         let save_form_data = new FormData();
         save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
@@ -2421,6 +2450,7 @@ window.addEventListener("load", () => {
             .then(data => {
                 if (data.success) {
                     toast("Saved!", 600);
+                    document.getElementById("btn-save-sheet").setAttribute("disabled", true);
                 } else {
                     toast("An error occured", 600);
                 }
