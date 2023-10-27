@@ -1,0 +1,15 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Sheets &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block main_content %}
+
+{% include "orgapy/sheet_searchbar.html" %}
+
+{% include "orgapy/sheet_list.html" %}
+
+{% include 'orgapy/pagination.html' with paginator=sheet_paginator %}
+
+{% endblock main_content %}
+

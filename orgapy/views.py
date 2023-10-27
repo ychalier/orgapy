@@ -674,6 +674,31 @@ def get_sheet_from_sid(sid, required_user=None):
 
 
 @permission_required("orgapy.view_sheet")
+def view_sheets(request):
+    page_size = 25
+    query = request.GET.get("query", "")
+    base_objects = models.Sheet.objects.filter(user=request.user)
+    if len(query) > 0:
+        objects = base_objects.filter(Q(title__contains=query) | Q(description__contains=query))
+    else:
+        objects = base_objects
+    if len(objects) == 1 and models.Sheet.objects.count() > 1:
+        return redirect("orgapy:view_sheet", sid=objects[0].id)
+    paginator = Paginator(objects.order_by(
+        "-date_modification",
+        "-date_access",
+    ), page_size)
+    page = request.GET.get("page")
+    sheets = paginator.get_page(page)
+    return render(request, "orgapy/sheets.html", {
+        "sheets": sheets,
+        "query": query,
+        "sheet_paginator": pretty_paginator(sheets, query=query),
+        "active": "sheets",
+    })
+
+
+@permission_required("orgapy.view_sheet")
 def view_sheet(request, sid):
     sheet = get_sheet_from_sid(sid)
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet"):

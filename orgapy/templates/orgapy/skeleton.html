@@ -37,7 +37,7 @@
                     <a href="{% url 'orgapy:projects' %}" class="btn {% if active != 'projects' %}btn-link{% else %}mr-1{% endif %}">Projects</a>
                     <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% else %}mr-1 ml-1{% endif %}">Notes</a>
                     <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% else %}mr-1 ml-1{% endif %}">Quotes</a>
-                    <a href="" class="btn {% if active != 'sheets' %}btn-link{% else %}mr-1 ml-1{% endif %}">Sheets</a>
+                    <a href="{% url 'orgapy:sheets' %}" class="btn {% if active != 'sheets' %}btn-link{% else %}mr-1 ml-1{% endif %}">Sheets</a>
                     {% endblock navbar %}
                 </header>
                 <div>

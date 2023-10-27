@@ -13,6 +13,7 @@ urlpatterns = [
     path("note/<nid>/delete", views.delete_note, name="delete_note"),
     path("note/<nid>/pin", views.toggle_pin, name="toggle_pin"),
     path("note/<nid>/public", views.toggle_public, name="toggle_public"),
+    path("sheets", views.view_sheets, name="sheets"),
     path("sheet/<sid>", views.view_sheet, name="view_sheet"),
     path("sheet/<sid>/raw", views.view_sheet_raw, name="view_sheet_raw"),
     path("", views.view_projects, name="projects_2"),
