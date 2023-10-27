@@ -537,10 +537,14 @@ class Script {
 
     evaluate(sheet) {
         this.formulas.forEach(formula => {
-            formula.location.indices(sheet, 0, 0).forEach((i, j) => {
-                sheet.values[i][j] = formula.expression.evaluate(sheet, i, j);
-                sheet.set_cell_content(i, j);
-            });
+            try {
+                formula.location.indices(sheet, 0, 0).forEach((i, j) => {
+                    sheet.values[i][j] = formula.expression.evaluate(sheet, i, j);
+                    sheet.set_cell_content(i, j);
+                });
+            } catch (error) {
+                console.error("Encountered an error while evaluating", formula, ":", error);
+            }
         });     
         sheet.update_filters();
     }
