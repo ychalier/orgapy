@@ -508,8 +508,9 @@ class ExpressionTernary extends Expression {
 
 class Script {
 
-    constructor(formulas) {
+    constructor(formulas, string) {
         this.formulas = formulas;
+        this.string = string;
     }
 
     static from_string(string) {
@@ -531,7 +532,7 @@ class Script {
                 }          
             }
         });
-        return new Script(formulas);
+        return new Script(formulas, string);
     }
 
     evaluate(sheet) {
@@ -2228,27 +2229,61 @@ class Sheet {
         this.set_cells_event_listeners();
     }
 
-    initialize_values() {
+    initialize_values(data_container, config_container) {
+        let data = null;
+        if (data_container != null) {
+            data = parse_tsv(data_container.innerHTML);
+            this.height = data.length - 1;
+            this.width = data[0].length;
+        }
+        let config = null;
+        if (config_container != null) {
+            config = JSON.parse(config_container.innerHTML);
+            this.highlights = config.highlights;
+        }
         this.column_types = [];
         this.column_widths = [];
         for (let j = 0; j < this.width; j++) {
-            this.column_widths.push(DEFAULT_COLUMN_WIDTH);
-            this.column_types.push(new COLUMN_TYPES[CTYPE_TEXT]());
-            this.column_names.push(colname(j));
+            if (config == null) {
+                this.column_widths.push(DEFAULT_COLUMN_WIDTH);
+                this.column_types.push(new COLUMN_TYPES[CTYPE_TEXT]());
+            } else {
+                this.column_widths.push(config.column_widths[j]);
+                this.column_types.push(new COLUMN_TYPES[config.column_types[j]]());
+            }
+            if (data == null) {
+                this.column_names.push(colname(j));
+            } else {
+                this.column_names.push(data[0][j]);
+            }
             this.filters.push(new Set());
         }
         this.row_heights = [];
         for (let i = 0; i < this.height; i++) {
-            this.row_heights.push(DEFAULT_ROW_HEIGHT);
+            if (config == null) {
+                this.row_heights.push(DEFAULT_ROW_HEIGHT);
+            } else {
+                this.row_heights.push(config.row_heights[i]);
+            }
         }
         this.values = [];
         for (let i = 0; i < this.height; i++) {
             this.values.push([]);
             for (let j = 0; j < this.width; j++) {
-                this.values[i].push(null);
+                if (data == null) {
+                    this.values[i].push(null);
+                } else {
+                    this.values[i].push(this.column_types[j].parse(data[i + 1][j]));
+                }
             }
         }
-    
+        if (config != null) {
+            this.script = Script.from_string(config.script);
+            this.filters = [];
+            config.filters.forEach(array => {
+                this.filters.push(new Set(array));
+            });
+        }
     }
 
     update_script(script_string) {
@@ -2284,6 +2319,9 @@ class Sheet {
             script_window.classList.add("hidden");
         });
         let script_textarea = create(script_container, "textarea", ["script-textarea"]);
+        if (this.script != null) {
+            script_textarea.value = this.script.string;
+        }
         script_textarea.addEventListener("keydown", (event) => {
             event.stopPropagation();
         });
@@ -2292,19 +2330,19 @@ class Sheet {
         });
     }
 
-    setup() {
+    setup(data_container, style_container) {
         this.context_menu.setup();
-        this.initialize_values();
+        this.initialize_values(data_container, style_container);
         this.inflate();
         this.inflate_script_window();
         this.set_global_event_listeners();
+        this.evaluate_script();
     }
 
 }
 
-var sheet;
 
-window.addEventListener("load", () => {
-    sheet = new Sheet(document.getElementById("sheet"));
-    sheet.setup();
-});
+function initialize_sheet(container, data_container, config_container) {
+    let sheet = new Sheet(container);
+    sheet.setup(data_container, config_container);
+}

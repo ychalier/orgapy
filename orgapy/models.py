@@ -345,7 +345,7 @@ class Sheet(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     data = models.TextField(blank=True, null=True)
-    styles = models.TextField(blank=True, null=True)
+    config = models.TextField(blank=True, null=True)
     public = models.BooleanField(default=False)
 
     class Meta:
@@ -357,3 +357,9 @@ class Sheet(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:view_sheet", kwargs={"sid": self.id})
+    
+    def get_modification_date_display(self):
+        now = datetime.datetime.now()
+        if self.date_modification.date() == now.date():
+            return self.date_modification.strftime("%H:%M")
+        return self.date_modification.strftime("%Y-%m-%d")

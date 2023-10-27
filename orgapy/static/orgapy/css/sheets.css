@@ -9,6 +9,7 @@
 
 .sheet {
     overflow: auto;
+    padding-bottom: 1em;
 }
 
 .sheet-sizer {
@@ -335,11 +336,15 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
 }
 
 .highlight-success {
-    background: #34a853;
+    background: var(--color-success-5);
 }
 
 .highlight-error {
-    background: #ea4335;
+    background: var(--color-error-5);
+}
+
+.highlight + .sheet-cell-content {
+    color: black;
 }
 
 .script-window {

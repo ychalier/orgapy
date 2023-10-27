@@ -9,10 +9,31 @@
 {% endblock head %}
 
 {% block main_content %}
+<h1>{{sheet.title}}</h1>
+
+<p>
+    <span class="text-small">
+        {% if sheet.date_creation.date == sheet.date_modification.date %}
+        Created on <b>{{ sheet.date_creation | date }}</b>
+        {% else %}
+        Created on <b>{{ sheet.date_creation | date }}</b>, edited on <b>{{ sheet.date_modification | date }}</b>
+        {% endif %}
+    </span>
+</p>
+
 <div id="sheet"></div>
 {% endblock main_content %}
 
 {% block body_scripts %}
 {{ block.super }}
 <script src="{% static 'orgapy/js/sheets.js' %}"></script>
+<div id="sheet-data" style="display: none">{{ sheet.data | safe }}</div>
+<div id="sheet-config" style="display: none">{{ sheet.config | safe }}</div>
+<script>
+    initialize_sheet(
+        document.getElementById("sheet"),
+        document.getElementById("sheet-data"),
+        document.getElementById("sheet-config"));
+</script>
+
 {% endblock body_scripts %}
