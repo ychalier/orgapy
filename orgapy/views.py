@@ -725,7 +725,7 @@ def save_sheet_core(request):
     if original_sheet is not None and original_sheet.user != request.user:
         raise PermissionDenied
     title = request.POST.get("title", "").strip()
-    description = request.POST.get("description", "").strip()
+    description = request.POST.get("content", "").strip()
     is_public = "public" in request.POST
     if original_sheet is None:
         sheet = models.Sheet.objects.create(
@@ -796,4 +796,14 @@ def view_sheet_raw(request, sid):
 def delete_sheet(request, sid):
     sheet = get_sheet_from_sid(sid, request.user)
     sheet.delete()
+    return redirect("orgapy:sheets")
+
+
+@permission_required("orgapy.change_sheet")
+def toggle_public_sheet(request, sid):
+    sheet = get_sheet_from_sid(sid, request.user)
+    sheet.public = not sheet.public
+    sheet.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
     return redirect("orgapy:sheets")
