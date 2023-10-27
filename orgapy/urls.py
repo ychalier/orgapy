@@ -39,4 +39,6 @@ urlpatterns = [
     path("api/calendar/add", views.api_calendar_add, name="api_calendar_add"),
     path("api/calendar/add-task", views.api_calendar_add_task, name="api_calendar_add_task"),
     path("api/note-title", views.api_note_title, name="api_note_title"),
+    path("api/sheet/data", views.api_sheet_data, name="api_sheet_data"),
+    path("api/sheet/save", views.api_sheet_save, name="api_sheet_save"),
 ]

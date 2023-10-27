@@ -681,3 +681,26 @@ def view_sheet(request, sid):
     elif sheet.public:
         pass # TODO
     raise PermissionDenied
+
+
+@permission_required("orgapy.view_sheet")
+def api_sheet_data(request):
+    sheet_id = request.POST.get("sid")
+    sheet = get_sheet_from_sid(int(sheet_id), request.user)
+    return JsonResponse({
+        "data": sheet.data,
+        "config": sheet.config
+    })
+
+
+@permission_required("orgapy.change_sheet")
+def api_sheet_save(request):
+    sheet_id = request.POST.get("sid")
+    sheet_data = request.POST.get("data")
+    sheet_config = request.POST.get("config")
+    sheet = get_sheet_from_sid(int(sheet_id), request.user)
+    sheet.data = sheet_data
+    sheet.config = sheet_config
+    sheet.date_modification = timezone.now()
+    sheet.save()
+    return JsonResponse({"success": True})

@@ -21,19 +21,21 @@
     </span>
 </p>
 
-<div id="sheet"></div>
+<div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
 {% endblock main_content %}
+
+{% block right_column %}
+<div class="side-menu-xl container">
+    <button class="btn mb-2" id="btn-save-sheet">Save</button>
+</div>
+{% endblock right_column %}
 
 {% block body_scripts %}
 {{ block.super }}
-<script src="{% static 'orgapy/js/sheets.js' %}"></script>
-<div id="sheet-data" style="display: none">{{ sheet.data | safe }}</div>
-<div id="sheet-config" style="display: none">{{ sheet.config | safe }}</div>
 <script>
-    initialize_sheet(
-        document.getElementById("sheet"),
-        document.getElementById("sheet-data"),
-        document.getElementById("sheet-config"));
+    const URL_API_SHEET_DATA = "{% url 'orgapy:api_sheet_data' %}";
+    const URL_API_SHEET_SAVE = "{% url 'orgapy:api_sheet_save' %}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
 </script>
-
+<script src="{% static 'orgapy/js/sheets.js' %}"></script>
 {% endblock body_scripts %}

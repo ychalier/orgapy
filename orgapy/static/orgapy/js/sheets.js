@@ -107,7 +107,7 @@ class AxisLocationAbsolute extends AxisLocation {
 
     evaluate(k, min, max, index_of) {
         let l = index_of(this.position);
-        if (l < min || l > max) throw new Error(`Index out of bounds: ${l}`);
+        if (l < min || l > max) throw new Error(`Index out of bounds: ${l} (original position: ${this.position})`);
         return l;
     }
 
@@ -2372,17 +2372,58 @@ class Sheet {
 }
 
 
-function initialize_sheet(container, data_container, config_container) {
+function initialize_sheet(container, data_string, config_string) {
     let sheet = new Sheet(container);
     let data = null;
-    let data_text = data_container.innerHTML;
-    if (data_text.trim() != "") {
-        data = parse_tsv(data_text);
+    if (data_string != null && data_string.trim() != "") {
+        data = parse_tsv(data_string);
     }
     let config = null;
-    let config_text = config_container.innerHTML;
-    if (config_text.trim() != "") {
-        config = JSON.parse(config_text);
+    if (config_string != null && config_string.trim() != "") {
+        config = JSON.parse(config_string);
     }
     sheet.setup(data, config);
+    return sheet;
 }
+
+
+window.addEventListener("load", () => {
+    let sheet_seed = document.querySelector(".sheet-seed");
+    let sheet_id = sheet_seed.getAttribute("sheet-id");
+    let form_data = new FormData();
+    var sheet = null;
+    form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+    form_data.set("sid", sheet_id);
+    fetch(URL_API_SHEET_DATA, {
+        method: "post",
+        body: form_data
+        })
+        .then(res => res.json())
+        .then(sheet_data => {
+            sheet = initialize_sheet(sheet_seed, sheet_data.data.replaceAll("\r", ""), sheet_data.config);
+        });
+    document.getElementById("btn-save-sheet").addEventListener("click", () => {
+        let save_form_data = new FormData();
+        save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+        save_form_data.set("sid", sheet_id);
+        let sheet_export = sheet.export();
+        save_form_data.set("data", sheet_export.data);
+        save_form_data.set("config", sheet_export.config);
+        fetch(URL_API_SHEET_SAVE, {
+            method: "post",
+            body: save_form_data
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toast("Saved!", 600);
+                } else {
+                    toast("An error occured", 600);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
+    });
+});
