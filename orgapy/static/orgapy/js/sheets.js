@@ -2229,16 +2229,12 @@ class Sheet {
         this.set_cells_event_listeners();
     }
 
-    initialize_values(data_container, config_container) {
-        let data = null;
-        if (data_container != null) {
-            data = parse_tsv(data_container.innerHTML);
+    initialize_values(data=null, config=null) {
+        if (data != null) {
             this.height = data.length - 1;
             this.width = data[0].length;
         }
-        let config = null;
-        if (config_container != null) {
-            config = JSON.parse(config_container.innerHTML);
+        if (config != null) {
             this.highlights = config.highlights;
         }
         this.column_types = [];
@@ -2330,13 +2326,47 @@ class Sheet {
         });
     }
 
-    setup(data_container, style_container) {
+    setup(data=null, config=null) {
         this.context_menu.setup();
-        this.initialize_values(data_container, style_container);
+        this.initialize_values(data, config);
         this.inflate();
         this.inflate_script_window();
         this.set_global_event_listeners();
         this.evaluate_script();
+    }
+
+    export() {
+        let data_array = [[]];
+        for (let j = 0; j < this.width; j++) {
+            data_array[0].push(this.column_names[j]);
+        }
+        for (let i = 0; i < this.height; i++) {
+            data_array.push([]);
+            for (let j = 0; j < this.width; j++) {
+                data_array[i + 1].push(this.column_types[j].format_text(this.values[i][j]));
+            }
+        }
+        let config_object = {
+            column_widths: [],
+            column_types: [],
+            row_heights: [],
+            script: "",
+            filters: [],
+            highlights: this.highlights,
+        }
+        for (let i = 0; i < this.height; i++) {
+            config_object.row_heights.push(this.row_heights[i]);
+        }
+        for (let j = 0; j < this.width; j++) {
+            config_object.column_widths.push(this.column_widths[j]);
+            config_object.column_types.push(this.column_types[j].constructor.ID);
+            config_object.filters.push(Array.from(this.filters[j]));
+        }
+        if (this.script != null) config_object.script = this.script.string;
+        return {
+            data: format_tsv(data_array),
+            config: JSON.stringify(config_object)
+        };
     }
 
 }
@@ -2344,5 +2374,15 @@ class Sheet {
 
 function initialize_sheet(container, data_container, config_container) {
     let sheet = new Sheet(container);
-    sheet.setup(data_container, config_container);
+    let data = null;
+    let data_text = data_container.innerHTML;
+    if (data_text.trim() != "") {
+        data = parse_tsv(data_text);
+    }
+    let config = null;
+    let config_text = config_container.innerHTML;
+    if (config_text.trim() != "") {
+        config = JSON.parse(config_text);
+    }
+    sheet.setup(data, config);
 }
