@@ -708,6 +708,57 @@ def view_sheet(request, sid):
     raise PermissionDenied
 
 
+@permission_required("orgapy.change_sheet")
+def edit_sheet(request, sid):
+    sheet = get_sheet_from_sid(sid)
+    return render(request, "orgapy/edit_sheet.html", {
+        "sheet": sheet,
+        "active": "sheets",
+    })
+
+
+def save_sheet_core(request):
+    original_sheet = None
+    if ("id" in request.POST
+            and models.Sheet.objects.filter(id=request.POST["id"]).exists()):
+        original_sheet = models.Sheet.objects.get(id=request.POST["id"])
+    if original_sheet is not None and original_sheet.user != request.user:
+        raise PermissionDenied
+    title = request.POST.get("title", "").strip()
+    description = request.POST.get("description", "").strip()
+    is_public = "public" in request.POST
+    if original_sheet is None:
+        sheet = models.Sheet.objects.create(
+            user=request.user,
+            title=title,
+            description=description,
+            public=is_public
+        )
+    else:
+        sheet = original_sheet
+        sheet.title = title
+        sheet.description = description
+        sheet.public = is_public
+    sheet.date_modification = timezone.now()
+    sheet.save()
+    return sheet
+
+
+@permission_required("orgapy.add_sheet")
+def create_sheet(request):
+    return render(request, "orgapy/create_sheet.html", {
+        "active": "sheets",
+    })
+
+
+@permission_required("orgapy.change_sheet")
+def save_sheet(request):
+    if request.method == "POST":
+        sheet = save_sheet_core(request)
+        return redirect("orgapy:view_sheet", sid=sheet.id)
+    raise PermissionDenied
+
+
 @permission_required("orgapy.view_sheet")
 def api_sheet_data(request):
     sheet_id = request.POST.get("sid")

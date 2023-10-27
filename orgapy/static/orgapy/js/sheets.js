@@ -2428,7 +2428,7 @@ window.addEventListener("load", () => {
         .then(sheet_data => {
             sheet = initialize_sheet(
                 sheet_seed,
-                sheet_data.data.replaceAll("\r", ""),
+                sheet_data.data == null ? null : sheet_data.data.replaceAll("\r", ""),
                 sheet_data.config,
                 (data_changed, config_changed) => {
                     document.getElementById("btn-save-sheet").removeAttribute("disabled");

@@ -8,7 +8,7 @@
             <a class="mr-2" href="?next={{ request.path }}" title="Make private"><i class="icon icon-lock"></i></a>
             {% endif %}
             <div class="show-on-parent-hover">
-                <a href="" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
+                <a href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
                 <div class="dropdown">
                     <a class="btn-inline c-hand dropdown-toggle" title="More options" tabindex="0"><i class="icon icon-more-horiz"></i></a>
                     <ul class="menu">
@@ -32,7 +32,7 @@
     <p class="empty-title h5">You have no sheet</p>
     <p class="empty-subtitle">Click the button to create a sheet.</p>
     <div class="empty-action">
-        <a class="btn btn-primary" href="{% if query %}?title={{query}}{% endif %}">Create sheet</a>
+        <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
     </div>
 </div>
 {% endif %}

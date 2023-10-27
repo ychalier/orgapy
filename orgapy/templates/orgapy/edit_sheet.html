@@ -1,0 +1,64 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Edit sheet &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block before_columns %}
+<form id="form-note-edit" action="{% url 'orgapy:save_sheet' %}" method="post">
+{% csrf_token %}
+{% if sheet %}<input type="hidden" name="id" value="{{sheet.id}}">{% endif %}
+{% endblock before_columns %}
+
+{% block main_content %}
+    <div class="form-group">
+        <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ sheet.title }}{% endif %}" />
+    </div>
+
+    <div class="form-group">
+        <textarea class="form-input" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ sheet.description }}</textarea>
+    </div>
+
+    <br>
+{% endblock main_content %}
+
+{% block right_column %}
+<div class="side-menu-xl container">
+    <button class="btn mb-2" id="btn-save-sheet">Save</button>   
+    
+    <button class="btn btn-primary mb-2">Done</button>
+
+    <div class="form-group">
+        <label class="form-switch">
+            <input type="checkbox" name="public" {% if sheet.public %}checked{% endif %} />
+            <i class="form-icon"></i> Public
+        </label>
+    </div>
+    
+</div>
+{% endblock right_column %}
+
+{% block after_columns %}
+</form>
+{% endblock after_columns %}
+
+{% block body_scripts %}
+{{ block.super }}
+<script>
+    let btn_save_sheet = document.getElementById("btn-save-sheet");
+    btn_save_sheet.classList.add("disabled");
+    btn_save_sheet.addEventListener("click", (event) => {
+        event.preventDefault();
+        btn_save_sheet.classList.add("disabled");
+        let form = document.getElementById("form-note-edit");
+        let formdata = new FormData(form);
+        fetch(form.action, {method: form.method, body: formdata}).then(res => {
+            toast("Saved!", 600);
+        });
+    });
+    document.querySelectorAll("input,textarea").forEach(input => {
+        input.addEventListener("input", () => {
+            btn_save_sheet.classList.remove("disabled");
+        });
+    });
+</script>
+{% endblock body_scripts %}
