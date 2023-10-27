@@ -704,3 +704,13 @@ def api_sheet_save(request):
     sheet.date_modification = timezone.now()
     sheet.save()
     return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.view_sheet")
+def view_sheet_raw(request, sid):
+    sheet = get_sheet_from_sid(sid)
+    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
+        response = HttpResponse(sheet.data, content_type="text/tab-separated-values")
+        response['Content-Disposition'] = f'attachment; filename="{sheet.title}.tsv"'
+        return response
+    raise PermissionDenied

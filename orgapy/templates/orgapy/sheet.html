@@ -27,6 +27,7 @@
 {% block right_column %}
 <div class="side-menu-xl container">
     <button class="btn mb-2" id="btn-save-sheet">Save</button>
+    <a class="btn mb-2" href="{% url 'orgapy:view_sheet_raw' sid=sheet.id %}">Download as TSV</a>
 </div>
 {% endblock right_column %}
 
