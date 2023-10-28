@@ -69,4 +69,7 @@
     const CSRF_TOKEN = "{{ csrf_token }}";
 </script>
 <script src="{% static 'orgapy/js/sheets.js' %}"></script>
+<script>
+    initialize_sheet_owner();
+</script>
 {% endblock body_scripts %}

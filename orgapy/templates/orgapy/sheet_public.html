@@ -1,0 +1,27 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %} {{sheet.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/sheets.css' %}" />
+{% endblock head %}
+
+{% block main_content %}
+<h1>{{sheet.title}}</h1>
+
+<div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
+{% endblock main_content %}
+
+{% block body_scripts %}
+{{ block.super }}
+<script>
+    const URL_API_SHEET_DATA = "{% url 'orgapy:api_sheet_data' %}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
+</script>
+<script src="{% static 'orgapy/js/sheets.js' %}"></script>
+<script>
+    initialize_sheet_public();
+</script>
+{% endblock body_scripts %}

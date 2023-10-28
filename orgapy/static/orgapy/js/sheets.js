@@ -2487,16 +2487,83 @@ function save_sheet_data(sheet_id, sheet) {
 }
 
 
-window.addEventListener("load", () => {
+function initialize_sheet_owner() {
+    window.addEventListener("load", () => {
+        let sheet_seed = document.querySelector(".sheet-seed");
+        let sheet_id = sheet_seed.getAttribute("sheet-id");
+        let form_data = new FormData();
+        var sheet = null;
+        form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+        form_data.set("sid", sheet_id);
+        let on_change_callback = (data_changed, config_changed) => {
+            document.getElementById("btn-save-sheet").removeAttribute("disabled");
+        }
+        fetch(URL_API_SHEET_DATA, {
+            method: "post",
+            body: form_data
+            })
+            .then(res => res.json())
+            .then(sheet_data => {
+                sheet = initialize_sheet(
+                    sheet_seed,
+                    sheet_data.data == null ? null : sheet_data.data.replaceAll("\r", ""),
+                    sheet_data.config,
+                    on_change_callback,
+                    false);
+            });
+        document.getElementById("btn-save-sheet").setAttribute("disabled", true);
+        document.getElementById("btn-save-sheet").addEventListener("click", () => {
+            save_sheet_data(sheet_id, sheet);
+        });
+    
+        document.addEventListener("keydown", (event) => {
+            if (event.key == "s" && event.ctrlKey) {
+                event.stopPropagation();
+                event.preventDefault();
+                save_sheet_data(sheet_id, sheet);
+            }
+        });
+    
+        document.getElementById("btn-sheet-upload").addEventListener("click", () => {
+            document.getElementById("modal-sheet-upload").classList.add("active");
+        });
+    
+        document.getElementById("btn-sheet-import").addEventListener("click", () => {
+            let file_input = document.getElementById("input-sheet-upload-file");
+            let files = file_input.files;
+            if (files.length > 0) {
+                let reader = new FileReader();
+                reader.readAsText(files[0]);
+                reader.onload = () => {
+                    if (sheet != null) delete sheet;
+                    sheet = initialize_sheet(sheet_seed, reader.result.replaceAll("\r", ""), null, on_change_callback, false);
+                    sheet.on_change(true, true);
+                }
+            }
+            closeModal("modal-sheet-upload");
+    
+        });
+    
+        document.getElementById("btn-sheet-shrink").addEventListener("click", () => {
+            sheet.toggle_shrink();
+        });
+    
+        document.getElementById("btn-sheet-fullscreen").addEventListener("click", () => {
+            sheet.toggle_fullscreen();
+        });
+    
+    });
+}
+
+
+function initialize_sheet_public() {
     let sheet_seed = document.querySelector(".sheet-seed");
     let sheet_id = sheet_seed.getAttribute("sheet-id");
     let form_data = new FormData();
     var sheet = null;
     form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
     form_data.set("sid", sheet_id);
-    let on_change_callback = (data_changed, config_changed) => {
-        document.getElementById("btn-save-sheet").removeAttribute("disabled");
-    }
+    let on_change_callback = (data_changed, config_changed) => {}
     fetch(URL_API_SHEET_DATA, {
         method: "post",
         body: form_data
@@ -2508,47 +2575,6 @@ window.addEventListener("load", () => {
                 sheet_data.data == null ? null : sheet_data.data.replaceAll("\r", ""),
                 sheet_data.config,
                 on_change_callback,
-                false);
+                true);
         });
-    document.getElementById("btn-save-sheet").setAttribute("disabled", true);
-    document.getElementById("btn-save-sheet").addEventListener("click", () => {
-        save_sheet_data(sheet_id, sheet);
-    });
-
-    document.addEventListener("keydown", (event) => {
-        if (event.key == "s" && event.ctrlKey) {
-            event.stopPropagation();
-            event.preventDefault();
-            save_sheet_data(sheet_id, sheet);
-        }
-    });
-
-    document.getElementById("btn-sheet-upload").addEventListener("click", () => {
-        document.getElementById("modal-sheet-upload").classList.add("active");
-    });
-
-    document.getElementById("btn-sheet-import").addEventListener("click", () => {
-        let file_input = document.getElementById("input-sheet-upload-file");
-        let files = file_input.files;
-        if (files.length > 0) {
-            let reader = new FileReader();
-            reader.readAsText(files[0]);
-            reader.onload = () => {
-                if (sheet != null) delete sheet;
-                sheet = initialize_sheet(sheet_seed, reader.result.replaceAll("\r", ""), null, on_change_callback, false);
-                sheet.on_change(true, true);
-            }
-        }
-        closeModal("modal-sheet-upload");
-
-    });
-
-    document.getElementById("btn-sheet-shrink").addEventListener("click", () => {
-        sheet.toggle_shrink();
-    });
-
-    document.getElementById("btn-sheet-fullscreen").addEventListener("click", () => {
-        sheet.toggle_fullscreen();
-    });
-
-});
+}

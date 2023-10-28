@@ -698,13 +698,12 @@ def view_sheets(request):
     })
 
 
-@permission_required("orgapy.view_sheet")
 def view_sheet(request, sid):
     sheet = get_sheet_from_sid(sid)
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet"):
         return render(request, "orgapy/sheet.html", { "sheet": sheet, "active": "sheets" })
     elif sheet.public:
-        pass # TODO
+        return render(request, "orgapy/sheet_public.html", { "sheet": sheet, "active": "sheets" })
     raise PermissionDenied
 
 
@@ -759,14 +758,15 @@ def save_sheet(request):
     raise PermissionDenied
 
 
-@permission_required("orgapy.view_sheet")
 def api_sheet_data(request):
     sheet_id = request.POST.get("sid")
-    sheet = get_sheet_from_sid(int(sheet_id), request.user)
-    return JsonResponse({
-        "data": sheet.data,
-        "config": sheet.config
-    })
+    sheet = get_sheet_from_sid(int(sheet_id))
+    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
+        return JsonResponse({
+            "data": sheet.data,
+            "config": sheet.config
+        })
+    raise PermissionDenied
 
 
 @permission_required("orgapy.change_sheet")
