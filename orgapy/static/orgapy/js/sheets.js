@@ -2493,14 +2493,11 @@ function initialize_sheet_owner() {
         let sheet_id = sheet_seed.getAttribute("sheet-id");
         let form_data = new FormData();
         var sheet = null;
-        form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-        form_data.set("sid", sheet_id);
         let on_change_callback = (data_changed, config_changed) => {
             document.getElementById("btn-save-sheet").removeAttribute("disabled");
         }
-        fetch(URL_API_SHEET_DATA, {
-            method: "post",
-            body: form_data
+        fetch(URL_API_SHEET_DATA + `?sid=${sheet_id}`, {
+            method: "get",
             })
             .then(res => res.json())
             .then(sheet_data => {

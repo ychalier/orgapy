@@ -759,7 +759,7 @@ def save_sheet(request):
 
 
 def api_sheet_data(request):
-    sheet_id = request.POST.get("sid")
+    sheet_id = request.GET.get("sid")
     sheet = get_sheet_from_sid(int(sheet_id))
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
         return JsonResponse({

@@ -18,7 +18,6 @@
 {{ block.super }}
 <script>
     const URL_API_SHEET_DATA = "{% url 'orgapy:api_sheet_data' %}";
-    const CSRF_TOKEN = "{{ csrf_token }}";
 </script>
 <script src="{% static 'orgapy/js/sheets.js' %}"></script>
 <script>
