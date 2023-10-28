@@ -1327,7 +1327,7 @@ class ContextMenu {
 
 class Sheet {
 
-    constructor(container, on_change_callback) {
+    constructor(container, on_change_callback, readonly=false) {
         // Config
         this.width = 4;
         this.height = 10;
@@ -1338,6 +1338,7 @@ class Sheet {
         this.row_heights = [];
         this.filters = [];
         this.highlights = {};
+        this.readonly = readonly;
 
         // DOM
         this.container = container;
@@ -1894,7 +1895,7 @@ class Sheet {
                     }
                 });
                 this.cells[i][j].addEventListener("dblclick", () => {
-                    if (!self.editing) self.start_editing(true);
+                    if (!self.editing && !self.readonly) self.start_editing(true);
                 });
                 this.cells[i][j].addEventListener("mousemove", () => {
                     if (self.selecting) {
@@ -1906,19 +1907,27 @@ class Sheet {
         for (let j = 0; j < this.width; j++) {
             let handle = this.column_handles[j];
             handle.addEventListener("mousedown", (event) => {
-                self.start_resizing_column(j, event);
+                if (!self.readonly) {
+                    self.start_resizing_column(j, event);
+                }
             });
             handle.addEventListener("dblclick", () => {
-                self.auto_resize_column(j);
+                if (!self.readonly) {
+                    self.auto_resize_column(j);
+                }
             });
         }
         for (let i = 0; i < this.height; i++) {
             let handle = this.row_handles[i];
             handle.addEventListener("mousedown", (event) => {
-                self.start_resizing_row(i, event);
+                if (!self.readonly) {
+                    self.start_resizing_row(i, event);
+                }
             });
             handle.addEventListener("dblclick", () => {
-                self.auto_resize_row(i);
+                if (!self.readonly) {
+                    self.auto_resize_row(i);
+                }
             });
         }
         for (let i = 0; i < this.height; i++) {
@@ -1935,7 +1944,9 @@ class Sheet {
                     self.start_selection(i, 0);
                     self.end_selection();
                 }
-                self.open_row_context_menu(event.clientX, event.clientY, i);
+                if (!self.readonly) {
+                    self.open_row_context_menu(event.clientX, event.clientY, i);
+                }
             });
             this.row_heads[i].addEventListener("mousemove", () => {
                 if (self.selecting) {
@@ -1945,8 +1956,10 @@ class Sheet {
         }
         let cell_top_left = this.container.querySelector(".sheet-row-head .sheet-cell:first-child");
         cell_top_left.addEventListener("click", () => {
-            document.querySelector(".script-window").classList.remove("hidden");
-            document.querySelector(".script-textarea").focus();
+            if (!self.readonly) {
+                document.querySelector(".script-window").classList.remove("hidden");
+                document.querySelector(".script-textarea").focus();
+            }
         });
         for (let j = 0; j < this.width; j++) {
             this.column_heads[j].addEventListener("mousedown", (event) => {
@@ -1962,7 +1975,9 @@ class Sheet {
                     self.start_selection(0, j);
                     self.end_selection();
                 }
-                self.open_column_context_menu(event.clientX, event.clientY, j);
+                if (!self.readonly) {
+                    self.open_column_context_menu(event.clientX, event.clientY, j);
+                }
             });
             this.column_heads[j].addEventListener("mousemove", () => {
                 if (self.selecting) {
@@ -1975,7 +1990,9 @@ class Sheet {
             });
             let cell_name = this.column_heads[j].querySelector(".sheet-column-name");
             cell_name.addEventListener("dblclick", (event) => {
-                self.start_editing_column_name(j);
+                if (!self.readonly) {
+                    self.start_editing_column_name(j);
+                }
             });
         }
     }
@@ -2011,6 +2028,7 @@ class Sheet {
     set_global_event_listeners() {
         var self = this;
         this.container.addEventListener("paste", (event) => {
+            if (self.readonly) return;
             if (self.selection != null) {
                 event.preventDefault();
                 let string = event.clipboardData.getData("text");
@@ -2037,7 +2055,7 @@ class Sheet {
             }
         });
         document.addEventListener("mousemove", (event) => {
-            if (self.resizing) {
+            if (self.resizing && !self.readonly) {
                 self.update_resizing(event);
             }
         });
@@ -2045,7 +2063,7 @@ class Sheet {
             if (self.selecting) {
                 self.end_selection();
             }
-            if (self.resizing) {
+            if (self.resizing && !self.readonly) {
                 self.end_resizing();
             }
         });
@@ -2064,64 +2082,66 @@ class Sheet {
             if (self.selection != null) {
                 if (event.key == "Enter") {
                     if (event.altKey && self.editing) {
-                        let root = self.selection.root();
-                        let textarea = self.cells[root.i][root.j].querySelector(".sheet-cell-input");
-                        textarea.value += "\n";
-                        textarea.scrollTop = textarea.scrollHeight;
-                        self.on_change(true, false);
+                        if (!self.readonly) {
+                            let root = self.selection.root();
+                            let textarea = self.cells[root.i][root.j].querySelector(".sheet-cell-input");
+                            textarea.value += "\n";
+                            textarea.scrollTop = textarea.scrollHeight;
+                            self.on_change(true, false);
+                        }
                     } else {
-                        if (self.editing) self.stop_editing();
+                        if (self.editing && !self.readonly) self.stop_editing();
                         self.selection.move(1, 0);
                     }
                 } else if (event.key == "ArrowUp") {
-                    if (self.editing) self.stop_editing();
+                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(-1, 0);
                     } else {
                         self.selection.move(-1, 0, event.ctrlKey);
                     }
                 } else if (event.key == "ArrowDown") {
-                    if (self.editing) self.stop_editing();
+                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(1, 0);
                     } else {
                         self.selection.move(1, 0, event.ctrlKey);
                     }
                 } else if (event.key == "ArrowLeft") {
-                    if (self.editing) self.stop_editing();
+                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(0, -1);
                     } else {
                         self.selection.move(0, -1, event.ctrlKey);
                     }
                 } else if (event.key == "ArrowRight") {
-                    if (self.editing) self.stop_editing();
+                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(0, 1);
                     } else {
                         self.selection.move(0, 1, event.ctrlKey);
                     }
-                } else if (!self.editing && (event.key == "Delete" || event.key == "Backspace")) {
+                } else if (!self.editing && (event.key == "Delete" || event.key == "Backspace") && !self.readonly) {
                     self.selection.iterate((i, j) => {
                         self.values[i][j] = null;
                         self.set_cell_content(i, j);
                     });
                     self.on_change(true, false);
                 } else if (event.key == "Tab") {
-                    if (self.editing) self.stop_editing();
+                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.move(0, -1);
                     } else {
                         self.selection.move(0, 1);
                     }
                     event.preventDefault();
-                } else if (event.key == "b" && event.ctrlKey) {
+                } else if (event.key == "b" && event.ctrlKey && !self.readonly) {
                     event.preventDefault();
                     self.toggle_bold();
-                } else if (event.key == "i" && event.ctrlKey) {
+                } else if (event.key == "i" && event.ctrlKey && !self.readonly) {
                     event.preventDefault();
                     self.toggle_italic();
-                } else if (event.key == "k" && event.ctrlKey) {
+                } else if (event.key == "k" && event.ctrlKey && !self.readonly) {
                     let root = self.selection.root();
                     let value = self.values[root.i][root.j];
                     if (value != null && typeof(value) == typeof("")) {
@@ -2148,7 +2168,7 @@ class Sheet {
                     event.preventDefault();
                     let string = self.get_selection_as_tsv();
                     navigator.clipboard.writeText(string);
-                } else if (event.altKey && (event.key == "²" || event.key == "&" || event.key == "é" || event.key == "\"")) {
+                } else if (event.altKey && (event.key == "²" || event.key == "&" || event.key == "é" || event.key == "\"") && !self.readonly) {
                     if (event.key == "²") {
                         self.selection.iterate((i, j) => {
                             let key = `${i},${j}`;
@@ -2173,7 +2193,7 @@ class Sheet {
                         });
                     }
                     self.on_change(false, true);
-                } else if (!self.editing && event.key.length == 1 && !event.ctrlKey && !event.altKey) {
+                } else if (!self.editing && event.key.length == 1 && !event.ctrlKey && !event.altKey && !self.readonly) {
                     //console.log(event.key);
                     self.start_editing();
                 }
@@ -2425,8 +2445,8 @@ class Sheet {
 }
 
 
-function initialize_sheet(container, data_string, config_string, on_change_callback) {
-    let sheet = new Sheet(container, on_change_callback);
+function initialize_sheet(container, data_string, config_string, on_change_callback, readonly) {
+    let sheet = new Sheet(container, on_change_callback, readonly);
     let data = null;
     if (data_string != null && data_string.trim() != "") {
         data = parse_tsv(data_string);
@@ -2487,7 +2507,8 @@ window.addEventListener("load", () => {
                 sheet_seed,
                 sheet_data.data == null ? null : sheet_data.data.replaceAll("\r", ""),
                 sheet_data.config,
-                on_change_callback);
+                on_change_callback,
+                false);
         });
     document.getElementById("btn-save-sheet").setAttribute("disabled", true);
     document.getElementById("btn-save-sheet").addEventListener("click", () => {
@@ -2514,7 +2535,7 @@ window.addEventListener("load", () => {
             reader.readAsText(files[0]);
             reader.onload = () => {
                 if (sheet != null) delete sheet;
-                sheet = initialize_sheet(sheet_seed, reader.result.replaceAll("\r", ""), null, on_change_callback);
+                sheet = initialize_sheet(sheet_seed, reader.result.replaceAll("\r", ""), null, on_change_callback, false);
                 sheet.on_change(true, true);
             }
         }
