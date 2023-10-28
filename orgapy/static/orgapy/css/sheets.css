@@ -419,3 +419,27 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
 .sheet-shrink .sheet-cell-input {
     padding: 5px 2px 2px 2px;
 }
+
+.sheet.fullscreen::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #222222;
+    width: 100%;
+    height: 100%;
+    content: "";
+}
+
+.sheet.fullscreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}

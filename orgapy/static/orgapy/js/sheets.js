@@ -1304,7 +1304,7 @@ class ContextMenu {
     open(x, y) {
         let width = 0;
         let height = 0;
-        this.container.querySelectorAll(".context-menu-item").forEach(item => {
+        this.container.querySelectorAll(".context-menu > .context-menu-item").forEach(item => {
             let bounds = item.getBoundingClientRect();
             width = Math.max(width, bounds.width);
             height += bounds.height;
@@ -2043,6 +2043,10 @@ class Sheet {
                 self.selection.all();
                 return;
             }
+            if (event.key == "Escape" && self.container.classList.contains("fullscreen")) {
+                self.container.classList.remove("fullscreen");
+                return;
+            }
             if (self.selection != null) {
                 if (event.key == "Enter") {
                     if (event.altKey && self.editing) {
@@ -2155,8 +2159,8 @@ class Sheet {
                         });
                     }
                     self.on_change(false, true);
-                } else if (!self.editing && event.key.length == 1) {
-                    // console.log(event.key);
+                } else if (!self.editing && event.key.length == 1 && !event.ctrlKey && !event.altKey) {
+                    //console.log(event.key);
                     self.start_editing();
                 }
             }
@@ -2396,6 +2400,14 @@ class Sheet {
         };
     }
 
+    toggle_fullscreen() {
+        if (this.container.classList.contains("fullscreen")) {
+            this.container.classList.remove("fullscreen");
+        } else {
+            this.container.classList.add("fullscreen");
+        }
+    }
+
 }
 
 
@@ -2411,6 +2423,33 @@ function initialize_sheet(container, data_string, config_string, on_change_callb
     }
     sheet.setup(data, config);
     return sheet;
+}
+
+
+function save_sheet_data(sheet_id, sheet) {
+    let save_form_data = new FormData();
+    save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+    save_form_data.set("sid", sheet_id);
+    let sheet_export = sheet.export();
+    save_form_data.set("data", sheet_export.data);
+    save_form_data.set("config", sheet_export.config);
+    fetch(URL_API_SHEET_SAVE, {
+        method: "post",
+        body: save_form_data
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                toast("Saved!", 600);
+                document.getElementById("btn-save-sheet").setAttribute("disabled", true);
+            } else {
+                toast("An error occured", 600);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            toast("An error occured", 600);
+        });
 }
 
 
@@ -2438,29 +2477,15 @@ window.addEventListener("load", () => {
         });
     document.getElementById("btn-save-sheet").setAttribute("disabled", true);
     document.getElementById("btn-save-sheet").addEventListener("click", () => {
-        let save_form_data = new FormData();
-        save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-        save_form_data.set("sid", sheet_id);
-        let sheet_export = sheet.export();
-        save_form_data.set("data", sheet_export.data);
-        save_form_data.set("config", sheet_export.config);
-        fetch(URL_API_SHEET_SAVE, {
-            method: "post",
-            body: save_form_data
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toast("Saved!", 600);
-                    document.getElementById("btn-save-sheet").setAttribute("disabled", true);
-                } else {
-                    toast("An error occured", 600);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                toast("An error occured", 600);
-            });
+        save_sheet_data(sheet_id, sheet);
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key == "s" && event.ctrlKey) {
+            event.stopPropagation();
+            event.preventDefault();
+            save_sheet_data(sheet_id, sheet);
+        }
     });
 
     document.getElementById("btn-sheet-upload").addEventListener("click", () => {
@@ -2485,6 +2510,10 @@ window.addEventListener("load", () => {
 
     document.getElementById("btn-sheet-shrink").addEventListener("click", () => {
         sheet.toggle_shrink();
+    });
+
+    document.getElementById("btn-sheet-fullscreen").addEventListener("click", () => {
+        sheet.toggle_fullscreen();
     });
 
 });

@@ -51,6 +51,7 @@
 {% block right_column %}
 <div class="side-menu container mt-1">
     <button class="btn mb-2" id="btn-save-sheet">Save</button>
+    <button id="btn-sheet-fullscreen" class="btn btn-action mb-1 mr-1" title="Fullscreen"><i class="icon icon-fullscreen"></i></button>
     <button id="btn-sheet-shrink" class="btn btn-action mb-1 mr-1" title="Shrink"><i class="icon icon-resize-horiz"></i></button>
     <a href="{% url 'orgapy:toggle_public_sheet' sid=sheet.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if sheet.public %}btn-primary{% endif %}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
     <a href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
