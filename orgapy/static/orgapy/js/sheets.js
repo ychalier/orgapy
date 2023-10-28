@@ -1642,21 +1642,27 @@ class Sheet {
 
     insert_column(j) {
         if (this.editing) this.stop_editing();
-        for (let k = j; k < this.width; k++) {
-            if (this.column_names[k] == colname(k)) {
-                this.column_names[k] = colname(k + 1);
+        let n = prompt("How many columns to insert?", 1);
+        if (n != null) {
+            n = parseInt(n);
+            for (let p = 0; p < n; p++) {
+                for (let k = j; k < this.width; k++) {
+                    if (this.column_names[k] == colname(k)) {
+                        this.column_names[k] = colname(k + 1);
+                    }
+                }
+                this.width++;
+                this.column_names.splice(j, 0, colname(j));
+                this.column_widths.splice(j, 0, DEFAULT_COLUMN_WIDTH);
+                this.column_types.splice(j, 0, new COLUMN_TYPES[CTYPE_TEXT]());
+                this.filters.splice(j, 0, new Set());
+                for (let i = 0; i < this.height; i++) {
+                    this.values[i].splice(j, 0, null);
+                }
             }
+            this.inflate();
+            this.on_change(true, false);
         }
-        this.width++;
-        this.column_names.splice(j, 0, colname(j));
-        this.column_widths.splice(j, 0, DEFAULT_COLUMN_WIDTH);
-        this.column_types.splice(j, 0, new COLUMN_TYPES[CTYPE_TEXT]());
-        this.filters.splice(j, 0, new Set());
-        for (let i = 0; i < this.height; i++) {
-            this.values[i].splice(j, 0, null);
-        }
-        this.inflate();
-        this.on_change(true, false);
     }
 
     delete_column(j) {
@@ -1682,15 +1688,21 @@ class Sheet {
 
     insert_row(i) {
         if (this.editing) this.stop_editing();
-        this.height++;
-        this.row_heights.splice(i, 0, this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT);
-        let row = [];
-        for (let j = 0; j < this.width; j++) {
-            row.push(null);
+        let n = prompt("How many rows to insert?", 1);
+        if (n != null) {
+            n = parseInt(n);
+            for (let p = 0; p < n; p++) {
+                this.height++;
+                this.row_heights.splice(i, 0, this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT);
+                let row = [];
+                for (let j = 0; j < this.width; j++) {
+                    row.push(null);
+                }
+                this.values.splice(i, 0, row);
+            }
+            this.inflate();
+            this.on_change(true, false);
         }
-        this.values.splice(i, 0, row);
-        this.inflate();
-        this.on_change(true, false);
     }
 
     delete_row(i) {
@@ -1751,6 +1763,7 @@ class Sheet {
         });
         this.context_menu.add_item("Delete", () => {
             let columns_to_delete = self.selection.columns();
+            columns_to_delete.sort((a, b) => a - b);
             columns_to_delete.reverse();
             columns_to_delete.forEach(k => self.delete_column(k));
         });
@@ -1778,6 +1791,7 @@ class Sheet {
         });
         this.context_menu.add_item("Delete", () => {
             let rows_to_delete = self.selection.rows();
+            rows_to_delete.sort((a, b) => a - b);
             rows_to_delete.reverse();
             rows_to_delete.forEach(k => self.delete_row(k));
         } );
