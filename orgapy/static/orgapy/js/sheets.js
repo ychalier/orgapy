@@ -2272,7 +2272,7 @@ class Sheet {
                 this.column_widths.push(config.column_widths[j]);
                 this.column_types.push(new COLUMN_TYPES[config.column_types[j]]());
             }
-            if (data == null) {
+            if (data == null || data[0][j].trim() == "") {
                 this.column_names.push(colname(j));
             } else {
                 this.column_names.push(data[0][j]);
@@ -2420,6 +2420,9 @@ window.addEventListener("load", () => {
     var sheet = null;
     form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
     form_data.set("sid", sheet_id);
+    let on_change_callback = (data_changed, config_changed) => {
+        document.getElementById("btn-save-sheet").removeAttribute("disabled");
+    }
     fetch(URL_API_SHEET_DATA, {
         method: "post",
         body: form_data
@@ -2430,9 +2433,7 @@ window.addEventListener("load", () => {
                 sheet_seed,
                 sheet_data.data == null ? null : sheet_data.data.replaceAll("\r", ""),
                 sheet_data.config,
-                (data_changed, config_changed) => {
-                    document.getElementById("btn-save-sheet").removeAttribute("disabled");
-                });
+                on_change_callback);
         });
     document.getElementById("btn-save-sheet").setAttribute("disabled", true);
     document.getElementById("btn-save-sheet").addEventListener("click", () => {
@@ -2460,4 +2461,25 @@ window.addEventListener("load", () => {
                 toast("An error occured", 600);
             });
     });
+
+    document.getElementById("btn-sheet-upload").addEventListener("click", () => {
+        document.getElementById("modal-sheet-upload").classList.add("active");
+    });
+
+    document.getElementById("btn-sheet-import").addEventListener("click", () => {
+        let file_input = document.getElementById("input-sheet-upload-file");
+        let files = file_input.files;
+        if (files.length > 0) {
+            let reader = new FileReader();
+            reader.readAsText(files[0]);
+            reader.onload = () => {
+                if (sheet != null) delete sheet;
+                sheet = initialize_sheet(sheet_seed, reader.result.replaceAll("\r", ""), null, on_change_callback);
+                sheet.on_change(true, true);
+            }
+        }
+        closeModal("modal-sheet-upload");
+
+    });
+
 });
