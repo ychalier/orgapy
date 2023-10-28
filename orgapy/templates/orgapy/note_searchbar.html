@@ -1,6 +1,6 @@
 <form action="{% url 'orgapy:notes' %}" method="get">
     <div class="search-create-bar">
-        <div class="searchbar-with-clear-button has-icon-right">         
+        <div class="searchbar-note searchbar-with-clear-button has-icon-right">         
             <input autocomplete="off" class="form-input" type="text" name="query" placeholder="Search a note" value="{% if query %}{{query}}{% endif %}" />
             <i class="form-icon icon icon-cross c-hand"></i>
         </div>

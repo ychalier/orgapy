@@ -10,7 +10,7 @@ window.addEventListener("load", () => {
         return i;
     }
 
-    document.querySelectorAll(".searchbar-with-clear-button").forEach(container => {
+    document.querySelectorAll(".searchbar-note.searchbar-with-clear-button").forEach(container => {
         const bar = container.querySelector("input");
         const icon = container.querySelector("i");
         function check_if_searchbar_is_empty() {
