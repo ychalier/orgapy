@@ -2173,7 +2173,6 @@ class Sheet {
     }
 
     toggle_shrink() {
-        //TODO: add to config
         this.shrunk = !this.shrunk;
         for (let i = 0; i < this.height; i++) {
             if (this.shrunk && this.row_heights[i] == DEFAULT_ROW_HEIGHT) {
@@ -2261,6 +2260,7 @@ class Sheet {
         }
         if (config != null) {
             this.highlights = config.highlights;
+            this.shrunk = config.shrunk;
         }
         this.column_types = [];
         this.column_widths = [];
@@ -2379,6 +2379,7 @@ class Sheet {
             script: "",
             filters: [],
             highlights: this.highlights,
+            shrunk: this.shrunk,
         }
         for (let i = 0; i < this.height; i++) {
             config_object.row_heights.push(this.row_heights[i]);
@@ -2480,6 +2481,10 @@ window.addEventListener("load", () => {
         }
         closeModal("modal-sheet-upload");
 
+    });
+
+    document.getElementById("btn-sheet-shrink").addEventListener("click", () => {
+        sheet.toggle_shrink();
     });
 
 });
