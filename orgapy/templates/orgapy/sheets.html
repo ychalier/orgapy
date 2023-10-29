@@ -5,7 +5,15 @@
 
 {% block main_content %}
 
-{% include 'orgapy/sheet_searchbar.html' %}
+<form action="{% url 'orgapy:sheets' %}" method="get">
+    <div class="search-create-bar">
+        <div class="searchbar-with-clear-button has-icon-right">         
+            <input autocomplete="off" class="form-input" type="text" name="query" placeholder="Search a sheet" value="{% if query %}{{query}}{% endif %}" />
+        </div>
+        <button class="btn btn-primary input-group-btn">Search</button>
+        <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
+    </div>
+</form>
 
 {% if groups or standalone_sheets %}
 
@@ -23,7 +31,7 @@
                 </summary>
                 <ul>
                     {% for sheet in group.sheet_set.all %}
-                    <li>{% include 'orgapy/sheet_list_item.html' %}</li>
+                    <li>{% include 'orgapy/partials/sheet_list_item.html' %}</li>
                     {% endfor %}
                 </ul>
             </details>
@@ -31,7 +39,7 @@
     </tr>
     {% endfor %}
     {% for sheet in standalone_sheets %}
-    <tr><td>{% include 'orgapy/sheet_list_item.html' %}</td></tr>
+    <tr><td>{% include 'orgapy/partials/sheet_list_item.html' %}</td></tr>
     {% endfor %}
 </table>
 {% else %}
@@ -47,7 +55,7 @@
 </div>
 {% endif %}
 
-{% include 'orgapy/create_sheet_group_modal.html' %}
+{% include 'orgapy/partials/modal_create_sheet_group.html' %}
 
 {% endblock main_content %}
 

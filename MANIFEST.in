@@ -2,4 +2,5 @@ include LICENSE
 include README.md
 recursive-include orgapy/static *
 recursive-include orgapy/templates *
+recursive-include orgapy/templates/partials *
 recursive-include orgapy/management/commands *

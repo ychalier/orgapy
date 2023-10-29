@@ -19,7 +19,7 @@
 
 {% block main_content %}
 
-{% include "orgapy/note_searchbar.html" %}
+{% include "orgapy/partials/note_searchbar.html" %}
 
 <div class="objgraph-ref my-4"><div id="objgraph-wrapper" class="objgraph-wrapper"></div></div>
 
@@ -35,7 +35,7 @@
     <a id="btn-edit-objectives" href="{% url 'admin:orgapy_objective_changelist' %}" class="projects-button"><i class="icon icon-edit"></i> Edit objectives</a>
 </div>
 
-{% include "orgapy/modal_add_event.html" %}
+{% include "orgapy/partials/modal_add_event.html" %}
 
 {% endblock main_content %}
 
