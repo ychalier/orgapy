@@ -1,0 +1,80 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %} {{group.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/sheets.css' %}" />
+{% endblock head %}
+
+{% block main_content %}
+<h1>{{group.title}}</h1>
+
+{% if group.sheet_set.all %}
+
+<div class="sheet-tabs">
+    <div class="sheet-tabs-container">
+        {% for sheet in group.sheet_set.all %}
+        <div class="sheet-tab {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">
+            <div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="sheet-tabs-titles">
+        {% for sheet in group.sheet_set.all %}
+        <div class="sheet-tab-title {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">{{ sheet.title }}</div>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<div class="empty">
+    <div class="empty-icon">
+        <i class="icon icon-note icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no sheet</p>
+    <p class="empty-subtitle">Click the button to create a sheet.</p>
+    <div class="empty-action">
+        <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}">Create sheet</a>
+    </div>
+</div>
+{% endif %}
+
+
+{% endblock main_content %}
+
+
+{% block body_scripts %}
+{{ block.super }}
+<script>
+    const URL_API_SHEET_DATA = "{% url 'orgapy:api_sheet_data' %}";
+    const URL_API_SHEET_SAVE = "{% url 'orgapy:api_sheet_save' %}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
+</script>
+<script src="{% static 'orgapy/js/sheets.js' %}"></script>
+<script>
+    window.addEventListener("load", () => {
+        initialize_sheets(false, true);
+        document.querySelectorAll(".sheet-tab-title").forEach(tab_title => {
+            tab_title.addEventListener("click", () => {
+                document.querySelectorAll(".sheet-tab").forEach(tab => {
+                    if (tab_title.getAttribute("tab") == tab.getAttribute("tab")) {
+                        tab.classList.add("active");
+                    } else {
+                        tab.classList.remove("active");
+                    }
+                });
+                document.querySelectorAll(".sheet-tab-title").forEach(tab_title_2 => {
+                    if (tab_title.getAttribute("tab") == tab_title_2.getAttribute("tab")) {
+                        tab_title_2.classList.add("active");
+                    } else {
+                        tab_title_2.classList.remove("active");
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock body_scripts %}
+

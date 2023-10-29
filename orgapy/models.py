@@ -336,6 +336,22 @@ class Calendar(models.Model):
         return success
 
 
+class SheetGroup(models.Model):
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+
+    class Meta:
+
+        ordering = ["title"]
+    
+    def __str__(self):
+        return f"{ self.user} - { self.id }. { self.title }"
+
+    def get_absolute_url(self):
+        return reverse("orgapy:view_sheet_group", kwargs={"sid": self.id})
+
+
 class Sheet(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -347,10 +363,11 @@ class Sheet(models.Model):
     data = models.TextField(blank=True, null=True)
     config = models.TextField(blank=True, null=True)
     public = models.BooleanField(default=False)
+    group = models.ForeignKey("SheetGroup", on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
 
-        ordering = ["-date_modification"]
+        ordering = ["title"]
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"

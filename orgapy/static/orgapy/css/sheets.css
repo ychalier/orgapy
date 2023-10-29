@@ -9,7 +9,6 @@
 
 .sheet {
     overflow: auto;
-    padding-bottom: 1em;
 }
 
 .sheet-sizer {
@@ -395,10 +394,6 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     z-index: 2;
 }
 
-.markdown .sheet {
-    padding-bottom: unset;
-}
-
 .sheet-toolbar {
     display: flex;
     background: #444;
@@ -438,4 +433,45 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
 .sheet-toolbar-button.active {
     background: white;
     color: black;
+}
+
+.sheet-tabs {
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.sheet-tab {
+    display: none;
+}
+
+.sheet-tab.active {
+    display: unset;
+}
+
+.sheet-tabs-titles {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: .4rem;
+}
+
+.sheet-tab-title {
+    background: #0f0f0f;
+    height: 32px;
+    border-radius: .4rem;
+    cursor: pointer;
+    padding: 0 .4rem;
+    line-height: 32px;
+}
+
+.sheet-tab-title:hover {
+    background: #888;
+}
+
+.sheet-tab-title.active {
+    background: white;
+    color: black;
+}
+
+.sheet-tab-title + .sheet-tab-title {
+    margin-left: .2rem;
 }

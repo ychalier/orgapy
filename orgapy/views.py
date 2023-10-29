@@ -675,25 +675,18 @@ def get_sheet_from_sid(sid, required_user=None):
 
 @permission_required("orgapy.view_sheet")
 def view_sheets(request):
-    page_size = 25
     query = request.GET.get("query", "")
-    base_objects = models.Sheet.objects.filter(user=request.user)
-    if len(query) > 0:
-        objects = base_objects.filter(Q(title__contains=query) | Q(description__contains=query))
+    groups = None
+    standalone_sheets = None
+    if query:
+        standalone_sheets = models.Sheet.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(description__contains=query))
     else:
-        objects = base_objects
-    if len(objects) == 1 and models.Sheet.objects.count() > 1:
-        return redirect("orgapy:view_sheet", sid=objects[0].id)
-    paginator = Paginator(objects.order_by(
-        "-date_modification",
-        "-date_access",
-    ), page_size)
-    page = request.GET.get("page")
-    sheets = paginator.get_page(page)
+        groups = models.SheetGroup.objects.filter(user=request.user)
+        standalone_sheets = models.Sheet.objects.filter(user=request.user, group__isnull=True)
     return render(request, "orgapy/sheets.html", {
-        "sheets": sheets,
+        "groups": groups,
+        "standalone_sheets": standalone_sheets,
         "query": query,
-        "sheet_paginator": pretty_paginator(sheets, query=query),
         "active": "sheets",
     })
 
@@ -710,9 +703,11 @@ def view_sheet(request, sid):
 @permission_required("orgapy.change_sheet")
 def edit_sheet(request, sid):
     sheet = get_sheet_from_sid(sid)
+    sheet_groups = models.SheetGroup.objects.filter(user=request.user)
     return render(request, "orgapy/edit_sheet.html", {
         "sheet": sheet,
         "active": "sheets",
+        "sheet_groups": sheet_groups,
     })
 
 
@@ -726,18 +721,24 @@ def save_sheet_core(request):
     title = request.POST.get("title", "").strip()
     description = request.POST.get("content", "").strip()
     is_public = "public" in request.POST
+    group_id = request.POST.get("group", "")
+    group = None
+    if group_id != "":
+        group = models.SheetGroup.objects.get(user=request.user, id=int(group_id))
     if original_sheet is None:
         sheet = models.Sheet.objects.create(
             user=request.user,
             title=title,
             description=description,
-            public=is_public
+            public=is_public,
+            group=group,
         )
     else:
         sheet = original_sheet
         sheet.title = title
         sheet.description = description
         sheet.public = is_public
+        sheet.group = group
     sheet.date_modification = timezone.now()
     sheet.save()
     return sheet
@@ -745,8 +746,10 @@ def save_sheet_core(request):
 
 @permission_required("orgapy.add_sheet")
 def create_sheet(request):
+    sheet_groups = models.SheetGroup.objects.filter(user=request.user)
     return render(request, "orgapy/create_sheet.html", {
         "active": "sheets",
+        "sheet_groups": sheet_groups,
     })
 
 
@@ -808,4 +811,35 @@ def toggle_public_sheet(request, sid):
     sheet.save()
     if "next" in request.GET:
         return redirect(request.GET["next"])
+    return redirect("orgapy:sheets")
+
+
+@permission_required("orgapy.add_sheetgroup")
+def create_sheet_group(request):
+    if "title" not in request.POST:
+        raise BadRequest
+    title = request.POST.get("title")
+    models.SheetGroup.objects.create(user=request.user, title=title)
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:sheets")
+
+
+@permission_required("orgapy.view_sheetgroup")
+def view_sheet_group(request, sid):
+    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
+        raise Http404("Group not found")
+    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
+    return render(request, "orgapy/sheet_group.html", {
+        "group": group,
+        "active": "sheets",
+    })
+
+
+@permission_required("orgapy.delete_sheetgroup")
+def delete_sheet_group(request, sid):
+    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
+        raise Http404("Group not found")
+    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
+    group.delete()
     return redirect("orgapy:sheets")

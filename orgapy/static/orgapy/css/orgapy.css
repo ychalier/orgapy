@@ -266,3 +266,11 @@ tr a i.icon {
     cursor: pointer;
     user-select: none;
 }
+
+.sheets-table ul {
+    margin: 0 0 0 .8rem;
+}
+
+.sheets-table li {
+    margin: 0;
+}

@@ -1,0 +1,17 @@
+<a class="link-hidden mr-2" href="{% url 'orgapy:view_sheet' sid=sheet.id %}">{{sheet.title}}</a>
+{% if sheet.public %}
+<a class="mr-2" href="?next={{ request.path }}" title="Make private"><i class="icon icon-lock"></i></a>
+{% endif %}
+<div class="show-on-parent-hover">
+    <a href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
+    <div class="dropdown">
+        <a class="btn-inline c-hand dropdown-toggle" title="More options" tabindex="0"><i class="icon icon-more-horiz"></i></a>
+        <ul class="menu">
+            {% if not sheet.public %}
+            <li class="menu-item"><a href="?next={{ request.path }}" title="Make public"><i class="icon icon-unlock"></i> Publish</a></li>
+            {% endif %}
+            <li class="menu-item"><a href="{% url 'orgapy:view_sheet_raw' sid=sheet.id %}" title="Download as Markdown"><i class="icon icon-download"></i> Download</a></li>
+            <li class="menu-item"><a href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" class="link-confirm" title="Delete"><i class="icon icon-delete"></i> Delete</a></li>
+        </ul>
+    </div>
+</div>

@@ -11,10 +11,22 @@
 
 {% block main_content %}
     <div class="form-group">
+        <label class="form-label" for="input-title">Title</label>
         <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ sheet.title }}{% endif %}" />
     </div>
 
     <div class="form-group">
+        <label class="form-label" for="input-group">Group</label>
+        <select name="group" class="form-select" id="input-group">
+            <option value="" class="text-gray">None</option>
+            {% for group in sheet_groups %}
+            <option value="{{group.id}}" {% if group == sheet.group %}selected{% endif %}>{{group.title}}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="input-content">Description</label>
         <textarea class="form-input" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ sheet.description }}</textarea>
     </div>
 
@@ -23,9 +35,10 @@
 
 {% block right_column %}
 <div class="side-menu-xl container">
-    <button class="btn mb-2" id="btn-save-sheet">Save</button>   
     
-    <button class="btn btn-primary mb-2">Done</button>
+    <button class="btn btn-primary mb-2">Save</button>
+    
+    <span class="btn mb-2" onclick="showModal('modal-create-sheet-group')">Add group</span>
 
     <div class="form-group">
         <label class="form-switch">
@@ -39,26 +52,7 @@
 
 {% block after_columns %}
 </form>
-{% endblock after_columns %}
 
-{% block body_scripts %}
-{{ block.super }}
-<script>
-    let btn_save_sheet = document.getElementById("btn-save-sheet");
-    btn_save_sheet.classList.add("disabled");
-    btn_save_sheet.addEventListener("click", (event) => {
-        event.preventDefault();
-        btn_save_sheet.classList.add("disabled");
-        let form = document.getElementById("form-note-edit");
-        let formdata = new FormData(form);
-        fetch(form.action, {method: form.method, body: formdata}).then(res => {
-            toast("Saved!", 600);
-        });
-    });
-    document.querySelectorAll("input,textarea").forEach(input => {
-        input.addEventListener("input", () => {
-            btn_save_sheet.classList.remove("disabled");
-        });
-    });
-</script>
-{% endblock body_scripts %}
+{% include 'orgapy/create_sheet_group_modal.html' %}
+
+{% endblock after_columns %}
