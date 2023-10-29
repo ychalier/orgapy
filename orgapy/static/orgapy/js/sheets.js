@@ -1755,6 +1755,14 @@ class Sheet {
                 self.update_filters();
             });
         });
+        this.context_menu.add_item("Resize", () => {
+            let new_width = prompt(`Column width (default is ${DEFAULT_COLUMN_WIDTH}):`, self.column_widths[j]);
+            if (new_width != null) {    
+                self.selection.columns().forEach(q => {
+                    self.set_column_width(q, new_width);
+                });
+            }
+        });
         this.context_menu.add_item("Insert left", () => {
             let bounds = self.selection.bounds();
             self.insert_column(bounds.left);
@@ -1783,6 +1791,14 @@ class Sheet {
     open_row_context_menu(x, y, i) {
         this.context_menu.reset();
         var self = this;
+        this.context_menu.add_item("Resize", () => {
+            let new_height = prompt(`Row height (default is ${DEFAULT_ROW_HEIGHT}):`, self.row_heights[i]);
+            if (new_height != null) {
+                self.selection.rows().forEach(p => {
+                    self.set_row_height(p, new_height);
+                });
+            }
+        });
         this.context_menu.add_item("Insert top", () => {
             let bounds = self.selection.bounds();
             self.insert_row(bounds.top);
