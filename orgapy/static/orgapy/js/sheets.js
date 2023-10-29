@@ -1327,7 +1327,7 @@ class ContextMenu {
 
 class Sheet {
 
-    constructor(sid, container, on_change_callback, readonly=false) {
+    constructor(sid, container, readonly=false) {
         this.sid = sid;
 
         // Config
@@ -1344,6 +1344,11 @@ class Sheet {
 
         // DOM
         this.container = container;
+        this.toolbar = null;
+        this.toolbar_button_save = null;
+        this.toolbar_button_toggle_fullscreen = null;
+        this.toolbar_button_toggle_shrink = null;
+        this.table = null;
         this.cells = [];
         this.column_handles = [];
         this.row_handles = [];
@@ -1368,15 +1373,15 @@ class Sheet {
         this.filtered_rows = new Set();
         this.script = null;
         this.shrunk = false;
-
-        this.on_change_callback = on_change_callback;
     }
 
     on_change(data_changed, config_changed) {
         if (data_changed) {
             this.evaluate_script();
         }
-        this.on_change_callback(this, data_changed, config_changed);
+        if (this.toolbar_button_save != null) {
+            this.toolbar_button_save.removeAttribute("disabled");
+        }
     }
 
     index_of_rows(row_name) {
@@ -1974,10 +1979,7 @@ class Sheet {
         }
         let cell_top_left = this.container.querySelector(".sheet-row-head .sheet-cell:first-child");
         cell_top_left.addEventListener("click", () => {
-            if (!self.readonly) {
-                document.querySelector(".script-window").classList.remove("hidden");
-                document.querySelector(".script-textarea").focus();
-            }
+            self.selection.all();
         });
         for (let j = 0; j < this.width; j++) {
             this.column_heads[j].addEventListener("mousedown", (event) => {
@@ -2241,22 +2243,29 @@ class Sheet {
         this.on_change(false, true);
     }
 
+    inflate_table() {
+        this.table = create(this.container, "table", ["sheet-table"]);
+    }
+
     inflate() {
-        this.container.innerHTML = "";
-        this.container.classList.add("sheet");
         if (this.shrunk) {
             this.container.classList.add("sheet-shrink");
+            if (this.toolbar_button_toggle_shrink != null) {
+                this.toolbar_button_toggle_shrink.classList.add("active");
+            }
         } else {
             this.container.classList.remove("sheet-shrink");
+            if (this.toolbar_button_toggle_shrink != null) {
+                this.toolbar_button_toggle_shrink.classList.remove("active");
+            }
         }
-        let table = create(this.container, "table", ["sheet-table"]);
-        let table_head = create(table, "thead");
-        let table_body = create(table, "tbody");
+        this.table.innerHTML = "";
+        let table_head = create(this.table, "thead");
+        let table_body = create(this.table, "tbody");
         
         let row_head = create(table_head, "tr", ["sheet-row", "sheet-row-head"]);
         let cell_top_left = create(row_head, "th", ["sheet-cell", "sheet-cell-head", "sheet-cell-top-left"]);
         cell_top_left.style.height = (this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT) + "px";
-        if (!this.readonly) cell_top_left.textContent = "ℱ"; //ƒ
         this.column_heads = [];
         for (let j = 0; j < this.width; j++) {
             this.column_heads.push(create(row_head, "th", ["sheet-cell"]));
@@ -2318,6 +2327,7 @@ class Sheet {
             this.highlights = config.highlights;
             this.shrunk = config.shrunk;
         }
+        this.column_names = [];
         this.column_types = [];
         this.column_widths = [];
         for (let j = 0; j < this.width; j++) {
@@ -2375,44 +2385,147 @@ class Sheet {
         this.script.evaluate(this);
     }
 
-    inflate_script_window() {
+    open_import_modal() {
         var self = this;
-        let script_window = create(document.body, "div", ["script-window", "hidden"]);
-        let script_overlay = create(script_window, "span", ["script-overlay"]);
-        script_overlay.addEventListener("click", () => {
-            script_window.classList.add("hidden");
+        let modal = create(document.body, "div", ["modal"]);
+        let modal_overlay = create(modal, "span", ["modal-overlay"]);
+        modal_overlay.addEventListener("click", () => {
+            remove(modal);
         });
-        let script_container = create(script_window, "div", ["script-container"]);
-        let script_buttons = create(script_container, "div", ["mb-2"]);
-        let script_save_button = create(script_buttons, "button", ["btn", "btn-primary", "mr-1"]);
-        script_save_button.textContent = "Save";
-        script_save_button.addEventListener("click", () => {
-            script_window.classList.add("hidden");
+        let modal_container = create(modal, "div", ["modal-container"]);
+        let modal_header = create(modal_container, "div", ["modal-header"]);
+        let modal_title = create(modal_header, "div", ["modal-title", "h5"]);
+        modal_title.textContent = "Import Sheet";
+        let modal_subtitle = create(modal_header, "div", ["modal-subtitle", "text-gray"]);
+        modal_subtitle.textContent = "Upload a CSV or TSV file";
+        let modal_body = create(modal_container, "div", ["modal-body"]);
+        let modal_form_group = create(modal_body, "div", ["form-group"]);
+        let modal_form_label = create(modal_form_group, "label", ["form-label"]);
+        modal_form_label.textContent = "Local file";
+        let modal_input = create(modal_form_group, "input", ["form-input"]);
+        modal_input.setAttribute("type", "file");
+        modal_input.setAttribute("accept", ".tsv,.csv,.txt");
+        let modal_footer = create(modal_container, "div", ["modal-footer"]);
+        let modal_button_cancel = create(modal_footer, "button", ["btn", "mr-1"]);
+        modal_button_cancel.textContent = "Cancel";
+        modal_button_cancel.addEventListener("click", () => {
+            remove(modal);
         });
-        let script_compute_button = create(script_buttons, "button", ["btn"]);
-        script_compute_button.textContent = "Compute";
-        script_compute_button.title = "Force re-computing everything";
-        script_compute_button.addEventListener("click", () => {
-            self.evaluate_script();
-            script_window.classList.add("hidden");
+        let modal_button_import = create(modal_footer, "button", ["btn", "btn-primary"]);
+        modal_button_import.textContent = "Import";
+        modal.classList.add("active");
+        modal_button_import.addEventListener("click", () => {
+            if (modal_input.files.length > 0) {
+                let reader = new FileReader();
+                reader.readAsText(modal_input.files[0]);
+                reader.onload = () => {
+                    self.import_tsv(reader.result.replaceAll("\r", ""));
+                }
+            }
+            remove(modal);
         });
-        let script_textarea = create(script_container, "textarea", ["script-textarea"]);
-        if (this.script != null) {
-            script_textarea.value = this.script.string;
-        }
-        script_textarea.addEventListener("keydown", (event) => {
+    }
+
+    open_script_modal() {
+        var self = this;
+        let modal = create(document.body, "div", ["modal"]);
+        let modal_overlay = create(modal, "span", ["modal-overlay"]);
+        modal_overlay.addEventListener("click", () => {
+            remove(modal);
+        });
+        let modal_container = create(modal, "div", ["modal-container"]);
+        let modal_header = create(modal_container, "div", ["modal-header"]);
+        let modal_title = create(modal_header, "div", ["modal-title", "h5"]);
+        modal_title.textContent = "Script";
+        let modal_subtitle = create(modal_header, "div", ["modal-subtitle", "text-gray"]);
+        modal_subtitle.textContent = "Write script formula, one per line";
+        let modal_body = create(modal_container, "div", ["modal-body"]);
+        let modal_form_group = create(modal_body, "div", ["form-group"]);
+        let modal_textarea = create(modal_form_group, "textarea", ["form-input", "script-textarea"]);
+        modal_textarea.addEventListener("keydown", (event) => {
             event.stopPropagation();
         });
-        script_textarea.addEventListener("change", (event) => {
-            self.update_script(script_textarea.value);
+        if (this.script != null) {
+            modal_textarea.value = this.script.string;
+        }
+        let modal_footer = create(modal_container, "div", ["modal-footer"]);
+        let modal_button_cancel = create(modal_footer, "button", ["btn", "mr-1"]);
+        modal_button_cancel.textContent = "Cancel";
+        modal_button_cancel.addEventListener("click", () => {
+            remove(modal);
+        });
+        let modal_button_compute = create(modal_footer, "button", ["btn", "mr-1"]);
+        modal_button_compute.textContent = "Save";
+        modal_button_compute.addEventListener("click", () => {
+            self.update_script(modal_textarea.value);
+        });
+        let modal_button_save = create(modal_footer, "button", ["btn", "btn-primary"]);
+        modal_button_save.textContent = "Save & close";
+        modal.classList.add("active");
+        modal_textarea.focus();
+        modal_button_save.addEventListener("click", () => {
+            self.update_script(modal_textarea.value);
+            remove(modal);
+        });
+    }
+
+    inflate_toolbar() {
+        if (this.readonly) return;
+        var self = this;
+
+        this.toolbar = create(this.container, "div", ["sheet-toolbar"]);
+
+        this.toolbar_button_save = create(this.toolbar, "button", ["sheet-toolbar-button"]);
+        this.toolbar_button_save.innerHTML = `<i class="icon icon-check"></i>`;
+        this.toolbar_button_save.title = "Save";
+        this.toolbar_button_save.setAttribute("disabled", true);
+        this.toolbar_button_save.addEventListener("click", () => {
+            self.save_data();
+        });
+
+        let btn_script = create(this.toolbar, "button", ["sheet-toolbar-button"]);
+        btn_script.textContent = "ℱ"; //ƒ
+        btn_script.addEventListener("click", () => {
+            self.open_script_modal();
+        });
+
+        this.toolbar_button_toggle_fullscreen = create(this.toolbar, "button", ["sheet-toolbar-button"]);
+        this.toolbar_button_toggle_fullscreen.innerHTML = `<i class="icon icon-fullscreen"></i>`;
+        this.toolbar_button_toggle_fullscreen.title = "Toggle fullscreen";
+        this.toolbar_button_toggle_fullscreen.addEventListener("click", () => {
+            self.toggle_fullscreen();
+        });
+
+        this.toolbar_button_toggle_shrink = create(this.toolbar, "button", ["sheet-toolbar-button"]);
+        this.toolbar_button_toggle_shrink.innerHTML = `<i class="icon icon-resize-horiz"></i>`;
+        this.toolbar_button_toggle_shrink.title = "Toggle shrink";
+        this.toolbar_button_toggle_shrink.addEventListener("click", () => {
+            self.toggle_shrink();
+        });
+
+        let btn_import = create(this.toolbar, "button", ["sheet-toolbar-button"]);
+        btn_import.innerHTML = `<i class="icon icon-upload"></i>`;
+        btn_import.title = "Import";
+        btn_import.addEventListener("click", () => {
+            self.open_import_modal();
+        });
+
+        let btn_export = create(this.toolbar, "button", ["sheet-toolbar-button"]);
+        btn_export.innerHTML = `<i class="icon icon-download"></i>`;
+        btn_export.title = "Export";
+        btn_export.addEventListener("click", () => {
+            self.export_tsv();
         });
     }
 
     setup(data=null, config=null) {
+        this.container.innerHTML = "";
+        this.container.classList.add("sheet");
         this.context_menu.setup();
         this.initialize_values(data, config);
+        this.inflate_toolbar();
+        this.inflate_table();
         this.inflate();
-        this.inflate_script_window();
         this.set_global_event_listeners();
         this.evaluate_script();
     }
@@ -2455,8 +2568,14 @@ class Sheet {
     toggle_fullscreen() {
         if (this.container.classList.contains("fullscreen")) {
             this.container.classList.remove("fullscreen");
+            if (this.toolbar_button_toggle_fullscreen != null) {
+                this.toolbar_button_toggle_fullscreen.classList.remove("active");
+            }
         } else {
             this.container.classList.add("fullscreen");
+            if (this.toolbar_button_toggle_fullscreen != null) {
+                this.toolbar_button_toggle_fullscreen.classList.add("active");
+            }
         }
     }
 
@@ -2465,6 +2584,20 @@ class Sheet {
         this.initialize_values(data, null);
         this.inflate();
         this.on_change(true, true);
+    }
+
+    export_tsv() {
+        let tsv_string = this.export().data;
+        let blob = new Blob([tsv_string], {type: "text/tab-separated-values"});
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        let title = document.querySelector("h1");
+        if (title == null) {
+            link.download = `Untitled.tsv`;
+        } else {
+            link.download = `${title.textContent}.tsv`;
+        }
+        link.click();
     }
 
     save_data() {
@@ -2482,7 +2615,9 @@ class Sheet {
             .then(data => {
                 if (data.success) {
                     toast("Saved!", 600);
-                    document.getElementById("btn-save-sheet").setAttribute("disabled", true);
+                    if (this.toolbar_button_save != null) {
+                        this.toolbar_button_save.setAttribute("disabled", true);
+                    }
                 } else {
                     toast("An error occured", 600);
                 }
@@ -2499,18 +2634,12 @@ class Sheet {
 function initialize_sheet(sheet_seed, public) {
     var sheet = null;
     let sheet_id = sheet_seed.getAttribute("sheet-id");
-    let on_change_callback = null;
-    if (!public) {
-        on_change_callback = (data_changed, config_changed) => {
-            document.getElementById("btn-save-sheet").removeAttribute("disabled");
-        }
-    }
     fetch(URL_API_SHEET_DATA + `?sid=${sheet_id}`, {
         method: "get",
         })
         .then(res => res.json())
         .then(sheet_data => {
-            sheet = new Sheet(sheet_id, sheet_seed, on_change_callback, public);
+            sheet = new Sheet(sheet_id, sheet_seed, public);
             let data = null;
             if (sheet_data.data != null && sheet_data.data.trim() != "") {
                 data = parse_tsv(sheet_data.data);
@@ -2521,11 +2650,9 @@ function initialize_sheet(sheet_seed, public) {
             }
             sheet.setup(data, config);
         });
-    if (public) return;
-    document.getElementById("btn-save-sheet").setAttribute("disabled", true);
-    document.getElementById("btn-save-sheet").addEventListener("click", () => {
-        sheet.save_data();
-    });
+    
+    /*
+    TODO
     document.addEventListener("keydown", (event) => {
         if (event.key == "s" && event.ctrlKey) {
             event.stopPropagation();
@@ -2533,27 +2660,7 @@ function initialize_sheet(sheet_seed, public) {
             sheet.save_data();
         }
     });
-    document.getElementById("btn-sheet-upload").addEventListener("click", () => {
-        document.getElementById("modal-sheet-upload").classList.add("active");
-    });
-    document.getElementById("btn-sheet-import").addEventListener("click", () => {
-        let file_input = document.getElementById("input-sheet-upload-file");
-        let files = file_input.files;
-        if (files.length > 0) {
-            let reader = new FileReader();
-            reader.readAsText(files[0]);
-            reader.onload = () => {
-                sheet.import_tsv(reader.result.replaceAll("\r", ""));
-            }
-        }
-        closeModal("modal-sheet-upload");
-    });
-    document.getElementById("btn-sheet-shrink").addEventListener("click", () => {
-        sheet.toggle_shrink();
-    });
-    document.getElementById("btn-sheet-fullscreen").addEventListener("click", () => {
-        sheet.toggle_fullscreen();
-    });
+    */
 }
 
 

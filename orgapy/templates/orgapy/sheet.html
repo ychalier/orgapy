@@ -26,37 +26,12 @@
 
 <div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
 
-<div id="modal-sheet-upload" class="modal">
-    <span class="modal-overlay" onclick="closeModal('modal-sheet-upload')"></span>
-    <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-title h5">Import Sheet</div>
-            <div class="modal-subtitle">Upload a CSV or TSV file</div>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label" for="input-sheet-upload-file">Local file</label>
-                <input type="file" name="sheet-upload-file" id="input-sheet-upload-file" accept=".tsv,.csv,.txt" />
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn" onclick="closeModal('modal-sheet-upload')">Cancel</button>
-            <button class="btn btn-primary" id="btn-sheet-import">Import</button>
-        </div>
-    </div>
-</div>
-
 {% endblock main_content %}
 
 {% block right_column %}
-<div class="side-menu container mt-1">
-    <button class="btn mb-2" id="btn-save-sheet">Save</button>
-    <button id="btn-sheet-fullscreen" class="btn btn-action mb-1 mr-1" title="Fullscreen"><i class="icon icon-fullscreen"></i></button>
-    <button id="btn-sheet-shrink" class="btn btn-action mb-1 mr-1" title="Shrink"><i class="icon icon-resize-horiz"></i></button>
+<div class="side-menu container mt-1">    
     <a href="{% url 'orgapy:toggle_public_sheet' sid=sheet.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if sheet.public %}btn-primary{% endif %}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
     <a href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
-    <button id="btn-sheet-upload" class="btn btn-action mb-1 mr-1" title="Import TSV"><i class="icon icon-upload"></i></button>
-    <a href="{% url 'orgapy:view_sheet_raw' sid=sheet.id %}" class="btn btn-action mb-1 mr-1" title="Download as TSV"><i class="icon icon-download"></i></a>
     <a href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
 </div>
 {% endblock right_column %}
