@@ -836,6 +836,33 @@ def view_sheet_group(request, sid):
     })
 
 
+@permission_required("orgapy.change_sheetgroup")
+def edit_sheet_group(request, sid):
+    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
+        raise Http404("Group not found")
+    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
+    return render(request, "orgapy/edit_sheet_group.html", {
+        "group": group,
+        "active": "sheets",
+    })
+
+
+@permission_required("orgapy.change_sheetgroup")
+def save_sheet_group(request):
+    sid = request.POST.get("id", "")
+    if not sid:
+        raise BadRequest
+    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
+        raise Http404("Group not found")
+    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
+    title = request.POST.get("title", "")
+    if not title:
+        raise BadRequest
+    group.title = title
+    group.save()
+    return redirect("orgapy:view_sheet_group", sid=group.id)
+
+
 @permission_required("orgapy.delete_sheetgroup")
 def delete_sheet_group(request, sid):
     if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():

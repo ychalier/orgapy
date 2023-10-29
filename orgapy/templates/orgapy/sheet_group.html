@@ -45,6 +45,14 @@
 {% endblock main_content %}
 
 
+{% block right_column %}
+<div class="side-menu container mt-1">    
+    <a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
+    <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
+</div>
+{% endblock right_column %}
+
+
 {% block body_scripts %}
 {{ block.super }}
 <script>

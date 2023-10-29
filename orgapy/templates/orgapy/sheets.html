@@ -17,6 +17,7 @@
                 <summary>
                     <a class="link-hidden mr-2" href="{{group.get_absolute_url}}">{{group.title}}</a>
                     <span class="show-on-parent-hover">
+                        <a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
                         <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="link-confirm btn-inline" title="Delete"><i class="icon icon-delete"></i></a>
                     </span>
                 </summary>

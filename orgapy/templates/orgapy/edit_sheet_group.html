@@ -1,0 +1,31 @@
+{% extends "orgapy/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Edit sheet group &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block before_columns %}
+<form action="{% url 'orgapy:save_sheet_group' %}" method="post">
+{% csrf_token %}
+{% if group %}<input type="hidden" name="id" value="{{group.id}}">{% endif %}
+{% endblock before_columns %}
+
+{% block main_content %}
+    <div class="form-group">
+        <label class="form-label" for="input-title">Title</label>
+        <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{{ group.title }}" />
+    </div>
+    <br>
+{% endblock main_content %}
+
+{% block right_column %}
+<div class="side-menu-xl container">
+    
+    <button class="btn btn-primary mb-2">Save</button>
+
+</div>
+{% endblock right_column %}
+
+{% block after_columns %}
+</form>
+
+{% endblock after_columns %}
