@@ -412,12 +412,15 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
 .sheet-toolbar-button {
     background: inherit;
     border: none;
-    font-size: small;
     cursor: pointer;
     color: white;
     border-radius: .4rem;
     height: 28px;
     width: 28px;
+}
+
+.sheet-toolbar-button .icon {
+    margin-top: -4px;
 }
 
 .sheet-toolbar-button + .sheet-toolbar-button {

@@ -2474,7 +2474,7 @@ class Sheet {
         this.toolbar = create(this.container, "div", ["sheet-toolbar"]);
 
         this.toolbar_button_save = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        this.toolbar_button_save.innerHTML = `<i class="icon icon-check"></i>`;
+        this.toolbar_button_save.innerHTML = `<i class="icon icon-save"></i>`;
         this.toolbar_button_save.title = "Save";
         this.toolbar_button_save.setAttribute("disabled", true);
         this.toolbar_button_save.addEventListener("click", () => {
@@ -2495,7 +2495,7 @@ class Sheet {
         });
 
         this.toolbar_button_toggle_shrink = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        this.toolbar_button_toggle_shrink.innerHTML = `<i class="icon icon-resize-horiz"></i>`;
+        this.toolbar_button_toggle_shrink.innerHTML = `<i class="icon icon-shrink"></i>`;
         this.toolbar_button_toggle_shrink.title = "Toggle shrink";
         this.toolbar_button_toggle_shrink.addEventListener("click", () => {
             self.toggle_shrink();
