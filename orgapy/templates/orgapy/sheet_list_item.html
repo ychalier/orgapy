@@ -1,4 +1,4 @@
-<a class="link-hidden mr-2" href="{% url 'orgapy:view_sheet' sid=sheet.id %}">{{sheet.title}}</a>
+<a class="link-hidden mr-2" href="{% url 'orgapy:sheet' sid=sheet.id %}">{{sheet.title}}</a>
 {% if sheet.public %}
 <a class="mr-2" href="?next={{ request.path }}" title="Make private"><i class="icon icon-lock"></i></a>
 {% endif %}
@@ -10,7 +10,7 @@
             {% if not sheet.public %}
             <li class="menu-item"><a href="?next={{ request.path }}" title="Make public"><i class="icon icon-unlock"></i> Publish</a></li>
             {% endif %}
-            <li class="menu-item"><a href="{% url 'orgapy:view_sheet_raw' sid=sheet.id %}" title="Download as Markdown"><i class="icon icon-download"></i> Download</a></li>
+            <li class="menu-item"><a href="{% url 'orgapy:export_sheet' sid=sheet.id %}" title="Download as TSV"><i class="icon icon-download"></i> Download</a></li>
             <li class="menu-item"><a href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" class="link-confirm" title="Delete"><i class="icon icon-delete"></i> Delete</a></li>
         </ul>
     </div>

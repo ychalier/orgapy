@@ -15,6 +15,11 @@ import urllib
 from . import models
 
 
+# ----------------------------------------------- #
+# UTILITIES                                       #
+# ----------------------------------------------- #
+
+
 def pretty_paginator(page, **attrs):
     to_show = sorted({
         1,
@@ -51,94 +56,6 @@ def get_note_from_nid(nid, required_user=None):
     if required_user is not None and note.user != required_user:
         raise PermissionDenied
     return note
-
-
-def about(request):
-    """View for the homepage, describing the application for a new user."""
-    return render(request, "orgapy/about.html", {})
-
-
-@permission_required("orgapy.view_note")
-def view_notes(request):
-    """View notes"""
-    page_size = 25
-    query = request.GET.get("query", "")
-    category = request.GET.get("category", "")
-    
-    if len(query) > 0 and query[0] == "#":
-        category = query[1:]
-    base_objects = models.Note.objects.filter(user=request.user)
-    if "uncategorized" in request.GET:
-        base_objects = base_objects.filter(categories__isnull=True)
-    if len(category) > 0:
-        objects = base_objects.filter(categories__name__exact=category)
-    elif len(query) > 0:
-        objects = base_objects.filter(Q(title__contains=query) | Q(content__contains=query))
-    else:
-        objects = base_objects
-    if len(objects) == 1 and models.Note.objects.count() > 1:
-        return redirect("orgapy:view_note", nid=objects[0].id)
-    paginator = Paginator(objects.order_by(
-        "-pinned",
-        "-date_modification",
-        "-date_access",
-    ), page_size)
-    page = request.GET.get("page")
-    notes = paginator.get_page(page)
-    return render(request, "orgapy/notes.html", {
-        "notes": notes,
-        "query": query,
-        "category": category,
-        "note_paginator": pretty_paginator(notes, query=query),
-        "active": "notes",
-        "categories": models.Category.objects.all().order_by("name"),
-    })
-
-
-def view_note(request, nid):
-    """View showing a note"""
-    note = get_note_from_nid(nid)
-    if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
-        return render(request, "orgapy/note.html", { "note": note, "active": "notes" })
-    elif note.public:
-        return render(request, "orgapy/note_public.html", { "note": note, "active": "notes" })
-    raise PermissionDenied
-
-
-def view_public_note(request, nid):
-    """View showing a note to an anonymous user"""
-    note = get_note_from_nid(nid)
-    if not note.public:
-        raise PermissionDenied
-    return render(request, "orgapy/note_public.html", {
-        "note": note,
-        "active": "notes"
-    })
-
-
-@permission_required("orgapy.add_note")
-def create_note(request):
-    """Create a new note"""
-    categories = models.Category.objects.filter(user=request.user)
-    return render(request, "orgapy/create_note.html", {
-        "categories": categories,
-        "note_category_ids": {},
-        "active": "notes",
-    })
-
-
-@permission_required("orgapy.change_note")
-def edit_note(request, nid):
-    """View to edit a note"""
-    note = get_note_from_nid(nid, request.user)
-    categories = models.Category.objects.filter(user=request.user).order_by("name")
-    note_category_ids = [category.id for category in note.categories.all()]
-    return render(request, "orgapy/edit_note.html", {
-        "note": note,
-        "categories": categories,
-        "note_category_ids": note_category_ids,
-        "active": "notes",
-    })
 
 
 def save_note_core(request):
@@ -188,18 +105,204 @@ def save_note_categories(request, note):
     note.save()
 
 
-@permission_required("orgapy.change_note")
-def save_note(request):
-    """Main procedure to edit a note"""
-    if request.method == "POST":
-        note = save_note_core(request)
-        save_note_categories(request, note)
-        return redirect("orgapy:view_note", nid=note.id)
-    raise PermissionDenied
+def add_quote(request, work_id, content):
+    work = models.Work.objects.get(id=work_id)
+    title = "%s - %s" % (work.author.name, work.title)
+    quote = models.Quote.objects.create(
+        user=request.user,
+        from_work=work,
+        title=title,
+        content=content,
+    )
+    return quote
+
+
+def parse_dt(date_string, time_string):
+    dt_date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+    dt_time = datetime.datetime.strptime(time_string, "%H:%M").time()
+    return datetime.datetime.combine(dt_date, dt_time)
+
+
+def get_sheet_from_sid(sid, required_user=None):
+    if not models.Sheet.objects.filter(id=sid).exists():
+        raise Http404("Sheet does not exist")
+    sheet = models.Sheet.objects.get(id=sid)
+    if required_user is not None and sheet.user != required_user:
+        raise PermissionDenied
+    return sheet
+
+
+
+def save_sheet_core(request):
+    original_sheet = None
+    if ("id" in request.POST
+            and models.Sheet.objects.filter(id=request.POST["id"]).exists()):
+        original_sheet = models.Sheet.objects.get(id=request.POST["id"])
+    if original_sheet is not None and original_sheet.user != request.user:
+        raise PermissionDenied
+    title = request.POST.get("title", "").strip()
+    description = request.POST.get("content", "").strip()
+    is_public = "public" in request.POST
+    group_id = request.POST.get("group", "")
+    group = None
+    if group_id != "":
+        group = models.SheetGroup.objects.get(user=request.user, id=int(group_id))
+    if original_sheet is None:
+        sheet = models.Sheet.objects.create(
+            user=request.user,
+            title=title,
+            description=description,
+            public=is_public,
+            group=group,
+        )
+    else:
+        sheet = original_sheet
+        sheet.title = title
+        sheet.description = description
+        sheet.public = is_public
+        sheet.group = group
+    sheet.date_modification = timezone.now()
+    sheet.save()
+    return sheet
+
+
+# ----------------------------------------------- #
+# VIEWS                                           #
+# ----------------------------------------------- #
+
+
+def view_landing(request):
+    if request.user is None:
+        return redirect("orgapy:about")
+    return redirect("orgapy:projects")
+
+
+def view_about(request):
+    """View for the homepage, describing the application for a new user."""
+    return render(request, "orgapy/about.html", {})
+
+
+@permission_required("orgapy.view_project")
+def view_projects(request):
+    return render(request, "orgapy/projects.html", {
+        "active": "projects"
+    })
 
 
 @permission_required("orgapy.view_note")
-def export_note(request, nid):
+def view_notes(request):
+    page_size = 25
+    query = request.GET.get("query", "")
+    category = request.GET.get("category", "")    
+    if len(query) > 0 and query[0] == "#":
+        category = query[1:]
+    base_objects = models.Note.objects.filter(user=request.user)
+    if "uncategorized" in request.GET:
+        base_objects = base_objects.filter(categories__isnull=True)
+    if len(category) > 0:
+        objects = base_objects.filter(categories__name__exact=category)
+    elif len(query) > 0:
+        objects = base_objects.filter(Q(title__contains=query) | Q(content__contains=query))
+    else:
+        objects = base_objects
+    if len(objects) == 1 and models.Note.objects.count() > 1:
+        return redirect("orgapy:note", nid=objects[0].id)
+    paginator = Paginator(objects.order_by(
+        "-pinned",
+        "-date_modification",
+        "-date_access",
+    ), page_size)
+    page = request.GET.get("page")
+    notes = paginator.get_page(page)
+    return render(request, "orgapy/notes.html", {
+        "notes": notes,
+        "query": query,
+        "category": category,
+        "note_paginator": pretty_paginator(notes, query=query),
+        "active": "notes",
+        "categories": models.Category.objects.all().order_by("name"),
+    })
+
+
+@permission_required("orgapy.add_note")
+def view_create_note(request):
+    categories = models.Category.objects.filter(user=request.user)
+    return render(request, "orgapy/create_note.html", {
+        "categories": categories,
+        "note_category_ids": {},
+        "active": "notes",
+    })
+
+
+@permission_required("orgapy.change_note")
+def view_save_note(request):
+    if request.method == "POST":
+        note = save_note_core(request)
+        save_note_categories(request, note)
+        return redirect("orgapy:note", nid=note.id)
+    raise BadRequest
+
+
+@permission_required("orgapy.view_category")
+def view_categories(request):
+    return render(request, "orgapy/categories.html", {
+        "categories": models.Category.objects.filter(user=request.user),
+        "uncategorized": models.Note.objects.filter(user=request.user, categories__isnull=True).count(),
+        "active": "notes",
+    })
+
+
+@permission_required("orgapy.change_category")
+def view_edit_category(request, cid):
+    query = models.Category.objects.filter(id=cid)
+    if query.exists():
+        category = query.get()
+        if category.user == request.user:
+            if request.method == "POST":
+                new_name = request.POST.get("name")
+                if len(new_name) > 0:
+                    category.name = new_name.lower()
+                    category.save()
+            return render(request, "orgapy/edit_category.html", {
+                "category": category
+            })
+    return redirect("orgapy:categories")
+
+
+@permission_required("orgapy.delete_category")
+def view_delete_category(request, cid):
+    query = models.Category.objects.filter(id=cid)
+    if query.exists():
+        category = query.get()
+        if category.user == request.user:
+            category.delete()
+    return redirect("orgapy:categories")
+
+
+def view_note(request, nid):
+    note = get_note_from_nid(nid)
+    if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
+        return render(request, "orgapy/note.html", { "note": note, "active": "notes" })
+    elif note.public:
+        return render(request, "orgapy/note_public.html", { "note": note, "active": "notes" })
+    raise PermissionDenied
+
+
+@permission_required("orgapy.change_note")
+def view_edit_note(request, nid):
+    note = get_note_from_nid(nid, request.user)
+    categories = models.Category.objects.filter(user=request.user).order_by("name")
+    note_category_ids = [category.id for category in note.categories.all()]
+    return render(request, "orgapy/edit_note.html", {
+        "note": note,
+        "categories": categories,
+        "note_category_ids": note_category_ids,
+        "active": "notes",
+    })
+
+
+@permission_required("orgapy.view_note")
+def view_export_note(request, nid):
     """View to export a note's content as Markdown"""
     note = get_note_from_nid(nid, request.user)
     markdown = note.title + "\n\n" + note.content
@@ -209,10 +312,30 @@ def export_note(request, nid):
 
 
 @permission_required("orgapy.delete_note")
-def delete_note(request, nid):
+def view_delete_note(request, nid):
     """View to delete a note"""
     note = get_note_from_nid(nid, request.user)
     note.delete()
+    return redirect("orgapy:notes")
+
+
+@permission_required("orgapy.change_note")
+def view_toggle_note_pin(request, nid):
+    note = get_note_from_nid(nid, request.user)
+    note.pinned = not note.pinned
+    note.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:notes")
+
+
+@permission_required("orgapy.change_note")
+def view_toggle_note_public(request, nid):
+    note = get_note_from_nid(nid, request.user)
+    note.public = not note.public
+    note.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
     return redirect("orgapy:notes")
 
 
@@ -246,20 +369,8 @@ def view_quotes(request, author=None, work=None):
     })
 
 
-def add_quote(request, work_id, content):
-    work = models.Work.objects.get(id=work_id)
-    title = "%s - %s" % (work.author.name, work.title)
-    quote = models.Quote.objects.create(
-        user=request.user,
-        from_work=work,
-        title=title,
-        content=content,
-    )
-    return quote
-
-
 @permission_required("orgapy.add_quote")
-def create_quote(request):
+def view_create_quote(request):
     if request.method == "POST":
         if "form_author" in request.POST:
             name = request.POST.get("author_name", "").strip()
@@ -287,44 +398,153 @@ def create_quote(request):
     })
 
 
-@permission_required("orgapy.view_category")
-def view_categories(request):
-    return render(request, "orgapy/categories.html", {
-        "categories": models.Category.objects.filter(user=request.user),
-        "uncategorized": models.Note.objects.filter(user=request.user, categories__isnull=True).count(),
-        "active": "notes",
+@permission_required("orgapy.view_sheet")
+def view_sheets(request):
+    query = request.GET.get("query", "")
+    groups = None
+    standalone_sheets = None
+    if query:
+        standalone_sheets = models.Sheet.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(description__contains=query))
+    else:
+        groups = models.SheetGroup.objects.filter(user=request.user)
+        standalone_sheets = models.Sheet.objects.filter(user=request.user, group__isnull=True)
+    return render(request, "orgapy/sheets.html", {
+        "groups": groups,
+        "standalone_sheets": standalone_sheets,
+        "query": query,
+        "active": "sheets",
     })
 
 
-@permission_required("orgapy.change_category")
-def edit_category(request, cid):
-    query = models.Category.objects.filter(id=cid)
-    if query.exists():
-        category = query.get()
-        if category.user == request.user:
-            if request.method == "POST":
-                new_name = request.POST.get("name")
-                if len(new_name) > 0:
-                    category.name = new_name.lower()
-                    category.save()
-            return render(request, "orgapy/edit_category.html", {
-                "category": category
-            })
-    return redirect("orgapy:categories")
+@permission_required("orgapy.add_sheet")
+def view_create_sheet(request):
+    sheet_groups = models.SheetGroup.objects.filter(user=request.user)
+    return render(request, "orgapy/create_sheet.html", {
+        "active": "sheets",
+        "sheet_groups": sheet_groups,
+    })
 
 
-@permission_required("orgapy.delete_category")
-def delete_category(request, cid):
-    query = models.Category.objects.filter(id=cid)
-    if query.exists():
-        category = query.get()
-        if category.user == request.user:
-            category.delete()
-    return redirect("orgapy:categories")
+@permission_required("orgapy.change_sheet")
+def view_save_sheet(request):
+    if request.method == "POST":
+        sheet = save_sheet_core(request)
+        return redirect("orgapy:sheet", sid=sheet.id)
+    raise PermissionDenied
+
+
+@permission_required("orgapy.add_sheetgroup")
+def view_create_sheet_group(request):
+    if "title" not in request.POST:
+        raise BadRequest
+    title = request.POST.get("title")
+    models.SheetGroup.objects.create(user=request.user, title=title)
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:sheets")
+
+
+@permission_required("orgapy.change_sheetgroup")
+def view_save_sheet_group(request):
+    sid = request.POST.get("id", "")
+    if not sid:
+        raise BadRequest
+    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
+        raise Http404("Group not found")
+    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
+    title = request.POST.get("title", "")
+    if not title:
+        raise BadRequest
+    group.title = title
+    group.save()
+    return redirect("orgapy:sheet_group", sid=group.id)
+
+
+@permission_required("orgapy.view_sheetgroup")
+def view_sheet_group(request, sid):
+    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
+        raise Http404("Group not found")
+    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
+    return render(request, "orgapy/sheet_group.html", {
+        "group": group,
+        "active": "sheets",
+    })
+
+
+@permission_required("orgapy.change_sheetgroup")
+def view_edit_sheet_group(request, sid):
+    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
+        raise Http404("Group not found")
+    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
+    return render(request, "orgapy/edit_sheet_group.html", {
+        "group": group,
+        "active": "sheets",
+    })
+
+
+@permission_required("orgapy.delete_sheetgroup")
+def view_delete_sheet_group(request, sid):
+    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
+        raise Http404("Group not found")
+    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
+    group.delete()
+    return redirect("orgapy:sheets")
+
+
+def view_sheet(request, sid):
+    sheet = get_sheet_from_sid(sid)
+    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet"):
+        return render(request, "orgapy/sheet.html", { "sheet": sheet, "active": "sheets" })
+    elif sheet.public:
+        return render(request, "orgapy/sheet_public.html", { "sheet": sheet, "active": "sheets" })
+    raise PermissionDenied
+
+
+@permission_required("orgapy.change_sheet")
+def view_edit_sheet(request, sid):
+    sheet = get_sheet_from_sid(sid)
+    sheet_groups = models.SheetGroup.objects.filter(user=request.user)
+    return render(request, "orgapy/edit_sheet.html", {
+        "sheet": sheet,
+        "active": "sheets",
+        "sheet_groups": sheet_groups,
+    })
+
+
+@permission_required("orgapy.view_sheet")
+def view_export_sheet(request, sid):
+    sheet = get_sheet_from_sid(sid)
+    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
+        response = HttpResponse(sheet.data, content_type="text/tab-separated-values")
+        response['Content-Disposition'] = f'attachment; filename="{sheet.title}.tsv"'
+        return response
+    raise PermissionDenied
+
+
+@permission_required("orgapy.delete_sheet")
+def view_delete_sheet(request, sid):
+    sheet = get_sheet_from_sid(sid, request.user)
+    sheet.delete()
+    return redirect("orgapy:sheets")
+
+
+@permission_required("orgapy.change_sheet")
+def view_toggle_sheet_public(request, sid):
+    sheet = get_sheet_from_sid(sid, request.user)
+    sheet.public = not sheet.public
+    sheet.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:sheets")
+
+
+# ----------------------------------------------- #
+# API                                             #
+# ----------------------------------------------- #
 
 
 @permission_required("orgapy.view_note")
-def api_suggestions(request):
+def api_notes_suggestions(request):
     query = request.GET.get("q", "").strip()
     results = []
     if len(query) >= 1:
@@ -340,33 +560,6 @@ def api_suggestions(request):
         ]
     }
     return JsonResponse(data)
-
-
-@permission_required("orgapy.change_note")
-def toggle_pin(request, nid):
-    note = get_note_from_nid(nid, request.user)
-    note.pinned = not note.pinned
-    note.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:notes")
-
-
-@permission_required("orgapy.change_note")
-def toggle_public(request, nid):
-    note = get_note_from_nid(nid, request.user)
-    note.public = not note.public
-    note.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:notes")
-
-
-@permission_required("orgapy.view_project")
-def view_projects(request):
-    return render(request, "orgapy/projects.html", {
-        "active": "projects"
-    })
 
 
 @permission_required("orgapy.view_project")
@@ -598,10 +791,7 @@ def api_calendar_complete(request):
     return JsonResponse({"success": success})
 
 
-def parse_dt(date_string, time_string):
-    dt_date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
-    dt_time = datetime.datetime.strptime(time_string, "%H:%M").time()
-    return datetime.datetime.combine(dt_date, dt_time)
+
 
 
 @permission_required("orgapy.change_calendar")
@@ -654,7 +844,7 @@ def api_calendar_add_task(request):
 
 
 @permission_required("orgapy.view_note")
-def api_note_title(request):
+def api_notes_title(request):
     nid = request.GET.get("nid")
     if nid is None:
         raise BadRequest()
@@ -664,101 +854,7 @@ def api_note_title(request):
     return HttpResponse(query.get().title, content_type="text/plain")
 
 
-def get_sheet_from_sid(sid, required_user=None):
-    if not models.Sheet.objects.filter(id=sid).exists():
-        raise Http404("Sheet does not exist")
-    sheet = models.Sheet.objects.get(id=sid)
-    if required_user is not None and sheet.user != required_user:
-        raise PermissionDenied
-    return sheet
 
-
-@permission_required("orgapy.view_sheet")
-def view_sheets(request):
-    query = request.GET.get("query", "")
-    groups = None
-    standalone_sheets = None
-    if query:
-        standalone_sheets = models.Sheet.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(description__contains=query))
-    else:
-        groups = models.SheetGroup.objects.filter(user=request.user)
-        standalone_sheets = models.Sheet.objects.filter(user=request.user, group__isnull=True)
-    return render(request, "orgapy/sheets.html", {
-        "groups": groups,
-        "standalone_sheets": standalone_sheets,
-        "query": query,
-        "active": "sheets",
-    })
-
-
-def view_sheet(request, sid):
-    sheet = get_sheet_from_sid(sid)
-    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet"):
-        return render(request, "orgapy/sheet.html", { "sheet": sheet, "active": "sheets" })
-    elif sheet.public:
-        return render(request, "orgapy/sheet_public.html", { "sheet": sheet, "active": "sheets" })
-    raise PermissionDenied
-
-
-@permission_required("orgapy.change_sheet")
-def edit_sheet(request, sid):
-    sheet = get_sheet_from_sid(sid)
-    sheet_groups = models.SheetGroup.objects.filter(user=request.user)
-    return render(request, "orgapy/edit_sheet.html", {
-        "sheet": sheet,
-        "active": "sheets",
-        "sheet_groups": sheet_groups,
-    })
-
-
-def save_sheet_core(request):
-    original_sheet = None
-    if ("id" in request.POST
-            and models.Sheet.objects.filter(id=request.POST["id"]).exists()):
-        original_sheet = models.Sheet.objects.get(id=request.POST["id"])
-    if original_sheet is not None and original_sheet.user != request.user:
-        raise PermissionDenied
-    title = request.POST.get("title", "").strip()
-    description = request.POST.get("content", "").strip()
-    is_public = "public" in request.POST
-    group_id = request.POST.get("group", "")
-    group = None
-    if group_id != "":
-        group = models.SheetGroup.objects.get(user=request.user, id=int(group_id))
-    if original_sheet is None:
-        sheet = models.Sheet.objects.create(
-            user=request.user,
-            title=title,
-            description=description,
-            public=is_public,
-            group=group,
-        )
-    else:
-        sheet = original_sheet
-        sheet.title = title
-        sheet.description = description
-        sheet.public = is_public
-        sheet.group = group
-    sheet.date_modification = timezone.now()
-    sheet.save()
-    return sheet
-
-
-@permission_required("orgapy.add_sheet")
-def create_sheet(request):
-    sheet_groups = models.SheetGroup.objects.filter(user=request.user)
-    return render(request, "orgapy/create_sheet.html", {
-        "active": "sheets",
-        "sheet_groups": sheet_groups,
-    })
-
-
-@permission_required("orgapy.change_sheet")
-def save_sheet(request):
-    if request.method == "POST":
-        sheet = save_sheet_core(request)
-        return redirect("orgapy:view_sheet", sid=sheet.id)
-    raise PermissionDenied
 
 
 def api_sheet_data(request):
@@ -787,86 +883,3 @@ def api_sheet_save(request):
     return JsonResponse({"success": True})
 
 
-@permission_required("orgapy.view_sheet")
-def view_sheet_raw(request, sid):
-    sheet = get_sheet_from_sid(sid)
-    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
-        response = HttpResponse(sheet.data, content_type="text/tab-separated-values")
-        response['Content-Disposition'] = f'attachment; filename="{sheet.title}.tsv"'
-        return response
-    raise PermissionDenied
-
-
-@permission_required("orgapy.delete_sheet")
-def delete_sheet(request, sid):
-    sheet = get_sheet_from_sid(sid, request.user)
-    sheet.delete()
-    return redirect("orgapy:sheets")
-
-
-@permission_required("orgapy.change_sheet")
-def toggle_public_sheet(request, sid):
-    sheet = get_sheet_from_sid(sid, request.user)
-    sheet.public = not sheet.public
-    sheet.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:sheets")
-
-
-@permission_required("orgapy.add_sheetgroup")
-def create_sheet_group(request):
-    if "title" not in request.POST:
-        raise BadRequest
-    title = request.POST.get("title")
-    models.SheetGroup.objects.create(user=request.user, title=title)
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:sheets")
-
-
-@permission_required("orgapy.view_sheetgroup")
-def view_sheet_group(request, sid):
-    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
-        raise Http404("Group not found")
-    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
-    return render(request, "orgapy/sheet_group.html", {
-        "group": group,
-        "active": "sheets",
-    })
-
-
-@permission_required("orgapy.change_sheetgroup")
-def edit_sheet_group(request, sid):
-    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
-        raise Http404("Group not found")
-    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
-    return render(request, "orgapy/edit_sheet_group.html", {
-        "group": group,
-        "active": "sheets",
-    })
-
-
-@permission_required("orgapy.change_sheetgroup")
-def save_sheet_group(request):
-    sid = request.POST.get("id", "")
-    if not sid:
-        raise BadRequest
-    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
-        raise Http404("Group not found")
-    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
-    title = request.POST.get("title", "")
-    if not title:
-        raise BadRequest
-    group.title = title
-    group.save()
-    return redirect("orgapy:view_sheet_group", sid=group.id)
-
-
-@permission_required("orgapy.delete_sheetgroup")
-def delete_sheet_group(request, sid):
-    if not models.SheetGroup.objects.filter(user=request.user, id=int(sid)).exists():
-        raise Http404("Group not found")
-    group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
-    group.delete()
-    return redirect("orgapy:sheets")

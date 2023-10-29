@@ -15,8 +15,8 @@
 
 {% block right_column %}
 <div class="side-menu container mt-1">
-    <a href="{% url 'orgapy:toggle_pin' nid=note.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if note.pinned %}btn-primary{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="icon icon-bookmark"></i></a>
-    <a href="{% url 'orgapy:toggle_public' nid=note.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if note.public %}btn-primary{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
+    <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if note.pinned %}btn-primary{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="icon icon-bookmark"></i></a>
+    <a href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if note.public %}btn-primary{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
     <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
     <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Download as Markdown"><i class="icon icon-download"></i></a>
     <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>

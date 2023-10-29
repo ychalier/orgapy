@@ -33,7 +33,7 @@
 
 {% block right_column %}
 <div class="side-menu container mt-1">    
-    <a href="{% url 'orgapy:toggle_public_sheet' sid=sheet.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if sheet.public %}btn-primary{% endif %}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
+    <a href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if sheet.public %}btn-primary{% endif %}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
     <a href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
     <a href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
 </div>

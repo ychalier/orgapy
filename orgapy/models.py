@@ -45,7 +45,7 @@ class Note(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
     def get_absolute_url(self):
-        return reverse("orgapy:view_note", kwargs={"nid": self.id})
+        return reverse("orgapy:note", kwargs={"nid": self.id})
     
     def _content_preprocess(self):
         return self.content
@@ -349,7 +349,7 @@ class SheetGroup(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
     def get_absolute_url(self):
-        return reverse("orgapy:view_sheet_group", kwargs={"sid": self.id})
+        return reverse("orgapy:sheet_group", kwargs={"sid": self.id})
 
 
 class Sheet(models.Model):
@@ -373,7 +373,7 @@ class Sheet(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
     def get_absolute_url(self):
-        return reverse("orgapy:view_sheet", kwargs={"sid": self.id})
+        return reverse("orgapy:sheet", kwargs={"sid": self.id})
     
     def get_modification_date_display(self):
         now = datetime.datetime.now()

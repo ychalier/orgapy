@@ -452,6 +452,7 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     display: flex;
     flex-direction: row;
     margin-bottom: .4rem;
+    flex-wrap: wrap;
 }
 
 .sheet-tab-title {
@@ -461,6 +462,8 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     cursor: pointer;
     padding: 0 .4rem;
     line-height: 32px;
+    margin-bottom: .2rem;
+    margin-right: .2rem;
 }
 
 .sheet-tab-title:hover {
@@ -470,8 +473,4 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
 .sheet-tab-title.active {
     background: white;
     color: black;
-}
-
-.sheet-tab-title + .sheet-tab-title {
-    margin-left: .2rem;
 }
