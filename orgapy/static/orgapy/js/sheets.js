@@ -653,7 +653,7 @@ function safe_parse(string, parser) {
 
 function parse_tsv(string) {
     let array = [];
-    string.split("\n").forEach((line, i) => {
+    string.replaceAll("\r", "").split("\n").forEach((line, i) => {
         array.push([]);
         line.split("\t").forEach(item => {
             array[i].push(item);
@@ -1327,7 +1327,9 @@ class ContextMenu {
 
 class Sheet {
 
-    constructor(container, on_change_callback, readonly=false) {
+    constructor(sid, container, on_change_callback, readonly=false) {
+        this.sid = sid;
+
         // Config
         this.width = 4;
         this.height = 10;
@@ -2238,7 +2240,7 @@ class Sheet {
         let row_head = create(table_head, "tr", ["sheet-row", "sheet-row-head"]);
         let cell_top_left = create(row_head, "th", ["sheet-cell", "sheet-cell-head", "sheet-cell-top-left"]);
         cell_top_left.style.height = (this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT) + "px";
-        cell_top_left.textContent = "ℱ"; //ƒ
+        if (!this.readonly) cell_top_left.textContent = "ℱ"; //ƒ
         this.column_heads = [];
         for (let j = 0; j < this.width; j++) {
             this.column_heads.push(create(row_head, "th", ["sheet-cell"]));
@@ -2442,136 +2444,105 @@ class Sheet {
         }
     }
 
-}
-
-
-function initialize_sheet(container, data_string, config_string, on_change_callback, readonly) {
-    let sheet = new Sheet(container, on_change_callback, readonly);
-    let data = null;
-    if (data_string != null && data_string.trim() != "") {
-        data = parse_tsv(data_string);
+    import_tsv(tsv_string) {
+        let data = parse_tsv(tsv_string);
+        this.initialize_values(data, null);
+        this.inflate();
+        this.on_change(true, true);
     }
-    let config = null;
-    if (config_string != null && config_string.trim() != "") {
-        config = JSON.parse(config_string);
-    }
-    sheet.setup(data, config);
-    return sheet;
-}
 
-
-function save_sheet_data(sheet_id, sheet) {
-    let save_form_data = new FormData();
-    save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-    save_form_data.set("sid", sheet_id);
-    let sheet_export = sheet.export();
-    save_form_data.set("data", sheet_export.data);
-    save_form_data.set("config", sheet_export.config);
-    fetch(URL_API_SHEET_SAVE, {
-        method: "post",
-        body: save_form_data
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                toast("Saved!", 600);
-                document.getElementById("btn-save-sheet").setAttribute("disabled", true);
-            } else {
-                toast("An error occured", 600);
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            toast("An error occured", 600);
-        });
-}
-
-
-function initialize_sheet_owner() {
-    window.addEventListener("load", () => {
-        let sheet_seed = document.querySelector(".sheet-seed");
-        let sheet_id = sheet_seed.getAttribute("sheet-id");
-        let form_data = new FormData();
-        var sheet = null;
-        let on_change_callback = (data_changed, config_changed) => {
-            document.getElementById("btn-save-sheet").removeAttribute("disabled");
-        }
-        fetch(URL_API_SHEET_DATA + `?sid=${sheet_id}`, {
-            method: "get",
+    save_data() {
+        let save_form_data = new FormData();
+        save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+        save_form_data.set("sid", this.sid);
+        let sheet_export = this.export();
+        save_form_data.set("data", sheet_export.data);
+        save_form_data.set("config", sheet_export.config);
+        fetch(URL_API_SHEET_SAVE, {
+            method: "post",
+            body: save_form_data
             })
             .then(res => res.json())
-            .then(sheet_data => {
-                sheet = initialize_sheet(
-                    sheet_seed,
-                    sheet_data.data == null ? null : sheet_data.data.replaceAll("\r", ""),
-                    sheet_data.config,
-                    on_change_callback,
-                    false);
-            });
-        document.getElementById("btn-save-sheet").setAttribute("disabled", true);
-        document.getElementById("btn-save-sheet").addEventListener("click", () => {
-            save_sheet_data(sheet_id, sheet);
-        });
-    
-        document.addEventListener("keydown", (event) => {
-            if (event.key == "s" && event.ctrlKey) {
-                event.stopPropagation();
-                event.preventDefault();
-                save_sheet_data(sheet_id, sheet);
-            }
-        });
-    
-        document.getElementById("btn-sheet-upload").addEventListener("click", () => {
-            document.getElementById("modal-sheet-upload").classList.add("active");
-        });
-    
-        document.getElementById("btn-sheet-import").addEventListener("click", () => {
-            let file_input = document.getElementById("input-sheet-upload-file");
-            let files = file_input.files;
-            if (files.length > 0) {
-                let reader = new FileReader();
-                reader.readAsText(files[0]);
-                reader.onload = () => {
-                    if (sheet != null) delete sheet;
-                    sheet = initialize_sheet(sheet_seed, reader.result.replaceAll("\r", ""), null, on_change_callback, false);
-                    sheet.on_change(true, true);
+            .then(data => {
+                if (data.success) {
+                    toast("Saved!", 600);
+                    document.getElementById("btn-save-sheet").setAttribute("disabled", true);
+                } else {
+                    toast("An error occured", 600);
                 }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
+    }
+
+}
+
+
+function initialize_sheet(sheet_seed, public) {
+    var sheet = null;
+    let sheet_id = sheet_seed.getAttribute("sheet-id");
+    let on_change_callback = null;
+    if (!public) {
+        on_change_callback = (data_changed, config_changed) => {
+            document.getElementById("btn-save-sheet").removeAttribute("disabled");
+        }
+    }
+    fetch(URL_API_SHEET_DATA + `?sid=${sheet_id}`, {
+        method: "get",
+        })
+        .then(res => res.json())
+        .then(sheet_data => {
+            sheet = new Sheet(sheet_id, sheet_seed, on_change_callback, public);
+            let data = null;
+            if (sheet_data.data != null && sheet_data.data.trim() != "") {
+                data = parse_tsv(sheet_data.data);
             }
-            closeModal("modal-sheet-upload");
-    
+            let config = null;
+            if (sheet_data.config != null && sheet_data.config.trim() != "") {
+                config = JSON.parse(sheet_data.config);
+            }
+            sheet.setup(data, config);
         });
-    
-        document.getElementById("btn-sheet-shrink").addEventListener("click", () => {
-            sheet.toggle_shrink();
-        });
-    
-        document.getElementById("btn-sheet-fullscreen").addEventListener("click", () => {
-            sheet.toggle_fullscreen();
-        });
-    
+    if (public) return;
+    document.getElementById("btn-save-sheet").setAttribute("disabled", true);
+    document.getElementById("btn-save-sheet").addEventListener("click", () => {
+        sheet.save_data();
+    });
+    document.addEventListener("keydown", (event) => {
+        if (event.key == "s" && event.ctrlKey) {
+            event.stopPropagation();
+            event.preventDefault();
+            sheet.save_data();
+        }
+    });
+    document.getElementById("btn-sheet-upload").addEventListener("click", () => {
+        document.getElementById("modal-sheet-upload").classList.add("active");
+    });
+    document.getElementById("btn-sheet-import").addEventListener("click", () => {
+        let file_input = document.getElementById("input-sheet-upload-file");
+        let files = file_input.files;
+        if (files.length > 0) {
+            let reader = new FileReader();
+            reader.readAsText(files[0]);
+            reader.onload = () => {
+                sheet.import_tsv(reader.result.replaceAll("\r", ""));
+            }
+        }
+        closeModal("modal-sheet-upload");
+    });
+    document.getElementById("btn-sheet-shrink").addEventListener("click", () => {
+        sheet.toggle_shrink();
+    });
+    document.getElementById("btn-sheet-fullscreen").addEventListener("click", () => {
+        sheet.toggle_fullscreen();
     });
 }
 
 
-function initialize_sheet_public() {
-    let sheet_seed = document.querySelector(".sheet-seed");
-    let sheet_id = sheet_seed.getAttribute("sheet-id");
-    let form_data = new FormData();
-    var sheet = null;
-    form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-    form_data.set("sid", sheet_id);
-    let on_change_callback = (data_changed, config_changed) => {}
-    fetch(URL_API_SHEET_DATA, {
-        method: "post",
-        body: form_data
-        })
-        .then(res => res.json())
-        .then(sheet_data => {
-            sheet = initialize_sheet(
-                sheet_seed,
-                sheet_data.data == null ? null : sheet_data.data.replaceAll("\r", ""),
-                sheet_data.config,
-                on_change_callback,
-                true);
-        });
+function initialize_sheets(public) {
+    document.querySelectorAll(".sheet-seed").forEach(sheet_seed => {
+        initialize_sheet(sheet_seed, public);
+    });
 }

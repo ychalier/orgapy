@@ -57,12 +57,12 @@ ol {
     line-height: 24px;
 }
 
-table {
+table:not(.sheet-table) {
     font-size: 15px;
     line-height: 24px;
 }
 
-table,
+table:not(.sheet-table),
 pre {
     overflow-x: auto;
 }

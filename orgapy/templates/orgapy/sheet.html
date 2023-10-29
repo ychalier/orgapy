@@ -70,6 +70,8 @@
 </script>
 <script src="{% static 'orgapy/js/sheets.js' %}"></script>
 <script>
-    initialize_sheet_owner();
+    window.addEventListener("load", () => {
+        initialize_sheets(false);
+    });
 </script>
 {% endblock body_scripts %}

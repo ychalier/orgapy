@@ -50,12 +50,22 @@ let converter = new showdown.Converter({
             type: "output",
             regex: /input type="checkbox" disabled/g,
             replace: `input type="checkbox" `
+        },
+        {
+            type: "output",
+            regex: /@sheet\/(\d+)/g,
+            replace: `<div class="sheet-seed" sheet-id="$1"></div>`
         }
     ]
 });
 document.querySelectorAll(".markdown").forEach(container => {
     container.innerHTML = converter.makeHtml(container.innerHTML);
 });
+if (document.querySelectorAll(".sheet-seed").length > 0) {
+    initialize_sheets(true);
+} else {
+    console.log("Nothing found!");
+}
 
 window.addEventListener("load", () => {
     hljs.highlightAll();

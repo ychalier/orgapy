@@ -443,3 +443,7 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     justify-content: center;
     align-items: center;
 }
+
+.markdown .sheet {
+    padding-bottom: unset;
+}
