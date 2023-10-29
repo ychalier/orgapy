@@ -2631,7 +2631,7 @@ class Sheet {
 }
 
 
-function initialize_sheet(sheet_seed, public) {
+function initialize_sheet(sheet_seed, readonly, showlink) {
     var sheet = null;
     let sheet_id = sheet_seed.getAttribute("sheet-id");
     fetch(URL_API_SHEET_DATA + `?sid=${sheet_id}`, {
@@ -2639,7 +2639,7 @@ function initialize_sheet(sheet_seed, public) {
         })
         .then(res => res.json())
         .then(sheet_data => {
-            sheet = new Sheet(sheet_id, sheet_seed, public);
+            sheet = new Sheet(sheet_id, sheet_seed, readonly);
             let data = null;
             if (sheet_data.data != null && sheet_data.data.trim() != "") {
                 data = parse_tsv(sheet_data.data);
@@ -2649,6 +2649,14 @@ function initialize_sheet(sheet_seed, public) {
                 config = JSON.parse(sheet_data.config);
             }
             sheet.setup(data, config);
+            if (showlink) {
+                let link = document.createElement("a");
+                link.classList.add("text-small");
+                link.classList.add("text-gray");
+                link.textContent = "View in editor";
+                link.href = sheet_data.url;
+                sheet_seed.parentNode.insertBefore(link, sheet_seed.nextSibling);
+            }
         });
     
     /*
@@ -2664,8 +2672,8 @@ function initialize_sheet(sheet_seed, public) {
 }
 
 
-function initialize_sheets(public) {
+function initialize_sheets(readonly, showlink) {
     document.querySelectorAll(".sheet-seed").forEach(sheet_seed => {
-        initialize_sheet(sheet_seed, public);
+        initialize_sheet(sheet_seed, readonly, showlink);
     });
 }

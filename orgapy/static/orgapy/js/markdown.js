@@ -62,7 +62,7 @@ document.querySelectorAll(".markdown").forEach(container => {
     container.innerHTML = converter.makeHtml(container.innerHTML);
 });
 if (document.querySelectorAll(".sheet-seed").length > 0) {
-    initialize_sheets(true);
+    initialize_sheets(true, true);
 } else {
     console.log("Nothing found!");
 }

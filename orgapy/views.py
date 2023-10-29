@@ -763,8 +763,10 @@ def api_sheet_data(request):
     sheet = get_sheet_from_sid(int(sheet_id))
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
         return JsonResponse({
+            "title": sheet.title,
             "data": sheet.data,
-            "config": sheet.config
+            "config": sheet.config,
+            "url": sheet.get_absolute_url(),
         })
     raise PermissionDenied
 
