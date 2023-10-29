@@ -6,6 +6,7 @@
 {% block head %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'orgapy/css/sheets.css' %}" />
+<script src="{% static 'orgapy/js/sheets.js' %}"></script>
 {% endblock head %}
 
 {% block main_content %}
@@ -55,12 +56,6 @@
 
 {% block body_scripts %}
 {{ block.super }}
-<script>
-    const URL_API_SHEET_DATA = "{% url 'orgapy:api_sheet_data' %}";
-    const URL_API_SHEET_SAVE = "{% url 'orgapy:api_sheet_save' %}";
-    const CSRF_TOKEN = "{{ csrf_token }}";
-</script>
-<script src="{% static 'orgapy/js/sheets.js' %}"></script>
 <script>
     window.addEventListener("load", () => {
         initialize_sheets(false, true);

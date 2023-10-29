@@ -30,7 +30,7 @@ window.addEventListener("load", () => {
             close_all_lists()
             const query = bar.value;
             if (query.length == 0) return;
-            fetch(URL_API_SUGGESTIONS + `?q=${ query }`).then(res => res.json()).then(data => {
+            fetch(URL_API + `?action=note-suggestions&q=${ query }`).then(res => res.json()).then(data => {
                 if (data.results.length > 0) {
                     const autocomplete_items = document.createElement("div");
                     autocomplete_items.classList.add("autocomplete-items");

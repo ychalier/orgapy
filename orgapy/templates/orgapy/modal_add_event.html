@@ -5,7 +5,7 @@
             <div class="modal-title h5">Add Event</div>
         </div>
         <div class="modal-body">
-            <form id="form-add-event" method="post" action="{% url 'orgapy:api_calendar_add' %}">
+            <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event">
                 {% csrf_token %}
                 <div class="form-group">
                     <label class="form-label">Calendar</label>
@@ -56,7 +56,7 @@
             <div class="modal-title h5">Add Task</div>
         </div>
         <div class="modal-body">
-            <form id="form-add-task" method="post" action="{% url 'orgapy:api_calendar_add_task' %}">
+            <form id="form-add-task" method="post" action="{% url 'orgapy:api' %}?action=add-task">
                 {% csrf_token %}
                 <div class="form-group">
                     <label class="form-label">Calendar</label>

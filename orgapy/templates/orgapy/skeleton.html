@@ -19,7 +19,10 @@
     <script src="{% static 'orgapy/js/searchbar.js' %}"></script>
     <script src="{% static 'orgapy/js/misc.js' %}"></script>
     <script>
-        const URL_API_SUGGESTIONS = "{% url 'orgapy:api_notes_suggestions' %}";
+        const URL_API = "{% url 'orgapy:api' %}";
+        {% if request.user.is_authenticated %}
+        const CSRF_TOKEN = "{{csrf_token}}";
+        {% endif %}
     </script>
     {% endblock head %}
 </head>

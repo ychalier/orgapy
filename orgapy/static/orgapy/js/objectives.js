@@ -202,7 +202,7 @@ window.addEventListener("load", () => {
         form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
         form_data.set("objective_id", objective_id);
         form_data.set("objective_history", JSON.stringify(objectives[objective_id].history));
-        fetch(URL_API_OBJECTIVE_HISTORY, {
+        fetch(URL_API + "?action=edit-objective-history", {
             method: "post",
             body: form_data
         })
@@ -315,7 +315,7 @@ window.addEventListener("load", () => {
         reset_objgraph_scroll();
     }
 
-    fetch(URL_API_OBJECTIVE_LIST).then(res => res.json()).then(data => {
+    fetch(URL_API + "?action=list-objectives").then(res => res.json()).then(data => {
         objectives = {};
         data.objectives.forEach(data => {
             objectives[data.id] = new Objective(data);

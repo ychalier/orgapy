@@ -1,7 +1,7 @@
 import json
 import datetime
 from django.utils import timezone
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.text import slugify
@@ -132,7 +132,6 @@ def get_sheet_from_sid(sid, required_user=None):
     return sheet
 
 
-
 def save_sheet_core(request):
     original_sheet = None
     if ("id" in request.POST
@@ -172,9 +171,9 @@ def save_sheet_core(request):
 
 
 def view_landing(request):
-    if request.user is None:
-        return redirect("orgapy:about")
-    return redirect("orgapy:projects")
+    if request.user.is_authenticated:
+        return redirect("orgapy:projects")
+    return redirect("orgapy:about")
 
 
 def view_about(request):
@@ -543,27 +542,47 @@ def view_toggle_sheet_public(request, sid):
 # ----------------------------------------------- #
 
 
-@permission_required("orgapy.view_note")
-def api_notes_suggestions(request):
-    query = request.GET.get("q", "").strip()
-    results = []
-    if len(query) >= 1:
-        results = models.Note.objects.filter(user=request.user, title__startswith=query)[:5]
-    data = {
-        "results": [
-            {
-                "id": result.id,
-                "title": result.title,
-                "url": result.get_absolute_url()
-            }
-            for result in results
-        ]
-    }
-    return JsonResponse(data)
+def api(request):
+    action = request.GET.get("action")
+    match action:
+        case "list-projects":
+            return api_list_projects(request)
+        case "create-project":
+            return api_create_project(request)
+        case "edit-project":
+            return api_edit_project(request)
+        case "edit-project-ranks":
+            return api_edit_project_ranks(request)
+        case "delete-project":
+            return api_delete_project(request)
+        case "list-objectives":
+            return api_list_objectives(request)
+        case "edit-objective-history":
+            return api_edit_objective_history(request)
+        case "list-calendars":
+            return api_list_calendars(request)
+        case "delete-calendar":
+            return api_delete_calendar(request)
+        case "complete-task":
+            return api_complete_task(request)
+        case "add-event":
+            return api_add_event(request)
+        case "add-task":
+            return api_add_task(request)
+        case "note-title":
+            return api_note_title(request)
+        case "note-suggestions":
+            return api_notes_suggestions(request)
+        case "sheet":
+            return api_sheet(request)
+        case "save-sheet":
+            return api_save_sheet(request)
+        case _:
+            raise BadRequest("Wrong action")
 
 
 @permission_required("orgapy.view_project")
-def api_project_list(request):
+def api_list_projects(request):
     projects = []
     for project in models.Project.objects.filter(user=request.user):
         progress = None
@@ -589,8 +608,36 @@ def api_project_list(request):
     return JsonResponse({"projects": projects})
 
 
+@permission_required("orgapy.add_project")
+def api_create_project(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    max_rank = models.Project.objects.filter(user=request.user).aggregate(Max("rank"))["rank__max"]
+    if max_rank is None:
+        max_rank = 1
+    project = models.Project.objects.create(
+        user=request.user,
+        title="New Project",
+        category="general",
+        rank=int(max_rank) + 1
+    )
+    return JsonResponse({"success": True, "project": {
+        "id": project.id,
+        "title": project.title,
+        "category": project.category,
+        "limit_date": None,
+        "progress": None,
+        "description": None,
+        "checklist": None,
+        "creation": project.date_creation.timestamp(),
+        "modification": project.date_modification.timestamp(),
+        "rank": project.rank,
+        "note": None,
+    }})
+
+
 @permission_required("orgapy.change_project")
-def api_project_edit(request):
+def api_edit_project(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     project_id = request.POST.get("project_id")
@@ -636,84 +683,8 @@ def api_project_edit(request):
     return JsonResponse({"success": True})
 
 
-@permission_required("orgapy.delete_project")
-def api_project_delete(request):
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    project_id = request.POST.get("project_id")
-    if project_id is None:
-        raise BadRequest("Missing field")
-    try:
-        project_id = int(project_id)
-    except:
-        raise BadRequest("Invalid value")
-    if not models.Project.objects.filter(id=project_id, user=request.user).exists():
-        raise Http404("Project not found")
-    project = models.Project.objects.get(id=project_id, user=request.user)
-    project.delete()
-    return JsonResponse({"success": True})
-
-
-@permission_required("orgapy.add_project")
-def api_project_create(request):
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    max_rank = models.Project.objects.filter(user=request.user).aggregate(Max("rank"))["rank__max"]
-    if max_rank is None:
-        max_rank = 1
-    project = models.Project.objects.create(
-        user=request.user,
-        title="New Project",
-        category="general",
-        rank=int(max_rank) + 1
-    )
-    return JsonResponse({"success": True, "project": {
-        "id": project.id,
-        "title": project.title,
-        "category": project.category,
-        "limit_date": None,
-        "progress": None,
-        "description": None,
-        "checklist": None,
-        "creation": project.date_creation.timestamp(),
-        "modification": project.date_modification.timestamp(),
-        "rank": project.rank,
-        "note": None,
-    }})
-
-
-@permission_required("orgapy.view_objective")
-def api_objective_list(request):
-    objectives = []
-    for objective in models.Objective.objects.filter(user=request.user):
-        objectives.append(objective.to_dict())
-    return JsonResponse({"objectives": objectives})
-
-
-@permission_required("orgapy.change_objective")
-def api_objective_history(request):
-    """Objective history must be a JSON string
-    """
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    objective_id = request.POST.get("objective_id")
-    objective_history = request.POST.get("objective_history")
-    if objective_id is None or objective_history is None:
-        raise BadRequest("Missing fields")
-    try:
-        objective_id = int(objective_id)
-    except:
-        raise BadRequest("Invalid values")
-    if not models.Objective.objects.filter(id=objective_id, user=request.user).exists():
-        raise Http404("Project not found")
-    objective = models.Objective.objects.get(id=objective_id, user=request.user)
-    objective.history = objective_history
-    objective.save()
-    return JsonResponse({"success": True})
-
-
 @permission_required("orgapy.change_project")
-def api_project_edit_ranks(request):
+def api_edit_project_ranks(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     ranks_data = request.POST.get("ranks")
@@ -736,8 +707,56 @@ def api_project_edit_ranks(request):
     return JsonResponse({"success": True})
 
 
+@permission_required("orgapy.delete_project")
+def api_delete_project(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    project_id = request.POST.get("project_id")
+    if project_id is None:
+        raise BadRequest("Missing field")
+    try:
+        project_id = int(project_id)
+    except:
+        raise BadRequest("Invalid value")
+    if not models.Project.objects.filter(id=project_id, user=request.user).exists():
+        raise Http404("Project not found")
+    project = models.Project.objects.get(id=project_id, user=request.user)
+    project.delete()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.view_objective")
+def api_list_objectives(request):
+    objectives = []
+    for objective in models.Objective.objects.filter(user=request.user):
+        objectives.append(objective.to_dict())
+    return JsonResponse({"objectives": objectives})
+
+
+@permission_required("orgapy.change_objective")
+def api_edit_objective_history(request):
+    """Objective history must be a JSON string
+    """
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    objective_id = request.POST.get("objective_id")
+    objective_history = request.POST.get("objective_history")
+    if objective_id is None or objective_history is None:
+        raise BadRequest("Missing fields")
+    try:
+        objective_id = int(objective_id)
+    except:
+        raise BadRequest("Invalid values")
+    if not models.Objective.objects.filter(id=objective_id, user=request.user).exists():
+        raise Http404("Project not found")
+    objective = models.Objective.objects.get(id=objective_id, user=request.user)
+    objective.history = objective_history
+    objective.save()
+    return JsonResponse({"success": True})
+
+
 @permission_required("orgapy.view_calendar")
-def api_calendar_list(request):
+def api_list_calendars(request):
     events = []
     tasks = []
     calendars = []
@@ -762,7 +781,7 @@ def api_calendar_list(request):
 
 
 @permission_required("orgapy.change_calendar")
-def api_calendar_delete(request):
+def api_delete_calendar(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     href = request.POST.get("href")
@@ -777,7 +796,7 @@ def api_calendar_delete(request):
 
 
 @permission_required("orgapy.change_calendar")
-def api_calendar_complete(request):
+def api_complete_task(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     uid = request.POST.get("uid")
@@ -791,11 +810,8 @@ def api_calendar_complete(request):
     return JsonResponse({"success": success})
 
 
-
-
-
 @permission_required("orgapy.change_calendar")
-def api_calendar_add(request):
+def api_add_event(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     calendarid = request.POST.get("calendarid")
@@ -823,7 +839,7 @@ def api_calendar_add(request):
 
 
 @permission_required("orgapy.change_calendar")
-def api_calendar_add_task(request):
+def api_add_task(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     calendarid = request.POST.get("calendarid")
@@ -844,7 +860,7 @@ def api_calendar_add_task(request):
 
 
 @permission_required("orgapy.view_note")
-def api_notes_title(request):
+def api_note_title(request):
     nid = request.GET.get("nid")
     if nid is None:
         raise BadRequest()
@@ -854,10 +870,26 @@ def api_notes_title(request):
     return HttpResponse(query.get().title, content_type="text/plain")
 
 
+@permission_required("orgapy.view_note")
+def api_notes_suggestions(request):
+    query = request.GET.get("q", "").strip()
+    results = []
+    if len(query) >= 1:
+        results = models.Note.objects.filter(user=request.user, title__startswith=query)[:5]
+    data = {
+        "results": [
+            {
+                "id": result.id,
+                "title": result.title,
+                "url": result.get_absolute_url()
+            }
+            for result in results
+        ]
+    }
+    return JsonResponse(data)
 
 
-
-def api_sheet_data(request):
+def api_sheet(request):
     sheet_id = request.GET.get("sid")
     sheet = get_sheet_from_sid(int(sheet_id))
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
@@ -871,7 +903,7 @@ def api_sheet_data(request):
 
 
 @permission_required("orgapy.change_sheet")
-def api_sheet_save(request):
+def api_save_sheet(request):
     sheet_id = request.POST.get("sid")
     sheet_data = request.POST.get("data")
     sheet_config = request.POST.get("config")
@@ -881,5 +913,3 @@ def api_sheet_save(request):
     sheet.date_modification = timezone.now()
     sheet.save()
     return JsonResponse({"success": True})
-
-

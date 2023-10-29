@@ -56,7 +56,7 @@ window.addEventListener("load", () => {
             form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
             form_data.set("href", this.url);
             form_data.set("calendarid", this.calendar_id);
-            fetch(URL_API_CALENDAR_DELETE, {
+            fetch(URL_API + "?action=delete-calendar", {
                 method: "post",
                 body: form_data
                 })
@@ -118,7 +118,7 @@ window.addEventListener("load", () => {
             form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
             form_data.set("uid", this.uid);
             form_data.set("calendarid", this.calendar_id);
-            fetch(URL_API_CALENDAR_COMPLETE, {
+            fetch(URL_API + "?action=complete-task", {
                 method: "post",
                 body: form_data
                 })
@@ -140,9 +140,9 @@ window.addEventListener("load", () => {
     }
 
     function fetch_calendar(force=false) {
-        let url = URL_API_CALENDAR_LIST;
+        let url = URL_API + "?action=list-calendars";
         if (force) {
-            url = `${url}?force=1`;
+            url = `${url}&force=1`;
         }
         fetch(url).then(res => res.json()).then(data => {
             let calendar_input_events = document.querySelector("#modal-add-event select[name='calendarid']");

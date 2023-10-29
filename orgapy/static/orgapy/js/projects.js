@@ -23,7 +23,7 @@ window.addEventListener("load", () => {
             note_span.textContent = note_titles[note_id];
             note_span.title = note_titles[note_id];
         } else {
-            fetch(URL_API_NOTE_TITLE + `?nid=${note_id}`).then(res => res.text()).then(title => {
+            fetch(URL_API + `?action=note-title&nid=${note_id}`).then(res => res.text()).then(title => {
                 note_titles[note_id] = title;
                 note_span.textContent = title;
                 note_span.title = title;
@@ -643,7 +643,7 @@ window.addEventListener("load", () => {
                 let form_data = new FormData();
                 form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
                 form_data.set("project_id", this.id);
-                fetch(URL_API_PROJECT_DELETE, {
+                fetch(URL_API + "?action=delete-project", {
                     method: "post",
                     body: form_data
                 })
@@ -720,7 +720,7 @@ window.addEventListener("load", () => {
             form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
             form_data.set("project_id", this.id);
             form_data.set("project_data", project_data);
-            fetch(URL_API_PROJECT_EDIT, {
+            fetch(URL_API + "?action=edit-project", {
                 method: "post",
                 body: form_data
             })
@@ -840,7 +840,7 @@ window.addEventListener("load", () => {
             }
             let form_data = new FormData();
             form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-            fetch(URL_API_PROJECT_CREATE, {method: "post", body: form_data})
+            fetch(URL_API + "?action=create-project", {method: "post", body: form_data})
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -892,7 +892,7 @@ window.addEventListener("load", () => {
         let form_data = new FormData();
         form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
         form_data.set("ranks", JSON.stringify(ranks));
-        fetch(URL_API_PROJECT_RANKS, {
+        fetch(URL_API + "?action=edit-project-ranks", {
             method: "post",
             body: form_data
         })
@@ -933,7 +933,7 @@ window.addEventListener("load", () => {
     }
 
     function fetch_projects_and_inflate() {
-        fetch(URL_API_PROJECT_LIST).then(res => res.json()).then(data => {
+        fetch(URL_API + "?action=list-projects").then(res => res.json()).then(data => {
             projects = {};
             todays_plan = null;
             data.projects.forEach(project_data => {

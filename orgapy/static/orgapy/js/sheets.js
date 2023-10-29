@@ -2605,7 +2605,7 @@ class Sheet {
         let sheet_export = this.export();
         save_form_data.set("data", sheet_export.data);
         save_form_data.set("config", sheet_export.config);
-        fetch(URL_API_SHEET_SAVE, {
+        fetch(URL_API + "?action=save-sheet", {
             method: "post",
             body: save_form_data
             })
@@ -2632,7 +2632,7 @@ class Sheet {
 function initialize_sheet(sheet_seed, readonly, showlink) {
     var sheet = null;
     let sheet_id = sheet_seed.getAttribute("sheet-id");
-    fetch(URL_API_SHEET_DATA + `?sid=${sheet_id}`, {
+    fetch(URL_API + `?action=sheet&sid=${sheet_id}`, {
         method: "get",
         })
         .then(res => res.json())

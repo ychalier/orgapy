@@ -64,7 +64,7 @@ document.querySelectorAll(".markdown").forEach(container => {
 if (document.querySelectorAll(".sheet-seed").length > 0) {
     initialize_sheets(true, true);
 } else {
-    console.log("Nothing found!");
+    //pass
 }
 
 window.addEventListener("load", () => {

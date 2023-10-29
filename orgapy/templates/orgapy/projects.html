@@ -12,20 +12,8 @@
 <link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/calendar.css' %}" />
 <script>
-    const CSRF_TOKEN = "{{ csrf_token }}";
-    const URL_API_PROJECT_LIST = "{% url 'orgapy:api_project_list' %}";
-    const URL_API_PROJECT_EDIT = "{% url 'orgapy:api_project_edit' %}";
-    const URL_API_PROJECT_DELETE = "{% url 'orgapy:api_project_delete' %}";
-    const URL_API_PROJECT_CREATE = "{% url 'orgapy:api_project_create' %}";
-    const URL_API_PROJECT_RANKS = "{% url 'orgapy:api_project_edit_ranks' %}"
-    const URL_API_OBJECTIVE_LIST = "{% url 'orgapy:api_objective_list' %}";
-    const URL_API_OBJECTIVE_HISTORY = "{% url 'orgapy:api_objective_history' %}";
-    const URL_API_CALENDAR_LIST = "{% url 'orgapy:api_calendar_list' %}";
-    const URL_API_CALENDAR_DELETE = "{% url 'orgapy:api_calendar_delete' %}";
-    const URL_API_CALENDAR_COMPLETE = "{% url 'orgapy:api_calendar_complete' %}";
     const URL_ADMIN_PROJECT_CHANGE = "{% url 'admin:orgapy_project_changelist' %}";
     const URL_ORGAPY_NOTE = "{% url 'orgapy:note' nid='NID' %}";
-    const URL_API_NOTE_TITLE = "{% url 'orgapy:api_notes_title' %}";
 </script>
 {% endblock head %}
 
