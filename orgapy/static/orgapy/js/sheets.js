@@ -2089,17 +2089,15 @@ class Sheet {
         });
         document.addEventListener("keydown", (event) => {
             if (self.editing_column_name) {
-                return;
-            }
-            if (event.key == "a" && event.ctrlKey) {
+                //pass
+            } else if (event.key == "a" && event.ctrlKey) {
                 self.selection.all();
-                return;
-            }
-            if (event.key == "Escape" && self.container.classList.contains("fullscreen")) {
+            } else if (event.key == "s" && event.ctrlKey && !self.readonly) {
+                event.preventDefault();
+                self.save_data();
+            } else if (event.key == "Escape" && self.container.classList.contains("fullscreen")) {
                 self.container.classList.remove("fullscreen");
-                return;
-            }
-            if (self.selection != null) {
+            } else if (self.selection != null) {
                 if (event.key == "Enter") {
                     if (event.altKey && self.editing) {
                         if (!self.readonly) {
@@ -2658,17 +2656,7 @@ function initialize_sheet(sheet_seed, readonly, showlink) {
                 sheet_seed.parentNode.insertBefore(link, sheet_seed.nextSibling);
             }
         });
-    
-    /*
-    TODO
-    document.addEventListener("keydown", (event) => {
-        if (event.key == "s" && event.ctrlKey) {
-            event.stopPropagation();
-            event.preventDefault();
-            sheet.save_data();
-        }
-    });
-    */
+
 }
 
 
