@@ -1346,7 +1346,6 @@ class Sheet {
         this.container = container;
         this.toolbar = null;
         this.toolbar_button_save = null;
-        this.toolbar_button_toggle_fullscreen = null;
         this.toolbar_button_toggle_shrink = null;
         this.table = null;
         this.cells = [];
@@ -2095,8 +2094,6 @@ class Sheet {
             } else if (event.key == "s" && event.ctrlKey && !self.readonly) {
                 event.preventDefault();
                 self.save_data();
-            } else if (event.key == "Escape" && self.container.classList.contains("fullscreen")) {
-                self.container.classList.remove("fullscreen");
             } else if (self.selection != null) {
                 if (event.key == "Enter") {
                     if (event.altKey && self.editing) {
@@ -2242,7 +2239,8 @@ class Sheet {
     }
 
     inflate_table() {
-        this.table = create(this.container, "table", ["sheet-table"]);
+        let table_wrapper = create(this.container, "div", ["sheet-table-wrapper"]);
+        this.table = create(table_wrapper, "table", ["sheet-table"]);
     }
 
     inflate() {
@@ -2487,13 +2485,6 @@ class Sheet {
             self.open_script_modal();
         });
 
-        this.toolbar_button_toggle_fullscreen = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        this.toolbar_button_toggle_fullscreen.innerHTML = `<i class="icon icon-fullscreen"></i>`;
-        this.toolbar_button_toggle_fullscreen.title = "Toggle fullscreen";
-        this.toolbar_button_toggle_fullscreen.addEventListener("click", () => {
-            self.toggle_fullscreen();
-        });
-
         this.toolbar_button_toggle_shrink = create(this.toolbar, "button", ["sheet-toolbar-button"]);
         this.toolbar_button_toggle_shrink.innerHTML = `<i class="icon icon-shrink"></i>`;
         this.toolbar_button_toggle_shrink.title = "Toggle shrink";
@@ -2561,20 +2552,6 @@ class Sheet {
             data: format_tsv(data_array),
             config: JSON.stringify(config_object)
         };
-    }
-
-    toggle_fullscreen() {
-        if (this.container.classList.contains("fullscreen")) {
-            this.container.classList.remove("fullscreen");
-            if (this.toolbar_button_toggle_fullscreen != null) {
-                this.toolbar_button_toggle_fullscreen.classList.remove("active");
-            }
-        } else {
-            this.container.classList.add("fullscreen");
-            if (this.toolbar_button_toggle_fullscreen != null) {
-                this.toolbar_button_toggle_fullscreen.classList.add("active");
-            }
-        }
     }
 
     import_tsv(tsv_string) {
@@ -2653,7 +2630,7 @@ function initialize_sheet(sheet_seed, readonly, showlink) {
                 link.classList.add("text-gray");
                 link.textContent = "View in editor";
                 link.href = sheet_data.url;
-                sheet_seed.parentNode.insertBefore(link, sheet_seed.nextSibling);
+                sheet_seed.insertBefore(link, sheet_seed.querySelector(".sheet-table-wrapper"));
             }
         });
 

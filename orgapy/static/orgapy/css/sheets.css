@@ -8,14 +8,17 @@
 }
 
 .sheet {
-    overflow: auto;
+    width: fit-content;
+    max-width: 100%;
+    height: 0;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.sheet-sizer {
-    visibility: hidden;
-    width: 0;
-    position: absolute;
-    height: 32px;
+.sheet-table-wrapper {
+    overflow: auto;
+    padding-right: 8px;
 }
 
 .sheet-table {
@@ -435,17 +438,8 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     color: black;
 }
 
-.sheet-tabs {
-    display: flex;
-    flex-direction: column-reverse;
-}
-
-.sheet-tab {
+.sheet-tab:not(.active) {
     display: none;
-}
-
-.sheet-tab.active {
-    display: unset;
 }
 
 .sheet-tabs-titles {
@@ -473,4 +467,8 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
 .sheet-tab-title.active {
     background: white;
     color: black;
+}
+
+.markdown .sheet {
+    height: auto;
 }

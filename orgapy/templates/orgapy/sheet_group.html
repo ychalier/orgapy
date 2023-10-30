@@ -1,4 +1,4 @@
-{% extends "orgapy/skeleton.html" %}
+{% extends "orgapy/fullscreen.html" %}
 {% load static %}
 
 {% block title %}{% block subtitle %} {{group.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
@@ -11,23 +11,26 @@
 
 {% block main_content %}
 <h1>{{group.title}}</h1>
+<div>    
+    <a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
+    <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
+</div>
+
+<div class="sheet-tabs-titles">
+    {% for sheet in group.sheet_set.all %}
+    <div class="sheet-tab-title {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">{{ sheet.title }}</div>
+    {% endfor %}
+</div>
+
+{% endblock main_content %}
+
+{% block fullscreen_content %}
 
 {% if group.sheet_set.all %}
 
-<div class="sheet-tabs">
-    <div class="sheet-tabs-container">
-        {% for sheet in group.sheet_set.all %}
-        <div class="sheet-tab {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">
-            <div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
-        </div>
-        {% endfor %}
-    </div>
-    <div class="sheet-tabs-titles">
-        {% for sheet in group.sheet_set.all %}
-        <div class="sheet-tab-title {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">{{ sheet.title }}</div>
-        {% endfor %}
-    </div>
-</div>
+{% for sheet in group.sheet_set.all %}
+<div class="sheet-tab {% if forloop.first %}active{% endif %} sheet-seed" tab="{{ forloop.counter0 }}" sheet-id="{{sheet.id}}"></div>
+{% endfor %}
 
 {% else %}
 <div class="empty">
@@ -42,23 +45,15 @@
 </div>
 {% endif %}
 
+{% endblock fullscreen_content %}
 
-{% endblock main_content %}
-
-
-{% block right_column %}
-<div class="side-menu container mt-1">    
-    <a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
-    <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
-</div>
-{% endblock right_column %}
 
 
 {% block body_scripts %}
 {{ block.super }}
 <script>
     window.addEventListener("load", () => {
-        initialize_sheets(false, true);
+        initialize_sheets(false, false);
         document.querySelectorAll(".sheet-tab-title").forEach(tab_title => {
             tab_title.addEventListener("click", () => {
                 document.querySelectorAll(".sheet-tab").forEach(tab => {

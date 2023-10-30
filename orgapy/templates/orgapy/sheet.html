@@ -1,4 +1,4 @@
-{% extends "orgapy/skeleton.html" %}
+{% extends "orgapy/fullscreen.html" %}
 {% load static %}
 
 {% block title %}{% block subtitle %} {{sheet.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
@@ -10,7 +10,7 @@
 {% endblock head %}
 
 {% block main_content %}
-<h1>{{sheet.title}}</h1>
+<h1 class="mb-0">{{sheet.title}}</h1>
 
 <p>
     {% if sheet.description %}
@@ -26,19 +26,21 @@
         Created on <b>{{ sheet.date_creation | date }}</b>, edited on <b>{{ sheet.date_modification | date }}</b>
         {% endif %}
     </span>
+    <span class="ml-2">    
+        <a class="btn-inline mr-1 {% if sheet.public %}btn-primary{% endif %}" href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
+        <a class="btn-inline mr-1" href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" title="Edit"><i class="icon icon-edit"></i></a>
+        <a class="btn-inline mr-1 link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="icon icon-delete"></i></a>
+    </span>
 </p>
-
-<div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
 
 {% endblock main_content %}
 
-{% block right_column %}
-<div class="side-menu container mt-1">    
-    <a href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if sheet.public %}btn-primary{% endif %}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
-    <a href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
-    <a href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
-</div>
-{% endblock right_column %}
+{% block fullscreen_content %}
+
+
+<div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
+
+{% endblock fullscreen_content %}
 
 {% block body_scripts %}
 {{ block.super }}

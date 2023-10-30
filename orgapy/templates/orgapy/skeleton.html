@@ -27,7 +27,7 @@
     {% endblock head %}
 </head>
 
-<body class="dark-blue noise">
+<body class="dark-blue noise {% block body_class %}{% endblock body_class %}">
     {% block body %}
     {% block before_columns %}{% endblock before_columns %}
     <div class="columns">
@@ -56,7 +56,7 @@
     {% block after_columns %}{% endblock after_columns %}
     <div id="snackbar"></div>
     {% endblock body %}
-    <div class="mb-4">&nbsp;</div>
+    {% block body_bottom %}<div class="mb-4">&nbsp;</div>{% endblock body_bottom %}
     {% block body_scripts %}{% endblock body_scripts %}
 </body>
 
