@@ -1814,15 +1814,18 @@ class Sheet {
                 el.classList.add("selected");
             }
         });
-        let filter_menu = this.context_menu.add_menu("Filter");
         let values = Array.from(this.get_value_set(j));
-        values.splice(0, 0, null);
-        values.forEach(value => {
-            let el = filter_menu.add_item(`<input type="checkbox" ${this.filters[j].has(value) ? "" : "checked"} /> ${value == null ? "(Empty)" : value}`, () => {
-                el.querySelector("input").checked = !self.toggle_filter(j, value);
-                self.update_filters();
+        if (values.length < 20) {
+            let filter_menu = this.context_menu.add_menu("Filter");
+            values.sort();
+            values.splice(0, 0, null);
+            values.forEach(value => {
+                let el = filter_menu.add_item(`<input type="checkbox" ${this.filters[j].has(value) ? "" : "checked"} /> ${value == null ? "(Empty)" : value}`, () => {
+                    el.querySelector("input").checked = !self.toggle_filter(j, value);
+                    self.update_filters();
+                });
             });
-        });
+        }
         this.context_menu.add_item("Resize", () => {
             let new_width = prompt(`Column width (default is ${DEFAULT_COLUMN_WIDTH}):`, self.column_widths[j]);
             if (new_width != null) {    
