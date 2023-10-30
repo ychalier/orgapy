@@ -2347,7 +2347,7 @@ class Sheet {
         for (let i = 0; i < this.height; i++) {
             this.rows.push(create(table_body, "tr", ["sheet-row"]));
             this.row_heads.push(create(this.rows[i], "td", ["sheet-cell", "sheet-cell-head"]));
-            this.row_heads[i].textContent = rowname(i);
+            this.row_heads[i].innerHTML = `<span class="sheet-cell-content">${rowname(i)}</span>`;
             this.row_heads[i].style.height = this.row_heights[i] + "px";
             this.rows[i].style.top = `-${i}px`;
             this.cells.push([]);

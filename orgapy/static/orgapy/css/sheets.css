@@ -25,7 +25,6 @@
     border-spacing: 0;
     table-layout: fixed;
     width: 0;
-    user-select: none;
 }
 
 .sheet-table tbody {
@@ -62,6 +61,7 @@
     box-sizing: border-box;
     transform: translateY(-50%);
     line-height: 1;
+    user-select: none;
 }
 
 .sheet-cell-content b {
