@@ -53,6 +53,9 @@
 {{ block.super }}
 <script src="{% static 'orgapy/js/dragrank.js' %}"></script>
 <script src="{% static 'orgapy/js/markdown.js' %}"></script>
+<script>
+    markdown_to_html(".markdown", true);
+</script>
 <script src="{% static 'orgapy/js/projects.js' %}"></script>
 <script src="{% static 'orgapy/js/objectives.js' %}"></script>
 <script src="{% static 'orgapy/js/calendar.js' %}"></script>

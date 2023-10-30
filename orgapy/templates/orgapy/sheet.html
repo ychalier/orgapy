@@ -7,6 +7,10 @@
 {{ block.super }}
 <script src="{% static 'orgapy/js/sheets.js' %}"></script>
 <link rel="stylesheet" href="{% static 'orgapy/css/sheets.css' %}" />
+<script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+<script src="{% static 'orgapy/js/markdown.js' %}"></script>
 {% endblock head %}
 
 {% block main_content %}
@@ -14,7 +18,7 @@
 
 <p>
     {% if sheet.description %}
-    <span>{{sheet.description | safe}}</span><br>
+    <span class="markdown-inline">{{sheet.description | safe}}</span><br>
     {% endif %}
     {% if sheet.group %}
     <span>Group: <a href="{{sheet.group.get_absolute_url}}">{{sheet.group.title}}</a></span><br>
@@ -46,6 +50,7 @@
 {{ block.super }}
 <script>
     window.addEventListener("load", () => {
+        markdown_to_html(".markdown-inline", false);
         initialize_sheets(false, false);
     });
 </script>
