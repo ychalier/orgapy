@@ -1,5 +1,20 @@
 window.addEventListener("load", () => {
 
+    var converter = new showdown.Converter({
+        omitExtraWLInCodeBlocks: true,
+        customizedHeaderId: true,
+        headerLevelStart: 1,
+        simplifiedAutoLink: true,
+        literalMidWordUnderscores: true,
+        strikethrough: true,
+        tables: false,
+        tasklists: false,
+        simpleLineBreaks: true,
+        emoji: true,
+        moreStyling: true,
+        extensions: []
+    });
+
     function clear_context_menus() {
         let context_menus = document.querySelectorAll(".contextmenu");
         for (let i = 0; i < context_menus.length; i++) {
