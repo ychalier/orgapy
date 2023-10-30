@@ -11,10 +11,6 @@
 
 {% block main_content %}
 <h1>{{group.title}}</h1>
-<div>    
-    <a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
-    <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
-</div>
 
 <div class="sheet-tabs-titles">
     {% for sheet in group.sheet_set.all %}
@@ -23,6 +19,11 @@
 </div>
 
 {% endblock main_content %}
+
+{% block right_column %}
+<a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="btn mb-1 mr-1" title="Edit">Edit</a>
+<a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="btn mb-1 mr-1 link-confirm" title="Delete">Delete</a>
+{% endblock right_column %}
 
 {% block fullscreen_content %}
 
