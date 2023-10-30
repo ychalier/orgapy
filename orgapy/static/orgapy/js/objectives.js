@@ -155,8 +155,8 @@ window.addEventListener("load", () => {
                     date_end = new Date(date_end.getTime() + (minimum_size - (date_end - date_start) / DAYMS) * DAYMS);
                 }
                 let length = (date_end - date_start) / DAYMS;
-                let early = next_slot_state == SLOT_STATE_BUTTON && slots[slots.length - 1].length < this.rules.period;
-                let late = next_slot_state == SLOT_STATE_BUTTON && slots[slots.length - 1].length > this.rules.period;
+                let early = next_slot_state == (SLOT_STATE_BUTTON | SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length < this.rules.period;
+                let late = next_slot_state == (SLOT_STATE_BUTTON | SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length > this.rules.period;
                 slots.push(new Slot(date_start, length, next_slot_state, early, late));
                 if (i == 0) {
                     next_history_index++;
@@ -254,7 +254,11 @@ window.addEventListener("load", () => {
             } else if (slot.state == SLOT_STATE_MISSED) {
                 dom_slot_background.classList.add("bg-error");
             } else if (slot.state == SLOT_STATE_COOLDOWN) {
-                dom_slot_background.classList.add("bg-cooldown");
+                if (slot.early) {
+                    dom_slot_background.classList.add("bg-future-complete");
+                } else {
+                    dom_slot_background.classList.add("bg-cooldown");
+                }
             } else if (slot.state == SLOT_STATE_FUTURE) {
                 dom_slot_background.classList.add("bg-future");
             } else if (slot.state == SLOT_STATE_FUTURE_COMPLETE) {
