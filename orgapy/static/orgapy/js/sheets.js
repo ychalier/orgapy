@@ -652,21 +652,77 @@ function safe_parse(string, parser) {
 
 
 function parse_tsv(string) {
-    let array = [];
-    string.replaceAll("\r", "").split("\n").forEach((line, i) => {
-        array.push([]);
-        line.split("\t").forEach(item => {
-            array[i].push(item);
-        });
-    });
+    string = string.replaceAll("\r", "");
+    let array = [[]];
+    let buffer = "";
+    let i = 0;
+    let is_next_row = false;
+    let is_escaped_string = false;
+    while (i < string.length) {
+        buffer = "";
+        is_next_row = false;
+        is_escaped_string = false;
+        let first_char = string.charAt(i);
+        is_escaped_string = first_char == "\"";
+        if (is_escaped_string) i++;
+        while (i < string.length) {
+            let char = string.charAt(i);
+            if (char == "\t" && !is_escaped_string) {
+                i++;
+                break;
+            }
+            if (char == "\n" && !is_escaped_string) {
+                is_next_row = true;
+                i++;
+                break;
+            }
+            if (char == "\\" && is_escaped_string) {
+                console.log("double slash here!");
+                i++;
+                if (i < string.length) {
+                    let next_char = string.charAt(i);
+                    console.log("next char is", next_char);
+                    if (next_char == "\"") {
+                        buffer += next_char;
+                        i++;
+                        continue;
+                    }
+                }
+                i--;
+            }
+            if (char == "\"" && is_escaped_string) {
+                i++;
+                if (i < string.length) {
+                    let next_char = string.charAt(i);
+                    if (next_char == "\n") {
+                        is_next_row = true;
+                    }
+                    i++;
+                }
+                break;
+            }
+            buffer += char;
+            i++;
+        }
+        array[array.length - 1].push(buffer);
+        if (is_next_row) array.push([]);
+    }
     return array;
+}
+
+
+function escape_tsv_value(value) {
+    if (value.includes("\n") || value.includes("\t")) {
+        return `"${value.replaceAll("\"", "\\\"")}"`;
+    }
+    return value;
 }
 
 
 function format_tsv(array) {
     let rows = [];
     array.forEach(row => {
-        rows.push(row.join("\t"));
+        rows.push(row.map(escape_tsv_value).join("\t"));
     });
     return rows.join("\n");
 }
@@ -2045,7 +2101,7 @@ class Sheet {
         var self = this;
         this.container.addEventListener("paste", (event) => {
             if (self.readonly) return;
-            if (self.selection != null) {
+            if (self.selection != null && !self.editing) {
                 event.preventDefault();
                 let string = event.clipboardData.getData("text");
                 let array = parse_tsv(string);
@@ -2097,9 +2153,11 @@ class Sheet {
                         if (!self.readonly) {
                             let root = self.selection.root();
                             let textarea = self.cells[root.i][root.j].querySelector(".sheet-cell-input");
-                            textarea.value += "\n";
+                            let start_pos = textarea.selectionStart;
+                            let end_pos = textarea.selectionEnd;
+                            textarea.value = textarea.value.substring(0, start_pos) + "\n" + textarea.value.substring(end_pos)
                             textarea.scrollTop = textarea.scrollHeight;
-                            self.on_change(true, false);
+                            textarea.setSelectionRange(start_pos + 1, end_pos + 1);
                         }
                     } else {
                         if (self.editing && !self.readonly) self.stop_editing();
