@@ -2191,6 +2191,34 @@ class Sheet {
                     } else {
                         self.selection.move(0, 1, event.ctrlKey);
                     }
+                } else if (event.key == "Home" && !self.editing) {
+                    event.preventDefault();
+                    if (event.shiftKey) {
+                        self.selection.expand(-self.height, -self.width);
+                    } else {
+                        self.selection.move(-self.height, -self.width, event.ctrlKey);
+                    }
+                } else if (event.key == "End" && !self.editing) {
+                    event.preventDefault();
+                    if (event.shiftKey) {
+                        self.selection.expand(self.height, self.width);
+                    } else {
+                        self.selection.move(self.height, self.width, event.ctrlKey);
+                    }
+                } else if (event.key == "PageUp" && !self.editing) {
+                    event.preventDefault();
+                    if (event.shiftKey) {
+                        self.selection.expand(-16, 0);
+                    } else {
+                        self.selection.move(-16, 0, event.ctrlKey);
+                    }
+                } else if (event.key == "PageDown" && !self.editing) {
+                    event.preventDefault();
+                    if (event.shiftKey) {
+                        self.selection.expand(16, 0);
+                    } else {
+                        self.selection.move(16, 0, event.ctrlKey);
+                    }
                 } else if (!self.editing && (event.key == "Delete" || event.key == "Backspace") && !self.readonly) {
                     self.selection.iterate((i, j) => {
                         self.values[i][j] = null;
