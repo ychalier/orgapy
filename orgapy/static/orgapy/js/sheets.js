@@ -1888,10 +1888,7 @@ class Sheet {
                 this.rows[i].classList.remove("hidden");
                 this.row_handles[i].classList.remove("hidden");
                 this.row_handles[i].style.top = (y - HANDLE_SIZE/2) + "px";
-                for (let j = 0; j < this.width; j++) {
-                    this.cells[i][j].style.top = row_top + "px";
-                    this.row_heads[i].style.top = row_top + "px";
-                }
+                this.rows[i].style.top = `${row_top}px`;
                 row_top--;
             } else {
                 this.rows[i].classList.add("hidden");
@@ -2290,11 +2287,10 @@ class Sheet {
             this.row_heads.push(create(this.rows[i], "td", ["sheet-cell", "sheet-cell-head"]));
             this.row_heads[i].textContent = rowname(i);
             this.row_heads[i].style.height = this.row_heights[i] + "px";
-            this.row_heads[i].style.top = `-${i}px`;
+            this.rows[i].style.top = `-${i}px`;
             this.cells.push([]);
             for (let j = 0; j < this.width; j++) {
                 this.cells[i].push(create(this.rows[i], "td", ["sheet-cell", this.column_types[j].constructor.ALIGNEMENT]));
-                this.cells[i][j].style.top = `-${i}px`;
                 this.cells[i][j].style.left = `-${j}px`;
                 this.set_cell_content(i, j);
             }
