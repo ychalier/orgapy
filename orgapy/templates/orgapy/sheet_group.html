@@ -14,7 +14,7 @@
 
 <div class="sheet-tabs-titles">
     {% for sheet in group.sheet_set.all %}
-    <div class="sheet-tab-title {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">{{ sheet.title }}</div>
+    <div class="sheet-tab-title {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">{{ sheet.title }} <a href="{% url 'orgapy:sheet' sid=sheet.id %}"><i class="icon icon-external"></i></a></div>
     {% endfor %}
 </div>
 
