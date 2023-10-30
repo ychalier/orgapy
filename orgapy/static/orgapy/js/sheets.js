@@ -939,6 +939,7 @@ class Selection {
         // TODO: merge ranges!
         this.set_filtered_ranges();
         this.set();
+        this.check_sheet_scroll();
     }
 
     expand(di, dj) {
@@ -948,6 +949,13 @@ class Selection {
         // TODO: merge ranges!
         this.set_filtered_ranges();
         this.set();
+        this.check_sheet_scroll();
+    }
+
+    check_sheet_scroll() {
+        let root = this.root();
+        let cell = this.sheet.cells[root.i][root.j];
+        cell.scrollIntoView(false);
     }
 
     bounds() {
