@@ -119,7 +119,9 @@ window.addEventListener("load", () => {
                 } else {
                     state = SLOT_STATE_MISSED;
                 }
-                slots.push(new Slot(date_start, this.rules.period, state));
+                let slot_date_end = new Date(date_start.getTime());
+                slot_date_end.setDate(slot_date_end.getDate() + this.rules.period);
+                slots.push(new Slot(date_start, (slot_date_end - date_start) / DAYMS, state));
                 if (current) break;
                 date_start = new Date(date_end.getTime());
                 if (NOW < date_start) break;
