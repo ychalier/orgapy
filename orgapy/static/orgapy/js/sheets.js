@@ -614,7 +614,7 @@ const MARKDOWN_PATTERN_LINK = /\[([^\[\]]*)\]\(([^\(\)]*)\)/;
 const MARKDOWN_PATTERN_URL = /((?:https?:\/\/)?(?:[-a-zA-Z0-9éèàç@:%._\+~#=]{2,256}\.(?:[a-z]{2,10})|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b(?:[-a-zA-Z0-9éèàç@:%_\+.~#?&//=]*))/
 
 
-function markdown_to_html(string) {
+function convert_markdown_to_html(string) {
     string = string.replace(MARKDOWN_PATTERN_BOLD, "<b>$1</b>");
     string = string.replace(MARKDOWN_PATTERN_ITALIC, "<i>$1</i>");
     string = string.replace(MARKDOWN_PATTERN_STRIKE, "<s>$1</s>");
@@ -1058,7 +1058,7 @@ class ColumnTypeText extends ColumnType {
     static LABEL = "Text";
 
     format_html(value) {
-        return safe_format(value, markdown_to_html);
+        return safe_format(value, convert_markdown_to_html);
     }
 
 }
