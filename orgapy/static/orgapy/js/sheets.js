@@ -2106,6 +2106,7 @@ class Sheet {
                         self.selection.move(1, 0);
                     }
                 } else if (event.key == "ArrowUp") {
+                    event.preventDefault();
                     if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(-1, 0);
@@ -2113,6 +2114,7 @@ class Sheet {
                         self.selection.move(-1, 0, event.ctrlKey);
                     }
                 } else if (event.key == "ArrowDown") {
+                    event.preventDefault();
                     if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(1, 0);
@@ -2120,6 +2122,7 @@ class Sheet {
                         self.selection.move(1, 0, event.ctrlKey);
                     }
                 } else if (event.key == "ArrowLeft") {
+                    event.preventDefault();
                     if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(0, -1);
@@ -2127,6 +2130,7 @@ class Sheet {
                         self.selection.move(0, -1, event.ctrlKey);
                     }
                 } else if (event.key == "ArrowRight") {
+                    event.preventDefault();
                     if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(0, 1);
