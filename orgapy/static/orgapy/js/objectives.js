@@ -99,7 +99,11 @@ window.addEventListener("load", () => {
             let history_index = 0;
             let is_under_cooldown = (NOW - new Date(this.history[this.history.length - 1] * 1000)) / DAYMS < this.rules.cooldown;
             while (true) {
-                let date_end = new Date(date_start.getTime() + this.rules.period * 24 * 3600 * 1000);
+                let date_end = new Date(date_start.getTime());
+                date_end.setDate(date_end.getDate() + this.rules.period);
+                if (this.rules.period > Math.floor(this.rules.period)) {
+                    date_end.setTime(date_end.getTime() + (this.rules.period - Math.floor(this.rules.period)) * DAYMS);
+                }
                 let state = null;
                 let date_start_ts = Math.floor(date_start / 1000);
                 let date_end_ts = Math.floor(date_end / 1000);
@@ -119,9 +123,9 @@ window.addEventListener("load", () => {
                 } else {
                     state = SLOT_STATE_MISSED;
                 }
-                let slot_date_end = new Date(date_start.getTime());
-                slot_date_end.setDate(slot_date_end.getDate() + this.rules.period);
-                slots.push(new Slot(date_start, (slot_date_end - date_start) / DAYMS, state));
+                //let slot_date_end = new Date(date_start.getTime());
+                //slot_date_end.setDate(slot_date_end.getDate() + this.rules.period);
+                slots.push(new Slot(date_start, (date_end - date_start) / DAYMS, state));
                 if (current) break;
                 date_start = new Date(date_end.getTime());
                 if (NOW < date_start) break;
@@ -155,8 +159,8 @@ window.addEventListener("load", () => {
                     date_end = new Date(date_end.getTime() + (minimum_size - (date_end - date_start) / DAYMS) * DAYMS);
                 }
                 let length = (date_end - date_start) / DAYMS;
-                let early = next_slot_state == (SLOT_STATE_BUTTON | SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length < this.rules.period;
-                let late = next_slot_state == (SLOT_STATE_BUTTON | SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length > this.rules.period;
+                let early = (next_slot_state == SLOT_STATE_BUTTON || next_slot_state == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length < this.rules.period;
+                let late = (next_slot_state == SLOT_STATE_BUTTON || next_slot_state == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length > this.rules.period;
                 slots.push(new Slot(date_start, length, next_slot_state, early, late));
                 if (i == 0) {
                     next_history_index++;
