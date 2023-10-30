@@ -2163,33 +2163,29 @@ class Sheet {
                         if (self.editing && !self.readonly) self.stop_editing();
                         self.selection.move(1, 0);
                     }
-                } else if (event.key == "ArrowUp") {
+                } else if (event.key == "ArrowUp" && !self.editing) {
                     event.preventDefault();
-                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(-1, 0);
                     } else {
                         self.selection.move(-1, 0, event.ctrlKey);
                     }
-                } else if (event.key == "ArrowDown") {
+                } else if (event.key == "ArrowDown" && !self.editing) {
                     event.preventDefault();
-                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(1, 0);
                     } else {
                         self.selection.move(1, 0, event.ctrlKey);
                     }
-                } else if (event.key == "ArrowLeft") {
+                } else if (event.key == "ArrowLeft" && !self.editing) {
                     event.preventDefault();
-                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(0, -1);
                     } else {
                         self.selection.move(0, -1, event.ctrlKey);
                     }
-                } else if (event.key == "ArrowRight") {
+                } else if (event.key == "ArrowRight" && !self.editing) {
                     event.preventDefault();
-                    if (self.editing && !self.readonly) self.stop_editing();
                     if (event.shiftKey) {
                         self.selection.expand(0, 1);
                     } else {
