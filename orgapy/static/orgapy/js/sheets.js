@@ -1904,7 +1904,9 @@ class Sheet {
 
     set_column_name(j, name) {
         this.column_names[j] = name.trim() == "" ? colname(j) : name.trim();
-        this.column_heads[j].querySelector(".sheet-column-name").textContent = this.column_names[j];
+        let el = this.column_heads[j].querySelector(".sheet-column-name"); 
+        el.textContent = this.column_names[j];
+        el.title = this.column_names[j];
         this.on_change(true, false);
     }
 
@@ -2366,6 +2368,7 @@ class Sheet {
             cell_sort.title = "Sort";
             let cell_name = create(shelf, "span", ["sheet-cell-shelf-item", "sheet-column-name"]);
             cell_name.textContent = this.column_names[j];
+            cell_name.title = this.column_names[j];
         }
 
         let x = FIRST_COLUMN_WIDTH;

@@ -285,6 +285,7 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     overflow: hidden;
     text-overflow: ellipsis;
     color: white;
+    user-select: none;
 }
 
 .sheet-column-name-input {
