@@ -458,6 +458,7 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     padding-bottom: .4rem;
     overflow-x: auto;
     flex-wrap: nowrap;
+    max-width: 100%;
 }
 
 .sheet-tab-title {

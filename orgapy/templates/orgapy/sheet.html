@@ -24,16 +24,12 @@
     <span>Group: <a href="{{sheet.group.get_absolute_url}}">{{sheet.group.title}}</a></span><br>
     {% endif %}
     <span class="text-small">
-        {% if sheet.date_creation.date == sheet.date_modification.date %}
         Created on <b>{{ sheet.date_creation | date }}</b>
-        {% else %}
-        Created on <b>{{ sheet.date_creation | date }}</b>, edited on <b>{{ sheet.date_modification | date }}</b>
-        {% endif %}
     </span>
     <span class="ml-2">    
         <a class="btn-inline mr-1 {% if sheet.public %}btn-primary{% endif %}" href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
         <a class="btn-inline mr-1" href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" title="Edit"><i class="icon icon-edit"></i></a>
-        <a class="btn-inline mr-1 link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="icon icon-delete"></i></a>
+        <a class="btn-inline link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="icon icon-delete"></i></a>
     </span>
 </p>
 
