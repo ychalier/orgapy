@@ -455,8 +455,9 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
 .sheet-tabs-titles {
     display: flex;
     flex-direction: row;
-    margin-bottom: .4rem;
-    flex-wrap: wrap;
+    padding-bottom: .4rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
 }
 
 .sheet-tab-title {
@@ -466,8 +467,9 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     cursor: pointer;
     padding: 0 .4rem;
     line-height: 32px;
-    margin-bottom: .2rem;
     margin-right: .2rem;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .sheet-tab-title:hover {

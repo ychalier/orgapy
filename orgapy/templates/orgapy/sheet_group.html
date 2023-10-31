@@ -7,17 +7,14 @@
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'orgapy/css/sheets.css' %}" />
 <script src="{% static 'orgapy/js/sheets.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+<script src="{% static 'orgapy/js/markdown.js' %}"></script>
 {% endblock head %}
 
 {% block main_content %}
 <h1>{{group.title}}</h1>
-
-<div class="sheet-tabs-titles">
-    {% for sheet in group.sheet_set.all %}
-    <div class="sheet-tab-title {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">{{ sheet.title }} <a href="{% url 'orgapy:sheet' sid=sheet.id %}"><i class="icon icon-external"></i></a></div>
-    {% endfor %}
-</div>
-
 {% endblock main_content %}
 
 {% block right_column %}
@@ -26,6 +23,21 @@
 {% endblock right_column %}
 
 {% block fullscreen_content %}
+
+<div class="sheet-tabs-titles">
+    {% for sheet in group.sheet_set.all %}
+    <div class="sheet-tab-title {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">{{ sheet.title }}</div>
+    {% endfor %}
+</div>
+
+<div>
+    {% for sheet in group.sheet_set.all %}
+    <div class="sheet-tab {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">
+        {% if sheet.description %}<div class="markdown-inline">{{sheet.description | safe}}</div>{% endif %}
+        <a class="text-small text-gray" href="{% url 'orgapy:sheet' sid=sheet.id %}">Vien in editor</a>
+    </div>
+    {% endfor %}
+</div>
 
 {% if group.sheet_set.all %}
 
@@ -54,6 +66,7 @@
 {{ block.super }}
 <script>
     window.addEventListener("load", () => {
+        markdown_to_html(".markdown-inline", false);
         initialize_sheets(false, false);
         document.querySelectorAll(".sheet-tab-title").forEach(tab_title => {
             tab_title.addEventListener("click", () => {
