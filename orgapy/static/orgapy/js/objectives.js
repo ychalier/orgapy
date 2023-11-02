@@ -22,6 +22,16 @@ window.addEventListener("load", () => {
         return Math.floor((d - get_year_start()) / 3600 / 24 / 1000) * DAYW;
     }
 
+    function add_days(base_date, days_to_add) {
+        let result = new Date(base_date.getTime());
+        result.setDate(result.getDate() + Math.floor(days_to_add));
+        let remainder = days_to_add - Math.floor(days_to_add);        
+        if (remainder > 0) {
+            result.setTime(result.getTime() + remainder * DAYMS);
+        }
+        return result;
+    }
+
     function inflate_objgraph_head(objgraph) {
         let objgraph_head = objgraph.appendChild(document.createElement("div"));
         objgraph_head.classList.add("objgraph-head");
@@ -65,7 +75,7 @@ window.addEventListener("load", () => {
         }
 
         end() {
-            return new Date(this.start.getTime() + this.length * DAYMS);
+            return add_days(this.start, this.length);
         }
 
     }
@@ -99,11 +109,7 @@ window.addEventListener("load", () => {
             let history_index = 0;
             let is_under_cooldown = (NOW - new Date(this.history[this.history.length - 1] * 1000)) / DAYMS < this.rules.cooldown;
             while (true) {
-                let date_end = new Date(date_start.getTime());
-                date_end.setDate(date_end.getDate() + this.rules.period);
-                if (this.rules.period > Math.floor(this.rules.period)) {
-                    date_end.setTime(date_end.getTime() + (this.rules.period - Math.floor(this.rules.period)) * DAYMS);
-                }
+                let date_end = add_days(date_start, this.rules.period);
                 let state = null;
                 let date_start_ts = Math.floor(date_start / 1000);
                 let date_end_ts = Math.floor(date_end / 1000);
@@ -123,8 +129,6 @@ window.addEventListener("load", () => {
                 } else {
                     state = SLOT_STATE_MISSED;
                 }
-                //let slot_date_end = new Date(date_start.getTime());
-                //slot_date_end.setDate(slot_date_end.getDate() + this.rules.period);
                 slots.push(new Slot(date_start, (date_end - date_start) / DAYMS, state));
                 if (current) break;
                 date_start = new Date(date_end.getTime());
@@ -147,7 +151,7 @@ window.addEventListener("load", () => {
                     date_end_history.setHours(0, 0, 0, 0);
                 }
                 let date_end_today = new Date(TODAY.getTime());
-                let date_end_period = new Date(date_start.getTime() + DAYMS * this.rules.period);
+                let date_end_period = add_days(date_start, this.rules.period);
                 let date_ends = [date_end_history, date_end_today, date_end_period];
                 if (next_slot_state == SLOT_STATE_MISSED) {
                     date_ends.pop();
@@ -160,7 +164,7 @@ window.addEventListener("load", () => {
                 }
                 let length = (date_end - date_start) / DAYMS;
                 let early = (next_slot_state == SLOT_STATE_BUTTON || next_slot_state == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length < this.rules.period;
-                let late = (next_slot_state == SLOT_STATE_BUTTON || next_slot_state == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length > this.rules.period;
+                let late = (next_slot_state == SLOT_STATE_BUTTON || next_slot_state == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length > this.rules.period + .9;
                 slots.push(new Slot(date_start, length, next_slot_state, early, late));
                 if (i == 0) {
                     next_history_index++;
@@ -172,7 +176,7 @@ window.addEventListener("load", () => {
                 }
                 date_start = new Date(date_end.getTime());
             }
-            let future_date_end = new Date(this.history[this.history.length - 1] * 1000 + this.rules.period * DAYMS);
+            let future_date_end = add_days(new Date(this.history[this.history.length - 1] * 1000), this.rules.period);
             let future_length = Math.floor((future_date_end - date_start) / DAYMS);
             if (future_length > 0) {
                 slots.push(new Slot(date_start, future_length, SLOT_STATE_FUTURE_COMPLETE, false, false));
