@@ -37,7 +37,7 @@
     <div class="sheet-tab {% if forloop.first %}active{% endif %}" tab="{{ forloop.counter0 }}">
         {% if sheet.description %}<div class="markdown-inline">{{sheet.description | safe}}</div>{% endif %}
         <div class="text-center">
-            <a class="text-small text-gray" href="{% url 'orgapy:sheet' sid=sheet.id %}">Vien in editor</a>
+            <a class="text-small text-gray" href="{% url 'orgapy:sheet' sid=sheet.id %}">View in editor</a>
             <span class="ml-2">    
                 <a class="btn-inline mr-1 {% if sheet.public %}btn-primary{% endif %}" href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
                 <a class="btn-inline mr-1" href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" title="Edit"><i class="icon icon-edit"></i></a>
