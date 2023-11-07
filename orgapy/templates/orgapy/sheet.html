@@ -16,9 +16,9 @@
 {% block main_content %}
 <h1 class="mb-0">{{sheet.title}}</h1>
 
-<p>
+<div class="mb-4">
     {% if sheet.description %}
-    <span class="markdown-inline">{{sheet.description | safe}}</span><br>
+    <div class="markdown-inline">{{sheet.description | safe}}</div>
     {% endif %}
     {% if sheet.group %}
     <span>Group: <a href="{{sheet.group.get_absolute_url}}">{{sheet.group.title}}</a></span><br>
@@ -31,7 +31,7 @@
         <a class="btn-inline mr-1" href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" title="Edit"><i class="icon icon-edit"></i></a>
         <a class="btn-inline link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="icon icon-delete"></i></a>
     </span>
-</p>
+</div>
 
 {% endblock main_content %}
 

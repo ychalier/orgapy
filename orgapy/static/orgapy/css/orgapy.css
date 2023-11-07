@@ -122,6 +122,12 @@ pre {
     background: #101010;
 }
 
+.markdown-inline p,
+.markdown-inline ul,
+.markdown-inline table {
+    margin-bottom: 0;
+}
+
 .markdown img {
     max-width: 100%;
 }
