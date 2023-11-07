@@ -1405,6 +1405,7 @@ class Sheet {
         this.filters = [];
         this.highlights = {};
         this.readonly = readonly;
+        this.ordering = null;
 
         // DOM
         this.container = container;
@@ -1917,18 +1918,29 @@ class Sheet {
         for (let i = 0; i < this.height; i++) {
             order.push(i);
         }
-        let comparator = (p, q) => {
-            let a = self.values[p][j];
-            let b = self.values[q][j];
-            if (a == null && b == null) return 0;
-            if (a == null) return -1;
-            if (b == null) return 1;
-            if (a < b) return -1;
-            if (a > b) return 1;
-            return 0;
+        if (j == null) {
+            if (this.ordering == null) return;
+            for (let i = 0; i < this.height; i++) {
+                order[i] = this.ordering.indexOf(i);
+            }
+        } else {
+            order.sort((p, q) => {
+                let a = self.values[p][j];
+                let b = self.values[q][j];
+                if (a == null && b == null) return 0;
+                if (a == null) return -1;
+                if (b == null) return 1;
+                if (a < b) return -1;
+                if (a > b) return 1;
+                return 0;
+            });
         }
-        order.sort(comparator);
         if (!ascending) order.reverse();
+        if (this.ordering == null) {
+            this.ordering = order;
+        } else {
+            this.ordering = tidy(this.ordering, order);
+        }
         this.values = tidy(this.values, order);
         this.row_heights = tidy(this.row_heights, order);
         this.inflate();
@@ -1936,7 +1948,9 @@ class Sheet {
             element.classList.remove("ascending");
             element.classList.remove("descending");
         });
-        this.column_heads[j].querySelector(".sheet-column-sort").classList.add(ascending ? "ascending" : "descending");
+        if (j != null) this.column_heads[j].querySelector(".sheet-column-sort").classList.add(ascending ? "ascending" : "descending");
+        this.set_row_names();
+        this.on_change(true, true);
     }
 
     update_filters() {
@@ -2045,6 +2059,11 @@ class Sheet {
         let cell_top_left = this.container.querySelector(".sheet-row-head .sheet-cell:first-child");
         cell_top_left.addEventListener("click", () => {
             self.selection.all();
+        });
+        cell_top_left.addEventListener("dblclick", () => {
+            self.sort_rows(null, true);
+            self.selection.reset();
+            self.selection.clear();
         });
         for (let j = 0; j < this.width; j++) {
             this.column_heads[j].addEventListener("mousedown", (event) => {
@@ -2340,6 +2359,12 @@ class Sheet {
         this.table = create(table_wrapper, "table", ["sheet-table"]);
     }
 
+    set_row_names() {
+        for (let i = 0; i < this.height; i++) {
+            this.row_heads[i].innerHTML = `<span class="sheet-cell-content">${this.ordering == null ? rowname(i) : rowname(this.ordering[i])}</span>`;
+        }
+    }
+
     inflate() {
         if (this.shrunk) {
             this.container.classList.add("sheet-shrink");
@@ -2386,7 +2411,6 @@ class Sheet {
         for (let i = 0; i < this.height; i++) {
             this.rows.push(create(table_body, "tr", ["sheet-row"]));
             this.row_heads.push(create(this.rows[i], "td", ["sheet-cell", "sheet-cell-head"]));
-            this.row_heads[i].innerHTML = `<span class="sheet-cell-content">${rowname(i)}</span>`;
             this.row_heads[i].style.height = this.row_heights[i] + "px";
             this.rows[i].style.top = `-${i}px`;
             this.cells.push([]);
@@ -2396,6 +2420,7 @@ class Sheet {
                 this.set_cell_content(i, j);
             }
         }
+        this.set_row_names();
 
         let y = 0;
         this.row_handles = [];
@@ -2419,6 +2444,7 @@ class Sheet {
         if (config != null) {
             this.highlights = config.highlights;
             this.shrunk = config.shrunk;
+            this.ordering = config.ordering;
         }
         this.column_names = [];
         this.column_types = [];
@@ -2635,6 +2661,13 @@ class Sheet {
             filters: [],
             highlights: this.highlights,
             shrunk: this.shrunk,
+            ordering: null,
+        };
+        if (this.ordering != null) {
+            config_object.ordering = [];
+            for (let i = 0; i < this.height; i++) {
+                config_object.ordering.push(this.ordering[i]);
+            }
         }
         for (let i = 0; i < this.height; i++) {
             config_object.row_heights.push(this.row_heights[i]);
