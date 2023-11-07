@@ -2155,8 +2155,9 @@ class Sheet {
         document.addEventListener("keydown", (event) => {
             if (self.editing_column_name) {
                 //pass
-            } else if (event.key == "a" && event.ctrlKey) {
+            } else if (event.key == "a" && event.ctrlKey && !self.editing) {
                 self.selection.all();
+                event.preventDefault();
             } else if (event.key == "s" && event.ctrlKey && !self.readonly) {
                 event.preventDefault();
                 self.save_data();
