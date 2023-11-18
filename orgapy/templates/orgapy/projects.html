@@ -23,6 +23,37 @@
 
 <div class="objgraph-ref my-4"><div id="objgraph-wrapper" class="objgraph-wrapper"></div></div>
 
+<template id="template-objective-popover">
+    <div class="popover-container">
+        <form action="{% url 'orgapy:api' %}?action=edit-objective" method="post">
+            {% csrf_token %}
+            <input hidden name="objective_id" id="input-objective-id" />
+            <div class="objective-popover">
+                <div class="form-group">
+                    <label class="form-label label-sm pt-0" for="input-objective-name">Name</label>
+                    <input name="name" class="form-input input-sm" type="text" id="input-objective-name" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label label-sm" for="input-objective-type">Type</label>
+                    <select name="type" class="form-select select-sm" id="input-objective-type">
+                        <option value="strict">Strict</option>
+                        <option value="flexible">Flexible</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label label-sm" for="input-objective-period">Period</label>
+                    <input name="period" class="form-input input-sm" type="number" id="input-objective-period" min="0" step="0.1" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label label-sm" for="input-objective-cooldown">Cooldown</label>
+                    <input name="cooldown" class="form-input input-sm" type="number" id="input-objective-cooldown" min="0" step="0.1" />
+                </div>
+                <button class="btn btn-sm">Save</button>
+            </div>
+        </form>
+    </div>
+</template>
+
 <div id="todays-plan"></div>
 
 <div id="projects" class="projects"></div>

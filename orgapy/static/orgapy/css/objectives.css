@@ -108,8 +108,8 @@
     line-height: 24px;
     background: black;
     padding: 0 .4rem;
-    border-radius: .4rem;    
-    z-index: 2;
+    border-radius: .4rem;
+    cursor: default;
 }
 
 .objgraph-completion {
@@ -146,4 +146,13 @@
 
 .bg-future-complete {
     background: #2e6f36;
+}
+
+.objective-popover {
+    display: flex;
+    flex-direction: column;
+    padding: .4rem;
+    border-radius: .2rem;
+    background: var(--color-primary-0);
+    border: 1px solid black;
 }

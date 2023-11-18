@@ -286,8 +286,28 @@ window.addEventListener("load", () => {
         });
         let dom_name = objgraph_body.appendChild(document.createElement("div"));
         dom_name.classList.add("objgraph-name");
+        dom_name.classList.add("popover");
+        dom_name.classList.add("popover-bottom");
         dom_name.textContent = obj.name;
         dom_name.style.top = ((index + 1) * 32 + 1) + "px";
+        let node = document.importNode(document.getElementById("template-objective-popover").content, true);
+        node.querySelector("#input-objective-id").value = obj.id;
+        node.querySelector("#input-objective-name").value = obj.name;
+        node.querySelectorAll("#input-objective-type option").forEach(option => {
+            if (option.value == obj.rules.type) option.selected = true;
+        });
+        node.querySelector("#input-objective-period").value = obj.rules.period;
+        node.querySelector("#input-objective-cooldown").value = obj.rules.cooldown;
+        node.querySelector("form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            let formdata = new FormData(event.target);
+            fetch(event.target.action, {method: "post", body: formdata}).then(res => res.json()).then(data => {
+                if (data.success) {
+                    fetch_objectives();
+                }
+            });
+        });
+        dom_name.appendChild(node);
     }
 
     function inflate_objgraph_body(objgraph) {
@@ -329,12 +349,16 @@ window.addEventListener("load", () => {
         reset_objgraph_scroll();
     }
 
-    fetch(URL_API + "?action=list-objectives").then(res => res.json()).then(data => {
-        objectives = {};
-        data.objectives.forEach(data => {
-            objectives[data.id] = new Objective(data);
+    function fetch_objectives() {
+        fetch(URL_API + "?action=list-objectives").then(res => res.json()).then(data => {
+            objectives = {};
+            data.objectives.forEach(data => {
+                objectives[data.id] = new Objective(data);
+            });
+            create_objgraph();
         });
-        create_objgraph();
-    });
+    }
+
+    fetch_objectives();
 
 });
