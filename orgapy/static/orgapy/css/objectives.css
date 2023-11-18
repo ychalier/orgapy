@@ -155,4 +155,6 @@
     border-radius: .2rem;
     background: var(--color-primary-0);
     border: 1px solid black;
+    position: relative;
+    z-index: inherit;
 }

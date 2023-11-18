@@ -301,7 +301,7 @@ window.addEventListener("load", () => {
         node.querySelector("form").addEventListener("submit", (event) => {
             event.preventDefault();
             let formdata = new FormData(event.target);
-            fetch(event.target.action, {method: "post", body: formdata}).then(res => res.json()).then(data => {
+            fetch(event.target.action + "?action=edit-objective", {method: "post", body: formdata}).then(res => res.json()).then(data => {
                 if (data.success) {
                     fetch_objectives();
                 }
@@ -358,6 +358,25 @@ window.addEventListener("load", () => {
             create_objgraph();
         });
     }
+
+    let modal_objective = document.getElementById("modal-add-objective");
+    let node = document.importNode(document.getElementById("template-objective-popover").content, true);
+    node.querySelector("#input-objective-period").value = 1;
+    node.querySelector("#input-objective-cooldown").value = 0;
+    node.querySelector("form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        let form = event.target;
+        closeModal("modal-add-objective");
+        let formdata = new FormData(form);
+        fetch(form.action + "?action=add-objective", {method: "post", body: formdata}).then(res => res.json()).then(data => {
+            if (data.success) {
+                form.reset();
+                fetch_objectives();
+            }
+        });
+    });
+    node.querySelector(".popover-container").className = "";
+    modal_objective.appendChild(node);
 
     fetch_objectives();
 

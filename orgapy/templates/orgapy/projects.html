@@ -25,7 +25,7 @@
 
 <template id="template-objective-popover">
     <div class="popover-container">
-        <form action="{% url 'orgapy:api' %}?action=edit-objective" method="post">
+        <form action="{% url 'orgapy:api' %}" method="post">
             {% csrf_token %}
             <input hidden name="objective_id" id="input-objective-id" />
             <div class="objective-popover">
@@ -54,6 +54,10 @@
     </div>
 </template>
 
+<div class="modal" id="modal-add-objective">
+    <span class="modal-overlay" onclick="closeModal('modal-add-objective')"></span>
+</div>
+
 <div id="todays-plan"></div>
 
 <div id="projects" class="projects"></div>
@@ -63,7 +67,7 @@
 <div class="d-flex my-4">
     <button id="btn-project-create" class="projects-button"><i class="icon icon-plus"></i> Add project</button>
      
-    <a id="btn-edit-objectives" href="{% url 'admin:orgapy_objective_changelist' %}" class="projects-button"><i class="icon icon-edit"></i> Edit objectives</a>
+    <button id="btn-project-create" class="projects-button" onclick="showModal('modal-add-objective')"><i class="icon icon-plus"></i> Add objective</button>
 </div>
 
 {% include "orgapy/partials/modal_add_event.html" %}

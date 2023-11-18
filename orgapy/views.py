@@ -557,6 +557,8 @@ def api(request):
             return api_delete_project(request)
         case "list-objectives":
             return api_list_objectives(request)
+        case "add-objective":
+            return api_add_objective(request)
         case "edit-objective":
             return api_edit_objective(request)
         case "edit-objective-history":
@@ -733,6 +735,30 @@ def api_list_objectives(request):
     for objective in models.Objective.objects.filter(user=request.user):
         objectives.append(objective.to_dict())
     return JsonResponse({"objectives": objectives})
+
+
+@permission_required("orgapy.add_objective")
+def api_add_objective(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    objective_name = request.POST.get("name")
+    objective_type = request.POST.get("type")
+    objective_period = request.POST.get("period")
+    objective_cooldown = request.POST.get("cooldown")
+    if objective_name is None or objective_type is None or objective_period is None or objective_cooldown is None:
+        raise BadRequest("Missing fields")
+    try:
+        objective_period = float(objective_period)
+        objective_cooldown = float(objective_cooldown)
+    except:
+        raise BadRequest("Invalid values")
+    models.Objective.objects.create(
+        user=request.user,
+        name=objective_name,
+        rules = '{"type": "%s", "period": %f, "cooldown": %f}' % (
+            objective_type, objective_period, objective_cooldown)
+        )
+    return JsonResponse({"success": True})
 
 
 @permission_required("orgapy.change_objective")
