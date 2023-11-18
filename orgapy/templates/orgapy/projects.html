@@ -31,24 +31,27 @@
             <div class="objective-popover">
                 <div class="form-group">
                     <label class="form-label label-sm pt-0" for="input-objective-name">Name</label>
-                    <input name="name" class="form-input input-sm" type="text" id="input-objective-name" />
+                    <input required minlength="1" name="name" class="form-input input-sm" type="text" id="input-objective-name" />
                 </div>
                 <div class="form-group">
                     <label class="form-label label-sm" for="input-objective-type">Type</label>
-                    <select name="type" class="form-select select-sm" id="input-objective-type">
+                    <select required name="type" class="form-select select-sm" id="input-objective-type">
                         <option value="strict">Strict</option>
                         <option value="flexible">Flexible</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label label-sm" for="input-objective-period">Period</label>
-                    <input name="period" class="form-input input-sm" type="number" id="input-objective-period" min="0" step="0.1" />
+                    <input required name="period" class="form-input input-sm" type="number" id="input-objective-period" min="0" step="0.5" />
                 </div>
                 <div class="form-group">
                     <label class="form-label label-sm" for="input-objective-cooldown">Cooldown</label>
-                    <input name="cooldown" class="form-input input-sm" type="number" id="input-objective-cooldown" min="0" step="0.1" />
+                    <input required name="cooldown" class="form-input input-sm" type="number" id="input-objective-cooldown" min="0" step="0.5" />
                 </div>
-                <button class="btn btn-sm">Save</button>
+                <div class="d-flex">
+                    <input type="submit" class="btn btn-sm" name="save" value="Save"/>
+                    <input type="submit" class="btn btn-sm ml-1" name="delete" value="Delete"/>
+                </div>
             </div>
         </form>
     </div>

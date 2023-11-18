@@ -300,12 +300,15 @@ window.addEventListener("load", () => {
         node.querySelector("#input-objective-cooldown").value = obj.rules.cooldown;
         node.querySelector("form").addEventListener("submit", (event) => {
             event.preventDefault();
-            let formdata = new FormData(event.target);
-            fetch(event.target.action + "?action=edit-objective", {method: "post", body: formdata}).then(res => res.json()).then(data => {
-                if (data.success) {
-                    fetch_objectives();
-                }
-            });
+            if (event.submitter.name == "save" || (event.submitter.name == "delete" && confirm(`Are you sure you want to delete objective ${obj.name}?`))) {
+                let formdata = new FormData(event.target, event.submitter);
+                fetch(event.target.action + "?action=edit-objective", {method: "post", body: formdata}).then(res => res.json()).then(data => {
+                    if (data.success) {
+                        fetch_objectives();
+                        toast("Saved!", 600);
+                    }
+                });
+            }
         });
         dom_name.appendChild(node);
     }
@@ -363,6 +366,8 @@ window.addEventListener("load", () => {
     let node = document.importNode(document.getElementById("template-objective-popover").content, true);
     node.querySelector("#input-objective-period").value = 1;
     node.querySelector("#input-objective-cooldown").value = 0;
+    let node_delete_button = node.querySelector("input[name='delete']");
+    node_delete_button.parentNode.removeChild(node_delete_button);
     node.querySelector("form").addEventListener("submit", (event) => {
         event.preventDefault();
         let form = event.target;
@@ -372,6 +377,7 @@ window.addEventListener("load", () => {
             if (data.success) {
                 form.reset();
                 fetch_objectives();
+                toast("Added!", 600);
             }
         });
     });

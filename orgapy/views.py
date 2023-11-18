@@ -563,6 +563,8 @@ def api(request):
             return api_edit_objective(request)
         case "edit-objective-history":
             return api_edit_objective_history(request)
+        case "delete-objective":
+            return api_delete_objective(request)
         case "list-calendars":
             return api_list_calendars(request)
         case "delete-calendar":
@@ -765,6 +767,9 @@ def api_add_objective(request):
 def api_edit_objective(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
+    print(request.POST)
+    if "delete" in request.POST:
+        return api_delete_objective(request)
     objective_id = request.POST.get("objective_id")
     objective_name = request.POST.get("name")
     objective_type = request.POST.get("type")
@@ -785,6 +790,23 @@ def api_edit_objective(request):
     objective.rules = '{"type": "%s", "period": %f, "cooldown": %f}' % (
         objective_type, objective_period, objective_cooldown)
     objective.save()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.delete_objective")
+def api_delete_objective(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    objective_id = request.POST.get("objective_id")
+    if objective_id is None:
+        raise BadRequest("Missing fields")
+    try:
+        objective_id = int(objective_id)
+    except:
+        raise BadRequest("Invalid values")
+    if not models.Objective.objects.filter(id=objective_id, user=request.user).exists():
+        raise Http404("Objective not found")
+    models.Objective.objects.get(id=objective_id, user=request.user).delete()
     return JsonResponse({"success": True})
 
 
