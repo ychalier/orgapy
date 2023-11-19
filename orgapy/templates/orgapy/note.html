@@ -3,7 +3,6 @@
 
 {% block title %}{% block subtitle %} {{note.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-
 {% block head %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'orgapy/css/sheets.css' %}" />
@@ -12,8 +11,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
 <script src="{% static 'orgapy/js/markdown.js' %}"></script>
+<script src="{% static 'orgapy/js/toc.js' %}"></script>
 {% endblock head %}
 
+{% block left_column %}<div style="height: {% if note.project_set.all %}11.4rem{% else %}10.2rem{% endif %}"></div><div class="toc"></div>{% endblock left_column %}
 
 {% block right_column %}
 <div class="side-menu container mt-1">
@@ -62,5 +63,6 @@ Project{{ note.project_set.count | pluralize }}: {% for project in note.project_
 {{ block.super }}
 <script>
     markdown_to_html(".markdown", true);
+    create_toc(document.querySelector(".markdown"), document.querySelector(".toc"));
 </script>
 {% endblock body_scripts %}

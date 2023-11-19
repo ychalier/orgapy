@@ -298,3 +298,11 @@ body.fullscreen {
 .sheets-table li {
     margin: 0;
 }
+
+.toc {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}

@@ -31,7 +31,7 @@
     {% block body %}
     {% block before_columns %}{% endblock before_columns %}
     <div class="columns">
-        <div class="column col-4 col-xl-3 col-lg-2 hide-md"></div>
+        <div class="column col-4 col-xl-3 col-lg-2 hide-md">{% block left_column %}{% endblock left_column %}</div>
         <div class="column col-4 col-xl-6 col-lg-8 col-md-12 col-sm-12 col-xs-12">
         {% block center_column %}
             <div class="container">
