@@ -93,6 +93,39 @@ class Objective(models.Model):
         }
 
 
+class Task(models.Model):
+
+    ONCE = "ON"
+    DAILY = "DY"
+    WEEKLY = "WK"
+    MONTHLY = "MN"
+    YEARLY = "YR"
+    RECURRING_MODE_CHOICES = [
+        (ONCE, "Once"),
+        (DAILY, "Daily"),
+        (WEEKLY, "Weekly"),
+        (MONTHLY, "Monthly"),
+        (YEARLY, "Yearly")
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    start_date = models.DateField()
+    due_date = models.DateField()
+    recurring_mode = models.CharField(max_length=2, choices=RECURRING_MODE_CHOICES, default=ONCE)
+    recurring_period = models.PositiveIntegerField(blank=True, null=True)
+    recurring_parent = models.ForeignKey("self", blank=True, null=True, on_delete=models.CASCADE)
+    completed = models.BooleanField(default=False)
+    date_completion = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+
+        ordering = ["-start_date"]
+
+    def __str__(self):
+        return f"{ self.user} - { self.id }. { self.title }"
+
+
 class Author(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -185,7 +218,6 @@ class Calendar(models.Model):
     last_sync = models.DateTimeField(blank=True, null=True)
     sync_period = models.PositiveIntegerField(default=86400)
     events = models.TextField(blank=True, null=True)
-    tasks = models.TextField(blank=True, null=True)
 
     class Meta:
 
@@ -194,7 +226,7 @@ class Calendar(models.Model):
     def __str__(self):
         return f"{ self.user } - { self.id }. { self.calendar_name }"
     
-    def fetch_events_and_tasks(self):
+    def fetch_events(self):
         self.last_sync = timezone.now()
         events = []
         with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
@@ -207,7 +239,6 @@ class Calendar(models.Model):
                     end=datetime.datetime.now().date() + datetime.timedelta(days=self.lookahead),
                     event=True,
                     expand=True)
-                todos = calendar.todos(include_completed=True)
         events_data = []
         for event in events:
             for subcomponent in event.icalendar_instance.subcomponents:
@@ -222,33 +253,13 @@ class Calendar(models.Model):
                     "location": None if location is None else str(location)
                 })
         self.events = json.dumps(events_data, default=str)
-        tasks_data = []
-        for todo in todos:
-            todo.expand_rrule(
-                start=datetime.datetime.now().date() - datetime.timedelta(days=100),
-                end=datetime.datetime.now().date() + datetime.timedelta(days=self.lookahead)
-            )
-            for subcomponent in todo.icalendar_instance.subcomponents:
-                if "SUMMARY" not in subcomponent or "COMPLETED" in subcomponent:
-                    continue
-                tasks_data.append({
-                    "uid": subcomponent["UID"],
-                    "title": subcomponent["SUMMARY"],
-                    "dtstart": subcomponent.get("DTSTART").dt.isoformat(),
-                    "due": subcomponent["DUE"].dt.isoformat() if "DUE" in subcomponent else None,
-                })
-        tasks_data.sort(key=lambda x: x["dtstart"])
-        self.tasks = json.dumps(tasks_data, default=str)
         self.save()
 
-    def get_events_and_tasks(self, force=False):
+    def get_events(self, force=False):
         now = timezone.now()
         if force or self.last_sync is None or (now - self.last_sync).total_seconds() > self.sync_period:
-            self.fetch_events_and_tasks()
-        return (
-            json.loads(self.events) if self.events else [],
-            json.loads(self.tasks) if self.tasks else [],
-        )
+            self.fetch_events()
+        return json.loads(self.events) if self.events else []
     
     def delete_event(self, href):
         success = False
@@ -290,48 +301,6 @@ class Calendar(models.Model):
                 })
                 self.events = json.dumps(events_data, default=str)
                 self.save()
-                success = True
-                break
-        return success
-    
-    def add_task(self, title, dtstart, due):
-        success = False
-        with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
-            principal = client.principal()
-            for calendar in principal.calendars():
-                if calendar.name != self.calendar_name:
-                    continue
-                todo = calendar.save_todo(
-                    dtstart=dtstart,
-                    due=due,
-                    summary=title)
-                uid = None
-                for subcomponent in todo.icalendar_instance.subcomponents:
-                    if "UID" in subcomponent:
-                        uid = str(subcomponent["UID"])
-                        break
-                tasks_data = json.loads(self.tasks)
-                tasks_data.append({
-                    "uid": uid,
-                    "title": title,
-                    "dtstart": dtstart.isoformat(),
-                    "due": due.isoformat(),
-                })
-                self.tasks = json.dumps(tasks_data, default=str)
-                self.save()
-                success = True
-                break
-        return success
-
-    def complete_task(self, uid):
-        success = False
-        with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
-            principal = client.principal()
-            for calendar in principal.calendars():
-                if calendar.name != self.calendar_name:
-                    continue
-                calendar.todo_by_uid(uid).complete(handle_rrule=True, rrule_mode="safe")
-                self.fetch_events_and_tasks()
                 success = True
                 break
         return success

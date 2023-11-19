@@ -1,5 +1,8 @@
 import json
 import datetime
+import urllib
+
+import dateutil.relativedelta
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect
@@ -11,7 +14,7 @@ from django.db.models import F
 from django.db.models import Max
 from django.http import HttpResponse, Http404, JsonResponse
 from django.core.exceptions import PermissionDenied, BadRequest
-import urllib
+
 from . import models
 
 
@@ -121,6 +124,10 @@ def parse_dt(date_string, time_string):
     dt_date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
     dt_time = datetime.datetime.strptime(time_string, "%H:%M").time()
     return datetime.datetime.combine(dt_date, dt_time)
+
+
+def parse_date(date_string):
+    return datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
 
 
 def get_sheet_from_sid(sid, required_user=None):
@@ -569,12 +576,18 @@ def api(request):
             return api_list_calendars(request)
         case "delete-calendar":
             return api_delete_calendar(request)
-        case "complete-task":
-            return api_complete_task(request)
         case "add-event":
             return api_add_event(request)
+        case "list-tasks":
+            return api_list_tasks(request)
         case "add-task":
             return api_add_task(request)
+        case "edit-task":
+            return api_edit_task(request)
+        case "delete-task":
+            return api_delete_task(request)
+        case "complete-task":
+            return api_complete_task(request)
         case "note-title":
             return api_note_title(request)
         case "note-suggestions":
@@ -835,16 +848,12 @@ def api_edit_objective_history(request):
 @permission_required("orgapy.view_calendar")
 def api_list_calendars(request):
     events = []
-    tasks = []
     calendars = []
     for calendar in models.Calendar.objects.filter(user=request.user):
-        eventsd, tasksd = calendar.get_events_and_tasks(force="force" in request.GET)
+        eventsd = calendar.get_events(force="force" in request.GET)
         for event in eventsd:
             event["calendar_id"] = calendar.id
             events.append(event)
-        for task in tasksd:
-            task["calendar_id"] = calendar.id
-            tasks.append(task)
         calendars.append({
             "name": calendar.calendar_name,
             "id": calendar.id,
@@ -852,7 +861,6 @@ def api_list_calendars(request):
     return JsonResponse({
         "calendars": calendars,
         "events": events,
-        "tasks": tasks,
         "last_sync": calendar.last_sync
     })
 
@@ -869,21 +877,6 @@ def api_delete_calendar(request):
         raise Http404("No calendar found for user")
     calendar = models.Calendar.objects.get(user=request.user, id=int(calendarid))
     success = calendar.delete_event(href)
-    return JsonResponse({"success": success})
-
-
-@permission_required("orgapy.change_calendar")
-def api_complete_task(request):
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    uid = request.POST.get("uid")
-    calendarid = request.POST.get("calendarid")
-    if uid is None or calendarid is None:
-        raise BadRequest("Missing fields")
-    if not models.Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
-        raise Http404("No calendar found for user")
-    calendar = models.Calendar.objects.get(user=request.user, id=int(calendarid))
-    success = calendar.complete_task(uid)
     return JsonResponse({"success": success})
 
 
@@ -915,25 +908,137 @@ def api_add_event(request):
     return JsonResponse({"success": success})
 
 
-@permission_required("orgapy.change_calendar")
+@permission_required("orgapy.view_task")
+def api_list_tasks(request):
+    tasks = []
+    for task in models.Task.objects.filter(user=request.user, completed=False):
+        tasks.append({
+            "id": task.id,
+            "title": task.title,
+            "start_date": task.start_date.isoformat(),
+            "due_date": task.due_date.isoformat(),
+            "recurring_mode": task.recurring_mode,
+            "recurring_period": task.recurring_period,
+        })
+    return JsonResponse({"tasks": tasks})
+
+
+@permission_required("orgapy.edit_task")
+def api_edit_task(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    task_id = request.POST.get("id")
+    task_title = request.POST.get("title")
+    task_start_date = request.POST.get("start_date")
+    task_due_date = request.POST.get("due_date")
+    task_recurring_mode = request.POST.get("recurring_mode")
+    task_recurring_period = request.POST.get("recurring_period")
+    if None in [task_id, task_title, task_start_date, task_due_date, task_recurring_mode, task_recurring_period]:
+        raise BadRequest("Missing fields")
+    try:
+        task_id = int(task_id)
+        task_start_date = parse_date(task_start_date)
+        task_due_date = parse_date(task_due_date)
+        task_recurring_period = None if task_recurring_period.strip() == "" else int(task_recurring_period)
+    except:
+        raise BadRequest("Invalid values")
+    if not models.Task.objects.filter(id=task_id, user=request.user).exists():
+        raise Http404("Task not found")
+    task = models.Task.objects.get(id=task_id, user=request.user)
+    task.title = task_title
+    task.start_date = task_start_date
+    task.due_date = task_due_date
+    task.recurring_mode = task_recurring_mode
+    task.recurring_period = task_recurring_period
+    task.save()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.add_task")
 def api_add_task(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
-    calendarid = request.POST.get("calendarid")
-    title = request.POST.get("title")
-    dtstart_date = request.POST.get("dtstart-date")
-    dtstart_time = request.POST.get("dtstart-time")
-    due_date = request.POST.get("due-date")
-    due_time = request.POST.get("due-time")
-    if title is None or dtstart_date is None or dtstart_time is None or due_date is None or due_time is None or calendarid is None:
+    task_title = request.POST.get("title")
+    task_start_date = request.POST.get("start_date")
+    task_due_date = request.POST.get("due_date")
+    task_recurring_mode = request.POST.get("recurring_mode")
+    task_recurring_period = request.POST.get("recurring_period")
+    if None in [task_title, task_start_date, task_due_date, task_recurring_mode, task_recurring_period]:
         raise BadRequest("Missing fields")
-    if not models.Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
-        raise Http404("No calendar found for user")
-    dtstart = parse_dt(dtstart_date, dtstart_time)
-    due = parse_dt(due_date, due_time)
-    calendar = models.Calendar.objects.get(user=request.user, id=int(calendarid))
-    success = calendar.add_task(title, dtstart, due)
-    return JsonResponse({"success": success})
+    try:
+        task_start_date = parse_date(task_start_date)
+        task_due_date = parse_date(task_due_date)
+        task_recurring_period = None if task_recurring_period.strip() == "" else int(task_recurring_period)
+    except:
+        raise BadRequest("Invalid values")
+    models.Task.objects.create(
+        user=request.user,
+        title=task_title,
+        start_date=task_start_date,
+        due_date=task_due_date,
+        recurring_mode=task_recurring_mode,
+        recurring_period=task_recurring_period,
+    )
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.delete_task")
+def api_delete_task(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    task_id = request.POST.get("id")
+    if task_id is None:
+        raise BadRequest("Missing fields")
+    try:
+        task_id = int(task_id)
+    except:
+        raise BadRequest("Invalid values")
+    if not models.Task.objects.filter(id=task_id, user=request.user).exists():
+        raise Http404("Task not found")
+    models.Task.objects.get(id=task_id, user=request.user).delete()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.edit_task")
+def api_complete_task(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    task_id = request.POST.get("id")
+    if task_id is None:
+        raise BadRequest("Missing fields")
+    try:
+        task_id = int(task_id)
+    except:
+        raise BadRequest("Invalid values")
+    if not models.Task.objects.filter(id=task_id, user=request.user).exists():
+        raise Http404("Task not found")
+    task = models.Task.objects.get(id=task_id, user=request.user)
+    task.completed = True
+    task.date_completion = timezone.now()
+    task.save()
+    if task.recurring_mode != models.Task.ONCE:
+        if task.recurring_mode == models.Task.DAILY:
+            start_date = task.start_date + datetime.timedelta(days=task.recurring_period)
+            due_date = task.due_date + datetime.timedelta(days=task.recurring_period)
+        elif task.recurring_mode == models.Task.WEEKLY:
+            start_date = task.start_date + datetime.timedelta(weeks=task.recurring_period)
+            due_date = task.due_date + datetime.timedelta(weeks=task.recurring_period)
+        elif task.recurring_mode == models.Task.MONTHLY:
+            start_date = task.start_date + dateutil.relativedelta.relativedelta(months=task.recurring_period)
+            due_date = task.due_date + dateutil.relativedelta.relativedelta(months=task.recurring_period)
+        elif task.recurring_mode == models.Task.YEARLY:
+            start_date = task.start_date + dateutil.relativedelta.relativedelta(years=task.recurring_period)
+            due_date = task.due_date + dateutil.relativedelta.relativedelta(years=task.recurring_period)
+        models.Task.objects.create(
+            user=request.user,
+            title=task.title,
+            start_date=start_date,
+            due_date=due_date,
+            recurring_mode=task.recurring_mode,
+            recurring_period=task.recurring_period,
+            recurring_parent=task if task.recurring_parent is None else task.recurring_parent,
+        )
+    return JsonResponse({"success": True})
 
 
 @permission_required("orgapy.view_note")

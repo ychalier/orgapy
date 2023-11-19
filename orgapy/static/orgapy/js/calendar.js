@@ -76,24 +76,24 @@ window.addEventListener("load", () => {
         }
     }
 
-    class CalendarTask {
+    class Task {
 
         constructor(data) {
-            this.uid = data.uid;
+            this.id = data.id;
             this.title = data.title;
-            this.calendar_id = data.calendar_id;
-            this.dtstart = new Date(data.dtstart);
-            this.due = null;
-            if (data.due != null) {
-                this.due = new Date(data.due);
-            }
+            this.start_date = new Date(data.start_date);
+            this.due_date = new Date(data.due_date);
+            this.recurring_mode = data.recurring_mode;
+            this.recurring_period = data.recurring_period;
         }
 
         inflate(container) {
             var self = this;
             let element = container.appendChild(document.createElement("div"));
             element.classList.add("task");
-            if (this.due != null && this.due < new Date()) {
+            let this_morning = new Date();
+            this_morning.setHours(0, 0, 0, 0);
+            if (this.due_date < this_morning) {
                 element.classList.add("task-overdue");
             }
             let button = element.appendChild(document.createElement("button"));
@@ -107,17 +107,33 @@ window.addEventListener("load", () => {
             button.innerHTML = `<i class="icon icon-check"></i>`;
             let title = element.appendChild(document.createElement("span"));
             title.textContent = this.title;
-            title.title = `Start: ${this.dtstart.toLocaleString()}`;
-            if (this.due) {
-                title.title += `\nDue: ${this.due.toLocaleString()}`;
-            }
+            title.title = `Start: ${this.start_date.toLocaleDateString()}`;
+            title.title += `\nDue: ${this.due_date.toLocaleDateString()}`;
+
+            title.addEventListener("dblclick", (event) => {
+                let modal = document.getElementById("modal-edit-task");
+                modal.querySelector("form").reset();
+                modal.querySelector("input[name='id']").value = self.id;
+                modal.querySelector("input[name='title']").value = self.title;
+                modal.querySelector("input[name='start_date']").value = self.start_date.toISOString().substring(0, 10);
+                modal.querySelector("input[name='due_date']").value = self.due_date.toISOString().substring(0, 10);
+                modal.querySelectorAll("select[name='recurring_mode'] option").forEach(option => {
+                    if (option.value == self.recurring_mode) {
+                        option.selected = true;
+                    } else {
+                        option.removeAttribute("selected");
+                    }
+                });
+                modal.querySelector("input[name='recurring_period']").value = self.recurring_period;
+                modal.classList.add("active");
+            });
+
         }
 
         complete() {
             let form_data = new FormData();
             form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-            form_data.set("uid", this.uid);
-            form_data.set("calendarid", this.calendar_id);
+            form_data.set("id", this.id);
             fetch(URL_API + "?action=complete-task", {
                 method: "post",
                 body: form_data
@@ -126,7 +142,7 @@ window.addEventListener("load", () => {
                 .then(data => {
                     if (data.success) {
                         toast("Task completed!", 600);
-                        fetch_calendar(false);
+                        fetch_tasks();
                     } else {
                         toast("An error occured", 600);
                     }
@@ -146,28 +162,19 @@ window.addEventListener("load", () => {
         }
         fetch(url).then(res => res.json()).then(data => {
             let calendar_input_events = document.querySelector("#modal-add-event select[name='calendarid']");
-            let calendar_input_tasks = document.querySelector("#modal-add-task select[name='calendarid']");
             calendar_input_events.innerHTML = "";
-            calendar_input_tasks.innerHTML = "";
             calendars = {};
             data.calendars.forEach(calendar => {
                 calendars[calendar.id] = calendar;
                 let option = calendar_input_events.appendChild(document.createElement("option"));
                 option.value = calendar.id;
                 option.textContent = calendar.name;
-                let option2 = calendar_input_tasks.appendChild(document.createElement("option"));
-                option2.value = calendar.id;
-                option2.textContent = calendar.name;
             });
             events = [];
-            tasks = [];
             sync_date = data.last_sync;
             data.events.forEach(event => {
                 events.push(new CalendarEvent(event));
             });
-            data.tasks.forEach(task => {
-                tasks.push(new CalendarTask(task));
-            })
             inflate_calendar();
         }).catch(err => {
             events = [];
@@ -175,8 +182,23 @@ window.addEventListener("load", () => {
             inflate_calendar();
         });
     }
+
+    function fetch_tasks() {
+        let url = URL_API + "?action=list-tasks";
+        fetch(url).then(res => res.json()).then(data => {
+            tasks = [];
+            data.tasks.forEach(task_data => {
+                tasks.push(new Task(task_data));
+            });
+            inflate_tasks();
+        }).catch(err => {
+            console.error(err);
+            inflate_tasks();
+        });
+    }
     
     fetch_calendar(false);
+    fetch_tasks();
 
     function inflate_events() {
         let container = document.getElementById("events");
@@ -222,47 +244,48 @@ window.addEventListener("load", () => {
         container.innerHTML = "";
 
         if (tasks.length == 0) {
-            container.innerHTML = "No task";
-            return;
-        }
-
-        tasks.sort((a, b) => a.dtstart - b.dtstart);
-
-        let seen = new Set();
-        let current_tasks = [];
-        let future_tasks = [];
-        const now = new Date();
-
-        tasks.forEach(task => {
-            if (task.dtstart <= now) {
-                seen.add(task.uid);
-                current_tasks.push(task);
-            } else if (!seen.has(task.uid)) {
-                seen.add(task.uid);
-                future_tasks.push(task);
-            }
-        });
-
-        let task_title = container.appendChild(document.createElement("div"));
-        task_title.classList.add("event-date");
-        if (current_tasks.length > 0) {
-            task_title.textContent = `Current tasks (${current_tasks.length})`;
-            current_tasks.forEach(task => {
-                task.inflate(container);
-            });
+            let task_title = container.appendChild(document.createElement("div"));
+            task_title.classList.add("event-date");
+            task_title.innerHTML = `No task`;
         } else {
-            task_title.textContent = `No current task`;
-        }
-
-        if (future_tasks.length > 0) {
-            let details = container.appendChild(document.createElement("details"));
-            let summary = details.appendChild(document.createElement("summary"));
-            summary.textContent = `Future tasks (${future_tasks.length})`;
-            summary.classList.add("event-date");
-            summary.classList.add("mt-2");
-            future_tasks.forEach(task => {
-                task.inflate(details);
+            tasks.sort((a, b) => a.start_date - b.start_date);
+    
+            let seen = new Set();
+            let current_tasks = [];
+            let future_tasks = [];
+            const now = new Date();
+    
+            tasks.forEach(task => {
+                if (task.start_date <= now) {
+                    seen.add(task.id);
+                    current_tasks.push(task);
+                } else if (!seen.has(task.id)) {
+                    seen.add(task.id);
+                    future_tasks.push(task);
+                }
             });
+    
+            let task_title = container.appendChild(document.createElement("div"));
+            task_title.classList.add("event-date");
+            if (current_tasks.length > 0) {
+                task_title.textContent = `Current tasks (${current_tasks.length})`;
+                current_tasks.forEach(task => {
+                    task.inflate(container);
+                });
+            } else {
+                task_title.textContent = `No current task`;
+            }
+    
+            if (future_tasks.length > 0) {
+                let details = container.appendChild(document.createElement("details"));
+                let summary = details.appendChild(document.createElement("summary"));
+                summary.textContent = `Future tasks (${future_tasks.length})`;
+                summary.classList.add("event-date");
+                summary.classList.add("mt-2");
+                future_tasks.forEach(task => {
+                    task.inflate(details);
+                });
+            }
         }
 
         let event_modal_btn = container.appendChild(document.createElement("button"));
@@ -295,7 +318,6 @@ window.addEventListener("load", () => {
 
     function inflate_calendar() {
         inflate_events();
-        inflate_tasks();
         inflate_sync();
     }
 
@@ -339,7 +361,45 @@ window.addEventListener("load", () => {
             .then(data => {
                 if (data.success) {
                     toast("Task added", 600);
-                    fetch_calendar(false);
+                    fetch_tasks();
+                } else {
+                    toast("An error occured", 600);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
+    });
+
+    document.getElementById("btn-edit-task").addEventListener("click", () => {
+        let form = document.getElementById("form-edit-task");
+        let form_data = new FormData(form);
+        closeModal('modal-edit-task');
+        fetch(form.action, {method: form.method, body: form_data}).then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toast("Task saved!", 600);
+                    fetch_tasks();
+                } else {
+                    toast("An error occured", 600);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
+    });
+
+    document.getElementById("btn-delete-task").addEventListener("click", () => {
+        let form = document.getElementById("form-edit-task");
+        let form_data = new FormData(form);
+        closeModal('modal-edit-task');
+        fetch(URL_API + "?action=delete-task", {method: form.method, body: form_data}).then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toast("Task deleted", 600);
+                    fetch_tasks();
                 } else {
                     toast("An error occured", 600);
                 }

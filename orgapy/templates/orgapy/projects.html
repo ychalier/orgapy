@@ -96,7 +96,7 @@
 <div class="d-flex my-4">
     <button id="btn-project-create" class="projects-button"><i class="icon icon-plus"></i> Add project</button>
      
-    <button id="btn-project-create" class="projects-button" onclick="showModal('modal-add-objective')"><i class="icon icon-plus"></i> Add objective</button>
+    <button class="projects-button" onclick="showModal('modal-add-objective')"><i class="icon icon-plus"></i> Add objective</button>
 </div>
 
 {% include "orgapy/partials/modal_add_event.html" %}
@@ -107,9 +107,9 @@
 <div class="container sticky-top">
     <div class="mb-2 text-primary"><b>Events</b></div>
     <div id="events"></div>
+    <div id="calendar-sync"></div>
     <div class="my-2 text-primary"><b>Tasks</b></div>
     <div id="tasks"></div>
-    <div id="calendar-sync"></div>
 </div>
 {% endblock right_column %}
 
