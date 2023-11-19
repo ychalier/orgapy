@@ -340,6 +340,33 @@ window.addEventListener("load", () => {
                 });
             }
         });
+        node.querySelector(".button-objective-add-completion").addEventListener("click", (event) => {
+            event.preventDefault();
+            let node = document.importNode(document.getElementById("template-modal-history-checkmark").content, true);
+            let modal_overlay = node.querySelector(".modal-overlay");
+            function close_this_modal() {
+                document.body.removeChild(modal_overlay.parentNode);
+            }
+            modal_overlay.addEventListener("click", close_this_modal);
+            let ts_date = new Date();
+            node.querySelector("input[name='date']").value = `${ts_date.getFullYear()}-${(ts_date.getMonth() + 1).toString().padStart(2, "0")}-${ts_date.getDate().toString().padStart(2, "0")}`;
+            node.querySelector("input[name='time']").value = `${ts_date.getHours().toString().padStart(2, "0")}:${ts_date.getMinutes().toString().padStart(2, "0")}:${Math.floor(ts_date.getSeconds()).toString().padStart(2, "0")}`;
+            let button_delete = node.querySelector("input[name='delete']");
+            button_delete.parentNode.removeChild(button_delete);
+            let form = node.querySelector("form");
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                let new_date = form.querySelector("input[name='date']").value;
+                let new_time = form.querySelector("input[name='time']").value;
+                let new_ts = Math.floor((new Date(new_date + "T" + new_time).getTime()) / 1000);
+                obj.history.push(new_ts);
+                obj.history.sort();
+                close_this_modal();
+                save_objective_history(objective_id);
+                create_objgraph();
+            });
+            document.body.appendChild(node);
+        })
         dom_name.appendChild(node);
     }
 
