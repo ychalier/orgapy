@@ -63,6 +63,7 @@ class Objective(models.Model):
     name = models.CharField(max_length=255)
     history = models.TextField(blank=True, null=True)
     rules = models.TextField(blank=True, null=True)
+    archived = models.BooleanField(default=False)
 
     class Meta:
 

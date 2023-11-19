@@ -734,7 +734,7 @@ def api_delete_project(request):
 @permission_required("orgapy.view_objective")
 def api_list_objectives(request):
     objectives = []
-    for objective in models.Objective.objects.filter(user=request.user):
+    for objective in models.Objective.objects.filter(user=request.user, archived=False):
         objectives.append(objective.to_dict())
     return JsonResponse({"objectives": objectives})
 
