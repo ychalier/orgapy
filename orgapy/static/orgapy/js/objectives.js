@@ -250,6 +250,36 @@ window.addEventListener("load", () => {
             dom_completion.classList.add("objgraph-completion");
             dom_completion.title = (new Date(ts * 1000)).toLocaleString();
             dom_completion.style.left = (((ts * 1000 + DAYMS - date_start.getTime()) / DAYMS) * DAYW) + "px";
+            dom_completion.addEventListener("dblclick", (event) => {
+                let node = document.importNode(document.getElementById("template-modal-history-checkmark").content, true);
+                let modal_overlay = node.querySelector(".modal-overlay");
+                function close_this_modal() {
+                    document.body.removeChild(modal_overlay.parentNode);
+                }
+                modal_overlay.addEventListener("click", close_this_modal);
+                node.querySelector("input[name='timestamp']").value = ts;
+                let ts_date = new Date(ts * 1000);
+                node.querySelector("input[name='date']").value = `${ts_date.getFullYear()}-${(ts_date.getMonth() + 1).toString().padStart(2, "0")}-${ts_date.getDate().toString().padStart(2, "0")}`;
+                node.querySelector("input[name='time']").value = `${ts_date.getHours().toString().padStart(2, "0")}:${ts_date.getMinutes().toString().padStart(2, "0")}:${Math.floor(ts_date.getSeconds()).toString().padStart(2, "0")}`;
+                let form = node.querySelector("form");
+                form.addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    let original_ts = parseInt(form.querySelector("input[name='timestamp']").value);
+                    if (e.submitter.name == "save") {
+                        let new_date = form.querySelector("input[name='date']").value;
+                        let new_time = form.querySelector("input[name='time']").value;
+                        let new_ts = Math.floor((new Date(new_date + "T" + new_time).getTime()) / 1000);
+                        obj.history[obj.history.indexOf(original_ts)] = new_ts;
+                        obj.history.sort();
+                    } else if (e.submitter.name == "delete") {
+                        obj.history.splice(obj.history.indexOf(original_ts), 1);
+                    }
+                    close_this_modal();
+                    save_objective_history(objective_id);
+                    create_objgraph();
+                });
+                document.body.appendChild(node);
+            });
         });
         slots.forEach(slot => {
             let dom_slot = dom_obj.appendChild(document.createElement("div"));
