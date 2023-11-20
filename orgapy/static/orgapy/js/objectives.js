@@ -19,7 +19,7 @@ window.addEventListener("load", () => {
     const DAYMS = 24 * 3600 * 1000;
 
     function day_offset(d) {
-        return Math.floor((d - get_year_start()) / 3600 / 24 / 1000) * DAYW;
+        return (d - get_year_start()) / 3600 / 24 / 1000 * DAYW;
     }
 
     function add_days(base_date, days_to_add) {
@@ -243,42 +243,24 @@ window.addEventListener("load", () => {
         dom_obj.classList.add("objgraph-objective");
         let obj = objectives[objective_id];
         let slots = obj.get_slots();
-        let date_start = new Date(slots[0].start.getTime() + DAYMS);
-        dom_obj.style.marginLeft = day_offset(date_start) + "px";
+        let date_start = new Date(slots[0].start.getTime());
+        let objective_offset = day_offset(date_start);
+        dom_obj.style.marginLeft = objective_offset + "px";
         obj.history.forEach(ts => {
             dom_completion = dom_obj.appendChild(document.createElement("div"));
             dom_completion.classList.add("objgraph-completion");
             dom_completion.title = (new Date(ts * 1000)).toLocaleString();
-            dom_completion.style.left = (((ts * 1000 + DAYMS - date_start.getTime()) / DAYMS) * DAYW) + "px";
-            dom_completion.addEventListener("dblclick", (event) => {
-                let node = document.importNode(document.getElementById("template-modal-history-checkmark").content, true);
-                let modal_overlay = node.querySelector(".modal-overlay");
-                function close_this_modal() {
-                    document.body.removeChild(modal_overlay.parentNode);
-                }
-                modal_overlay.addEventListener("click", close_this_modal);
-                node.querySelector("input[name='timestamp']").value = ts;
-                let ts_date = new Date(ts * 1000);
-                node.querySelector("input[name='date']").value = `${ts_date.getFullYear()}-${(ts_date.getMonth() + 1).toString().padStart(2, "0")}-${ts_date.getDate().toString().padStart(2, "0")}`;
-                node.querySelector("input[name='time']").value = `${ts_date.getHours().toString().padStart(2, "0")}:${ts_date.getMinutes().toString().padStart(2, "0")}:${Math.floor(ts_date.getSeconds()).toString().padStart(2, "0")}`;
-                let form = node.querySelector("form");
-                form.addEventListener("submit", (e) => {
-                    e.preventDefault();
-                    let original_ts = parseInt(form.querySelector("input[name='timestamp']").value);
-                    if (e.submitter.name == "save") {
-                        let new_date = form.querySelector("input[name='date']").value;
-                        let new_time = form.querySelector("input[name='time']").value;
-                        let new_ts = Math.floor((new Date(new_date + "T" + new_time).getTime()) / 1000);
-                        obj.history[obj.history.indexOf(original_ts)] = new_ts;
-                        obj.history.sort();
-                    } else if (e.submitter.name == "delete") {
-                        obj.history.splice(obj.history.indexOf(original_ts), 1);
-                    }
-                    close_this_modal();
-                    save_objective_history(objective_id);
-                    create_objgraph();
-                });
-                document.body.appendChild(node);
+            // This trick avoids having completion marks between two days.
+            // TODO: ideally, what should be avoided would be to be between two
+            // slots, eg. with a 3.5 days period.
+            let completion_date = new Date(ts * 1000);
+            let completion_day_date = new Date(ts * 1000);
+            completion_day_date.setHours(0, 0, 0, 0);
+            let completion_offset = day_offset(completion_date);
+            let completion_day_offset = day_offset(completion_day_date);
+            dom_completion.style.left = (completion_offset - objective_offset - 0.2 * (completion_offset - completion_day_offset)) + "px";
+            dom_completion.addEventListener("click", (event) => {
+                open_modal_completion_form(obj, ts);
             });
         });
         slots.forEach(slot => {
@@ -320,54 +302,10 @@ window.addEventListener("load", () => {
         dom_name.classList.add("popover-bottom");
         dom_name.textContent = obj.name;
         dom_name.style.top = ((index + 1) * 32 + 1) + "px";
-        let node = document.importNode(document.getElementById("template-objective-popover").content, true);
-        node.querySelector("#input-objective-id").value = obj.id;
-        node.querySelector("#input-objective-name").value = obj.name;
-        node.querySelectorAll("#input-objective-type option").forEach(option => {
-            if (option.value == obj.rules.type) option.selected = true;
+        dom_name.addEventListener("click", (event) => {
+            open_modal_objective_form(obj);
         });
-        node.querySelector("#input-objective-period").value = obj.rules.period;
-        node.querySelector("#input-objective-cooldown").value = obj.rules.cooldown;
-        node.querySelector("form").addEventListener("submit", (event) => {
-            event.preventDefault();
-            if (event.submitter.name == "save" || (event.submitter.name == "delete" && confirm(`Are you sure you want to delete objective ${obj.name}?`))) {
-                let formdata = new FormData(event.target, event.submitter);
-                fetch(event.target.action + "?action=edit-objective", {method: "post", body: formdata}).then(res => res.json()).then(data => {
-                    if (data.success) {
-                        fetch_objectives();
-                        toast("Saved!", 600);
-                    }
-                });
-            }
-        });
-        node.querySelector(".button-objective-add-completion").addEventListener("click", (event) => {
-            event.preventDefault();
-            let node = document.importNode(document.getElementById("template-modal-history-checkmark").content, true);
-            let modal_overlay = node.querySelector(".modal-overlay");
-            function close_this_modal() {
-                document.body.removeChild(modal_overlay.parentNode);
-            }
-            modal_overlay.addEventListener("click", close_this_modal);
-            let ts_date = new Date();
-            node.querySelector("input[name='date']").value = `${ts_date.getFullYear()}-${(ts_date.getMonth() + 1).toString().padStart(2, "0")}-${ts_date.getDate().toString().padStart(2, "0")}`;
-            node.querySelector("input[name='time']").value = `${ts_date.getHours().toString().padStart(2, "0")}:${ts_date.getMinutes().toString().padStart(2, "0")}:${Math.floor(ts_date.getSeconds()).toString().padStart(2, "0")}`;
-            let button_delete = node.querySelector("input[name='delete']");
-            button_delete.parentNode.removeChild(button_delete);
-            let form = node.querySelector("form");
-            form.addEventListener("submit", (e) => {
-                e.preventDefault();
-                let new_date = form.querySelector("input[name='date']").value;
-                let new_time = form.querySelector("input[name='time']").value;
-                let new_ts = Math.floor((new Date(new_date + "T" + new_time).getTime()) / 1000);
-                obj.history.push(new_ts);
-                obj.history.sort();
-                close_this_modal();
-                save_objective_history(objective_id);
-                create_objgraph();
-            });
-            document.body.appendChild(node);
-        })
-        dom_name.appendChild(node);
+
     }
 
     function inflate_objgraph_body(objgraph) {
@@ -419,27 +357,127 @@ window.addEventListener("load", () => {
         });
     }
 
-    let modal_objective = document.getElementById("modal-add-objective");
-    let node = document.importNode(document.getElementById("template-objective-popover").content, true);
-    node.querySelector("#input-objective-period").value = 1;
-    node.querySelector("#input-objective-cooldown").value = 0;
-    let node_delete_button = node.querySelector("input[name='delete']");
-    node_delete_button.parentNode.removeChild(node_delete_button);
-    node.querySelector("form").addEventListener("submit", (event) => {
+    function open_modal_objective_form(objective=null) {
+        let modal = document.getElementById("modal-objective-form");
+        modal.querySelector("form").reset();
+        if (objective != null) {
+            modal.querySelector("input[name='id']").value = objective.id;
+            modal.querySelector("input[name='name']").value = objective.name;
+            modal.querySelectorAll("select[name='type'] option").forEach(option => {
+                if (option.value == objective.rules.type) {
+                    option.selected = true;
+                } else {
+                    option.removeAttribute("selected");
+                }
+            });
+            modal.querySelector("input[name='period']").value = objective.rules.period;
+            modal.querySelector("input[name='cooldown']").value = objective.rules.cooldown;
+            modal.querySelector("input[name='add']").style.display = "none";
+            modal.querySelector("input[name='save']").style.display = "unset";
+            modal.querySelector("input[name='delete']").style.display = "unset";
+            modal.querySelector("input[name='completion']").style.display = "unset";
+        } else {
+            modal.querySelectorAll("select[name='type'] option").forEach(option => {
+                if (option.value == "ON") {
+                    option.selected = true;
+                } else {
+                    option.removeAttribute("selected");
+                }
+            });
+            modal.querySelector("input[name='period']").value = 1;
+            modal.querySelector("input[name='cooldown']").value = 0;
+            modal.querySelector("input[name='add']").style.display = "unset";
+            modal.querySelector("input[name='save']").style.display = "none";
+            modal.querySelector("input[name='delete']").style.display = "none";
+            modal.querySelector("input[name='completion']").style.display = "none";
+        }
+        modal.classList.add("active");
+    }
+
+    document.querySelector("#modal-objective-form form").addEventListener("submit", (event) => {
         event.preventDefault();
-        let form = event.target;
-        closeModal("modal-add-objective");
-        let formdata = new FormData(form);
-        fetch(form.action + "?action=add-objective", {method: "post", body: formdata}).then(res => res.json()).then(data => {
-            if (data.success) {
-                form.reset();
-                fetch_objectives();
-                toast("Added!", 600);
-            }
-        });
+        closeModal("modal-objective-form");
+        if (event.submitter.name == "completion") {
+            let objective_id = parseInt(event.target.querySelector("input[name='id']").value);
+            open_modal_completion_form(objectives[objective_id]);
+            return;
+        }
+        if (event.submitter.name == "delete" && !confirm(`Are you sure you want to delete this objective?`)) return;
+        let url = URL_API + "?action=";
+        switch (event.submitter.name) {
+            case "add":
+                url += "add-objective";
+                break;
+            case "save":
+                url += "edit-objective";
+                break;
+            case "delete":
+                url += "delete-objective";
+                break;
+        }
+        let formdata = new FormData(event.target, event.submitter);
+        fetch(url, {method: "post", body: formdata}).then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toast("Saved!", 600);
+                    fetch_objectives();
+                } else {
+                    toast("An error occured", 600);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
     });
-    node.querySelector(".popover-container").className = "";
-    modal_objective.appendChild(node);
+
+    document.getElementById("btn-objective-create").addEventListener("click", (event) => {
+        open_modal_objective_form();
+    });
+
+    function open_modal_completion_form(objective, timestamp=null) {
+        let modal = document.getElementById("modal-completion-form");
+        modal.querySelector("form").reset();
+        modal.querySelector("input[name='id']").value = objective.id;
+        if (timestamp != null) {
+            modal.querySelector("input[name='timestamp']").value = timestamp;
+            let ts_date = new Date(timestamp * 1000);
+            modal.querySelector("input[name='date']").value = `${ts_date.getFullYear()}-${(ts_date.getMonth() + 1).toString().padStart(2, "0")}-${ts_date.getDate().toString().padStart(2, "0")}`;
+            modal.querySelector("input[name='time']").value = `${ts_date.getHours().toString().padStart(2, "0")}:${ts_date.getMinutes().toString().padStart(2, "0")}:${Math.floor(ts_date.getSeconds()).toString().padStart(2, "0")}`;
+            modal.querySelector("input[name='add']").style.display = "none";
+            modal.querySelector("input[name='save']").style.display = "unset";
+            modal.querySelector("input[name='delete']").style.display = "unset";
+        } else {
+            modal.querySelector("input[name='add']").style.display = "unset";
+            modal.querySelector("input[name='save']").style.display = "none";
+            modal.querySelector("input[name='delete']").style.display = "none";
+        }
+        modal.classList.add("active");
+    }
+
+    document.querySelector("#modal-completion-form form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        closeModal("modal-completion-form");
+        if (event.submitter.name == "delete" && !confirm(`Are you sure you want to delete this completion?`)) return;        
+        let objective_id = parseInt(event.target.querySelector("input[name='id']").value);
+        let original_ts = parseInt(event.target.querySelector("input[name='timestamp']").value);
+        let obj = objectives[objective_id];
+        if (event.submitter.name == "delete") {
+            obj.history.splice(obj.history.indexOf(original_ts), 1);
+        } else {
+            let new_date = event.target.querySelector("input[name='date']").value;
+            let new_time = event.target.querySelector("input[name='time']").value;
+            let new_ts = Math.floor((new Date(new_date + "T" + new_time).getTime()) / 1000);
+            if (event.submitter.name == "add") {
+                obj.history.push(new_ts);
+            } else if (event.submitter.name == "save") {
+                obj.history[obj.history.indexOf(original_ts)] = new_ts;
+            }
+            obj.history.sort();
+        }
+        save_objective_history(objective_id);
+        create_objgraph();
+    });
 
     fetch_objectives();
 

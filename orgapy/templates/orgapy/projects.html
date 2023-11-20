@@ -23,12 +23,13 @@
 
 <div class="objgraph-ref my-4"><div id="objgraph-wrapper" class="objgraph-wrapper"></div></div>
 
-<template id="template-objective-popover">
-    <div class="popover-container">
-        <form action="{% url 'orgapy:api' %}" method="post">
+<div class="modal modal-sm" id="modal-objective-form">
+    <span class="modal-overlay" onclick="closeModal('modal-objective-form')"></span>
+    <div class="modal-container">
+        <form>
             {% csrf_token %}
-            <input hidden name="objective_id" id="input-objective-id" />
-            <div class="objective-popover">
+            <input hidden name="id" />
+            <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label label-sm pt-0" for="input-objective-name">Name</label>
                     <input required minlength="1" name="name" class="form-input input-sm" type="text" id="input-objective-name" />
@@ -48,44 +49,41 @@
                     <label class="form-label label-sm" for="input-objective-cooldown">Cooldown</label>
                     <input required name="cooldown" class="form-input input-sm" type="number" id="input-objective-cooldown" min="0" step="0.5" />
                 </div>
-                <div class="d-flex">
-                    <input type="submit" class="btn btn-sm" name="save" value="Save"/>
-                    <input type="submit" class="btn btn-sm ml-1" name="delete" value="Delete"/>
-                    <button class="button-objective-add-completion btn btn-sm ml-1">Add completion</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <input type="submit" class="btn btn-sm" name="add" value="Add"/>
+                <input type="submit" class="btn btn-sm" name="save" value="Save"/>
+                <input type="submit" class="btn btn-sm" name="delete" value="Delete"/>
+                <input type="submit" class="btn btn-sm" name="completion" value="Add completion"/>
             </div>
         </form>
     </div>
-</template>
-
-<div class="modal" id="modal-add-objective">
-    <span class="modal-overlay" onclick="closeModal('modal-add-objective')"></span>
 </div>
 
-<template id="template-modal-history-checkmark">
-    <div class="modal active" id="modal-history-checkmark">
-        <span class="modal-overlay"></span>
-        <div class="modal-container">
+<div class="modal modal-sm" id="modal-completion-form">
+    <span class="modal-overlay" onclick="closeModal('modal-completion-form')"></span>
+    <div class="modal-container">
+        <form>
+            {% csrf_token %}
+            <input hidden name="id" />
+            <input hidden name="timestamp" />
             <div class="modal-body">
-                <form action="{% url 'orgapy:api' %}" method="post">
-                    {% csrf_token %}
-                    <input hidden name="timestamp" />
-                    <div class="form-group">
-                        <label class="form-label">Completion Checkmark</label>
-                        <div class="input-group">
-                            <input class="form-input input-sm" type="date" name="date" />
-                            <input class="form-input input-sm" type="time" name="time" step="1" />
-                        </div>
+                <div class="form-group">
+                    <label class="form-label">Completion</label>
+                    <div class="input-group">
+                        <input class="form-input input-sm" type="date" name="date" />
+                        <input class="form-input input-sm" type="time" name="time" step="1" />
                     </div>
-                    <div class="d-flex">
-                        <input type="submit" class="btn btn-sm" name="save" value="Save"/>
-                        <input type="submit" class="btn btn-sm ml-1" name="delete" value="Delete"/>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
+            <div class="modal-footer">
+                <input type="submit" class="btn btn-sm" name="add" value="Add"/>
+                <input type="submit" class="btn btn-sm" name="save" value="Save"/>
+                <input type="submit" class="btn btn-sm" name="delete" value="Delete"/>
+            </div>
+        </form>
     </div>
-</template>
+</div>
 
 <div id="todays-plan"></div>
 
@@ -96,7 +94,7 @@
 <div class="d-flex my-4">
     <button id="btn-project-create" class="projects-button"><i class="icon icon-plus"></i> Add project</button>
      
-    <button class="projects-button" onclick="showModal('modal-add-objective')"><i class="icon icon-plus"></i> Add objective</button>
+    <button id="btn-objective-create" class="projects-button"><i class="icon icon-plus"></i> Add objective</button>
 </div>
 
 {% include "orgapy/partials/modal_add_event.html" %}

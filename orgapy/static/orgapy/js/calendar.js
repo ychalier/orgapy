@@ -110,22 +110,8 @@ window.addEventListener("load", () => {
             title.title = `Start: ${this.start_date.toLocaleDateString()}`;
             title.title += `\nDue: ${this.due_date.toLocaleDateString()}`;
 
-            title.addEventListener("dblclick", (event) => {
-                let modal = document.getElementById("modal-edit-task");
-                modal.querySelector("form").reset();
-                modal.querySelector("input[name='id']").value = self.id;
-                modal.querySelector("input[name='title']").value = self.title;
-                modal.querySelector("input[name='start_date']").value = self.start_date.toISOString().substring(0, 10);
-                modal.querySelector("input[name='due_date']").value = self.due_date.toISOString().substring(0, 10);
-                modal.querySelectorAll("select[name='recurring_mode'] option").forEach(option => {
-                    if (option.value == self.recurring_mode) {
-                        option.selected = true;
-                    } else {
-                        option.removeAttribute("selected");
-                    }
-                });
-                modal.querySelector("input[name='recurring_period']").value = self.recurring_period;
-                modal.classList.add("active");
+            title.addEventListener("click", (event) => {
+                open_modal_task_form(self);
             });
 
         }
@@ -239,6 +225,33 @@ window.addEventListener("load", () => {
 
     }
 
+    function open_modal_task_form(task=null) {
+        let modal = document.getElementById("modal-task-form");
+        modal.querySelector("form").reset();
+        if (task != null) {
+            modal.querySelector("input[name='id']").value = task.id;
+            modal.querySelector("input[name='title']").value = task.title;
+            modal.querySelector("input[name='start_date']").value = task.start_date.toISOString().substring(0, 10);
+            modal.querySelector("input[name='due_date']").value = task.due_date.toISOString().substring(0, 10);
+            modal.querySelectorAll("select[name='recurring_mode'] option").forEach(option => {
+                if (option.value == task.recurring_mode) {
+                    option.selected = true;
+                } else {
+                    option.removeAttribute("selected");
+                }
+            });
+            modal.querySelector("input[name='recurring_period']").value = task.recurring_period;
+            modal.querySelector("input[name='add']").style.display = "none";
+            modal.querySelector("input[name='save']").style.display = "unset";
+            modal.querySelector("input[name='delete']").style.display = "unset";
+        } else {
+            modal.querySelector("input[name='add']").style.display = "unset";
+            modal.querySelector("input[name='save']").style.display = "none";
+            modal.querySelector("input[name='delete']").style.display = "none";
+        }
+        modal.classList.add("active");
+    }
+
     function inflate_tasks() {
         let container = document.getElementById("tasks");
         container.innerHTML = "";
@@ -293,7 +306,7 @@ window.addEventListener("load", () => {
         event_modal_btn.title = "Add Task";
         event_modal_btn.classList.add("event-modal-btn");
         event_modal_btn.addEventListener("click", () => {
-            showModal("modal-add-task");
+            open_modal_task_form();
         });
         
     }
@@ -353,52 +366,27 @@ window.addEventListener("load", () => {
             });
     });
 
-    document.getElementById("btn-add-task").addEventListener("click", () => {
-        let form = document.getElementById("form-add-task");
-        let form_data = new FormData(form);
-        closeModal('modal-add-task');
-        fetch(form.action, {method: form.method, body: form_data}).then(res => res.json())
+    document.querySelector("#modal-task-form form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        closeModal("modal-task-form");
+        if (event.submitter.name == "delete" && !confirm(`Are you sure you want to delete this task?`)) return;
+        let url = URL_API + "?action=";
+        switch (event.submitter.name) {
+            case "add":
+                url += "add-task";
+                break;
+            case "save":
+                url += "edit-task";
+                break;
+            case "delete":
+                url += "delete-task";
+                break;
+        }
+        let formdata = new FormData(event.target, event.submitter);
+        fetch(url, {method: "post", body: formdata}).then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    toast("Task added", 600);
-                    fetch_tasks();
-                } else {
-                    toast("An error occured", 600);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                toast("An error occured", 600);
-            });
-    });
-
-    document.getElementById("btn-edit-task").addEventListener("click", () => {
-        let form = document.getElementById("form-edit-task");
-        let form_data = new FormData(form);
-        closeModal('modal-edit-task');
-        fetch(form.action, {method: form.method, body: form_data}).then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toast("Task saved!", 600);
-                    fetch_tasks();
-                } else {
-                    toast("An error occured", 600);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                toast("An error occured", 600);
-            });
-    });
-
-    document.getElementById("btn-delete-task").addEventListener("click", () => {
-        let form = document.getElementById("form-edit-task");
-        let form_data = new FormData(form);
-        closeModal('modal-edit-task');
-        fetch(URL_API + "?action=delete-task", {method: form.method, body: form_data}).then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toast("Task deleted", 600);
+                    toast("Saved!", 600);
                     fetch_tasks();
                 } else {
                     toast("An error occured", 600);

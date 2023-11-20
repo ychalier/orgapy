@@ -783,7 +783,7 @@ def api_edit_objective(request):
     print(request.POST)
     if "delete" in request.POST:
         return api_delete_objective(request)
-    objective_id = request.POST.get("objective_id")
+    objective_id = request.POST.get("id")
     objective_name = request.POST.get("name")
     objective_type = request.POST.get("type")
     objective_period = request.POST.get("period")
@@ -810,7 +810,7 @@ def api_edit_objective(request):
 def api_delete_objective(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
-    objective_id = request.POST.get("objective_id")
+    objective_id = request.POST.get("id")
     if objective_id is None:
         raise BadRequest("Missing fields")
     try:
