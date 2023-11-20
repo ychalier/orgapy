@@ -911,7 +911,9 @@ def api_add_event(request):
 @permission_required("orgapy.view_task")
 def api_list_tasks(request):
     tasks = []
-    for task in models.Task.objects.filter(user=request.user, completed=False):
+    limit = int(request.GET.get("limit", 5))
+    max_start_date = timezone.now() + datetime.timedelta(days=limit)
+    for task in models.Task.objects.filter(user=request.user, completed=False, start_date__lte=max_start_date):
         tasks.append({
             "id": task.id,
             "title": task.title,
@@ -920,6 +922,7 @@ def api_list_tasks(request):
             "recurring_mode": task.recurring_mode,
             "recurring_period": task.recurring_period,
         })
+    tasks.sort(key=lambda x: x["due_date"])
     return JsonResponse({"tasks": tasks})
 
 

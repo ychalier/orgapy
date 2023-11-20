@@ -85,6 +85,21 @@
     </div>
 </div>
 
+<div class="modal" id="modal-tasks">
+    <span class="modal-overlay" onclick="closeModal('modal-tasks')"></span>
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title h5">Tasks</div>
+        </div>
+        <div class="modal-body">
+            <div class="tasks"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal('modal-tasks')">Close</button>
+        </div>
+    </div>
+</div>
+
 <div id="todays-plan"></div>
 
 <div id="projects" class="projects"></div>
@@ -106,7 +121,7 @@
     <div class="mb-2 text-primary"><b>Events</b></div>
     <div id="events"></div>
     <div id="calendar-sync"></div>
-    <div class="my-2 text-primary"><b>Tasks</b></div>
+    <div class="my-2 text-primary c-hand" id="tasks-title"><b>Tasks</b></div>
     <div id="tasks"></div>
 </div>
 {% endblock right_column %}

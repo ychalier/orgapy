@@ -170,7 +170,7 @@ window.addEventListener("load", () => {
     }
 
     function fetch_tasks() {
-        let url = URL_API + "?action=list-tasks";
+        let url = URL_API + "?action=list-tasks&limit=5";
         fetch(url).then(res => res.json()).then(data => {
             tasks = [];
             data.tasks.forEach(task_data => {
@@ -292,7 +292,7 @@ window.addEventListener("load", () => {
             if (future_tasks.length > 0) {
                 let details = container.appendChild(document.createElement("details"));
                 let summary = details.appendChild(document.createElement("summary"));
-                summary.textContent = `Future tasks (${future_tasks.length})`;
+                summary.textContent = `Incoming tasks (${future_tasks.length})`;
                 summary.classList.add("event-date");
                 summary.classList.add("mt-2");
                 future_tasks.forEach(task => {
@@ -396,6 +396,35 @@ window.addEventListener("load", () => {
                 console.error(err);
                 toast("An error occured", 600);
             });
+    });
+
+    function open_modal_tasks() {
+        let modal = document.getElementById("modal-tasks");
+        let tasks_container = modal.querySelector(".tasks");
+        tasks_container.innerHTML = "";
+        fetch(URL_API + "?action=list-tasks&limit=365").then(res => res.json()).then(data => {
+            data.tasks.forEach(task => {
+                let task_element = tasks_container.appendChild(document.createElement("div"));
+                task_element.classList.add("mb-2");
+                let task_title = task_element.appendChild(document.createElement("span"));
+                task_title.classList.add("label");
+                task_title.classList.add("mr-1");
+                task_title.textContent = task.title;
+                task_title.addEventListener("click", () => {
+                    modal.classList.remove("active");
+                    open_modal_task_form(new Task(task));
+                });
+                let task_date = task_element.appendChild(document.createElement("span"));
+                task_date.textContent = `${new Date(task.due_date).toLocaleDateString(
+                    "fr-FR",
+                    {weekday: "long", day: "numeric", month: "short"})}`
+            });
+        });
+        modal.classList.add("active");
+    }
+
+    document.getElementById("tasks-title").addEventListener("click", () => {
+        open_modal_tasks();
     });
 
 });
