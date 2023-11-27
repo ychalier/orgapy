@@ -922,7 +922,7 @@ def api_list_tasks(request):
             "recurring_mode": task.recurring_mode,
             "recurring_period": task.recurring_period,
         })
-    tasks.sort(key=lambda x: x["due_date"])
+    tasks.sort(key=lambda x: x["due_date"] if x.get("due_date") is not None else "")
     return JsonResponse({"tasks": tasks})
 
 
