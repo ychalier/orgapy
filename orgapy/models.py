@@ -111,7 +111,7 @@ class Task(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     start_date = models.DateField()
-    due_date = models.DateField()
+    due_date = models.DateField(null=True, blank=True)
     recurring_mode = models.CharField(max_length=2, choices=RECURRING_MODE_CHOICES, default=ONCE)
     recurring_period = models.PositiveIntegerField(blank=True, null=True)
     recurring_parent = models.ForeignKey("self", blank=True, null=True, on_delete=models.CASCADE)

@@ -861,7 +861,7 @@ def api_list_calendars(request):
     return JsonResponse({
         "calendars": calendars,
         "events": events,
-        "last_sync": calendar.last_sync
+        "last_sync": calendar.last_sync if calendar else None
     })
 
 
@@ -918,7 +918,7 @@ def api_list_tasks(request):
             "id": task.id,
             "title": task.title,
             "start_date": task.start_date.isoformat(),
-            "due_date": task.due_date.isoformat(),
+            "due_date": task.due_date.isoformat() if task.due_date is not None else None,
             "recurring_mode": task.recurring_mode,
             "recurring_period": task.recurring_period,
         })
@@ -934,14 +934,17 @@ def api_edit_task(request):
     task_title = request.POST.get("title")
     task_start_date = request.POST.get("start_date")
     task_due_date = request.POST.get("due_date")
+    if task_due_date.strip() == "":
+        task_due_date = None
     task_recurring_mode = request.POST.get("recurring_mode")
     task_recurring_period = request.POST.get("recurring_period")
-    if None in [task_id, task_title, task_start_date, task_due_date, task_recurring_mode, task_recurring_period]:
+    if None in [task_id, task_title, task_start_date, task_recurring_mode, task_recurring_period]:
         raise BadRequest("Missing fields")
     try:
         task_id = int(task_id)
         task_start_date = parse_date(task_start_date)
-        task_due_date = parse_date(task_due_date)
+        if task_due_date is not None:
+            task_due_date = parse_date(task_due_date)
         task_recurring_period = None if task_recurring_period.strip() == "" else int(task_recurring_period)
     except:
         raise BadRequest("Invalid values")
@@ -964,13 +967,16 @@ def api_add_task(request):
     task_title = request.POST.get("title")
     task_start_date = request.POST.get("start_date")
     task_due_date = request.POST.get("due_date")
+    if task_due_date.strip() == "":
+        task_due_date = None
     task_recurring_mode = request.POST.get("recurring_mode")
     task_recurring_period = request.POST.get("recurring_period")
-    if None in [task_title, task_start_date, task_due_date, task_recurring_mode, task_recurring_period]:
+    if None in [task_title, task_start_date, task_recurring_mode, task_recurring_period]:
         raise BadRequest("Missing fields")
     try:
         task_start_date = parse_date(task_start_date)
-        task_due_date = parse_date(task_due_date)
+        if task_due_date is not None:
+            task_due_date = parse_date(task_due_date)
         task_recurring_period = None if task_recurring_period.strip() == "" else int(task_recurring_period)
     except:
         raise BadRequest("Invalid values")
@@ -1020,18 +1026,23 @@ def api_complete_task(request):
     task.date_completion = timezone.now()
     task.save()
     if task.recurring_mode != models.Task.ONCE:
+        due_date = None
         if task.recurring_mode == models.Task.DAILY:
             start_date = task.start_date + datetime.timedelta(days=task.recurring_period)
-            due_date = task.due_date + datetime.timedelta(days=task.recurring_period)
+            if task.due_date is not None:
+                due_date = task.due_date + datetime.timedelta(days=task.recurring_period)
         elif task.recurring_mode == models.Task.WEEKLY:
             start_date = task.start_date + datetime.timedelta(weeks=task.recurring_period)
-            due_date = task.due_date + datetime.timedelta(weeks=task.recurring_period)
+            if task.due_date is not None:
+                due_date = task.due_date + datetime.timedelta(weeks=task.recurring_period)
         elif task.recurring_mode == models.Task.MONTHLY:
             start_date = task.start_date + dateutil.relativedelta.relativedelta(months=task.recurring_period)
-            due_date = task.due_date + dateutil.relativedelta.relativedelta(months=task.recurring_period)
+            if task.due_date is not None:
+                due_date = task.due_date + dateutil.relativedelta.relativedelta(months=task.recurring_period)
         elif task.recurring_mode == models.Task.YEARLY:
             start_date = task.start_date + dateutil.relativedelta.relativedelta(years=task.recurring_period)
-            due_date = task.due_date + dateutil.relativedelta.relativedelta(years=task.recurring_period)
+            if task.due_date is not None:
+                due_date = task.due_date + dateutil.relativedelta.relativedelta(years=task.recurring_period)
         models.Task.objects.create(
             user=request.user,
             title=task.title,

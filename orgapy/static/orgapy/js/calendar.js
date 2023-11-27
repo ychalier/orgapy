@@ -82,7 +82,7 @@ window.addEventListener("load", () => {
             this.id = data.id;
             this.title = data.title;
             this.start_date = new Date(data.start_date);
-            this.due_date = new Date(data.due_date);
+            this.due_date = data.due_date ? new Date(data.due_date) : null;
             this.recurring_mode = data.recurring_mode;
             this.recurring_period = data.recurring_period;
         }
@@ -93,7 +93,7 @@ window.addEventListener("load", () => {
             element.classList.add("task");
             let this_morning = new Date();
             this_morning.setHours(0, 0, 0, 0);
-            if (this.due_date < this_morning) {
+            if (this.due_date != null && this.due_date < this_morning) {
                 element.classList.add("task-overdue");
             }
             let button = element.appendChild(document.createElement("button"));
@@ -108,8 +108,9 @@ window.addEventListener("load", () => {
             let title = element.appendChild(document.createElement("span"));
             title.textContent = this.title;
             title.title = `Start: ${this.start_date.toLocaleDateString()}`;
-            title.title += `\nDue: ${this.due_date.toLocaleDateString()}`;
-
+	    if (this.due_date != null) {
+		title.title += `\nDue: ${this.due_date.toLocaleDateString()}`;
+	    }
             title.addEventListener("click", (event) => {
                 open_modal_task_form(self);
             });
