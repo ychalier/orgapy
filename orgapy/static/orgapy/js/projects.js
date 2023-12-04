@@ -421,8 +421,8 @@ window.addEventListener("load", () => {
                 reorder(self.checklist_items, permutation);
                 self.concat_checklist();
                 self.update();
-            }, (element) => {
-                return !element.classList.contains("editing");
+            }, {
+                drag_allowed: (element) => { return !element.classList.contains("editing"); }
             });
         }
 
@@ -941,8 +941,8 @@ window.addEventListener("load", () => {
         });
         dragrank(container, ".project", (ordering, permutation) => {
             setTimeout(() => {save_ranks(ordering)}, 300);
-        }, (element) => {
-            return !element.classList.contains("editing");
+        }, {
+            drag_allowed: (element) => { return !element.classList.contains("editing"); }
         });
         update_project_count();
     }

@@ -40,6 +40,7 @@
                     <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% else %}mr-1 ml-1{% endif %}">Notes</a>
                     <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% else %}mr-1 ml-1{% endif %}">Quotes</a>
                     <a href="{% url 'orgapy:sheets' %}" class="btn {% if active != 'sheets' %}btn-link{% else %}mr-1 ml-1{% endif %}">Sheets</a>
+                    <a href="{% url 'orgapy:maps' %}" class="btn {% if active != 'maps' %}btn-link{% else %}mr-1 ml-1{% endif %}">Maps</a>
                 </header>
                 <header class="navbar navbar-float blackblock show-md">
                     <a href="{% url 'orgapy:landing' %}" class="btn btn-link">Orgapy</a>
@@ -47,6 +48,7 @@
                     <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% else %}mr-1 ml-1{% endif %}" title="Notes"><i class="icon icon-note"></i></a>
                     <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% else %}mr-1 ml-1{% endif %}" title="Quotes"><i class="icon icon-quote"></i></a>
                     <a href="{% url 'orgapy:sheets' %}" class="btn {% if active != 'sheets' %}btn-link{% else %}mr-1 ml-1{% endif %}" title="Sheets"><i class="icon icon-feed"></i></a>
+                    <a href="{% url 'orgapy:maps' %}" class="btn {% if active != 'maps' %}btn-link{% else %}mr-1 ml-1{% endif %}" title="Maps"><i class="icon icon-map"></i></a>
                 </header>
                 <div>
                 {% block main_content_prev %}{% endblock main_content_prev %}

@@ -1,0 +1,38 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Maps &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block main_content %}
+
+<form action="{% url 'orgapy:maps' %}" method="get">
+    <div class="search-create-bar">
+        <div class="searchbar-with-clear-button has-icon-right">         
+            <input autocomplete="off" class="form-input" type="text" name="query" placeholder="Search a map" value="{% if query %}{{query}}{% endif %}" />
+        </div>
+        <button class="btn btn-primary input-group-btn">Search</button>
+        <a class="btn btn-primary" href="{% url 'orgapy:create_map' %}{% if query %}?title={{query}}{% endif %}">Create map</a>
+    </div>
+</form>
+
+{% if maps %}
+
+<table class="table table-hover table-striped table-condensed maps-table">
+    {% for map in maps %}
+    <tr><td>{% include 'orgapy/partials/map_list_item.html' %}</td></tr>
+    {% endfor %}
+</table>
+{% else %}
+<div class="empty">
+    <div class="empty-icon">
+        <i class="icon icon-note icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no map</p>
+    <p class="empty-subtitle">Click the button to create a map.</p>
+    <div class="empty-action">
+        <a class="btn btn-primary" href="{% url 'orgapy:create_map' %}{% if query %}?title={{query}}{% endif %}">Create map</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock main_content %}

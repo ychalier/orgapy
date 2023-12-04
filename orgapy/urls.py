@@ -36,5 +36,12 @@ urlpatterns = [
     path("sheets/<sid>/export", views.view_export_sheet, name="export_sheet"),
     path("sheets/<sid>/delete", views.view_delete_sheet, name="delete_sheet"),
     path("sheets/<sid>/public", views.view_toggle_sheet_public, name="toggle_sheet_public"),
+    path("maps", views.view_maps, name="maps"),
+    path("maps/create", views.view_create_map, name="create_map"),
+    path("maps/save", views.view_save_map, name="save_map"),
+    path("maps/<mid>", views.view_map, name="map"),
+    path("maps/<mid>/export", views.view_export_map, name="export_map"),
+    path("maps/<mid>/delete", views.view_delete_map, name="delete_map"),
+    path("maps/<mid>/public", views.view_toggle_map_public, name="toggle_map_public"),
     path("api", views.api, name="api"),
 ]

@@ -172,6 +172,39 @@ def save_sheet_core(request):
     return sheet
 
 
+def get_map_from_mid(mid, required_user=None):
+    if not models.Map.objects.filter(id=mid).exists():
+        raise Http404("Sheet does not exist")
+    mmap = models.Map.objects.get(id=mid)
+    if required_user is not None and mmap.user != required_user:
+        raise PermissionDenied
+    return mmap
+
+
+def save_map_core(request):
+    original_map = None
+    if ("id" in request.POST
+            and models.Map.objects.filter(id=request.POST["id"]).exists()):
+        original_map = models.Map.objects.get(id=request.POST["id"])
+    if original_map is not None and original_map.user != request.user:
+        raise PermissionDenied
+    title = request.POST.get("title", "").strip()
+    is_public = "public" in request.POST
+    if original_map is None:
+        mmap = models.Map.objects.create(
+            user=request.user,
+            title=title,
+            public=is_public,
+        )
+    else:
+        mmap = original_map
+        mmap.title = title
+        mmap.public = is_public
+    mmap.date_modification = timezone.now()
+    mmap.save()
+    return mmap
+
+
 # ----------------------------------------------- #
 # VIEWS                                           #
 # ----------------------------------------------- #
@@ -544,6 +577,71 @@ def view_toggle_sheet_public(request, sid):
     return redirect("orgapy:sheets")
 
 
+@permission_required("orgapy.view_map")
+def view_maps(request):
+    query = request.GET.get("query", "")
+    if query:
+        maps = models.Map.objects.filter(user=request.user).filter(title__contains=query)
+    else:
+        maps = models.Map.objects.filter(user=request.user)
+    return render(request, "orgapy/maps.html", {
+        "maps": maps,
+        "query": query,
+        "active": "maps",
+    })
+
+
+@permission_required("orgapy.add_map")
+def view_create_map(request):
+    return render(request, "orgapy/create_map.html", {
+        "active": "maps",
+    })
+
+
+@permission_required("orgapy.change_map")
+def view_save_map(request):
+    if request.method == "POST":
+        mmap = save_map_core(request)
+        return redirect("orgapy:map", mid=mmap.id)
+    raise PermissionDenied
+
+
+def view_map(request, mid):
+    mmap = get_map_from_mid(mid)
+    if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map"):
+        return render(request, "orgapy/map.html", { "map": mmap, "active": "maps" })
+    elif mmap.public:
+        return render(request, "orgapy/map_public.html", { "map": mmap, "active": "maps" })
+    raise PermissionDenied
+
+
+@permission_required("orgapy.view_map")
+def view_export_map(request, mid):
+    mmap = get_map_from_mid(mid)
+    if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map") or mmap.public:
+        response = HttpResponse(mmap.geojson, content_type="application/geo+json")
+        response['Content-Disposition'] = f'attachment; filename="{mmap.title}.geojson"'
+        return response
+    raise PermissionDenied
+
+
+@permission_required("orgapy.delete_map")
+def view_delete_map(request, mid):
+    mmap = get_map_from_mid(mid, request.user)
+    mmap.delete()
+    return redirect("orgapy:maps")
+
+
+@permission_required("orgapy.change_map")
+def view_toggle_map_public(request, mid):
+    mmap = get_map_from_mid(mid, request.user)
+    mmap.public = not mmap.public
+    mmap.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:maps")
+
+
 # ----------------------------------------------- #
 # API                                             #
 # ----------------------------------------------- #
@@ -596,6 +694,10 @@ def api(request):
             return api_sheet(request)
         case "save-sheet":
             return api_save_sheet(request)
+        case "map":
+            return api_map(request)
+        case "save-map":
+            return api_save_map(request)
         case _:
             raise BadRequest("Wrong action")
 
@@ -1108,4 +1210,34 @@ def api_save_sheet(request):
     sheet.config = sheet_config
     sheet.date_modification = timezone.now()
     sheet.save()
+    return JsonResponse({"success": True})
+
+
+def api_map(request):
+    map_id = request.GET.get("mid")
+    mmap = get_map_from_mid(int(map_id))
+    if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map") or mmap.public:
+        return JsonResponse({
+            "title": mmap.title,
+            "geojson": mmap.geojson,
+            "config": mmap.config,
+            "url": mmap.get_absolute_url(),
+        })
+    raise PermissionDenied
+
+
+@permission_required("orgapy.change_map")
+def api_save_map(request):
+    map_id = request.POST.get("mid")
+    map_title = request.POST.get("title")
+    if map_title is None:
+        raise BadRequest("Missing title")
+    map_geojson = request.POST.get("geojson")
+    map_config = request.POST.get("config")
+    mmap = get_map_from_mid(int(map_id), request.user)
+    mmap.title = map_title
+    mmap.geojson = map_geojson
+    mmap.config = map_config
+    mmap.date_modification = timezone.now()
+    mmap.save()
     return JsonResponse({"success": True})

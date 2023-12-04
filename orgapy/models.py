@@ -350,3 +350,25 @@ class Sheet(models.Model):
         if self.date_modification.date() == now.date():
             return self.date_modification.strftime("%H:%M")
         return self.date_modification.strftime("%Y-%m-%d")
+
+
+class Map(models.Model):
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
+    date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
+    date_access = models.DateTimeField(auto_now_add=True, auto_now=False)
+    title = models.CharField(max_length=255)
+    geojson = models.TextField(blank=True, null=True)
+    config = models.TextField(blank=True, null=True)
+    public = models.BooleanField(default=False)
+
+    class Meta:
+
+        ordering = ["title"]
+
+    def __str__(self):
+        return f"{ self.user} - { self.id }. { self.title }"
+
+    def get_absolute_url(self):
+        return reverse("orgapy:map", kwargs={"mid": self.id})

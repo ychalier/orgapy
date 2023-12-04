@@ -1,15 +1,25 @@
 var DRAG_RANK_LISTENERS = [];
 
-function dragrank_clear() {
-    DRAG_RANK_LISTENERS.forEach(listener => {
-        document.removeEventListener(listener.type, listener.handler);
+function dragrank_clear(dragid=null) {
+    let indices_to_remove = [];
+    DRAG_RANK_LISTENERS.forEach((listener, i) => {
+        if (dragid == null || listener.dragid == dragid) {
+            document.removeEventListener(listener.type, listener.handler);
+            indices_to_remove.push(i);
+        }
     });
+    for (let j = indices_to_remove.length - 1; j >= 0; j--) {
+        DRAG_RANK_LISTENERS.splice(DRAG_RANK_LISTENERS[j], 1);
+    }
 }
 
-function dragrank(container, element_selector, callback, drag_allowed, options={}) {
+function dragrank(container, element_selector, callback, options={}) {
     
     if (!("zIndex" in options)) options.zIndex = 0;
     if (!("transition" in options)) options.transition = ".3s ease";
+    if (!("dragid" in options)) options.dragid = "default";
+    if (!("drag_allowed" in options)) options.drag_allowed = () => { return true; };
+    if (!("dom_reorder" in options)) options.dom_reorder = false;
     var dragging = null;
     var elements = container.querySelectorAll(element_selector);
     var heights = [];
@@ -17,10 +27,6 @@ function dragrank(container, element_selector, callback, drag_allowed, options={
     var margin = null;
     var prev_ordering = [];
     var ordering = [];
-    var is_drag_allowed = drag_allowed;
-    if (is_drag_allowed == null) {
-        is_drag_allowed = () => { return true; }
-    }
     
     function reset_positions() {
         if (heights.length == 0) return;
@@ -41,48 +47,59 @@ function dragrank(container, element_selector, callback, drag_allowed, options={
 
     }
 
-    elements.forEach((element, i) => {
-        ordering.push(i);
-        element.style.cursor = "grab";
-        element.style.position = "relative";
-        element.style.zIndex = options.zIndex;
-        element.style.transition = options.transition;
-        element.style.top = 0;
-        element.addEventListener("mousedown", (event) => {
-            if (is_drag_allowed(element)) {
-                event.stopPropagation();
-                if (heights.length == 0) {
-                    let top0 = null;
-                    elements.forEach(e => {
-                        let bounds = e.getBoundingClientRect();
-                        let style = e.currentStyle || window.getComputedStyle(e);
-                        if (margin == null) {
-                            margin = parseFloat(style.marginBottom.replace("px", ""));
-                        }
-                        heights.push(bounds.height + margin);
-                        if (top0 == null) top0 = bounds.top;
-                        tops.push(bounds.top - top0);
-                    });
-                }
-                dragging = {
-                    e: element,
-                    i: i,
-                    x: event.clientX,
-                    y: event.clientY,
-                    j: ordering[i],
-                    o: ordering[i],
-                    s: window.scrollY,
-                    top: parseFloat(element.style.top.replace("px", "")),
-                };
-                element.style.cursor = "grabbing";
-                element.style.zIndex = options.zIndex + 1;
-                element.style.transition = "none";
-                return false;
-            }
-        });
-    });
+    function reset_variables() {
+        elements = container.querySelectorAll(element_selector);
+        heights = [];
+        tops = [];
+        margin = null;
+        prev_ordering = [];
+        ordering = [];
 
-    prev_ordering = [...ordering];
+        elements.forEach((element, i) => {
+            ordering.push(i);
+            element.style.cursor = "grab";
+            element.style.position = "relative";
+            element.style.zIndex = options.zIndex;
+            element.style.transition = options.transition;
+            element.style.top = 0;
+            element.addEventListener("mousedown", (event) => {
+                if (options.drag_allowed(element)) {
+                    event.stopPropagation();
+                    if (heights.length == 0) {
+                        let top0 = null;
+                        elements.forEach(e => {
+                            let bounds = e.getBoundingClientRect();
+                            let style = e.currentStyle || window.getComputedStyle(e);
+                            if (margin == null) {
+                                margin = parseFloat(style.marginBottom.replace("px", ""));
+                            }
+                            heights.push(bounds.height + margin);
+                            if (top0 == null) top0 = bounds.top;
+                            tops.push(bounds.top - top0);
+                        });
+                    }
+                    dragging = {
+                        e: element,
+                        i: i,
+                        x: event.clientX,
+                        y: event.clientY,
+                        j: ordering[i],
+                        o: ordering[i],
+                        s: window.scrollY,
+                        top: parseFloat(element.style.top.replace("px", "")),
+                    };
+                    element.style.cursor = "grabbing";
+                    element.style.zIndex = options.zIndex + 1;
+                    element.style.transition = "none";
+                    return false;
+                }
+            });
+        });
+    
+        prev_ordering = [...ordering];
+    }
+
+    reset_variables();    
 
     function update(event) {
         if (dragging == null) return;
@@ -133,6 +150,30 @@ function dragrank(container, element_selector, callback, drag_allowed, options={
         dragging.j = min_j;
     }
 
+    function swap_sibling(node2, node1) {
+        node1.parentNode.replaceChild(node1, node2);
+        node1.parentNode.insertBefore(node2, node1);
+    }
+
+    function dom_reorder() {
+        let order_reciprocal = [];
+        let current_indices = [];
+        for (let i = 0; i < ordering.length; i++) {
+            order_reciprocal.push(null);
+            current_indices.push(i);
+        }
+        for (let i = 0; i < ordering.length; i++) {
+            order_reciprocal[ordering[i]] = i;
+        }
+        order_reciprocal.forEach((current_index, target_index) =>  {
+            for (let i = current_index; i > target_index; i--) {
+                swap_sibling(elements[current_index], elements[current_index].previousElementSibling);
+            }
+        });
+        reset_variables();
+        reset_positions();
+    }
+
     function on_mouseup(event) {
         if (dragging == null) return;
         event.stopPropagation();
@@ -149,6 +190,10 @@ function dragrank(container, element_selector, callback, drag_allowed, options={
             changed = changed || permutation[k] != k;
         }
         if (changed) callback(ordering, permutation);
+        if (options.dom_reorder) {
+            // Timeout to let the animation happen
+            setTimeout(dom_reorder, 100);
+        }
         prev_ordering = [...ordering];
         return false;
     }
@@ -157,9 +202,9 @@ function dragrank(container, element_selector, callback, drag_allowed, options={
     document.addEventListener("wheel", update);
     document.addEventListener("mouseup", on_mouseup);
 
-    DRAG_RANK_LISTENERS.push({type: "mousemove", handler: update});
-    DRAG_RANK_LISTENERS.push({type: "wheel", handler: update});
-    DRAG_RANK_LISTENERS.push({type: "mouseup", handler: on_mouseup});
+    DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "mousemove", handler: update});
+    DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "wheel", handler: update});
+    DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "mouseup", handler: on_mouseup});
 
     reset_positions();
 
