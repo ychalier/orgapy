@@ -218,25 +218,29 @@ class PanelControl extends L.Control {
     inflate_panel() {
         var self = this;
         this.inflate_map_title();
-        let buttons = create(this.panel_container, "div", ["mb-2"]);
-        this.map.button_save = create(buttons, "button", ["btn", "btn-sm", "mr-1"]);
-        this.map.button_save.textContent = "Save";
-        this.map.button_save.setAttribute("disabled", true);
-        this.map.button_save.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.map.save_data();
-        });
-        let button_add_layer = create(buttons, "span", ["btn", "btn-sm"]);
-        button_add_layer.innerHTML = `<i class="icon icon-plus mr-1"></i><span class="button-label">Layer</span>`;
-        button_add_layer.title = "Add layer";
-        button_add_layer.addEventListener("click", () => {
-            self.map.add_layer();
-        });
+        if (!this.map.readonly) {
+            let buttons = create(this.panel_container, "div", ["mb-2"]);
+            this.map.button_save = create(buttons, "button", ["btn", "btn-sm", "mr-1"]);
+            this.map.button_save.textContent = "Save";
+            this.map.button_save.setAttribute("disabled", true);
+            this.map.button_save.addEventListener("click", (event) => {
+                event.stopPropagation();
+                self.map.save_data();
+            });
+            let button_add_layer = create(buttons, "span", ["btn", "btn-sm"]);
+            button_add_layer.innerHTML = `<i class="icon icon-plus mr-1"></i><span class="button-label">Layer</span>`;
+            button_add_layer.title = "Add layer";
+            button_add_layer.addEventListener("click", () => {
+                self.map.add_layer();
+            });
+        }
         this.layers_container = create(this.panel_container, "div", ["map-layers"]);
         this.layers_container.addEventListener("wheel", (event) => {
             event.stopPropagation();
         });
-        this.inflate_base_map_form();
+        if (!this.map.readonly) {
+            this.inflate_base_map_form();
+        }
     }
 
     onAdd(map) {
@@ -475,6 +479,7 @@ class Feature {
             let cell_value = create(tr, "div", ["feature-property-value"]);
             cell_value.textContent = this.properties[property];
         }
+        if (this.layer.map.readonly) return;
         let buttons = create(wrapper, "div", ["feature-buttons"]);
         let button_edit = create(buttons, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
         button_edit.innerHTML = `<i class="icon icon-edit"></i>`;
@@ -881,6 +886,7 @@ class Layer {
         this.features.forEach(feature => {
             feature.inflate();
         });
+        if (this.map.readonly) return;
         let edit_button = create(this.container, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
         edit_button.innerHTML = `<i class="icon icon-edit"></i>`;
         edit_button.title = "Edit style";
@@ -1075,9 +1081,10 @@ class Layer {
 
 class Map {
 
-    constructor(mid, container) {
+    constructor(mid, container, readonly=false) {
         this.mid = mid;
         this.container = container;
+        this.readonly = readonly;
         this.container_left = null;
         this.container_right = null;
         this.leaflet_map = null;
@@ -1122,6 +1129,7 @@ class Map {
         this.panel_control = new PanelControl(this);
         this.panel_control.addTo(this.leaflet_map);
         new CurrentPositionControl().addTo(this.leaflet_map);
+        if (this.readonly) return;
         new SearchControl(this).addTo(this.leaflet_map);
         new ToolbarControl(this).addTo(this.leaflet_map);
     }
@@ -1160,7 +1168,9 @@ class Map {
             });
             this.fit_view_to_features();
         }
-        this.button_save.disabled = true;
+        if (this.button_save != null) {
+            this.button_save.disabled = true;
+        }
     }
 
     add_layer() {
@@ -1188,6 +1198,7 @@ class Map {
     }
 
     setup_layer_dragrank() {
+        if (this.readonly) return;
         var self = this;
         dragrank_clear("layer");
         dragrank(this.panel_control.layers_container, ".map-layer", (ordering, permutation) => {
@@ -1237,6 +1248,7 @@ class Map {
     }
 
     delete_layer(layer_index) {
+        if (this.readonly) return;
         this.get_layer(layer_index).delete();
         this.layers.splice(this.get_array_layer_index(layer_index), 1);
         if (this.selected_layer == layer_index) {
@@ -1253,18 +1265,22 @@ class Map {
     }
 
     start_marker() {
+        if (this.readonly) return;
         this.add_feature_on_commit(this.leaflet_map.editTools.startMarker());
     }
 
     start_polyline() {
+        if (this.readonly) return;
         this.add_feature_on_commit(this.leaflet_map.editTools.startPolyline());
     }
 
     start_polygon() {
+        if (this.readonly) return;
         this.add_feature_on_commit(this.leaflet_map.editTools.startPolygon());
     }
 
     toggle_edition() {
+        if (this.readonly) return;
         this.editing = !this.editing;
         if (this.editing) {
             this.layers.forEach(layer => {
@@ -1279,6 +1295,7 @@ class Map {
     }
 
     onchange(change) {
+        if (this.readonly) return;
         console.log("Change:", change);
         if (this.button_save != null) {
             this.button_save.removeAttribute("disabled");
@@ -1286,10 +1303,12 @@ class Map {
     }
 
     open_import_dialog() {
+        if (this.readonly) return;
         new ImportGeojsonDialog(this).open();
     }
 
     open_layer_style_dialog() {
+        if (this.readonly) return;
         new LayerStyleDialog(this).open();
     }
 
@@ -1302,6 +1321,7 @@ class Map {
     }
 
     set_title(new_title) {
+        if (this.readonly) return;
         this.title = new_title;
         this.onchange("edit-map");
     }
@@ -1319,6 +1339,7 @@ class Map {
     }
 
     save_data() {
+        if (this.readonly) return;
         let save_form_data = new FormData();
         save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
         save_form_data.set("mid", this.mid);
@@ -1503,7 +1524,6 @@ class LayerStyleDialog extends Dialog {
 }
 
 
-//TODO: handle readonly
 function initialize_map(map_seed, readonly) {
     var map = null;
     let map_id = map_seed.getAttribute("map-id");
@@ -1513,7 +1533,7 @@ function initialize_map(map_seed, readonly) {
         .then(res => res.json())
         .then(map_data => {
             // sheet = new Sheet(sheet_id, sheet_seed, readonly);
-            map = new Map(map_id, map_seed);
+            map = new Map(map_id, map_seed, readonly);
             let geojson = null;
             if (map_data.geojson != null && map_data.geojson.trim() != "") {
                 geojson = JSON.parse(map_data.geojson);
