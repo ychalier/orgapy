@@ -939,7 +939,7 @@ class Selection {
         // TODO: merge ranges!
         this.set_filtered_ranges();
         this.set();
-        this.check_sheet_scroll();
+        this.check_sheet_scroll(di < 0);
     }
 
     expand(di, dj) {
@@ -949,13 +949,22 @@ class Selection {
         // TODO: merge ranges!
         this.set_filtered_ranges();
         this.set();
-        this.check_sheet_scroll();
+        this.check_sheet_scroll(di < 0);
     }
 
-    check_sheet_scroll() {
+    check_sheet_scroll(move_up=false) {
         let root = this.root();
-        let cell = this.sheet.cells[root.i][root.j];
-        cell.scrollIntoView(false);
+        let i = root.i;
+        if (move_up && i > 0) i--;
+        let cell = this.sheet.cells[i][root.j];
+        cell.scrollIntoView({
+            behavior: "auto",
+            block: "nearest",
+            inline: "nearest",
+        });
+        if (move_up && root.i == 0) {
+            this.sheet.table.parentNode.scrollTo(this.sheet.table.parentNode.scrollLeft, 0);
+        }
     }
 
     bounds() {
