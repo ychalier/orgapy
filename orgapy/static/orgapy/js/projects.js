@@ -243,6 +243,7 @@ window.addEventListener("load", () => {
         }
 
         inflate_checklist_summary(summary) {
+            var self = this;
             let total = 0;
             let completed = 0;
             this.checklist_items.forEach(item => {
@@ -261,6 +262,15 @@ window.addEventListener("load", () => {
             let checklist_text = document.createElement("span");
             checklist_text.textContent = `${completed}/${total}`;
             checklist_summary.appendChild(checklist_text);
+            if (completed > 0) {
+                let checklist_clear = checklist_summary.appendChild(document.createElement("i"));
+                checklist_clear.className = "icon icon-cross show-on-parent-hover ml-1";
+                checklist_clear.title = "Clear completed items";
+                checklist_clear.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    self.clear_checklist();
+                });
+            }
         }
 
         inflate_description_summary(summary) {
@@ -439,12 +449,25 @@ window.addEventListener("load", () => {
             let checklist = body.appendChild(document.createElement("div"));
             checklist.classList.add("project-checklist");
             this.inflate_checklist_items(checklist);
-            let button_add_item = checklist.appendChild(document.createElement("button"));
+            let buttons = checklist.appendChild(document.createElement("div"));
+            buttons.classList.add("d-flex");
+            let button_add_item = buttons.appendChild(document.createElement("button"));
+            button_add_item.title = "Add checklist item";
             button_add_item.classList.add("project-button");
-            button_add_item.innerHTML = `<i class="icon icon-plus"></i> Add`;
+            button_add_item.classList.add("mr-2");
+            button_add_item.innerHTML = `<i class="icon icon-plus mr-1"></i> Add`;
             button_add_item.addEventListener("click", (event) => {
                 event.stopPropagation();
                 self.add_new_checklist_item(checklist);
+                return false;
+            });
+            let button_clear = buttons.appendChild(document.createElement("button"));
+            button_clear.title = "Clear completed items";
+            button_clear.classList.add("project-button");
+            button_clear.innerHTML = `<i class="icon icon-cross mr-1"></i> Clear`;
+            button_clear.addEventListener("click", (event) => {
+                event.stopPropagation();
+                self.clear_checklist();
                 return false;
             });
         }
@@ -593,13 +616,7 @@ window.addEventListener("load", () => {
                 });
             } else {
                 add_contextmenu_option(menu, "Clear checklist", () => {
-                    for (let i = this.checklist_items.length - 1; i >= 0; i--) {
-                        if (this.checklist_items[i].state) {
-                            this.checklist_items.splice(i, 1);
-                        }
-                    }
-                    self.concat_checklist();
-                    self.update();
+                    self.clear_checklist();
                 });
                 add_contextmenu_option(menu, "Remove checklist", () => {
                     self.checklist = null;
@@ -764,6 +781,16 @@ window.addEventListener("load", () => {
         on_empty_checklist() {
             this.checklist = null;
             this.checklist_items = []; 
+        }
+
+        clear_checklist() {
+            for (let i = this.checklist_items.length - 1; i >= 0; i--) {
+                if (this.checklist_items[i].state) {
+                    this.checklist_items.splice(i, 1);
+                }
+            }
+            this.concat_checklist();
+            this.update();
         }
 
     }
