@@ -313,6 +313,7 @@ window.addEventListener("load", () => {
     }
 
     function inflate_sync() {
+        if (sync_date == null) return;
         let container = document.getElementById("calendar-sync");
         container.innerHTML = "";
         let event_sync = container.appendChild(document.createElement("div"));
