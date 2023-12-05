@@ -951,6 +951,7 @@ def api_edit_objective_history(request):
 def api_list_calendars(request):
     events = []
     calendars = []
+    calendar = None
     for calendar in models.Calendar.objects.filter(user=request.user):
         eventsd = calendar.get_events(force="force" in request.GET)
         for event in eventsd:
