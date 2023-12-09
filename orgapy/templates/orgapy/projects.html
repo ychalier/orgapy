@@ -106,10 +106,12 @@
 
 <div class=""><span id="project-count">No project</span></div>
 
-<div class="d-flex my-4">
-    <button id="btn-project-create" class="projects-button"><i class="icon icon-plus"></i> Add project</button>
+<div class="d-flex my-4" style="flex-wrap: wrap">
+    <button id="btn-project-create" class="projects-button mb-1"><i class="icon icon-plus"></i> Project</button>
      
-    <button id="btn-objective-create" class="projects-button"><i class="icon icon-plus"></i> Add objective</button>
+    <button id="btn-todaysplan-create" class="projects-button mb-1"><i class="icon icon-plus"></i> Today's Plan</button>
+     
+    <button id="btn-objective-create" class="projects-button mb-1"><i class="icon icon-plus"></i> Objective</button>
 </div>
 
 {% include "orgapy/partials/modal_add_event.html" %}

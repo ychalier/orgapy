@@ -470,6 +470,7 @@ window.addEventListener("load", () => {
                 self.clear_checklist();
                 return false;
             });
+            return checklist;
         }
 
         expand() {
@@ -517,6 +518,7 @@ window.addEventListener("load", () => {
             if (this.description != null) this.inflate_description(body);
             if (this.checklist != null) this.inflate_checklist(body);
             this.update_expansion();
+            return body;
         }
 
         inflate_progress() {
@@ -800,9 +802,11 @@ window.addEventListener("load", () => {
         constructor(data) {
             super(data);
             this.title = "Today's Plan";
+            this.category = "general";
             this.limit_date = null;
             this.progress = null;
             this.description = null;
+            this.note = null;
             if (this.checklist == null) {
                 this.on_empty_checklist();
             }
@@ -832,7 +836,7 @@ window.addEventListener("load", () => {
         }
 
         on_empty_checklist() {
-            this.checklist = "[ ] Default Item";
+            this.checklist = "[ ] Item";
             this.split_checklist();
         }
 
@@ -1001,6 +1005,40 @@ window.addEventListener("load", () => {
         setTimeout(() => {
             temp_project_element.querySelector("input").focus();
         }, 1);
+    });
+
+    document.getElementById("btn-todaysplan-create").addEventListener("click", () => {
+        if (todays_plan != null) {
+            alert("Today's plan already exists");
+            return;
+        }
+        let form_data = new FormData();
+        form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+        fetch(URL_API + "?action=create-project", {method: "post", body: form_data})
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    todays_plan = new TodaysPlanProject({
+                        id: data.project.id,
+                        modification: data.project.modification,
+                        title: "Today's Plan"
+                    });
+                    inflate_projects();
+                    todays_plan.save();
+                    setTimeout(() => {
+                        let label = todays_plan.container.querySelector("label");
+                        todays_plan.inflate_checklist_item_label_input(label, "", 0);
+                    }, 1);
+                } else {
+                    toast("An error occured", 600);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast("An error occured", 600);
+            });
+        
+        inflate_projects();
     });
 
 });
