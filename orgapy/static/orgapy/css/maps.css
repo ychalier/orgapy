@@ -127,11 +127,11 @@
     border-radius: 2px;
     background-color: #101010;
     box-shadow: 0 1px 3px rgba(0, 0, 0, .25) !important;
-    min-width: 200px;
+    min-width: 250px;
 }
 
 .map-layers {
-    max-height: 80vh;
+    max-height: 60vh;
     overflow: auto;
 }
 
