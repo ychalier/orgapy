@@ -738,14 +738,22 @@ class Feature {
         }
         this.panel_element = create(this.layer.features_container, "li", ["map-feature"]);
         this.panel_element.innerHTML = "";
-        this.panel_element.textContent = this.properties.label;
+        let label = create(this.panel_element, "span");
+        label.textContent = this.properties.label;
+        let move_button = create(this.panel_element, "span", ["btn", "btn-sm", "show-on-parent-hover", "btn-feature"]);
+        move_button.innerHTML = `<i class="icon icon-arrow-right"></i>`;
+        move_button.title = "Move to another layer";
+        move_button.addEventListener("click", (event) => {
+            event.stopPropagation();
+            new MoveFeatureDialog(self.layer.map, self.layer.index, self.index).open();
+        });
         this.panel_element.addEventListener("mouseenter", (event) => {
             self.start_highlight();
         });
         this.panel_element.addEventListener("mouseleave", (event) => {
             self.end_highlight();
         });
-        this.panel_element.addEventListener("dblclick", (event) => {
+        label.addEventListener("dblclick", (event) => {
             event.stopPropagation();
             self.goto();
         });
@@ -1518,6 +1526,65 @@ class LayerStyleDialog extends Dialog {
             event.stopPropagation();
             self.close();
             return false;
+        });
+    }
+
+}
+
+
+class MoveFeatureDialog extends Dialog {
+
+    constructor(map, src_layer_index, feature_index) {
+        super();
+        this.map = map;
+        this.src_layer_index = src_layer_index;
+        this.feature_index = feature_index;
+    }
+
+    open() {
+        var self = this;
+        super.open();
+        let title = create(this.container, "div", ["dialog-title"]);
+        title.textContent = "Move Feature to another Layer";
+        let form = create(this.container, "form", ["d-flex"]);
+        form.style.flexDirection = "column";
+        let group = create(form, "div", ["form-group"]);
+        create(group, "label", ["form-label"]).textContent = "Destination Layer";
+        let select = create(group, "select", ["form-select"]);
+        this.map.layers.forEach(layer => {
+            let option = create(select, "option");
+            option.value = layer.index;
+            if (layer.index == this.src_layer_index) {
+                option.selected = true;
+            }
+            option.textContent = layer.label;
+        });
+        let buttons = create(form, "div", ["d-flex"]);
+        let move_button = create(buttons, "button", ["btn", "btn-primary", "mr-1"]);
+        move_button.textContent = "Move";
+        let cancel_button = create(buttons, "button", ["btn"]);
+        cancel_button.textContent = "Cancel";
+        cancel_button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            self.close();
+            return false;
+        });
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            let src = self.src_layer_index;
+            let dst = null;
+            select.querySelectorAll("option").forEach(option => {
+                if (option.selected) {
+                    dst = parseInt(option.value);
+                }
+            });
+            self.close();
+            if (src == dst || dst == null) return;
+            let src_layer = self.map.get_layer(src);
+            let dst_layer = self.map.get_layer(dst);
+            dst_layer.add_feature(src_layer.get_feature(self.feature_index).to_geojson());
+            src_layer.delete_feature(self.feature_index);
         });
     }
 

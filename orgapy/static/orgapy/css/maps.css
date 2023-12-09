@@ -45,6 +45,11 @@
     margin-left: .2rem;
 }
 
+.btn-feature {
+    border: none;
+    height: 0;
+}
+
 /* Form */
 
 .inline-form {
