@@ -9,10 +9,10 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-orgapy',
-    version='3.5.0',
+    version='3.5.1',
     packages=find_packages(),
     include_package_data=True,
-    license='MIT License',
+    license='GNU GPLv3',
     description='A Django app to handles notes, tasks, and events.',
     long_description=README,
     url='https://chalier.fr/orgapy',
@@ -21,8 +21,6 @@ setup(
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP',
