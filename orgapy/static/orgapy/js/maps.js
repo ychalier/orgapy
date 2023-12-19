@@ -134,16 +134,17 @@ class CurrentPositionControl extends L.Control {
         label.style.cursor = "pointer";
         label.style.color = "black";
         label.title = "Click to copy";
-        function set_label_text() {
-            let center = map.getCenter();
-            label.textContent = `${center.lat.toFixed(6)},${center.lng.toFixed(6)}`;
+        function set_label_text(event) {
+            let point = event ? event.latlng : map.getCenter();
+            label.textContent = `${point.lat.toFixed(6)},${point.lng.toFixed(6)}`;
         }
         label.addEventListener("click", (event) => {
             event.stopPropagation();
+            set_label_text();
             navigator.clipboard.writeText(label.textContent);
         });
         set_label_text();
-        map.addEventListener("move", set_label_text);
+        map.addEventListener("mousemove", set_label_text);
         return container;
     }
 
