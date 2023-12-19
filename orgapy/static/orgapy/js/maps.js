@@ -1022,10 +1022,15 @@ class Layer {
             },
             properties: {}
         }
-        if (base_properties != null) {
-            for (let property in base_properties) {
-                geojson_data.properties[property] = base_properties[property];
+        if (base_properties == null) base_properties = {};
+        let layer_style = this.most_common_or_default_style();
+        for (let key in layer_style) {
+            if (!(key in base_properties)) {
+                base_properties[key] = layer_style[key];
             }
+        }
+        for (let property in base_properties) {
+            geojson_data.properties[property] = base_properties[property];
         }
         if (map_element instanceof L.Marker) {
             geojson_data.geometry.type = "Point";
@@ -1099,6 +1104,15 @@ class Layer {
             }
         });
         return max_value;
+    }
+
+    most_common_or_default_style() {
+        return {
+            strokeColor: or_default(this.most_common_property_value("strokeColor"), DEFAULT_STROKE_COLOR),
+            strokeWidth: or_default(this.most_common_property_value("strokeWidth"), DEFAULT_STROKE_COLOR),
+            fillColor: or_default(this.most_common_property_value("fillColor"), DEFAULT_STROKE_COLOR),
+            fillOpacity: or_default(this.most_common_property_value("fillOpacity"), DEFAULT_STROKE_COLOR),
+        };
     }
 
 }
