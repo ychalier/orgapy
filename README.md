@@ -10,44 +10,19 @@ You'll need Python 3, and a [Django](https://www.djangoproject.com/) project.
 
 ### Installation
 
-1. Install the release to the Python environment
-
-    ```console
-    pip install --extra-index-url="https://packages.chalier.fr" django-orgapy
-    ```
-
+1. Install the latest release of `django-orgapy`
 2. Add `orgapy` to the `INSTALLED_APPS` variables in Django settings.py
-
-    ```python
-    INSTALLED_APPS = [
-        '...',
-        'orgapy',
-    ]
-    ```  
-
 3. Migrate the database
-
-    ```console
-    python manage.py migrate
-    ```
-
-4. Collect the new static files
-
-    ```console
-    python manage.py collectstatic
-    ```
-
-5. Setup the URLs
+4. Collect new static files
+5. Setup URLs
 
     ```python
     from django.urls import include
     import orgapy.urls
     urlpatterns = [
-        ...,
         path("orgapy/", include("orgapy.urls", namespace="orgapy")),
     ]
     ```
-
 6. Reload your server, and it should be up.
 
 ### Permissions
@@ -69,5 +44,5 @@ Project is maintained by [Yohan Chalier](https://chalier.fr).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/ychalier/rolepy/graphs/contributors) file for details.
+This project is licensed under the [GNU GPLv3](LICENSE) license.
 
