@@ -261,24 +261,40 @@ class SearchControl extends L.Control {
         this.searchbar_container = null;
     }
 
-    on_nominatim_results(results) {
-        if (results.length == 0) {
-            alert("No result found!");
-            return;
-        }
-        //TODO?: handle choice between multiple results
-        let best_result = results[0];
-        let marker = new L.marker([parseFloat(best_result.lat), parseFloat(best_result.lon)]);
-        this.map.get_selected_layer().add_feature_from_map_element(marker, {label: best_result.display_name});
-        this.map.leaflet_map.panTo(marker.getLatLng());
-    }
-
     search_nominatim(query) {
         var self = this;
         let url = `https://nominatim.openstreetmap.org/search?q=${encodeURI(query)}&format=jsonv2`;
         fetch(url).then(res => res.json()).then(results => {
-            self.on_nominatim_results(results);
+            if (results.length == 0) {
+                alert("No result found!");
+                return;
+            }
+            //TODO?: handle choice between multiple results
+            let best_result = results[0];
+            self.onresult({
+                lat: best_result.lat,
+                lon: best_result.lon,
+                label: best_result.display_name
+            });
         });
+    }
+
+    onresult(result) {
+        let marker = new L.marker([parseFloat(result.lat), parseFloat(result.lon)]);
+        this.map.get_selected_layer().add_feature_from_map_element(marker, {label: result.label});
+        this.map.leaflet_map.panTo(marker.getLatLng());
+    }
+
+    search(query) {
+        if (query.match(/^\d+(\.\d+)? *, *\d+(\.\d+)?$/g)) {
+            this.onresult({
+                lat: parseFloat(query.split(",")[0]),
+                lon: parseFloat(query.split(",")[1]),
+                label: "GPS Point"
+            });
+        } else {
+            this.search_nominatim(query);
+        }
     }
 
     inflate() {
@@ -298,7 +314,7 @@ class SearchControl extends L.Control {
             event.preventDefault();
             let query = input.value.trim();
             if (query != "") {
-                self.search_nominatim(query);
+                self.search(query);
             }
         });
     }
