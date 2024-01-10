@@ -45,7 +45,7 @@ window.addEventListener("load", () => {
             delete_button.title = "Delete";
             var self = this;
             delete_button.addEventListener("click", () => {
-                if (confirm("Are you sure you want to delete this event?") == true) {
+                if (confirm(`Are you sure you want to delete the event '${this.title}'?`) == true) {
                     self.delete();
                 }
             });
@@ -100,7 +100,7 @@ window.addEventListener("load", () => {
             button.classList.add("task-button-complete");
             button.title = "Complete";
             button.addEventListener("click", () => {
-                if (confirm("Are you sure you want to complete this task?") == true) {
+                if (confirm(`Are you sure you want to complete the task '${this.title}'?`) == true) {
                     self.complete();
                 }
             });
