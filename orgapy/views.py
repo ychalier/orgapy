@@ -1037,7 +1037,7 @@ def api_edit_task(request):
     task_title = request.POST.get("title")
     task_start_date = request.POST.get("start_date")
     task_due_date = request.POST.get("due_date")
-    if task_due_date.strip() == "":
+    if task_due_date is not None and task_due_date.strip() == "":
         task_due_date = None
     task_recurring_mode = request.POST.get("recurring_mode")
     task_recurring_period = request.POST.get("recurring_period")

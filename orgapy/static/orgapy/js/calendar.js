@@ -233,7 +233,9 @@ window.addEventListener("load", () => {
             modal.querySelector("input[name='id']").value = task.id;
             modal.querySelector("input[name='title']").value = task.title;
             modal.querySelector("input[name='start_date']").value = task.start_date.toISOString().substring(0, 10);
-            modal.querySelector("input[name='due_date']").value = task.due_date.toISOString().substring(0, 10);
+            if (task.due_date != null) {
+                modal.querySelector("input[name='due_date']").value = task.due_date.toISOString().substring(0, 10);
+            }
             modal.querySelectorAll("select[name='recurring_mode'] option").forEach(option => {
                 if (option.value == task.recurring_mode) {
                     option.selected = true;
