@@ -195,6 +195,7 @@ class Project(models.Model):
     checklist = models.TextField(blank=True, null=True)
     rank = models.FloatField()
     note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True)
+    archived = models.BooleanField(default=False)
 
     class Meta:
 

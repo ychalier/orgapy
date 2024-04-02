@@ -658,6 +658,10 @@ def api(request):
             return api_edit_project(request)
         case "edit-project-ranks":
             return api_edit_project_ranks(request)
+        case "archive-project":
+            return api_archive_project(request)
+        case "unarchive-project":
+            return api_unarchive_project(request)
         case "delete-project":
             return api_delete_project(request)
         case "list-objectives":
@@ -704,8 +708,11 @@ def api(request):
 
 @permission_required("orgapy.view_project")
 def api_list_projects(request):
+    show_archived = request.GET.get("archived", "0") == "1"
     projects = []
     for project in models.Project.objects.filter(user=request.user):
+        if project.archived and not show_archived:
+            continue
         progress = None
         if project.progress_min is not None and project.progress_max is not None and project.progress_current is not None:
             progress = {
@@ -724,7 +731,8 @@ def api_list_projects(request):
             "description": project.description if project.description else None,
             "checklist": project.checklist if project.checklist else None,
             "rank": project.rank,
-            "note": None if project.note is None else project.note.id
+            "note": None if project.note is None else project.note.id,
+            "archived": project.archived,
         })
     return JsonResponse({"projects": projects})
 
@@ -754,6 +762,7 @@ def api_create_project(request):
         "modification": project.date_modification.timestamp(),
         "rank": project.rank,
         "note": None,
+        "archived": False,
     }})
 
 
@@ -825,6 +834,44 @@ def api_edit_project_ranks(request):
     for project, rank in zip(projects, ranks):
         project.rank = rank
         project.save()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.change_project")
+def api_archive_project(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    project_id = request.POST.get("project_id")
+    if project_id is None:
+        raise BadRequest("Missing field")
+    try:
+        project_id = int(project_id)
+    except:
+        raise BadRequest("Invalid value")
+    if not models.Project.objects.filter(id=project_id, user=request.user).exists():
+        raise Http404("Project not found")
+    project = models.Project.objects.get(id=project_id, user=request.user)
+    project.archived = True
+    project.save()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.change_project")
+def api_unarchive_project(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    project_id = request.POST.get("project_id")
+    if project_id is None:
+        raise BadRequest("Missing field")
+    try:
+        project_id = int(project_id)
+    except:
+        raise BadRequest("Invalid value")
+    if not models.Project.objects.filter(id=project_id, user=request.user).exists():
+        raise Http404("Project not found")
+    project = models.Project.objects.get(id=project_id, user=request.user)
+    project.archived = False
+    project.save()
     return JsonResponse({"success": True})
 
 

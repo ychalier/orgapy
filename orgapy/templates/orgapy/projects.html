@@ -112,6 +112,12 @@
     <button id="btn-todaysplan-create" class="projects-button mb-1"><i class="icon icon-plus"></i> Today's Plan</button>
      
     <button id="btn-objective-create" class="projects-button mb-1"><i class="icon icon-plus"></i> Objective</button>
+     
+    {% if not request.GET.archived %}
+    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}?archived=1">View Archived Projects</a>
+    {% else %}
+    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}">Hide Archived Projects</a>
+    {% endif %}
 </div>
 
 {% include "orgapy/partials/modal_add_event.html" %}

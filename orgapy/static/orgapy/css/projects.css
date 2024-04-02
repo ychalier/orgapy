@@ -22,6 +22,11 @@
     overflow: hidden;
 }
 
+.project.archived {
+    background: rgb(0, 0, 30);
+    border-color: rgb(17, 17, 73);
+}
+
 .project-header {
     padding: .8rem;
 }
@@ -338,7 +343,7 @@
     justify-content: flex-start;
     align-items: center;
     width: fit-content;
-    color: white;
+    color: white !important;
     padding: .8rem;
     cursor: pointer;
     transition: .2s ease;

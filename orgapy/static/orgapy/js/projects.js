@@ -62,6 +62,7 @@ window.addEventListener("load", () => {
             this.checklist = data.checklist;
             this.rank = data.rank;
             this.note = data.note;
+            this.archived = data.archived;
             this.checklist_items = null;
             this.split_checklist();
             this.expanded = false;
@@ -566,6 +567,9 @@ window.addEventListener("load", () => {
         inflate() {
             this.container.innerHTML = "";
             this.container.className = `project`;
+            if (this.archived) {
+                this.container.classList.add("archived");
+            }
             this.inflate_header();
             if (this.description != null || this.checklist != null) {
                 this.inflate_body();
@@ -647,6 +651,16 @@ window.addEventListener("load", () => {
                 window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
             });
 
+            if (this.archived) {
+                add_contextmenu_option(menu, "Unarchive project", () => {
+                    self.unarchive();
+                });
+            } else {
+                add_contextmenu_option(menu, "Archive project", () => {
+                    self.archive();
+                });
+            }
+
             add_contextmenu_option(menu, "Delete project", () => {
                 self.delete();
             });
@@ -688,7 +702,71 @@ window.addEventListener("load", () => {
                             if (self.title == "Today's Plan") {
                                 todays_plan = null;
                             }
+                            
                             delete projects[self.id];
+                            inflate_projects();
+                            update_project_count();
+                        } else {
+                            toast("An error occured", 600);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        toast("An error occured", 600);
+                    });
+            }
+        }
+
+        archive() {
+            var self = this;
+            if (confirm(`Are you sure to archive '${this.title}'?`) == true) {
+                let form_data = new FormData();
+                form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+                form_data.set("project_id", this.id);
+                fetch(URL_API + "?action=archive-project", {
+                    method: "post",
+                    body: form_data
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.archived = true;
+                            toast("Archived!", 600);
+                            if (self.title == "Today's Plan") {
+                                todays_plan = null;
+                            }
+                            const showArchived = (new URLSearchParams(window.location.search)).get("archived") == "1";
+                            if (!showArchived) {
+                                delete projects[self.id];
+                            }
+                            inflate_projects();
+                            update_project_count();
+                        } else {
+                            toast("An error occured", 600);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        toast("An error occured", 600);
+                    });
+            }
+        }
+
+        unarchive() {
+            var self = this;
+            if (confirm(`Are you sure to unarchive '${this.title}'?`) == true) {
+                let form_data = new FormData();
+                form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
+                form_data.set("project_id", this.id);
+                fetch(URL_API + "?action=unarchive-project", {
+                    method: "post",
+                    body: form_data
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.archived = false;
+                            toast("Unarchived!", 600);
                             inflate_projects();
                             update_project_count();
                         } else {
@@ -979,7 +1057,8 @@ window.addEventListener("load", () => {
     }
 
     function fetch_projects_and_inflate() {
-        fetch(URL_API + "?action=list-projects").then(res => res.json()).then(data => {
+        const showArchived = (new URLSearchParams(window.location.search)).get("archived") == "1";
+        fetch(URL_API + `?action=list-projects${showArchived ? "&archived=1" : ""}`).then(res => res.json()).then(data => {
             projects = {};
             todays_plan = null;
             data.projects.forEach(project_data => {
