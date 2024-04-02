@@ -174,8 +174,13 @@ window.addEventListener("load", () => {
         let url = URL_API + "?action=list-tasks&limit=5";
         fetch(url).then(res => res.json()).then(data => {
             tasks = [];
+            const now = new Date();
             data.tasks.forEach(task_data => {
-                tasks.push(new Task(task_data));
+                const task = new Task(task_data);
+                if (task.recurring_mode != "ON" && task.start_date > now) {
+                    return;
+                }
+                tasks.push(task);
             });
             inflate_tasks();
         }).catch(err => {
