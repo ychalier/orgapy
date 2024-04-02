@@ -687,7 +687,7 @@ window.addEventListener("load", () => {
 
         delete() {
             var self = this;
-            if (confirm("Are you sure?") == true) {
+            if (confirm(`Are you sure to delete '${this.title}'?`) == true) {
                 let form_data = new FormData();
                 form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
                 form_data.set("project_id", this.id);
