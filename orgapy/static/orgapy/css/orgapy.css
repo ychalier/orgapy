@@ -157,6 +157,9 @@ pre {
     .markdown a {
         word-break: break-all;
     }
+    .markdown table a {
+        word-break: keep-all;
+    }
 }
 
 .code code {
