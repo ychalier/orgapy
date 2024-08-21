@@ -115,14 +115,14 @@
     <button id="btn-objective-create" class="projects-button mb-1"><i class="icon icon-plus"></i> Objective</button>
      
     {% if not request.GET.archivedProjects %}
-    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}?archivedProjects=1">View Archived Projects</a>
+    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}?archivedProjects=1{% if request.GET.archivedObjectives %}&archivedObjectives=1{% endif %}">View Archived Projects</a>
     {% else %}
-    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}">Hide Archived Projects</a>
+    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}{% if request.GET.archivedObjectives %}?archivedObjectives=1{% endif %}">Hide Archived Projects</a>
     {% endif %}
     {% if not request.GET.archivedObjectives %}
-    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}?archivedObjectives=1">View Archived Objectives</a>
+    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}?archivedObjectives=1{% if request.GET.archivedProjects %}&archivedProjects=1{% endif %}">View Archived Objectives</a>
     {% else %}
-    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}">Hide Archived Objectives</a>
+    <a class="projects-button mb-1" href="{% url 'orgapy:projects' %}{% if request.GET.archivedProjects %}?archivedProjects=1{% endif %}">Hide Archived Objectives</a>
     {% endif %}
 </div>
 
