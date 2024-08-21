@@ -99,6 +99,7 @@ window.addEventListener("load", () => {
                 this.history = [];
             }
             this.rules = data.rules;
+            this.archived = data.archived;
             this.history.sort();
         }
 
@@ -300,6 +301,9 @@ window.addEventListener("load", () => {
         dom_name.classList.add("objgraph-name");
         dom_name.classList.add("popover");
         dom_name.classList.add("popover-bottom");
+        if (obj.archived) {
+            dom_name.classList.add("archived");
+        }
         dom_name.textContent = obj.name;
         dom_name.style.top = ((index + 1) * 32 + 1) + "px";
         dom_name.addEventListener("click", (event) => {
@@ -353,7 +357,8 @@ window.addEventListener("load", () => {
     }
 
     function fetch_objectives() {
-        fetch(URL_API + "?action=list-objectives").then(res => res.json()).then(data => {
+        const showArchived = (new URLSearchParams(window.location.search)).get("archivedObjectives") == "1";
+        fetch(URL_API + `?action=list-objectives${showArchived ? "&archived=1" : ""}`).then(res => res.json()).then(data => {
             objectives = {};
             data.objectives.forEach(data => {
                 objectives[data.id] = new Objective(data);

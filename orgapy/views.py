@@ -670,6 +670,10 @@ def api(request):
             return api_add_objective(request)
         case "edit-objective":
             return api_edit_objective(request)
+        case "archive-objective":
+            return api_archive_objective(request)
+        case "unarchive-objective":
+            return api_unarchive_objective(request)
         case "edit-objective-history":
             return api_edit_objective_history(request)
         case "delete-objective":
@@ -895,8 +899,11 @@ def api_delete_project(request):
 
 @permission_required("orgapy.view_objective")
 def api_list_objectives(request):
+    show_archived = request.GET.get("archived", "0") == "1"
     objectives = []
-    for objective in models.Objective.objects.filter(user=request.user, archived=False):
+    for objective in models.Objective.objects.filter(user=request.user):
+        if not show_archived and objective.archived:
+            continue
         objectives.append(objective.to_dict())
     return JsonResponse({"objectives": objectives})
 
@@ -954,6 +961,44 @@ def api_edit_objective(request):
     objective.save()
     return JsonResponse({"success": True})
 
+
+@permission_required("orgapy.change_objective")
+def api_archive_objective(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    objective_id = request.POST.get("objective_id")
+    if objective_id is None:
+        raise BadRequest("Missing field")
+    try:
+        objective_id = int(objective_id)
+    except:
+        raise BadRequest("Invalid value")
+    if not models.Objective.objects.filter(id=objective_id, user=request.user).exists():
+        raise Http404("Objective not found")
+    objective = models.Objective.objects.get(id=objective_id, user=request.user)
+    objective.archived = True
+    objective.save()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.change_objective")
+def api_unarchive_objective(request):
+    if request.method != "POST":
+        raise BadRequest("Wrong method")
+    objective_id = request.POST.get("objective_id")
+    if objective_id is None:
+        raise BadRequest("Missing field")
+    try:
+        objective_id = int(objective_id)
+    except:
+        raise BadRequest("Invalid value")
+    if not models.Objective.objects.filter(id=objective_id, user=request.user).exists():
+        raise Http404("Objective not found")
+    objective = models.Objective.objects.get(id=objective_id, user=request.user)
+    objective.archived = False
+    objective.save()
+    return JsonResponse({"success": True})
+    
 
 @permission_required("orgapy.delete_objective")
 def api_delete_objective(request):

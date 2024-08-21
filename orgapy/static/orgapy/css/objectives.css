@@ -112,6 +112,11 @@
     cursor: default;
 }
 
+.objgraph-name.archived {
+    background: rgb(0, 0, 30);
+    border-color: rgb(17, 17, 73);
+}
+
 .objgraph-completion {
     position: absolute;
     height: 100%;

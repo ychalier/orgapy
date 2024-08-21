@@ -90,6 +90,7 @@ class Objective(models.Model):
             "name": self.name,
             "history": history_dict,
             "rules": rules_dict,
+            "archived": self.archived
         }
 
 

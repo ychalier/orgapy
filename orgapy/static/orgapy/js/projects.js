@@ -735,7 +735,7 @@ window.addEventListener("load", () => {
                             if (self.title == "Today's Plan") {
                                 todays_plan = null;
                             }
-                            const showArchived = (new URLSearchParams(window.location.search)).get("archived") == "1";
+                            const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
                             if (!showArchived) {
                                 delete projects[self.id];
                             }
@@ -1057,7 +1057,7 @@ window.addEventListener("load", () => {
     }
 
     function fetch_projects_and_inflate() {
-        const showArchived = (new URLSearchParams(window.location.search)).get("archived") == "1";
+        const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
         fetch(URL_API + `?action=list-projects${showArchived ? "&archived=1" : ""}`).then(res => res.json()).then(data => {
             projects = {};
             todays_plan = null;
