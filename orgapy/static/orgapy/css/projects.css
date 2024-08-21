@@ -334,6 +334,13 @@
     border-bottom: none;
 }
 
+.project-buttons {
+    display: flex;
+    margin: .8rem 0;
+    flex-wrap: wrap;
+    gap: .2rem;
+}
+
 .projects-button {
     border: 1px solid black;
     background: #101010;
@@ -347,6 +354,7 @@
     padding: .8rem;
     cursor: pointer;
     transition: .2s ease;
+    margin: 0;
 }
 
 .projects-button:hover {
@@ -360,6 +368,11 @@
 a.projects-button:hover {
     text-decoration: inherit;
     color: inherit;
+}
+
+.projects-button-small {
+    padding: .2rem .4rem;
+    font-size: smaller;
 }
 
 .filters {
