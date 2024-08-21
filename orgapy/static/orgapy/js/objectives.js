@@ -339,6 +339,11 @@ window.addEventListener("load", () => {
 
     function create_objgraph() {
         let container = document.getElementById("objgraph-wrapper");
+        if (Object.keys(objectives).length == 0) {
+            container.parentElement.classList.add("hidden");
+        } else {
+            container.parentElement.classList.remove("hidden");
+        }
         container.innerHTML = "";
         let objgraph = container.appendChild(document.createElement("div"));
         objgraph.classList.add("objgraph");
