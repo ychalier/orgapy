@@ -383,6 +383,11 @@ window.addEventListener("load", () => {
             modal.querySelector("input[name='period']").value = objective.rules.period;
             modal.querySelector("input[name='cooldown']").value = objective.rules.cooldown;
             modal.querySelector("input[name='add']").style.display = "none";
+            if (objective.archived) {
+                modal.querySelector("input[name='archive']").value = "Unarchive";
+            } else {
+                modal.querySelector("input[name='archive']").value = "Archive";
+            }
             modal.querySelector("input[name='save']").style.display = "unset";
             modal.querySelector("input[name='delete']").style.display = "unset";
             modal.querySelector("input[name='completion']").style.display = "unset";
@@ -397,6 +402,7 @@ window.addEventListener("load", () => {
             modal.querySelector("input[name='period']").value = 1;
             modal.querySelector("input[name='cooldown']").value = 0;
             modal.querySelector("input[name='add']").style.display = "unset";
+            modal.querySelector("input[name='archive']").style.display = "none";
             modal.querySelector("input[name='save']").style.display = "none";
             modal.querySelector("input[name='delete']").style.display = "none";
             modal.querySelector("input[name='completion']").style.display = "none";
@@ -410,6 +416,32 @@ window.addEventListener("load", () => {
         if (event.submitter.name == "completion") {
             let objective_id = parseInt(event.target.querySelector("input[name='id']").value);
             open_modal_completion_form(objectives[objective_id]);
+            return;
+        }
+        if (event.submitter.name == "archive") {
+            const objective_id = parseInt(event.target.querySelector("input[name='id']").value);
+            const archived = objectives[objective_id].archived;
+            const prefix = archived ? "un" : ""; 
+            const url = `${URL_API}?action=${prefix}archive-objective`;
+            const formdata = new FormData(event.target, event.submitter);
+            formdata.append("objective_id", objective_id);
+            fetch(url, {method: "post", body: formdata}).then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (archived) {
+                            toast("Unarchived!", 600);
+                        } else {
+                            toast("Archived!", 600);
+                        }
+                        fetch_objectives();
+                    } else {
+                        toast("An error occured", 600);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    toast("An error occured", 600);
+                });
             return;
         }
         if (event.submitter.name == "delete" && !confirm(`Are you sure you want to delete this objective?`)) return;
