@@ -309,3 +309,10 @@ body.fullscreen {
     flex-direction: column;
     text-align: right;
 }
+
+.modal-footer-buttons {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .2rem;
+}
