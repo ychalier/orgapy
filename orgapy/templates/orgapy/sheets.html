@@ -5,14 +5,13 @@
 
 {% block main_content %}
 
-<form action="{% url 'orgapy:sheets' %}" method="get">
-    <div class="search-create-bar">
-        <div class="searchbar-with-clear-button has-icon-right">         
-            <input autocomplete="off" class="form-input" type="text" name="query" placeholder="Search a sheet" value="{% if query %}{{query}}{% endif %}" />
-        </div>
-        <button class="btn btn-primary input-group-btn">Search</button>
-        <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
+<form class="searchbar" action="{% url 'orgapy:sheets' %}" method="get">
+    <div class="searchbar-container">         
+        <input class="searchbar-input" type="text" name="query" placeholder="Search a sheet" value="{% if query %}{{query}}{% endif %}" />
+        <i class="searchbar-icon"></i>
     </div>
+    <button class="searchbar-search">Search</button>
+    <a class="searchbar-create button" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
 </form>
 
 {% if groups or standalone_sheets %}

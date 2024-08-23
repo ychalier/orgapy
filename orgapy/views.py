@@ -230,7 +230,7 @@ def view_projects(request):
 
 @permission_required("orgapy.view_note")
 def view_notes(request):
-    page_size = 25
+    page_size = 19
     query = request.GET.get("query", "")
     category = request.GET.get("category", "")    
     if len(query) > 0 and query[0] == "#":
