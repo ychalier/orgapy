@@ -10,41 +10,27 @@
 {% endblock before_columns %}
 
 {% block main_content %}
-    <div class="form-group">
-        <!--<label class="form-label" for="input-title">Title</label>-->
-        <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
-    </div>
 
-    <div class="form-group">
-        <!--<label class="form-label" for="input-content">Content (Markdown)</label>-->
-        <textarea class="form-input" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
-    </div>
+<input class="note-form-title" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
 
-    <input type="hidden" name="categories" id="input-categories" />
+<input type="hidden" name="categories" id="input-categories" />
 
-    <div class="form-group">
-        <label class="form-label">Categories</label>
-        {% for category in categories %}
-        <span class="category-chip chip {% if category.id in note_category_ids %}active{% endif %}">{{ category.name }}</span>
-        {% endfor %}
-    </div>
+<div class="note-form-categories">
+    {% for category in categories %}
+    <span class="note-form-category {% if category.id in note_category_ids %}active{% endif %}">{{ category.name }}</span>
+    {% endfor %}
+    <input class="note-form-category-other" id="input-extra-categories" type="text" name="extra" placeholder="other"  title="Seperate with a semicolon" />
+</div>
 
-    <div class="form-group">
-        <div class="input-group">
-            <label class="form-label input-group-addon addon-sm" for="input-extra-categories">Other</label>
-            <input class="form-input input-sm" id="input-extra-categories" type="text" name="extra" placeholder="foo;bar" />
-        </div>
-        <div class="form-input-hint">Separate them with a semicolon.</div>
-    </div>
+<textarea class="note-form-content" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
 
-    <br>
 {% endblock main_content %}
 
 {% block right_column %}
-<div class="side-menu-xl container">
-    <button class="btn mb-2" id="btn-save-note">Save</button>   
+<div class="column-sticky">
+    <button id="btn-save-note">Save</button>   
     
-    <button class="btn btn-primary mb-2">Done</button>
+    <button>Done</button>
 
     <div class="form-group">
         <label class="form-switch">

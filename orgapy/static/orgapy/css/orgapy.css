@@ -43,6 +43,7 @@ textarea {
     padding: .4rem;
     border-radius: .4rem;
     background-color: #101010;
+    width: 100%;
 }
 
 input:focus,
@@ -364,7 +365,6 @@ button:focus {
 
 .searchbar-input {
     border-radius: .4rem 0 0 .4rem;
-    width: 100%;
     border-color: black;
 }
 
@@ -462,6 +462,57 @@ a.note-category:hover {
     padding: .8rem;
     margin: .8rem 0;
     border-radius: .4rem;
+}
+
+/**
+ * Note form
+ */
+
+.note-form-title {
+    display: block;
+    font-size: 32px;
+    font-weight: bold;
+    padding: .8rem;
+    margin: .8rem 0 0 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.note-form-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem;
+    background: #101010;
+    padding: .8rem;
+    margin: 0 0 .8rem 0;
+    border-bottom-left-radius: .4rem;
+    border-bottom-right-radius: .4rem;
+    border: 1px solid black;
+}
+
+.note-form-category-other,
+.note-form-category {
+    background: #303030;
+    padding: .2rem .4rem;
+    border-radius: .4rem;
+    font-size: small;
+    border: none;
+}
+
+.note-form-category.active {
+    background: #8ed2ff;
+    color: black;
+}
+
+.note-form-category-other {
+    width: 6rem;
+}
+
+.note-form-content {
+    display: block;
+    padding: .8rem;
+    margin: .8rem 0;
+    height: 100%;
 }
 
 /******************************************************************************/
