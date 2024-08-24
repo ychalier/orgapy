@@ -14,48 +14,51 @@
 <script src="{% static 'orgapy/js/toc.js' %}"></script>
 {% endblock head %}
 
-{% block left_column %}<div style="height: {% if note.project_set.all %}11.4rem{% else %}10.2rem{% endif %}"></div><div class="toc"></div>{% endblock left_column %}
+{% block left_column %}<div class="column-sticky toc"></div>{% endblock left_column %}
 
 {% block right_column %}
-<div class="side-menu container mt-1">
-    <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if note.pinned %}btn-primary{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="icon icon-bookmark"></i></a>
-    <a href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" class="btn btn-action mb-1 mr-1 {% if note.public %}btn-primary{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
-    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Edit"><i class="icon icon-edit"></i></a>
-    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="btn btn-action mb-1 mr-1" title="Download as Markdown"><i class="icon icon-download"></i></a>
-    <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="btn btn-action mb-1 mr-1 link-confirm" title="Delete"><i class="icon icon-delete"></i></a>
+<div class="column-sticky column-right-actions">
+    <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" class="action-button" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i></a>
+    <a href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" class="action-button" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i></a>
+    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="action-button" title="Edit"><i class="ri-pencil-fill"></i></a>
+    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="action-button" title="Download as Markdown"><i class="ri-download-line"></i></a>
+    <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="action-button link-confirm" title="Delete"><i class="ri-delete-bin-line"></i></a>
 </div>
 {% endblock right_column %}
 
 
 {% block main_content %}
-<h1>{{note.title}}</h1>
 
-<p>
-    {% if note.categories.all %}
-        {% for category in note.categories.all %}
-        <a class="mr-2" href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
-        {% endfor %}
-    {% else %}
-        <span class="chip mr-2"><a class="link-hidden" href="{% url 'orgapy:notes' %}?uncategorized=1">uncategorized</a></span>
-    {% endif %}
-    <span class="text-small">
-        {% if note.date_creation.date == note.date_modification.date %}
-        Created on <b>{{ note.date_creation | date }}</b>
-        {% else %}
-        Created on <b>{{ note.date_creation | date }}</b>, edited on <b>{{ note.date_modification | date }}</b>
-        {% endif %}
-    </span>
-</p>
+<div class="note">
 
-{% if note.project_set.all %}
-<p style="margin-top: -24px">
-Project{{ note.project_set.count | pluralize }}: {% for project in note.project_set.all %}<a href="{{ project.get_absolute_url }}">{{ project.title }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
-</p>
-{% endif %}
+    <header class="note-header">
+        <h1 class="note-title">{{note.title}}</h1>
+        <div class="note-meta">
+            {% if note.categories.all %}
+                {% for category in note.categories.all %}
+                <a class="mr-2" href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+                {% endfor %}
+            {% else %}
+                <span class="chip mr-2"><a class="link-hidden" href="{% url 'orgapy:notes' %}?uncategorized=1">uncategorized</a></span>
+            {% endif %}
+            <span class="text-small">
+                {% if note.date_creation.date == note.date_modification.date %}
+                Created on <b>{{ note.date_creation | date }}</b>
+                {% else %}
+                Created on <b>{{ note.date_creation | date }}</b>, edited on <b>{{ note.date_modification | date }}</b>
+                {% endif %}
+            </span>
+            {% if note.project_set.all %}
+            <div style="margin-top: -24px">
+            Project{{ note.project_set.count | pluralize }}: {% for project in note.project_set.all %}<a href="{{ project.get_absolute_url }}">{{ project.title }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </header>
 
-{% if note.content %}
-<div class="markdown p-4">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
-{% endif %}
+    <main class="note-content markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</main>
+
+</div>
 
 {% endblock main_content %}
 
