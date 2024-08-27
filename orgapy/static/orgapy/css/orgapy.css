@@ -169,6 +169,12 @@ button:focus {
  * Action buttons
  */
 
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem;
+}
+
 .action-button {
     text-decoration: none;
     color: inherit;
@@ -377,7 +383,7 @@ button:focus {
     flex-basis: 0;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1000px) {
     .column-left {
         flex-grow: 0;
     }
@@ -392,6 +398,7 @@ button:focus {
 .column-right {
     flex-grow: 1;
     flex-basis: 0;
+    padding-top: calc(42.2px + 1.6rem);
 }
 
 .column-sticky {
@@ -488,11 +495,11 @@ button:focus {
  * Toc
  */
 
-.toc {
+#toc {
     display: flex;
     flex-direction: column;
     width: fit-content;
-    margin-right: .8rem;
+    margin: .4rem .8rem 0 0;
 }
 
 /**
