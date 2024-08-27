@@ -14,19 +14,6 @@
 <script src="{% static 'orgapy/js/toc.js' %}"></script>
 {% endblock head %}
 
-{% block left_column %}<div class="column-sticky toc"></div>{% endblock left_column %}
-
-{% block right_column %}
-<div class="column-sticky column-right-actions">
-    <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" class="action-button" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i></a>
-    <a href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" class="action-button" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i></a>
-    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="action-button" title="Edit"><i class="ri-pencil-fill"></i></a>
-    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="action-button" title="Download as Markdown"><i class="ri-download-line"></i></a>
-    <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="action-button link-confirm" title="Delete"><i class="ri-delete-bin-line"></i></a>
-</div>
-{% endblock right_column %}
-
-
 {% block main_content %}
 
 <div class="note">
@@ -61,6 +48,19 @@
 </div>
 
 {% endblock main_content %}
+
+{% block right_column %}
+<div class="column-sticky">
+    <div>
+        <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" class="action-button" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i></a>
+        <a href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" class="action-button" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i></a>
+        <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="action-button" title="Edit"><i class="ri-pencil-fill"></i></a>
+        <a href="{% url 'orgapy:export_note' nid=note.id %}" class="action-button" title="Download as Markdown"><i class="ri-download-line"></i></a>
+        <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="action-button link-confirm" title="Delete"><i class="ri-delete-bin-line"></i></a>
+    </div>
+    <div class="card toc"></div>
+</div>
+{% endblock right_column %}
 
 {% block body_scripts %}
 {{ block.super }}
