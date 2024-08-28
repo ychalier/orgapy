@@ -27,26 +27,18 @@
 {% endblock main_content %}
 
 {% block right_column %}
-<div class="column-sticky">
-    <button id="btn-save-note">Save</button>   
-    
-    <button>Done</button>
-
-    <div class="form-group">
-        <label class="form-switch">
-            <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
-            <i class="form-icon"></i> Pinned
-        </label>
-    </div>
-
-    <div class="form-group">
-        <label class="form-switch">
-            <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
-            <i class="form-icon"></i> Public
-        </label>
-    </div>
-    
-</div>
+<button id="btn-save-note" class="button-block">Save and continue</button>
+<button class="button-block">Save and exit</button>
+<label class="toggle">
+    <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
+    <span class="toggle-slider"></span>
+    <span class="toggle-text">Pinned</span>
+</label>
+<label class="toggle">
+    <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
+    <span class="toggle-slider"></span>
+    <span class="toggle-text">Public</span>
+</label>
 {% endblock right_column %}
 
 {% block after_columns %}

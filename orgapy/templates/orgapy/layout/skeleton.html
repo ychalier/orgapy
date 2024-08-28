@@ -29,9 +29,9 @@
 <body class="{% block body_class %}{% endblock body_class %}">
     {% block body %}
     {% block before_columns %}{% endblock before_columns %}
-    <div class="columns">
-        <div class="column column-left">{% block left_column %}{% endblock left_column %}</div>
-        <div class="column column-main">
+    <div id="columns">
+        <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
+        <div id="column-main">
         {% block center_column %}
             <nav class="navbar">
                 <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}">Projects</a>
@@ -55,12 +55,12 @@
             {% block main_content_next %}{% endblock main_content_next %}
         {% endblock center_column %}
         </div>
-        <div class="column column-right">{% block right_column %}{% endblock right_column %}</div>
+        <div id="column-right"><div class="column-sticky">{% block right_column %}{% endblock right_column %}</div></div>
     </div>
     {% block after_columns %}{% endblock after_columns %}
     <div id="snackbar"></div>
     {% endblock body %}
-    {% block body_bottom %}<div class="mb-4">&nbsp;</div>{% endblock body_bottom %}
+    {% block body_bottom %}{% endblock body_bottom %}
     {% block body_scripts %}{% endblock body_scripts %}
 </body>
 
