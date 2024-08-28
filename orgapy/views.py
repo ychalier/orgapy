@@ -24,11 +24,13 @@ from . import models
 
 
 def pretty_paginator(page, **attrs):
+    show_around = 2 # +- n
     to_show = sorted({
         1,
-        max(1, page.number - 1),
-        page.number,
-        min(page.number + 1, page.paginator.num_pages),
+        *[
+            max(1, min(page.paginator.num_pages, i))
+            for i in range(page.number - show_around, page.number + show_around + 1)
+        ],
         page.paginator.num_pages,
     })
     attr_string = urllib.parse.urlencode(attrs)

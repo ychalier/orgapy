@@ -60,6 +60,9 @@ function markdown_to_html_fancy(element) {
         ]
     });
     element.innerHTML = converter.makeHtml(element.innerHTML);
+    element.querySelectorAll("p").forEach(paragraph => {
+        paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
+    });
     window.addEventListener("load", () => {
         hljs.highlightAll();
     });

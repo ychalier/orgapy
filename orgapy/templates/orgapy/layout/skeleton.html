@@ -31,7 +31,7 @@
     {% block before_columns %}{% endblock before_columns %}
     <div id="columns">
         <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
-        <div id="column-main">
+        <main id="column-main">
         {% block center_column %}
             <nav class="navbar">
                 <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}">Projects</a>
@@ -54,7 +54,7 @@
             {% block main_content %}{% endblock main_content %}
             {% block main_content_next %}{% endblock main_content_next %}
         {% endblock center_column %}
-        </div>
+        </main>
         <div id="column-right"><div class="column-sticky">{% block right_column %}{% endblock right_column %}</div></div>
     </div>
     {% block after_columns %}{% endblock after_columns %}

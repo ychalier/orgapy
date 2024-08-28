@@ -279,7 +279,7 @@ button:focus {
 }
 
 /**
- *
+ * Card
  */
 
 .card {
@@ -290,8 +290,20 @@ button:focus {
     border-radius: .4rem;
 }
 
+.card > *:first-child {
+    margin-top: 0;
+}
+
+.card > *:last-child {
+    margin-bottom: 0;
+}
+
 .card-oneline {
     padding: 0;
+}
+
+header.card h1 {
+    margin-bottom: .4rem;
 }
 
 /**
@@ -340,7 +352,7 @@ button:focus {
 }
 
 .oneline:hover {
-    background: hsl(204, 25%, 25%);
+    background: #304350;
 }
 
 /**
@@ -362,7 +374,7 @@ button:focus {
 }
 
 /**
- * 
+ * Button block
  */
 
 .button-block {
@@ -569,10 +581,15 @@ input:checked + .toggle-slider + .toggle-text {
     margin: .4rem 0 0 0;
 }
 
+#toc > a {
+    margin: .2rem 0;
+}
+
 /**
  * Note
  */
 
+/*
 .note-header {
     background: #101010;
     padding: .8rem;
@@ -594,6 +611,7 @@ input:checked + .toggle-slider + .toggle-text {
     margin: .8rem 0;
     border-radius: .4rem;
 }
+*/
 
 /**
  * Note form
@@ -647,24 +665,79 @@ input:checked + .toggle-slider + .toggle-text {
     resize: none;
 }
 
-/******************************************************************************/
+/**
+ * Markdown
+ */
 
-h1,
-h2,
-h3,
-h4,
-h5 {
-    margin: 0 0 .6em 0;
+.card.markdown {
+    padding-bottom: 1.6rem;
 }
 
-h3 {
-    font-size: 1rem;
+.markdown p {
+    line-height: 1.6;
+    font-size: 15px;
 }
 
-h4 {
-    font-size: .9rem;
+.markdown ul,
+.markdown ol {
+    line-height: 1.6;
+    font-size: 15px;
+    padding-left: 1.6rem;
 }
 
+.markdown table,
+.markdown pre {
+    overflow-x: auto;
+}
+
+.markdown code {
+    font-size: 15px;
+    border-radius: .4rem;
+}
+
+.markdown table {
+    background: #303030;
+    border-collapse: separate;
+    border: 1px solid #888;
+    border-radius: .4rem;
+    border-spacing: 0;
+}
+
+.markdown th,
+.markdown td {
+    padding: .2rem .4rem;
+    border-bottom: 1px solid black;
+    font-size: 15px;
+}
+
+.markdown tr:last-child td {
+    border-bottom: none;
+}
+
+.markdown thead tr {
+    background: #282828;
+}
+
+.markdown tbody tr:nth-child(odd) {
+    background: #404040;
+}
+
+.markdown tbody tr:hover {
+    background: #304350;
+}
+
+.markdown img,
+.markdown video {
+    max-width: 100%;
+    border-radius: .4rem;
+}
+
+.markdown .task-list-item input {
+    width: auto;
+    accent-color: #8ed2ff;
+}
+
+/*
 .markdown h2,
 .markdown h3,
 .markdown h4,
@@ -684,29 +757,26 @@ h4 {
 .markdown h4 {
     font-size: 12pt;
 }
+*/
 
-p,
-ul,
-ol {
-    margin-bottom: 24px;
-    font-size: 15px;
-    line-height: 24px;
+/******************************************************************************
+/* OLD STUFF                                                                  *
+/******************************************************************************/
+/*
+
+h3 {
+    font-size: 1rem;
 }
 
-table:not(.sheet-table) {
-    font-size: 15px;
-    line-height: 24px;
-}
-
-table:not(.sheet-table),
-pre {
-    overflow-x: auto;
+h4 {
+    font-size: .9rem;
 }
 
 .table-wrapper {
     overflow-x: auto;
     margin-bottom: 24px;
 }
+*/
 
 /*
 .blackblock {
@@ -715,6 +785,7 @@ pre {
 }
 */
 
+/*
 .markdown {
     background: #101010;
 }
@@ -758,14 +829,16 @@ pre {
         word-break: keep-all;
     }
 }
+    */
 
+
+/*
 .code code {
     background: #2b2b2b;
 }
+*/
 
-code {
-    word-break: break-all;
-}
+
 
 #input-content {
     /*min-height: 50vh;*/
@@ -855,6 +928,7 @@ code {
     background: black;
 }
 
+/*
 .btn-inline {
     margin: 0 .4rem 0 0;
     opacity: .6;
@@ -876,6 +950,7 @@ tr a i.icon {
     cursor: pointer;
     user-select: none;
 }
+    */
 
 body.fullscreen {
     display: flex;
