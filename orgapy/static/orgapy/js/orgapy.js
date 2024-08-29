@@ -1,4 +1,34 @@
-window.addEventListener("load", () => {
+function bindSearchbarSuggestions(searchbar, apiAction) {
+    window.addEventListener("load", () => {
+        const input = searchbar.querySelector(".searchbar-input");
+        const icon = searchbar.querySelector(".searchbar-icon");
+        const container = searchbar.querySelector(".searchbar-suggestions");
+        icon.addEventListener("click", () => {
+            input.value = "";
+            input.focus();
+        });
+        input.addEventListener("input", () => {
+            container.innerHTML = "";
+            const query = input.value.trim();
+            fetch(URL_API + `?action=${apiAction}&q=${query}`).then(res => res.json()).then(data => {
+                for (const entry of data.results) {
+                    const element = document.createElement("a");
+                    element.className = "searchbar-suggestion";
+                    container.appendChild(element);
+                    element.href = entry.url;               
+                    element.innerHTML = `<mark>${ entry.title.slice(0, query.length) }</mark>${ entry.title.slice(query.length) }`;
+                }
+            });
+        });
+    });
+}
+
+/*******************************************************************************
+ * OLD STUF
+ *******************************************************************************
+ */
+
+ window.addEventListener("load", () => {
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {
             event.preventDefault();
@@ -21,29 +51,6 @@ window.addEventListener("load", () => {
         update_target_visibility();
         input.addEventListener("input", update_target_visibility);
     });
-
-    /*
-    const input_categories = document.getElementById("input-categories");
-    const input_categories_array = [];
-    if (input_categories != null) {
-        document.querySelectorAll(".category-chip").forEach(chip => {
-            if (chip.classList.contains("active")) {
-                input_categories_array.push(chip.textContent);
-            }
-            chip.addEventListener("click", () => {
-                if (chip.classList.contains("active")) {
-                    chip.classList.remove("active");
-                    input_categories_array.splice(input_categories_array.indexOf(chip.textContent), 1);
-                } else {
-                    chip.classList.add("active");
-                    input_categories_array.push(chip.textContent);
-                }
-                input_categories.value = input_categories_array.join(";");
-            });
-        });
-        input_categories.value = input_categories_array.join(";");
-    }
-    */
 
     function row_is_lower(x, y) {
         const float_x = parseFloat(x.textContent);

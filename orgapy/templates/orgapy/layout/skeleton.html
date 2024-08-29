@@ -15,8 +15,7 @@
     <link rel="icon" href="{% static 'orgapy/logo/144.png' %}" sizes="144x144" />
     <link rel="stylesheet" href="{% static 'orgapy/remixicon/remixicon.css' %}" />
     <link rel="stylesheet" href="{% static 'orgapy/css/orgapy.css' %}" />
-    <script src="{% static 'orgapy/js/searchbar.js' %}"></script>
-    <script src="{% static 'orgapy/js/misc.js' %}"></script>
+    <script src="{% static 'orgapy/js/orgapy.js' %}"></script>
     <script>
         const URL_API = "{% url 'orgapy:api' %}";
         {% if request.user.is_authenticated %}
@@ -33,7 +32,7 @@
         <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
         <main id="column-main">
         {% block center_column %}
-            <nav class="navbar">
+            <nav id="navbar">
                 <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}">Projects</a>
                 <a href="{% url 'orgapy:notes' %}" class="navbar-link {% if active == 'notes' %}active{% endif %}">Notes</a>
                 <a href="{% url 'orgapy:quotes' %}" class="navbar-link {% if active == 'quotes' %}active{% endif %}">Quotes</a>
