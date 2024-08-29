@@ -21,6 +21,8 @@ window.addEventListener("load", () => {
         update_target_visibility();
         input.addEventListener("input", update_target_visibility);
     });
+
+    /*
     const input_categories = document.getElementById("input-categories");
     const input_categories_array = [];
     if (input_categories != null) {
@@ -41,6 +43,7 @@ window.addEventListener("load", () => {
         });
         input_categories.value = input_categories_array.join(";");
     }
+    */
 
     function row_is_lower(x, y) {
         const float_x = parseFloat(x.textContent);

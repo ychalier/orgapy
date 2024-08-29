@@ -11,16 +11,28 @@
 
 {% block main_content %}
 
-<input class="note-form-title" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
+<header class="card">
+    <input class="note-form-title" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
+    <div id="categories-input">
+        <input id="categories-input-hidden" type="hidden" name="categories" value="{% for category in note.categories.all %}{% if not forloop.first %};{% endif %}{{ category.id }}{% endfor %}" />
+        <div id="categories-input-current"></div>
+        <div id="categories-suggestions">
+            <input id="categories-input-new" type="text" placeholder="new category" />
+            <div id="categories-suggestions-items"></div>
+        </div>
+    </div>
+</header>
 
-<input type="hidden" name="categories" id="input-categories" />
 
+
+{% comment %}
 <div class="note-form-categories">
     {% for category in categories %}
     <span class="note-form-category {% if category.id in note_category_ids %}active{% endif %}">{{ category.name }}</span>
     {% endfor %}
     <input class="note-form-category-other" id="input-extra-categories" type="text" name="extra" placeholder="other"  title="Seperate with a semicolon" />
 </div>
+{% endcomment %}
 
 <textarea class="note-form-content" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
 
@@ -64,5 +76,7 @@
             btn_save_note.classList.remove("disabled");
         });
     });
+    const CATEGORIES = [{% for category in categories %}{% if not forloop.first %}, {% endif %}{name: "{{ category.name }}", id: {{ category.id }}}{% endfor %}];
 </script>
+<script src="{% static 'orgapy/js/noteCategoriesInput.js' %}"></script>
 {% endblock body_scripts %}

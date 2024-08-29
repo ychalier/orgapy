@@ -621,40 +621,8 @@ input:checked + .toggle-slider + .toggle-text {
     display: block;
     font-size: 32px;
     font-weight: bold;
-    padding: .8rem;
-    margin: .8rem 0 0 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.note-form-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .2rem;
-    background: #101010;
-    padding: .8rem;
-    margin: 0 0 .8rem 0;
-    border-bottom-left-radius: .4rem;
-    border-bottom-right-radius: .4rem;
-    border: 1px solid black;
-}
-
-.note-form-category-other,
-.note-form-category {
-    background: #303030;
-    padding: .2rem .4rem;
-    border-radius: .4rem;
-    font-size: small;
-    border: none;
-}
-
-.note-form-category.active {
-    background: #8ed2ff;
-    color: black;
-}
-
-.note-form-category-other {
-    width: 6rem;
+    padding: 0;
+    margin: .8rem 0;
 }
 
 .note-form-content {
@@ -758,6 +726,82 @@ input:checked + .toggle-slider + .toggle-text {
     font-size: 12pt;
 }
 */
+
+#categories-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .2rem;
+}
+
+#categories-input-current {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem;
+}
+
+#categories-input .category {
+    font-size: small;
+    background: #8ed2ff;
+    color: black;
+    padding: .2rem;
+    border-radius: .2rem;
+    transition: .2s ease-in-out;
+}
+
+#categories-input .category:hover {
+    background: #7fbae1;
+}
+
+#categories-input .category i {
+    cursor: pointer;
+}
+
+#categories-input-new {
+    width: 6rem;
+    font-size: small;
+    padding: .2rem;
+    border-radius: .2rem;
+    background: #303030;
+    border-color: #888;
+}
+
+#categories-suggestions {
+    position: relative;
+}
+
+#categories-suggestions-items {
+    position: absolute;
+    left: 0;
+    top: 1.3rem;
+    width: 100%;
+}
+
+#categories-suggestions-items div {
+    padding: .2rem;
+    width: 100%;
+    font-size: small;
+    cursor: pointer;
+    background: #303030;
+    border-left: 1px solid #888;
+    border-right: 1px solid #888;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+#categories-suggestions-items div:first-child {
+    border-top: 1px solid #555;
+}
+
+#categories-suggestions-items div:last-child {
+    border-bottom-left-radius: .4rem;
+    border-bottom-right-radius: .4rem;
+    border-bottom: 1px solid #888;
+}
+
+#categories-suggestions-items div:hover {
+    background: #404040;
+}
 
 /******************************************************************************
 /* OLD STUFF                                                                  *

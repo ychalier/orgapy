@@ -97,15 +97,19 @@ def save_note_core(request):
 
 def save_note_categories(request, note):
     """Edit note procedure: Category objects"""
+    # NOTE: categories should have been cleared (note.categories.clear())
+    # by calling save_note_core
     name_list = request.POST.get("categories", "").split(";") + request.POST.get("extra", "").split(";")
     for dirty_name in name_list:
         name = dirty_name.lower().strip()
         if name == "":
             continue
-        if not models.Category.objects.filter(name=name, user=request.user).exists():
-            category = models.Category.objects.create(name=name, user=request.user)
-        else:
+        if models.Category.objects.filter(id=name, user=request.user).exists():
+            category = models.Category.objects.get(id=name, user=request.user)
+        elif models.Category.objects.filter(name=name, user=request.user).exist():
             category = models.Category.objects.get(name=name, user=request.user)
+        else:
+            category = models.Category.objects.create(name=name, user=request.user)
         note.categories.add(category)
     note.save()
 
