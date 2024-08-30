@@ -52,6 +52,10 @@ textarea:focus {
     outline: 1px solid #8ed2ff;
 }
 
+input[type=checkbox] {
+    accent-color: #8ed2ff;
+}
+
 button {
     font-family: inherit;
     font-size: 12pt;
@@ -71,6 +75,58 @@ button:hover {
 button:active,
 button:focus {
     outline: 1px solid #8ed2ff;
+}
+
+/***** UTILITY CLASSES ********************************************************/
+
+.hidden {
+    display: none;
+}
+
+.link-hidden {
+    color: inherit;
+    text-decoration: none;
+}
+
+.link-tenuous {
+    text-decoration: none;
+}
+
+.link-tenuous:hover,
+.link-hidden:hover {
+    text-decoration: underline;
+}
+
+.show-on-parent-hover {
+    display: none;
+}
+
+*:hover>.show-on-parent-hover {
+    display: unset;
+    height: 0;
+}
+
+*:hover>i.show-on-parent-hover {
+    height: fit-content;
+}
+
+.button-block {
+    display: block;
+    margin: .4rem 0;
+}
+
+.button-inline {
+    text-decoration: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #6b9fc2;
+    transition: .2s ease-in-out;
+}
+
+.button-inline:active,
+.button-inline:focus,
+.button-inline:hover {
+    color: #8ed2ff;
 }
 
 /***** GENERAL COMPONENTS *****************************************************/
@@ -145,24 +201,6 @@ button:focus {
 .page-item.active a {
     background: #8ed2ff;
     color: black;
-}
-
-/**
- * Button-inline
- */
-
-.button-inline {
-    text-decoration: none;
-    border-radius: 50%;
-    cursor: pointer;
-    color: #6b9fc2;
-    transition: .2s ease-in-out;
-}
-
-.button-inline:active,
-.button-inline:focus,
-.button-inline:hover {
-    color: #8ed2ff;
 }
 
 /**
@@ -315,7 +353,7 @@ header.card h1 {
     margin-top: .4rem;
 }
 
-.card > *:first-child > *:first-child {
+.card>*:first-child>*:first-child {
     margin-top: 0;
 }
 
@@ -329,14 +367,23 @@ header.card h1 {
     margin-top: .4rem;
 }
 
-.card-commands button {
-    font-size: small;
+.card-commands button,
+.card-commands a.button {
     background: #303030;
-    padding: .2rem;
 }
 
-.card-commands button:hover {
+.card-commands button:hover,
+.card-commands a.button:hover {
     background: #1b2931;
+}
+
+.card-slim {
+    font-size: small;
+    padding: .2rem .4rem;
+}
+
+.card-slim * {
+    font-size: small;
 }
 
 /**
@@ -386,33 +433,6 @@ header.card h1 {
 
 .oneline:hover {
     background: #304350;
-}
-
-/**
- * Link hidden & tenuous
- */
-
-.link-hidden {
-    color: inherit;
-    text-decoration: none;
-}
-
-.link-tenuous {
-    text-decoration: none;
-}
-
-.link-tenuous:hover,
-.link-hidden:hover {
-    text-decoration: underline;
-}
-
-/**
- * Button block
- */
-
-.button-block {
-    display: block;
-    margin: .4rem 0;
 }
 
 /**
@@ -475,19 +495,6 @@ input:checked+.toggle-slider:before {
 
 input:checked+.toggle-slider+.toggle-text {
     color: inherit;
-}
-
-/**
- * Show on parent hover
- */
-
-.show-on-parent-hover {
-    display: none;
-}
-
-*:hover>.show-on-parent-hover {
-    display: unset;
-    height: 0;
 }
 
 /**
@@ -720,7 +727,6 @@ input:checked+.toggle-slider+.toggle-text {
 
 .markdown .task-list-item input {
     width: auto;
-    accent-color: #8ed2ff;
 }
 
 /******************************************************************************

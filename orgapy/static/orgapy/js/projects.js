@@ -245,9 +245,7 @@ class Project {
         } else if (this.isLimitDateOverdue()) {
             limitDate.classList.add("project-limitdate-overdue");
         }
-        create(limitDate, "i", "ri-time-line");
-        let limitDateText = create(limitDate, "span");
-        limitDateText.textContent = this.getLimitDateDisplay();
+        limitDate.innerHTML = `<i class="ri-time-line"></i> ${this.getLimitDateDisplay()}`;
         limitDate.addEventListener("click", (event) => {
             event.stopPropagation();
             self.inflateLimitDateInput(limitDate);
@@ -267,8 +265,7 @@ class Project {
         if (completed == total) {
             checklistSummary.classList.add("project-checklist-summary-done");
         }
-        create(checklistSummary, "i", "ri-checkbox-circle-line");
-        create(checklistSummary, "span").textContent = `${completed}/${total}`;
+        checklistSummary.innerHTML = `<i class="ri-checkbox-circle-line"></i> ${completed}/${total}`;
         if (completed > 0) {
             let checklistClear = create(checklistSummary, "i", "ri-close-line show-on-parent-hover");
             checklistClear.title = "Clear completed items";
@@ -430,7 +427,7 @@ class Project {
             self.concatChecklist();
             self.update();
         }, {
-            dragAllowed: (element) => { return !element.classList.contains("editing"); } // TODO: rename to dragAllowed
+            dragAllowed: (element) => { return !element.classList.contains("editing"); }
         });
     }
 
@@ -446,7 +443,7 @@ class Project {
         var self = this;
         let checklist = create(body, "div", "project-checklist");
         this.inflateChecklistItems(checklist);
-        let buttons = create(checklist, "div", "d-flex"); // TODO: wrong class
+        let buttons = create(checklist, "div", "project-buttons");
         let buttonAddItem = create(buttons, "button", "project-button");
         buttonAddItem.title = "Add checklist item";
         buttonAddItem.innerHTML = `<i class="ri-add-line"></i> Add`;
@@ -1680,9 +1677,12 @@ window.addEventListener("load", () => {
         });
     });
     
+    /*
+    TODO: redo this!
     document.getElementById("btn-objective-create").addEventListener("click", (event) => {
         openModalObjectiveForm();
     });
+    */
 
     document.querySelector("#modal-completion-form form").addEventListener("submit", (event) => {
         event.preventDefault();

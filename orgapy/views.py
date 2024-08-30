@@ -736,7 +736,7 @@ def api_list_projects(request):
             "modification": project.date_modification.timestamp(),
             "title": project.title,
             "category": project.category,
-            "limit_date": project.limit_date,
+            "limitDate": project.limit_date,
             "progress": progress,
             "description": project.description if project.description else None,
             "checklist": project.checklist if project.checklist else None,
@@ -764,7 +764,7 @@ def api_create_project(request):
         "id": project.id,
         "title": project.title,
         "category": project.category,
-        "limit_date": None,
+        "limitDate": None,
         "progress": None,
         "description": None,
         "checklist": None,
@@ -795,8 +795,8 @@ def api_edit_project(request):
     project.title = project_data["title"]
     project.category = project_data["category"]
     project.rank = float(project_data["rank"])
-    if project_data["limit_date"] is not None:
-        project.limit_date = datetime.datetime.strptime(project_data["limit_date"], "%Y-%m-%d").date()
+    if project_data["limitDate"] is not None:
+        project.limit_date = datetime.datetime.strptime(project_data["limitDate"], "%Y-%m-%d").date()
     else:
         project.limit_date = None
     if project_data["progress"] is not None:
