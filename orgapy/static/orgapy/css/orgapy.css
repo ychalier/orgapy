@@ -781,6 +781,82 @@ input:checked+.toggle-slider+.toggle-text {
     width: auto;
 }
 
+/**
+ * Snackbar
+ */
+
+#snackbar {
+    visibility: hidden;
+    min-width: 5rem;
+    transform: translateX(-50%);
+    border: 1px solid black;
+    background-color: #303030;
+    color: #f0f0f0;
+    text-align: center;
+    border-radius: .4rem;
+    padding: .4rem;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 2rem;
+    font-size: medium;
+}
+
+#snackbar.show {
+    visibility: visible;
+    -webkit-animation: fadein 0.5s;
+    animation: fadein 0.5s;
+}
+
+#snackbar.hide {
+    -webkit-animation: fadeout 0.5s;
+    animation: fadeout 0.5s;
+}
+
+@-webkit-keyframes fadein {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+    to {
+        bottom: 2rem;
+        opacity: 1;
+    }
+}
+
+@keyframes fadein {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+    to {
+        bottom: 2rem;
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes fadeout {
+    from {
+        bottom: 2rem;
+        opacity: 1;
+    }
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
+}
+
+@keyframes fadeout {
+    from {
+        bottom: 2rem;
+        opacity: 1;
+    }
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
+}
+
 /******************************************************************************
 /* OLD STUFF                                                                  *
 /******************************************************************************/
