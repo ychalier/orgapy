@@ -1,5 +1,28 @@
-window.addEventListener("load", () => {
-    
+function createToc(contentContainer, tocContainer) {    
+    function removeToc() {
+        tocContainer.previousElementSibling.style.flexDirection = "column";
+        tocContainer.parentElement.removeChild(tocContainer);
+    }
+    let bounds = contentContainer.getBoundingClientRect();
+    if (bounds.height <= 0.8 * window.innerHeight) {
+        removeToc();
+        return;
+    };
+    let titles = contentContainer.querySelectorAll("h2");
+    if (titles.length < 2) {
+        removeToc();
+        return;
+    }
+    tocContainer.innerHTML = "<b>Contents</b>";
+    titles.forEach(title => {
+        let anchor = tocContainer.appendChild(document.createElement("a"));
+        anchor.classList.add("link-hidden");
+        anchor.textContent = title.textContent;
+        anchor.href = `#${title.id}`;
+    });
+}
+
+function setupCategoryInput() {
     const categoryIndex = {};
     const categoryReverseIndex = {};
     for (const category of CATEGORIES) {
@@ -128,5 +151,23 @@ window.addEventListener("load", () => {
     });
 
     updateCategories();
+}
 
-});
+function bindSaveNoteButton() {
+    let buttonSaveNote = document.getElementById("btn-save-note");
+    buttonSaveNote.classList.add("disabled");
+    buttonSaveNote.addEventListener("click", (event) => {
+        event.preventDefault();
+        buttonSaveNote.classList.add("disabled");
+        let form = document.getElementById("form-note-edit");
+        let formdata = new FormData(form);
+        fetch(form.action, {method: form.method, body: formdata}).then(res => {
+            toast("Saved!", 600);
+        });
+    });
+    document.querySelectorAll("input,textarea").forEach(input => {
+        input.addEventListener("input", () => {
+            buttonSaveNote.classList.remove("disabled");
+        });
+    });
+}

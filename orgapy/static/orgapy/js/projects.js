@@ -432,11 +432,11 @@ class Project {
             });
         });
         dragrank(checklist, ".project-checklist-item", (ordering, permutation) => {
-            reorder(self.checklistItems, permutation);
+            dragrankReorder(self.checklistItems, permutation);
             self.concatChecklist();
             self.update();
         }, {
-            drag_allowed: (element) => { return !element.classList.contains("editing"); } // TODO: rename to dragAllowed
+            dragAllowed: (element) => { return !element.classList.contains("editing"); } // TODO: rename to dragAllowed
         });
     }
 
@@ -937,7 +937,7 @@ function saveProjectRanks(ordering) {
 }
 
 function inflateProjects() {
-    dragrank_clear();
+    dragrankClear();
     let todaysPlanContainer = document.getElementById("todays-plan");
     todaysPlanContainer.innerHTML = "";
     if (todaysPlan != null) {
@@ -953,7 +953,7 @@ function inflateProjects() {
     dragrank(container, ".project", (ordering, permutation) => {
         setTimeout(() => {saveProjectRanks(ordering)}, 300);
     }, {
-        drag_allowed: (element) => { return !element.classList.contains("editing"); } // Rename drag_allowed
+        dragAllowed: (element) => { return !element.classList.contains("editing"); } // Rename dragAllowed
     });
     updateProjectCount();
 }
@@ -992,9 +992,8 @@ class CalendarEvent {
 
     inflate(container) {
         let element = create(container, "div", "event")
-        let dotWrapper = create(element, "div", "event-dot-wrapper");
-        let dot = create(dotWrapper, "div", "event-dot");
-        dot.classList.add("event-dot");
+        let dotWrapper = create(element, "div", "event-dot-wrapper dropdown");
+        create(dotWrapper, "a", "event-dot dropdown-toggle").tabIndex = 0;
         if (this.over) {
             element.classList.add("event-over");
         }
@@ -1005,11 +1004,13 @@ class CalendarEvent {
         if (this.location != null) {
             element.title = this.location;
         }
-        let deleteButton = create(element, "div", "event-delete");
-        deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i>`;
-        deleteButton.title = "Delete";
+        let eventActionsList = create(dotWrapper, "ul", "menu");
+        let eventDeleteListItem = create(eventActionsList, "li", "menu-item");
+        let eventDeleteButton = create(eventDeleteListItem, "a");
+        eventDeleteButton.innerHTML = `<i class="ri-delete-bin-line"></i> Delete`;
+        eventDeleteButton.title = "Delete";
         var self = this;
-        deleteButton.addEventListener("click", () => {
+        eventDeleteButton.addEventListener("click", () => {
             if (confirm(`Are you sure you want to delete the event '${this.title}'?`) == true) {
                 self.delete();
             }
@@ -1145,13 +1146,6 @@ function inflateEvents() {
             event.inflate(container);
         });
     });
-    
-    let eventModalButton = create(container, "button", "event-modal-btn");
-    eventModalButton.innerHTML = `<i class="ri-add-line"></i> Add`;
-    eventModalButton.title = "Add Event";
-    eventModalButton.addEventListener("click", () => {
-        showModal("modal-add-event");
-    });
 
 }
 
@@ -1208,7 +1202,7 @@ function inflateTasks() {
             }
         });
 
-        let taskTitle = create(container, "div", "event-date");
+        let taskTitle = create(container, "div", "card-subtitle");
         if (currentTasks.length > 0) {
             taskTitle.textContent = `Current tasks (${currentTasks.length})`;
             currentTasks.forEach(task => {
@@ -1220,36 +1214,18 @@ function inflateTasks() {
 
         if (futureTasks.length > 0) {
             let details = create(container, "details");
-            create(details, "summary", "event-date").textContent = `Incoming tasks (${futureTasks.length})`;
+            create(details, "summary", "card-subtitle").textContent = `Incoming tasks (${futureTasks.length})`;
             futureTasks.forEach(task => {
                 task.inflate(details);
             });
         }
     }
-
-    let eventModalButton = create(container, "button", "event-modal-btn");
-    eventModalButton.innerHTML = `<i class="ri-add-line"></i> Add`;
-    eventModalButton.title = "Add Task";
-    eventModalButton.addEventListener("click", () => {
-        openModalTaskForm();
-    });
     
 }
 
 function inflateSync() {
     if (syncDate == null) return;
-    let container = document.getElementById("calendar-sync");
-    container.innerHTML = "";
-    let eventSync = create(container, "div", "event-sync");
-    let eventSyncDate = create(eventSync, "div", "event-sync-date");
-    eventSyncDate.textContent = new Date(syncDate).toLocaleString();
-    eventSyncDate.title = "Last synchronization";
-    let eventSyncButton = create(eventSync, "div", "event-sync-btn");
-    eventSyncButton.title = "Refresh";
-    eventSyncButton.innerHTML = `<i class="ri-reset-left-line"></i>`;
-    eventSyncButton.addEventListener("click", () => {
-        fetchEvents(true);
-    });
+    document.getElementById("events-refresh").title = "Last synchronization: " + new Date(syncDate).toLocaleString();
 }
 
 function inflateCalendar() {
@@ -1264,7 +1240,7 @@ function openModalTasks() {
     fetch(URL_API + "?action=list-tasks&limit=365").then(res => res.json()).then(data => {
         data.tasks.forEach(task => {
             let taskElement = create(tasksContainer, "div");
-            let taskTitle = create(taskElement.appendChild, "span", "label");
+            let taskTitle = create(taskElement, "span", "label");
             taskTitle.textContent = task.title;
             taskTitle.addEventListener("click", () => {
                 modal.classList.remove("active");
@@ -1706,8 +1682,6 @@ window.addEventListener("load", () => {
         inflateProjects();
     });
 
-    document.getElementById("tasks-title").addEventListener("click", openModalTasks);
-
     document.getElementById("btn-add-event").addEventListener("click", () => {
         let form = document.getElementById("form-add-event");
         let formData = new FormData(form);
@@ -1717,7 +1691,21 @@ window.addEventListener("load", () => {
             fetchEvents(false);
         });
     });
+
+    document.getElementById("events-refresh").addEventListener("click", () => {
+        fetchEvents(true);
+    });
+
+    document.getElementById("events-add").addEventListener("click", () => {
+        showModal("modal-add-event");
+    });
+
+    document.getElementById("tasks-add").addEventListener("click", () => {
+        openModalTaskForm();
+    })
     
+    document.getElementById("tasks-explore").addEventListener("click", openModalTasks);
+
     document.querySelector("#modal-task-form form").addEventListener("submit", (event) => {
         event.preventDefault();
         closeModal("modal-task-form");

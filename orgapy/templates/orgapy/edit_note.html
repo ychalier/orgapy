@@ -3,6 +3,12 @@
 
 {% block title %}{% block subtitle %}Edit note &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
+<script src="{% static 'orgapy/js/notes.js' %}"></script>
+{% endblock %}
+
 {% block before_columns %}
 <form id="form-note-edit" action="{% url 'orgapy:save_note' %}" method="post">
 {% csrf_token %}
@@ -22,17 +28,6 @@
         </div>
     </div>
 </header>
-
-
-
-{% comment %}
-<div class="note-form-categories">
-    {% for category in categories %}
-    <span class="note-form-category {% if category.id in note_category_ids %}active{% endif %}">{{ category.name }}</span>
-    {% endfor %}
-    <input class="note-form-category-other" id="input-extra-categories" type="text" name="extra" placeholder="other"  title="Seperate with a semicolon" />
-</div>
-{% endcomment %}
 
 <textarea class="note-form-content" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
 
@@ -60,23 +55,8 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    let btn_save_note = document.getElementById("btn-save-note");
-    btn_save_note.classList.add("disabled");
-    btn_save_note.addEventListener("click", (event) => {
-        event.preventDefault();
-        btn_save_note.classList.add("disabled");
-        let form = document.getElementById("form-note-edit");
-        let formdata = new FormData(form);
-        fetch(form.action, {method: form.method, body: formdata}).then(res => {
-            toast("Saved!", 600);
-        });
-    });
-    document.querySelectorAll("input,textarea").forEach(input => {
-        input.addEventListener("input", () => {
-            btn_save_note.classList.remove("disabled");
-        });
-    });
     const CATEGORIES = [{% for category in categories %}{% if not forloop.first %}, {% endif %}{name: "{{ category.name }}", id: {{ category.id }}}{% endfor %}];
+    setupCategoryInput();
+    bindSaveNoteButton();
 </script>
-<script src="{% static 'orgapy/js/noteCategoriesInput.js' %}"></script>
 {% endblock body_scripts %}

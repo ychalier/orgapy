@@ -195,28 +195,21 @@ function markdownToHtml(selector, fancy=false) {
     });
 }
 
-function createToc(contentContainer, tocContainer) {    
-    function removeToc() {
-        tocContainer.previousElementSibling.style.flexDirection = "column";
-        tocContainer.parentElement.removeChild(tocContainer);
-    }
-    let bounds = contentContainer.getBoundingClientRect();
-    if (bounds.height <= 0.8 * window.innerHeight) {
-        removeToc();
-        return;
-    };
-    let titles = contentContainer.querySelectorAll("h2");
-    if (titles.length < 2) {
-        removeToc();
-        return;
-    }
-    tocContainer.innerHTML = "<b>Contents</b>";
-    titles.forEach(title => {
-        let anchor = tocContainer.appendChild(document.createElement("a"));
-        anchor.classList.add("link-hidden");
-        anchor.textContent = title.textContent;
-        anchor.href = `#${title.id}`;
-    });
+const TOAST_LONG = 3500;
+const TOAST_SHORT = 2000;
+
+function toast(message, duration) {
+    let snackbar = document.getElementById("snackbar");
+    snackbar.textContent = message;
+    snackbar.className = "show";
+    setTimeout(function() {
+        snackbar.classList.add("hide");
+        setTimeout(function() {
+            snackbar.classList.remove("show");
+            snackbar.classList.remove("hide");
+            snackbar.textContent = "";
+        }, 500);
+    }, duration);
 }
 
 /*******************************************************************************

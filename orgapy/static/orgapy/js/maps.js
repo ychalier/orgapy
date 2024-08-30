@@ -944,11 +944,11 @@ class Layer {
             self.map.delete_layer(self.index);
         });
         dragrank(this.features_container, ".map-feature", (ordering, permutation) => {
-            reorder(self.features, permutation);
+            dragrankReorder(self.features, permutation);
             self.onchange("feature-order");
         }, {
             dragid: "feature",
-            dom_reorder: true,
+            domReorder: true,
         });
     }
 
@@ -1239,13 +1239,13 @@ class Map {
     setup_layer_dragrank() {
         if (this.readonly) return;
         var self = this;
-        dragrank_clear("layer");
+        dragrankClear("layer");
         dragrank(this.panel_control.layers_container, ".map-layer", (ordering, permutation) => {
-            reorder(self.layers, permutation);
+            dragrankReorder(self.layers, permutation);
             self.onchange("layer-order");
         }, {
             dragid: "layer",
-            dom_reorder: true,
+            domReorder: true,
         });
     }
 

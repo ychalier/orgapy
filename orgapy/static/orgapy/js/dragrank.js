@@ -1,44 +1,44 @@
 var DRAG_RANK_LISTENERS = [];
 
-function dragrank_clear(dragid=null) {
-    let indices_to_remove = [];
+function dragrankClear(dragid=null) {
+    let indicesToRemove = [];
     DRAG_RANK_LISTENERS.forEach((listener, i) => {
         if (dragid == null || listener.dragid == dragid) {
             document.removeEventListener(listener.type, listener.handler);
-            indices_to_remove.push(i);
+            indicesToRemove.push(i);
         }
     });
-    for (let j = indices_to_remove.length - 1; j >= 0; j--) {
+    for (let j = indicesToRemove.length - 1; j >= 0; j--) {
         DRAG_RANK_LISTENERS.splice(DRAG_RANK_LISTENERS[j], 1);
     }
 }
 
-function dragrank(container, element_selector, callback, options={}) {
+function dragrank(container, elementSelector, callback, options={}) {
     
     if (!("zIndex" in options)) options.zIndex = 0;
     if (!("transition" in options)) options.transition = ".3s ease";
     if (!("dragid" in options)) options.dragid = "default";
-    if (!("drag_allowed" in options)) options.drag_allowed = () => { return true; };
-    if (!("dom_reorder" in options)) options.dom_reorder = false;
+    if (!("dragAllowed" in options)) options.dragAllowed = () => { return true; };
+    if (!("domReorder" in options)) options.domReorder = false;
     var dragging = null;
-    var elements = container.querySelectorAll(element_selector);
+    var elements = container.querySelectorAll(elementSelector);
     var heights = [];
     var tops = [];
     var margin = null;
-    var prev_ordering = [];
+    var prevOrdering = [];
     var ordering = [];
     
-    function reset_positions() {
+    function resetPositions() {
         if (heights.length == 0) return;
 
-        let ordering_reversed = [...ordering];
+        let orderingReversed = [...ordering];
         for (let i = 0; i < elements.length; i++) {
-            ordering_reversed[ordering[i]] = i;
+            orderingReversed[ordering[i]] = i;
         }
 
         let y = tops[0];
         for (let i = 0; i < elements.length; i++) {
-            let j = ordering_reversed[i];
+            let j = orderingReversed[i];
             if (dragging == null || dragging.i != j) {
                 elements[j].style.top = (y - tops[j]) + "px";
             }
@@ -47,12 +47,12 @@ function dragrank(container, element_selector, callback, options={}) {
 
     }
 
-    function reset_variables() {
-        elements = container.querySelectorAll(element_selector);
+    function resetVariables() {
+        elements = container.querySelectorAll(elementSelector);
         heights = [];
         tops = [];
         margin = null;
-        prev_ordering = [];
+        prevOrdering = [];
         ordering = [];
 
         elements.forEach((element, i) => {
@@ -63,7 +63,7 @@ function dragrank(container, element_selector, callback, options={}) {
             element.style.transition = options.transition;
             element.style.top = 0;
             element.addEventListener("mousedown", (event) => {
-                if (options.drag_allowed(element)) {
+                if (options.dragAllowed(element)) {
                     event.stopPropagation();
                     if (heights.length == 0) {
                         let top0 = null;
@@ -96,10 +96,10 @@ function dragrank(container, element_selector, callback, options={}) {
             });
         });
     
-        prev_ordering = [...ordering];
+        prevOrdering = [...ordering];
     }
 
-    reset_variables();    
+    resetVariables();    
 
     function update(event) {
         if (dragging == null) return;
@@ -108,70 +108,69 @@ function dragrank(container, element_selector, callback, options={}) {
         dragging.e.style.top = (dragging.top + dy) + "px";
         dragging.e.style.left = dx + "px";
 
-        let ordering_reversed = [...ordering];
+        let orderingReversed = [...ordering];
         for (let i = 0; i < elements.length; i++) {
-            ordering_reversed[ordering[i]] = i;
+            orderingReversed[ordering[i]] = i;
         }
 
         let cy = tops[dragging.i] + dragging.top + dy + heights[dragging.i] / 2;
         let y = 0;
-        let min_j = null;
-        let min_distance = null;
-        let czs = [];
+        let minJ = null;
+        let minDistance = null;
         for (let j = 0; j < elements.length; j++) {
-            let k = ordering_reversed[j];
+            let k = orderingReversed[j];
             let cz = y + heights[k] / 2;
             let distance = Math.abs(cz - cy);
-            if (min_distance == null || distance < min_distance) {
-                min_j = j;
-                min_distance = distance;
+            if (minDistance == null || distance < minDistance) {
+                minJ = j;
+                minDistance = distance;
             }
             y += heights[k];
         }
         
-        if (min_distance == null) min_j = dragging.j;
-        if (min_j != dragging.j) {
-            if (min_j > dragging.j) {
+        if (minDistance == null) minJ = dragging.j;
+        if (minJ != dragging.j) {
+            if (minJ > dragging.j) {
                 for (let k = 0; k < ordering.length; k++) {
-                    if (ordering[k] > dragging.j && ordering[k] <= min_j) {
+                    if (ordering[k] > dragging.j && ordering[k] <= minJ) {
                         ordering[k] = ordering[k] - 1;
                     } 
                 }
             } else {
                 for (let k = 0; k < ordering.length; k++) {
-                    if (ordering[k] >= min_j && ordering[k] < dragging.j) {
+                    if (ordering[k] >= minJ && ordering[k] < dragging.j) {
                         ordering[k] = ordering[k] + 1;
                     } 
                 }
             }
-            ordering[dragging.i] = min_j;
-            reset_positions();
+            ordering[dragging.i] = minJ;
+            resetPositions();
         }
-        dragging.j = min_j;
+        dragging.j = minJ;
     }
 
-    function swap_sibling(node2, node1) {
+    function swapSibling(node2, node1) {
         node1.parentNode.replaceChild(node1, node2);
         node1.parentNode.insertBefore(node2, node1);
     }
 
-    function dom_reorder() {
-        let order_reciprocal = [];
-        let current_indices = [];
+    function domReorder() {
+        let orderReciprocal = [];
+        let currentIndices = [];
         for (let i = 0; i < ordering.length; i++) {
-            order_reciprocal.push(null);
-            current_indices.push(i);
+            orderReciprocal.push(null);
+            currentIndices.push(i);
         }
         for (let i = 0; i < ordering.length; i++) {
-            order_reciprocal[ordering[i]] = i;
+            orderReciprocal[ordering[i]] = i;
         }
-        order_reciprocal.forEach((current_index, target_index) =>  {
+        orderReciprocal.forEach((current_index, target_index) =>  {
             for (let i = current_index; i > target_index; i--) {
-                swap_sibling(elements[current_index], elements[current_index].previousElementSibling);
+                swapSibling(elements[current_index], elements[current_index].previousElementSibling);
             }
         });
-        reset_variables();
-        reset_positions();
+        resetVariables();
+        resetPositions();
     }
 
     function on_mouseup(event) {
@@ -182,19 +181,19 @@ function dragrank(container, element_selector, callback, options={}) {
         dragging.e.style.zIndex = options.zIndex;
         dragging.e.style.transition = options.transition;
         dragging = null;
-        reset_positions();
+        resetPositions();
         let permutation = [...ordering];
         let changed = false;
         for (let k = 0; k < ordering.length; k++) {
-            permutation[prev_ordering[k]] = ordering[k];
+            permutation[prevOrdering[k]] = ordering[k];
             changed = changed || permutation[k] != k;
         }
         if (changed) callback(ordering, permutation);
-        if (options.dom_reorder) {
+        if (options.domReorder) {
             // Timeout to let the animation happen
-            setTimeout(dom_reorder, 100);
+            setTimeout(domReorder, 100);
         }
-        prev_ordering = [...ordering];
+        prevOrdering = [...ordering];
         return false;
     }
 
@@ -206,11 +205,11 @@ function dragrank(container, element_selector, callback, options={}) {
     DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "wheel", handler: update});
     DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "mouseup", handler: on_mouseup});
 
-    reset_positions();
+    resetPositions();
 
 }
 
-function reorder(array, permutation) {
+function dragrankReorder(array, permutation) {
     let cpy = [...array];
     for (let i = 0; i < array.length; i++) {
         array[permutation[i]] = cpy[i];

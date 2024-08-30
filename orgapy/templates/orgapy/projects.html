@@ -133,17 +133,18 @@
 
 {% block right_column %}
 <div class="card">
-    <div class="card-title">Calendar</div>
     <div id="events"></div>
-    <button id="button-add-event"><i class="ri-add-line"></i> Add</button>
-    <div id="calendar-sync"> <!--TODO: remove this id-->
-        <span id="calendar-sync-date"></span>
-        <button id="calendar-sync-button"><i class="ri-reset-left-line"></i></button>
+    <div class="card-commands">
+        <button id="events-add"><i class="ri-add-line"></i> Add</button>
+        <button id="events-refresh"><i class="ri-reset-left-line"></i> Refresh</button>
     </div>
 </div>
 <div class="card">
-    <div class="card-title" id="tasks-title">Tasks</div>
     <div id="tasks"></div>
+    <div class="card-commands">
+        <button id="tasks-add"><i class="ri-add-line"></i> Add</button>
+        <button id="tasks-explore"><i class="ri-search-line"></i> Explore</button>
+    </div>
 </div>
 {% endblock right_column %}
 
