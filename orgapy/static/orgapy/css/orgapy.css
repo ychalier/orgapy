@@ -306,6 +306,18 @@ header.card h1 {
     margin-bottom: .4rem;
 }
 
+.card-title {
+    display: block;
+    font-weight: bold;
+}
+
+.card-subtitle {
+    display: block;
+    font-size: small;
+    font-weight: bold;
+    margin-top: .4rem;
+}
+
 /**
  * Oneline
  */
@@ -533,7 +545,7 @@ input:checked + .toggle-slider + .toggle-text {
 /***** SPECIFIC COMPONENTS ****************************************************/
 
 /**
- * Columns
+ * Main Layout Columns
  */
 
 #columns {
@@ -565,15 +577,23 @@ input:checked + .toggle-slider + .toggle-text {
     padding-top: calc(42.2px + 1.6rem);
 }
 
-.column-sticky {
+#column-right .button-block:first-child {
+    margin-top: 0;
+}
+
+#column-right-sticky {
     position: sticky;
     top: .8rem;
     left: 0;
     margin-right: .8rem;
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    gap: .4rem;
 }
 
-#column-right .button-block:first-child {
-    margin-top: 0;
+#column-right-sticky > * {
+    margin: 0;
 }
 
 /** 
@@ -617,8 +637,6 @@ input:checked + .toggle-slider + .toggle-text {
 #toc {
     display: flex;
     flex-direction: column;
-    width: fit-content;
-    margin: .4rem 0 0 0;
 }
 
 #toc > a {
@@ -803,6 +821,138 @@ input:checked + .toggle-slider + .toggle-text {
 
 #input-content {
     font-family: "Fira Code", monospace;
+}
+
+/**
+ * Events
+ */
+
+#events {
+    line-height: 1.6;
+}
+
+.event {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.event-title {
+    margin-left: .2rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.event-over {
+    opacity: 0.5;
+}
+
+.event-dot-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-right: .2rem;
+}
+
+.event-dot {
+    margin-top: .1rem;
+    width: 8px;
+    height: 8px;
+    background: #8ed2ff;
+    border-radius: 50%;
+}
+
+.event-sync {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-top: .4rem;
+    font-size: small;
+    color: #888;
+    font-style: italic;
+}
+
+.event-sync-btn {
+    cursor: pointer;
+    display: none;
+    margin-top: -3px;
+    margin-left: .4rem;
+    font-size: small;
+}
+
+.event-delete {
+    cursor: pointer;
+    display: none;
+    margin-top: 1px;
+    margin-left: .4rem;
+    font-size: small;
+}
+
+.event-sync-btn:hover,
+.event-delete:hover {
+    color: #8ed2ff;
+}
+
+.event:hover .event-delete,
+.event-sync:hover .event-sync-btn {
+    display: block;
+}
+
+.event-modal-btn {
+    font-size: small;
+    background: none;
+    color: inherit;
+    border: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: baseline;
+    padding: .2rem;
+    border-radius: .2rem;
+    transition: .2s ease;
+    cursor: pointer;
+    margin-top: .2rem;
+}
+
+.event-modal-btn:hover {
+    background: #22272b;
+}
+
+.event-modal-btn i {
+    margin-right: .4rem;
+}
+
+/**
+ * Tasks
+ */
+
+.task-overdue {
+    color: #e65400;
+}
+
+.task-button-complete {
+    background: #262728;
+    border: 1px solid black;
+    border-radius: .2rem;
+    margin-right: .3rem;
+    color: inherit;
+    font-size: 9px;
+    height: 19px;
+    width: 19px;
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
+    top: -2px;
+    cursor: pointer;
+}
+
+.task-button-complete .icon {
+    visibility: hidden;
+}
+
+.task-button-complete:hover .icon {
+    visibility: visible;
 }
 
 /******************************************************************************

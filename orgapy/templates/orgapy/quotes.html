@@ -8,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
-<script src="{% static 'orgapy/js/markdown.js' %}"></script>
 {% endblock head %}
 
 {% block main_content %}
@@ -73,6 +72,6 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    markdown_to_html(".markdown", true);
+    markdownToHtml(".markdown", true);
 </script>
 {% endblock body_scripts %}

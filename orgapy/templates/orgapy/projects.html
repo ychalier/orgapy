@@ -4,7 +4,7 @@
 {% block title %}{% block subtitle %}Projects &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block head %}
-{{block.super}}
+{{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
@@ -15,6 +15,8 @@
     const URL_ADMIN_PROJECT_CHANGE = "{% url 'admin:orgapy_project_changelist' %}";
     const URL_ORGAPY_NOTE = "{% url 'orgapy:note' nid='NID' %}";
 </script>
+<script src="{% static 'orgapy/js/dragrank.js' %}"></script>
+<script src="{% static 'orgapy/js/projects.js' %}"></script>
 {% endblock head %}
 
 {% block main_content %}
@@ -130,23 +132,24 @@
 {% endblock main_content %}
 
 {% block right_column %}
-<div class="container sticky-top">
-    <div class="mb-2 text-primary"><b>Events</b></div>
+<div class="card">
+    <div class="card-title">Calendar</div>
     <div id="events"></div>
-    <div id="calendar-sync"></div>
-    <div class="my-2 text-primary c-hand" id="tasks-title"><b>Tasks</b></div>
+    <button id="button-add-event"><i class="ri-add-line"></i> Add</button>
+    <div id="calendar-sync"> <!--TODO: remove this id-->
+        <span id="calendar-sync-date"></span>
+        <button id="calendar-sync-button"><i class="ri-reset-left-line"></i></button>
+    </div>
+</div>
+<div class="card">
+    <div class="card-title" id="tasks-title">Tasks</div>
     <div id="tasks"></div>
 </div>
 {% endblock right_column %}
 
 {% block body_scripts %}
 {{ block.super }}
-<script src="{% static 'orgapy/js/dragrank.js' %}"></script>
-<script src="{% static 'orgapy/js/markdown.js' %}"></script>
 <script>
-    markdown_to_html(".markdown", true);
+    markdownToHtml(".markdown", true);
 </script>
-<script src="{% static 'orgapy/js/projects.js' %}"></script>
-<script src="{% static 'orgapy/js/objectives.js' %}"></script>
-<script src="{% static 'orgapy/js/calendar.js' %}"></script>
 {% endblock body_scripts %}

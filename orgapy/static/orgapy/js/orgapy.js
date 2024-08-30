@@ -1,3 +1,71 @@
+function create(parent=null, tag="div", className=null) {
+    const element = document.createElement(tag);
+    if (parent != null) {
+        parent.appendChild(element);
+    }
+    if (className != null) {
+        element.className = className;
+    }
+    return element;
+}
+
+function remove(element) {
+    element.parentElement.removeChild(element);
+}
+
+function pad2(x) {
+    return x.toString().padStart(2, "0");
+}
+
+function dtf(dt, format) {
+    return format
+        .replace("YYYY", dt.getFullYear())
+        .replace("mm", pad2(dt.getMonth() + 1))
+        .replace("dd", pad2(dt.getDate()))
+        .replace("HH", pad2(dt.getHours()))
+        .replace("MM", pad2(dt.getMinutes()))
+}
+
+function fetchApi(url, method, formData=null, onSuccess=null) {
+    const requestInit = {};
+    requestInit.method = method;
+    if (formData != null) {
+        requestInit.body = formData;
+    }
+    fetch(url, requestInit)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (onSuccess != null) {
+                    onSuccess(data);
+                }
+            } else {
+                toast("An error occured", 600);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            toast("An error occured", 600);
+        });
+}
+
+function fetchApiPost(action, body, onSuccess=null) {
+    let formData = new FormData();
+    formData.set("csrfmiddlewaretoken", CSRF_TOKEN);
+    for (const key in body) {
+        formData.set(key, body[key]);
+    }
+    fetchApi(URL_API + "?action=" + action, "post", formData, onSuccess);
+}
+
+function showModal(modalId) {
+    document.getElementById(modalId).classList.add("active");
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove("active");
+}
+
 function bindSearchbarSuggestions(searchbar, apiAction) {
     window.addEventListener("load", () => {
         const input = searchbar.querySelector(".searchbar-input");
@@ -23,6 +91,134 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
     });
 }
 
+function markdownToHtmlFancy(element) {
+    let converter = new showdown.Converter({
+        omitExtraWLInCodeBlocks: true,
+        customizedHeaderId: true,
+        headerLevelStart: 2,
+        simplifiedAutoLink: true,
+        literalMidWordUnderscores: true,
+        strikethrough: true,
+        tables: true,
+        tasklists: true,
+        simpleLineBreaks: true,
+        emoji: true,
+        moreStyling: true,
+        extensions: [
+            {
+                type: "output",
+                regex: /<table>/g,
+                replace: `<div class="table-wrapper"><table class="table">`,
+            },
+            {
+                type: "output",
+                regex: /&lt;/g,
+                replace: `<`,
+            },
+            {
+                type: "output",
+                regex: /&gt;/g,
+                replace: `>`,
+            },
+            {
+                type: "output",
+                regex: /&amp;/g,
+                replace: `&`,
+            },
+            {
+                type: "output",
+                regex: /<\/table>/g,
+                replace: `</table></div>`,
+            },
+            {
+                type: "output",
+                regex: /<pre><code class="(.*?) language-(.*?)">/g,
+                replace: `<pre class="code" data-lang="$1"><code class="language-$2">`,
+            },
+            {
+                type: "output",
+                regex: /style="margin: 0px 0\.35em 0\.25em \-1\.6em;/g,
+                replace: `style="margin: 0px 0.35em 0.25em -1em;`
+            },
+            {
+                type: "output",
+                regex: /input type="checkbox" disabled/g,
+                replace: `input type="checkbox" `
+            },
+            {
+                type: "output",
+                regex: /@sheet\/(\d+)/g,
+                replace: `<div class="sheet-seed" sheet-id="$1"></div>`
+            }
+        ]
+    });
+    element.innerHTML = converter.makeHtml(element.innerHTML);
+    element.querySelectorAll("p").forEach(paragraph => {
+        paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
+    });
+    window.addEventListener("load", () => {
+        hljs.highlightAll();
+    });
+    if (element.querySelectorAll(".sheet-seed").length > 0) {
+        initialize_sheets(true, true); // TODO: rename this function
+    }
+}
+
+function markdownToHtmlBasic(element) {
+    let converter = new showdown.Converter({
+        omitExtraWLInCodeBlocks: true,
+        customizedHeaderId: true,
+        headerLevelStart: 1,
+        simplifiedAutoLink: true,
+        literalMidWordUnderscores: true,
+        strikethrough: true,
+        tables: false,
+        tasklists: false,
+        simpleLineBreaks: true,
+        emoji: true,
+        moreStyling: true,
+        extensions: []
+    });
+    element.innerHTML = converter.makeHtml(element.innerHTML);
+    if (element.children.length == 1) {
+        element.innerHTML = element.children[0].innerHTML;
+    }
+}
+
+function markdownToHtml(selector, fancy=false) {
+    document.querySelectorAll(selector).forEach(element => {
+        if (fancy) {
+            markdownToHtmlFancy(element);
+        } else {
+            markdownToHtmlBasic(element);
+        }
+    });
+}
+
+function createToc(contentContainer, tocContainer) {    
+    function removeToc() {
+        tocContainer.previousElementSibling.style.flexDirection = "column";
+        tocContainer.parentElement.removeChild(tocContainer);
+    }
+    let bounds = contentContainer.getBoundingClientRect();
+    if (bounds.height <= 0.8 * window.innerHeight) {
+        removeToc();
+        return;
+    };
+    let titles = contentContainer.querySelectorAll("h2");
+    if (titles.length < 2) {
+        removeToc();
+        return;
+    }
+    tocContainer.innerHTML = "<b>Contents</b>";
+    titles.forEach(title => {
+        let anchor = tocContainer.appendChild(document.createElement("a"));
+        anchor.classList.add("link-hidden");
+        anchor.textContent = title.textContent;
+        anchor.href = `#${title.id}`;
+    });
+}
+
 /*******************************************************************************
  * OLD STUF
  *******************************************************************************
@@ -36,20 +232,6 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
                 window.location.href = link.href;
             }
         });
-    });
-    document.querySelectorAll(".show-on-switch-container").forEach(container => {
-        const input = container.querySelector(".show-on-switch-input");
-        const target = container.querySelector(".show-on-switch-target");
-
-        function update_target_visibility() {
-            if (input.checked) {
-                target.classList.remove("hidden");
-            } else {
-                target.classList.add("hidden");
-            }
-        }
-        update_target_visibility();
-        input.addEventListener("input", update_target_visibility);
     });
 
     function row_is_lower(x, y) {
