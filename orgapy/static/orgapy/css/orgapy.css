@@ -129,6 +129,16 @@ button:focus {
     color: #8ed2ff;
 }
 
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem;
+}
+
+.row > * {
+    width: fit-content;
+}
+
 /***** GENERAL COMPONENTS *****************************************************/
 
 /**
@@ -167,6 +177,36 @@ button:focus {
 
 .modal.active {
     display: unset;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #30303080;
+    z-index: 2;
+}
+
+.modal-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    transform: translate(-50%, -50%);
+}
+
+.modal input,
+.modal select,
+.modal textarea,
+.modal .toggle-slider,
+.modal button {
+    background: #303030;
+}
+
+.modal button:hover {
+    background: #1b2931;
 }
 
 /**
@@ -769,11 +809,4 @@ body.fullscreen {
 
 .sheets-table li {
     margin: 0;
-}
-
-.modal-footer-buttons {
-    display: flex;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: .2rem;
 }

@@ -37,84 +37,6 @@
     </div>
 </div>
 
-<div class="modal modal-sm" id="modal-objective-form">
-    <span class="modal-overlay" onclick="closeModal('modal-objective-form')"></span>
-    <div class="modal-container">
-        <form>
-            {% csrf_token %}
-            <input hidden name="id" />
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label label-sm pt-0" for="input-objective-name">Name</label>
-                    <input required minlength="1" name="name" class="form-input input-sm" type="text" id="input-objective-name" />
-                </div>
-                <div class="form-group">
-                    <label class="form-label label-sm" for="input-objective-type">Type</label>
-                    <select required name="type" class="form-select select-sm" id="input-objective-type">
-                        <option value="strict">Strict</option>
-                        <option value="flexible">Flexible</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label label-sm" for="input-objective-period">Period</label>
-                    <input required name="period" class="form-input input-sm" type="number" id="input-objective-period" min="0" step="0.5" />
-                </div>
-                <div class="form-group">
-                    <label class="form-label label-sm" for="input-objective-cooldown">Cooldown</label>
-                    <input required name="cooldown" class="form-input input-sm" type="number" id="input-objective-cooldown" min="0" step="0.5" />
-                </div>
-            </div>
-            <div class="modal-footer modal-footer-buttons">
-                <input type="submit" class="btn btn-sm btn-primary" name="add" value="Add"/>
-                <input type="submit" class="btn btn-sm btn-primary" name="save" value="Save"/>
-                <input type="submit" class="btn btn-sm" name="archive" value="Archive"/>
-                <input type="submit" class="btn btn-sm" name="delete" value="Delete"/>
-                <input type="submit" class="btn btn-sm" name="completion" value="Completion"/>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="modal modal-sm" id="modal-completion-form">
-    <span class="modal-overlay" onclick="closeModal('modal-completion-form')"></span>
-    <div class="modal-container">
-        <form>
-            {% csrf_token %}
-            <input hidden name="id" />
-            <input hidden name="timestamp" />
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Completion</label>
-                    <div class="input-group">
-                        <input class="form-input input-sm" type="date" name="date" />
-                        <input class="form-input input-sm" type="time" name="time" step="1" />
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <input type="submit" class="btn btn-sm" name="add" value="Add"/>
-                <input type="submit" class="btn btn-sm" name="save" value="Save"/>
-                <input type="submit" class="btn btn-sm" name="delete" value="Delete"/>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="modal" id="modal-tasks">
-    <span class="modal-overlay" onclick="closeModal('modal-tasks')"></span>
-    <div class="modal-container">
-        <div class="modal-header">
-            <div class="modal-title h5">Tasks</div>
-        </div>
-        <div class="modal-body">
-            <div class="tasks"></div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn" onclick="closeModal('modal-tasks')">Close</button>
-        </div>
-    </div>
-</div>
-
 <div id="projects" class="projects"></div>
 
 <div id="projects-footer" class="card card-slim">
@@ -129,7 +51,176 @@
     </div>
 </div>
 
-{% include "orgapy/partials/modal_add_event.html" %}
+<div class="modal" id="modal-objective-form">
+    <span class="modal-overlay" onclick="closeModal('modal-objective-form')"></span>
+    <div class="modal-container">
+        <form>
+            {% csrf_token %}
+            <input hidden name="id" />
+            <div class="card">
+                <b>Objective</b>
+                <p>
+                    <label for="input-objective-name">Name</label>
+                    <input required minlength="1" name="name" type="text" id="input-objective-name" />
+                </p>
+                <p>
+                    <label for="input-objective-type">Type</label>
+                    <select required name="type" id="input-objective-type">
+                        <option value="strict">Strict</option>
+                        <option value="flexible">Flexible</option>
+                    </select>
+                </p>
+                <p>
+                    <label cfor="input-objective-period">Period</label>
+                    <input required name="period" type="number" id="input-objective-period" min="0" step="0.5" />
+                </p>
+                <p>
+                    <label for="input-objective-cooldown">Cooldown</label>
+                    <input required name="cooldown" type="number" id="input-objective-cooldown" min="0" step="0.5" />
+                </p>
+                <div class="row">
+                    <input type="submit" class="button" name="add" value="Add"/>
+                    <input type="submit" class="button" name="save" value="Save"/>
+                    <input type="submit" class="button" name="archive" value="Archive"/>
+                    <input type="submit" class="button" name="delete" value="Delete"/>
+                    <input type="submit" class="button" name="completion" value="Completion"/>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="modal-completion-form">
+    <span class="modal-overlay" onclick="closeModal('modal-completion-form')"></span>
+    <div class="modal-container">
+        <form>
+            {% csrf_token %}
+            <input hidden name="id" />
+            <input hidden name="timestamp" />
+            <div class="card">
+                <b>Completion</b>
+                <p>
+                    <label>Date</label>
+                    <input type="date" name="date" />
+                </p>
+                <p>
+                    <label>Time</label>
+                    <input type="time" name="time" step="1" />
+                </p>
+                <div class="row">
+                    <input type="submit" class="button" name="add" value="Add"/>
+                    <input type="submit" class="button" name="save" value="Save"/>
+                    <input type="submit" class="button" name="delete" value="Delete"/>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="modal-tasks">
+    <span class="modal-overlay" onclick="closeModal('modal-tasks')"></span>
+    <div class="modal-container">
+        <div class="card">
+            <b>Tasks</b>
+            <div class="tasks"></div>
+            <button onclick="closeModal('modal-tasks')">Close</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-add-event" class="modal">
+    <span class="modal-overlay" onclick="closeModal('modal-add-event')"></span>
+    <div class="modal-container">
+        <div class="card">
+            <b>Add Event</b>
+            <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event">
+                {% csrf_token %}
+                <p>
+                    <label>Calendar</label>
+                    <select class="form-select" name="calendarid"></select>
+                </p>
+                <p>
+                    <label>Title</label>
+                    <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
+                </p>
+                <p>
+                    <label class="toggle">
+                        <input type="checkbox" name="allday" />
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">All Day</span>
+                    </label>
+                </p>
+                <p>
+                    <label>Date start</label>
+                    <div class="row">
+                        <input name="dtstart-date" type="date" />
+                        <input name="dtstart-time" type="time" />
+                    </div>
+                </p>
+                <p>
+                    <label>Date end</label>
+                    <div class="row">
+                        <input name="dtend-date" type="date" />
+                        <input name="dtend-time" type="time" />
+                    </div>
+                </p>
+                <p>
+                    <label>Location</label>
+                    <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
+                </p>
+            </form>
+            <div class="row">
+                <button id="btn-add-event">Add</button>
+                <button onclick="closeModal('modal-add-event')">Cancel</button>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<div id="modal-task-form" class="modal">
+    <span class="modal-overlay" onclick="closeModal('modal-task-form')"></span>
+    <div class="modal-container">
+        <div class="card">
+            <b>Add Task</b>
+            <form>
+                {% csrf_token %}
+                <input name="id" hidden />
+                <p>
+                    <label>Title</label>
+                    <input name="title" type="text" placeholder="Housework, Call X, …" />
+                </p>
+                <p>
+                    <label>Date start</label>
+                    <input name="start_date" type="date" />
+                </p>
+                <p>
+                    <label>Date due</label>
+                    <input name="due_date" type="date" />
+                </p>
+                <p>
+                    <label>Recurring mode</label>
+                    <select class="form-select" name="recurring_mode">
+                        <option value="ON" selected>Once</option>
+                        <option value="DY">Daily</option>
+                        <option value="WK">Weekly</option>
+                        <option value="MN">Monthly</option>
+                        <option value="YR">Yearly</option>
+                    </select>
+                </p>
+                <p>
+                    <label>Recurring period</label>
+                    <input name="recurring_period" type="number" />
+                </p>
+                <div class="row">
+                    <input type="submit" name="add" value="Add" />
+                    <input type="submit" name="save" value="Save" />
+                    <input type="submit" name="delete" value="Delete" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% endblock main_content %}
 

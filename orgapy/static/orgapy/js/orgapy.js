@@ -24,6 +24,7 @@ function dtf(dt, format) {
         .replace("dd", pad2(dt.getDate()))
         .replace("HH", pad2(dt.getHours()))
         .replace("MM", pad2(dt.getMinutes()))
+        .replace("SS", pad2(dt.getSeconds()))
 }
 
 function fetchApi(url, method, formData=null, onSuccess=null) {
