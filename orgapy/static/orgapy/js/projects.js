@@ -15,7 +15,6 @@ var converter = new showdown.Converter({
 
 var noteTitles = {};
 var projects = {};
-var todaysPlan = null;
 
 var calendars = {};
 var events = [];
@@ -156,7 +155,6 @@ class Project {
     onTitleInputChange(input) {
         this.container.classList.remove("editing");
         let titleString = input.value.trim();
-        let shouldInflateProjects = titleString == "Today's Plan" && this.title != titleString;
         let match = titleString.match(/^(.+?)(?:@(\d+))? *$/);
         this.title = match[1].trim();
         if (match[2] == undefined) {
@@ -164,11 +162,7 @@ class Project {
         } else {
             this.note = parseInt(match[2]);
         }
-        if (shouldInflateProjects) {
-            this.save(true);
-        } else {
-            this.update();
-        }
+        this.update();
     }
 
     inflateTitleInput(title) {
@@ -684,9 +678,6 @@ class Project {
         if (confirm(`Are you sure to delete '${this.title}'?`) == true) {
             fetchApiPost("delete-project", {project_id: this.id}, () => {
                 toast("Deleted!", 600);
-                if (self.title == "Today's Plan") {
-                    todaysPlan = null;
-                }
                 delete projects[self.id];
                 inflateProjects();
                 updateProjectCount();
@@ -700,9 +691,6 @@ class Project {
             fetchApiPost("archive-project", {project_id: this.id}, () => {
                 self.archived = true;
                 toast("Archived!", 600);
-                if (self.title == "Today's Plan") {
-                    todaysPlan = null;
-                }
                 const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
                 if (!showArchived) {
                     delete projects[self.id];
@@ -807,60 +795,6 @@ class Project {
 
 }
 
-class TodaysPlanProject extends Project {
-
-    constructor(data) {
-        super(data);
-        this.title = "Today's Plan";
-        this.category = "general";
-        this.limitDate = null;
-        this.progress = null;
-        this.description = null;
-        this.note = null;
-        if (this.checklist == null) {
-            this.onEmptyChecklist();
-        }
-        this.rank = -1;
-    }
-
-    inflateTitle(header) {
-        create(header, "div", "project-title").textContent = this.title;
-    }
-
-    inflateHeader() {
-        var self = this;
-        let header = this.container.querySelector(".project-header");
-        if (header == null) {
-            header = create(this.container, "div");
-            header.addEventListener("contextmenu", (event) => {
-                event.preventDefault();
-                self.inflateContextMenu(event); // cursor position required to position the menu
-            });
-        } else {
-            header.innerHTML = "";
-        }
-        header.className = "project-header";
-        this.inflateTitle(header);
-    }
-
-    onEmptyChecklist() {
-        this.checklist = "[ ] Item";
-        this.splitChecklist();
-    }
-
-    updateExpansion() {
-        this.expand();
-    }
-
-    inflateContextMenuItems(menu) {
-        var self = this;
-        addContextMenuOption(menu, "Delete project", () => {
-            self.delete();
-        });
-    }
-
-}
-
 class TemporaryProject extends Project {
 
     constructor() {
@@ -938,11 +872,6 @@ function saveProjectRanks(ordering) {
 
 function inflateProjects() {
     dragrankClear();
-    let todaysPlanContainer = document.getElementById("todays-plan");
-    todaysPlanContainer.innerHTML = "";
-    if (todaysPlan != null) {
-        todaysPlanContainer.appendChild(todaysPlan.create());
-    }
     let container = document.getElementById("projects");
     container.innerHTML = "";
     let projectIndices = [...Object.keys(projects)];
@@ -953,7 +882,7 @@ function inflateProjects() {
     dragrank(container, ".project", (ordering, permutation) => {
         setTimeout(() => {saveProjectRanks(ordering)}, 300);
     }, {
-        dragAllowed: (element) => { return !element.classList.contains("editing"); } // Rename dragAllowed
+        dragAllowed: (element) => { return !element.classList.contains("editing"); }
     });
     updateProjectCount();
 }
@@ -962,13 +891,8 @@ function fetchProjectsAndInflate() {
     const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
     fetch(URL_API + `?action=list-projects${showArchived ? "&archived=1" : ""}`).then(res => res.json()).then(data => {
         projects = {};
-        todaysPlan = null;
         data.projects.forEach(projectData => {
-            if (projectData["title"] == "Today's Plan") {
-                todaysPlan = new TodaysPlanProject(projectData);
-            } else {
-                projects[projectData.id] = new Project(projectData);
-            }
+            projects[projectData.id] = new Project(projectData);
         });
         inflateProjects();
     });
@@ -1124,7 +1048,7 @@ function inflateEvents() {
     container.innerHTML = "";
     
     if (events.length == 0) {
-        container.innerHTML = "No event";
+        container.textContent = "No event";
         return;
     }
     
@@ -1183,42 +1107,43 @@ function inflateTasks() {
     container.innerHTML = "";
 
     if (tasks.length == 0) {
-        create(container, "div", "event-date").innerHTML = `No task`;
-    } else {
-        tasks.sort((a, b) => a.start_date - b.start_date);
+        container.innerHTML = "No task";
+        return;
+    }
+    
+    tasks.sort((a, b) => a.start_date - b.start_date);
 
-        let seen = new Set();
-        let currentTasks = [];
-        let futureTasks = [];
-        const now = new Date();
+    let seen = new Set();
+    let currentTasks = [];
+    let futureTasks = [];
+    const now = new Date();
 
-        tasks.forEach(task => {
-            if (task.startDate <= now) {
-                seen.add(task.id);
-                currentTasks.push(task);
-            } else if (!seen.has(task.id)) {
-                seen.add(task.id);
-                futureTasks.push(task);
-            }
+    tasks.forEach(task => {
+        if (task.startDate <= now) {
+            seen.add(task.id);
+            currentTasks.push(task);
+        } else if (!seen.has(task.id)) {
+            seen.add(task.id);
+            futureTasks.push(task);
+        }
+    });
+
+    let taskTitle = create(container, "div", "card-subtitle");
+    if (currentTasks.length > 0) {
+        taskTitle.textContent = `Current tasks (${currentTasks.length})`;
+        currentTasks.forEach(task => {
+            task.inflate(container);
         });
+    } else {
+        taskTitle.textContent = `No current task`;
+    }
 
-        let taskTitle = create(container, "div", "card-subtitle");
-        if (currentTasks.length > 0) {
-            taskTitle.textContent = `Current tasks (${currentTasks.length})`;
-            currentTasks.forEach(task => {
-                task.inflate(container);
-            });
-        } else {
-            taskTitle.textContent = `No current task`;
-        }
-
-        if (futureTasks.length > 0) {
-            let details = create(container, "details");
-            create(details, "summary", "card-subtitle").textContent = `Incoming tasks (${futureTasks.length})`;
-            futureTasks.forEach(task => {
-                task.inflate(details);
-            });
-        }
+    if (futureTasks.length > 0) {
+        let details = create(container, "details");
+        create(details, "summary", "card-subtitle").textContent = `Incoming tasks (${futureTasks.length})`;
+        futureTasks.forEach(task => {
+            task.inflate(details);
+        });
     }
     
 }
@@ -1659,27 +1584,6 @@ window.addEventListener("load", () => {
         setTimeout(() => {
             tempProjectElement.querySelector("input").focus();
         }, 1);
-    });
-
-    document.getElementById("btn-todaysplan-create").addEventListener("click", () => {
-        if (todaysPlan != null) {
-            alert("Today's plan already exists");
-            return;
-        }
-        fetchApiPost("create-project", {}, (data) => {
-            todaysPlan = new TodaysPlanProject({
-                id: data.project.id,
-                modification: data.project.modification,
-                title: "Today's Plan"
-            });
-            inflateProjects();
-            todaysPlan.save();
-            setTimeout(() => {
-                let label = todaysPlan.container.querySelector("label");
-                todaysPlan.inflateChecklistItemLabelInput(label, "", 0);
-            }, 1);
-        });
-        inflateProjects();
     });
 
     document.getElementById("btn-add-event").addEventListener("click", () => {
