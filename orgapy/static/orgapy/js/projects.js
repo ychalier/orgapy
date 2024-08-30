@@ -1503,6 +1503,7 @@ function fetchObjectives() {
             objectives[data.id] = new Objective(data);
         });
         createObjgraph();
+        document.getElementById("objective-count").textContent = data.objectives.length + " objective" + (data.objectives.length > 0 ? "s" : "");
     });
 }
 
@@ -1647,7 +1648,7 @@ window.addEventListener("load", () => {
             const url = `${URL_API}?action=${prefix}archive-objective`;
             const formData = new FormData(event.target, event.submitter);
             formData.append("objective_id", objectiveId);
-            fetchApiPost(url, "post", formData, () => {
+            fetchApi(url, "post", formData, () => {
                 if (archived) {
                     toast("Unarchived!", 600);
                 } else {
@@ -1677,12 +1678,9 @@ window.addEventListener("load", () => {
         });
     });
     
-    /*
-    TODO: redo this!
     document.getElementById("btn-objective-create").addEventListener("click", (event) => {
         openModalObjectiveForm();
     });
-    */
 
     document.querySelector("#modal-completion-form form").addEventListener("submit", (event) => {
         event.preventDefault();

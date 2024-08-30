@@ -9,8 +9,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/calendar.css' %}" />
 <script>
     const URL_ADMIN_PROJECT_CHANGE = "{% url 'admin:orgapy_project_changelist' %}";
     const URL_ORGAPY_NOTE = "{% url 'orgapy:note' nid='NID' %}";
@@ -23,7 +21,21 @@
 
 {% include "orgapy/partials/note_searchbar.html" %}
 
-<div class="objgraph-ref my-4 hidden"><div id="objgraph-wrapper" class="objgraph-wrapper"></div></div>
+<div id="objectives-card" class="card hidden">
+    <div id="objgraph-wrapper" class="objgraph-wrapper"></div>
+</div>
+
+<div id="objectives-footer" class="card card-slim">
+    <div class="card-commands">
+        <span id="objective-count">No objective</span>
+        {% if not request.GET.archivedObjectives %}
+        <a class="button" href="{% url 'orgapy:projects' %}?archivedObjectives=1{% if request.GET.archivedProjects %}&archivedProjects=1{% endif %}">View Archived</a>
+        {% else %}
+        <a class="button" href="{% url 'orgapy:projects' %}{% if request.GET.archivedProjects %}?archivedProjects=1{% endif %}">Hide Archived</a>
+        {% endif %}
+        <button id="btn-objective-create"><i class="ri-add-line"></i> Add</button>
+    </div>
+</div>
 
 <div class="modal modal-sm" id="modal-objective-form">
     <span class="modal-overlay" onclick="closeModal('modal-objective-form')"></span>
@@ -107,7 +119,7 @@
 
 <div id="projects-footer" class="card card-slim">
     <div class="card-commands">
-        <span id="project-count">No project</span> · 
+        <span id="project-count">No project</span>
         {% if not request.GET.archivedProjects %}
         <a class="button" href="{% url 'orgapy:projects' %}?archivedProjects=1{% if request.GET.archivedObjectives %}&archivedObjectives=1{% endif %}">View Archived</a>
         {% else %}
@@ -116,18 +128,6 @@
         <button id="btn-project-create"><i class="ri-add-line"></i> Add</button>
     </div>
 </div>
-
-<!--
-
-<button id="btn-objective-create" class="projects-button"><i class="ri-add-line"></i> Objective</button>
-
-{% if not request.GET.archivedObjectives %}
-<a class="projects-button projects-button-small" href="{% url 'orgapy:projects' %}?archivedObjectives=1{% if request.GET.archivedProjects %}&archivedProjects=1{% endif %}">View Archived Objectives</a>
-{% else %}
-<a class="projects-button projects-button-small" href="{% url 'orgapy:projects' %}{% if request.GET.archivedProjects %}?archivedProjects=1{% endif %}">Hide Archived Objectives</a>
-{% endif %}
-
--->
 
 {% include "orgapy/partials/modal_add_event.html" %}
 

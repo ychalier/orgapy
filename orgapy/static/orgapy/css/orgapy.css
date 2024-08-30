@@ -365,11 +365,19 @@ header.card h1 {
     gap: .2rem;
     flex-wrap: wrap;
     margin-top: .4rem;
+    font-size: small;
+    line-height: 1;
 }
 
+.card-commands span,
 .card-commands button,
 .card-commands a.button {
     background: #303030;
+    font-size: small;
+    padding: .2rem;
+    border-radius: .2rem;
+    border: 1px solid #555;
+    line-height: inherit;
 }
 
 .card-commands button:hover,
@@ -378,12 +386,16 @@ header.card h1 {
 }
 
 .card-slim {
-    font-size: small;
-    padding: .2rem .4rem;
+    padding: 0;
+    background: none;
+    border: none;
 }
 
-.card-slim * {
-    font-size: small;
+.card-slim .card-commands span,
+.card-slim .card-commands button,
+.card-slim .card-commands a.button {
+    background: #101010;
+    border-color: black;
 }
 
 /**
