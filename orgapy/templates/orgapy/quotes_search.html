@@ -31,30 +31,14 @@
 </p>
 {% endif %}
 
-{% if recent_quotes %}
-
-<div class="card">
-    <h2>Recent quotes</h2>
-{% for quote in recent_quotes %}
-<div class="">
-    <a href="{% url 'orgapy:quotes_work' author=quote.from_work.author.slug work=quote.from_work.slug %}">{{ quote.from_work.title }}</a>,
-    <a href="{% url 'orgapy:quotes_author' author=quote.from_work.author.slug %}">{{ quote.from_work.author.name }}</a>
-    <div class="markdown">{{ quote.content | safe }}</div>
-</div>
-{% endfor %}
-</div>
-
-{% endif %}
-
-
 {% if authors %}
 <div class="card card-oneline">
     <h2 class="card-oneline-title">Auteurs</h2>
-    {% for author in authors %}
+    {% for author_ in authors %}
     <div class="oneline oneline-striped">
         <span class="oneline-truncate">
-            <a class="link-hidden" href="{% url 'orgapy:quotes_author' author=author.slug %}">{{ author.name }}</a> :
-            {% for work in author.work_set.all %}{% if not forloop.first %}, {% endif %}<i><a class="link-hidden" href="{% url 'orgapy:quotes_work' author=author.slug work=work.slug %}">{{ work.title }}</a></i>{% endfor %}
+            <a class="link-hidden" href="{% url 'orgapy:quotes_author' author=author_.slug %}">{{ author_.name }}</a> :
+            {% for work_ in author_.work_set.all %}{% if not forloop.first %}, {% endif %}<i><a class="link-hidden" href="{% url 'orgapy:quotes_work' author=author_.slug work=work_.slug %}">{{ work_.title }}</a></i>{% endfor %}
         </span>
     </div>
     {% endfor %}
@@ -62,6 +46,33 @@
 {% else %}
 <!-- TODO -->
 {% endif %}
+
+{% if quotes %}
+<div>
+    {% for quote in quotes %}
+    <div class="card my-2">
+        <div class="card-header" style="background: #101010;">
+            <a href="{% url 'orgapy:quotes_work' author=quote.from_work.author.slug work=quote.from_work.slug %}">{{ quote.from_work.title }}</a>,
+            <a href="{% url 'orgapy:quotes_author' author=quote.from_work.author.slug %}">{{ quote.from_work.author.name }}</a>
+        </div>
+        <div class="card-body markdown">{{ quote.content | safe }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty my-2">
+    <div class="empty-icon">
+        <i class="icon icon-quote icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no quote</p>
+    <p class="empty-subtitle">Click the button below to add a quote.</p>
+    <div class="empty-action">
+        <a class="btn btn-primary" href="{% url 'orgapy:create_quote' %}">Create quote</a>
+    </div>
+</div>
+{% endif %}
+
+{% include 'orgapy/partials/pagination.html' with paginator=quote_paginator %}
 
 {% endblock main_content %}
 

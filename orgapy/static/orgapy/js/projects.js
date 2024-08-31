@@ -299,7 +299,7 @@ class Project {
         if (this.limitDate == null && this.description == null && this.checklist == null) return;
         let summary = create(header, "div", "project-summary");
         if (this.description != null || this.checklist != null) {
-            summary.classList.add("c-hand"); //TODO
+            summary.classList.add("cursor-pointer");
         }
         if (this.limitDate != null) this.inflateLimitDate(summary);
         if (this.checklist != null) this.inflateChecklistSummary(summary);

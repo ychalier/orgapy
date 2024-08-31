@@ -385,7 +385,20 @@ def view_toggle_note_public(request, nid):
 
 
 @permission_required("orgapy.view_quote")
-def view_quotes(request, author=None, work=None):
+def view_quotes(request):
+    recent_quotes = models.Quote.objects.filter(user=request.user).order_by("-date_creation")[:3]
+    random_quotes = models.Quote.objects.filter(user=request.user).exclude(id__in=[q.id for q in recent_quotes]).order_by("?")[:3]
+    authors = models.Author.objects.all()
+    return render(request, "orgapy/quotes.html", {
+        "recent_quotes": recent_quotes,
+        "random_quotes": random_quotes,
+        "authors": authors,
+        "active": "quotes",
+    })
+
+
+@permission_required("orgapy.view_quote")
+def view_quotes_search(request, author=None, work=None):
     page_size = 10
     query = request.GET.get("query", "")
     objects = models.Quote.objects.filter(user=request.user)
@@ -403,7 +416,7 @@ def view_quotes(request, author=None, work=None):
     page = request.GET.get("page")
     quotes = paginator.get_page(page)
     authors = models.Author.objects.filter(user=request.user).order_by("name")
-    return render(request, "orgapy/quotes.html", {
+    return render(request, "orgapy/quotes_search.html", {
         "quotes": quotes,
         "query": query,
         "authors": authors,

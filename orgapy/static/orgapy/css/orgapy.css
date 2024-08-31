@@ -33,6 +33,12 @@ a {
     color: #8ed2ff;
 }
 
+ul,
+ol {
+    line-height: 1.6;
+    padding-left: 1.6rem;
+}
+
 input,
 select,
 textarea {
@@ -137,6 +143,10 @@ button:focus {
 
 .row > * {
     width: fit-content;
+}
+
+.cursor-pointer {
+    cursor: pointer;
 }
 
 /***** GENERAL COMPONENTS *****************************************************/
@@ -380,6 +390,11 @@ button:focus {
 
 .card-oneline {
     padding: 0;
+}
+
+.card-oneline-title {
+    margin: 0;
+    padding: .8rem;
 }
 
 header.card h1 {
