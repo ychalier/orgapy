@@ -3,13 +3,6 @@
 
 {% block title %}{% block subtitle %}Quotes &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block head %}
-{{ block.super }}
-<script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
-{% endblock head %}
-
 {% block main_content %}
 
 <form class="searchbar" action="{% url 'orgapy:quotes_search' %}" method="get">
