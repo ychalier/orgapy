@@ -724,7 +724,7 @@ input:checked+.toggle-slider+.toggle-text {
  * Navbar
  */
 
-#navbar {
+.navbar {
     display: flex;
     flex-wrap: wrap;
     gap: .2rem;
@@ -929,6 +929,24 @@ input:checked+.toggle-slider+.toggle-text {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+
+/** RESPONSIVE LAYOUT *********************************************************/
+
+@media(min-width: 800px) {
+    #navbar-small {
+        display: none;
+    }
+}
+
+@media (max-width: 800px) {
+    #navbar-large {
+        display: none;
+    }
+
+    #column-right {
+        padding: 0 .8rem .8rem .8rem;
+    }
 }
 
 /******************************************************************************

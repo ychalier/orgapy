@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-orgapy',
-    version='4.0.0-dev.1',
+    version='4.0.0-dev.2',
     packages=find_packages(),
     include_package_data=True,
     license='GNU GPLv3',

@@ -35,23 +35,23 @@
         <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
         <main id="column-main">
         {% block center_column %}
-            <nav id="navbar">
+            
+            <nav class="navbar" id="navbar-large">
                 <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}">Projects</a>
                 <a href="{% url 'orgapy:notes' %}" class="navbar-link {% if active == 'notes' %}active{% endif %}">Notes</a>
                 <a href="{% url 'orgapy:quotes' %}" class="navbar-link {% if active == 'quotes' %}active{% endif %}">Quotes</a>
                 <a href="{% url 'orgapy:sheets' %}" class="navbar-link {% if active == 'sheets' %}active{% endif %}">Sheets</a>
                 <a href="{% url 'orgapy:maps' %}" class="navbar-link {% if active == 'maps' %}active{% endif %}">Maps</a>
             </nav>
-            {% comment %}
-            <header class="navbar">
-                <a href="{% url 'orgapy:landing' %}" class="btn btn-link">Orgapy</a>
-                <a href="{% url 'orgapy:projects' %}" class="btn {% if active != 'projects' %}btn-link{% else %}mr-1{% endif %}" title="Projects"><i class="icon icon-task"></i></a>
-                <a href="{% url 'orgapy:notes' %}" class="btn {% if active != 'notes' %}btn-link{% else %}mr-1 ml-1{% endif %}" title="Notes"><i class="icon icon-note"></i></a>
-                <a href="{% url 'orgapy:quotes' %}" class="btn {% if active != 'quotes' %}btn-link{% else %}mr-1 ml-1{% endif %}" title="Quotes"><i class="icon icon-quote"></i></a>
-                <a href="{% url 'orgapy:sheets' %}" class="btn {% if active != 'sheets' %}btn-link{% else %}mr-1 ml-1{% endif %}" title="Sheets"><i class="icon icon-feed"></i></a>
-                <a href="{% url 'orgapy:maps' %}" class="btn {% if active != 'maps' %}btn-link{% else %}mr-1 ml-1{% endif %}" title="Maps"><i class="icon icon-map"></i></a>
-            </header>
-            {% endcomment %}
+            
+            <nav class="navbar" id="navbar-small">
+                <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-checkbox-circle-line"></i>{% endif %}</a>
+                <a href="{% url 'orgapy:notes' %}" class="navbar-link {% if active == 'notes' %}active{% endif %}" title="Notes">{% if active == 'notes' %}Notes{% else %}<i class="ri-sticky-note-line"></i>{% endif %}</a>
+                <a href="{% url 'orgapy:quotes' %}" class="navbar-link {% if active == 'quotes' %}active{% endif %}" title="Quotes">{% if active == 'quotes' %}Quotes{% else %}<i class="ri-double-quotes-l"></i>{% endif %}</a>
+                <a href="{% url 'orgapy:sheets' %}" class="navbar-link {% if active == 'sheets' %}active{% endif %}" title="Sheets">{% if active == 'sheets' %}Sheets{% else %}<i class="ri-table-line"></i>{% endif %}</a>
+                <a href="{% url 'orgapy:maps' %}" class="navbar-link {% if active == 'maps' %}active{% endif %}" title="Maps">{% if active == 'maps' %}Maps{% else %}<i class="ri-map-2-line"></i>{% endif %}</a>
+            </nav>
+            
             {% block main_content_prev %}{% endblock main_content_prev %}
             {% block main_content %}{% endblock main_content %}
             {% block main_content_next %}{% endblock main_content_next %}
