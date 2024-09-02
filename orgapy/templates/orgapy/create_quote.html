@@ -4,65 +4,76 @@
 {% block title %}{% block subtitle %}Create quote | {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block main_content %}
-<h1>{% block section__title %}Create quote{% endblock section__title %}</h1>
 
-<h2 class="m-top">Add an author</h2>
+<div class="card">
+    <h2>Add Author</h2>
+    <form action="{% url 'orgapy:create_quote' %}" method="post">
+        {% csrf_token %}
+        <p>
+            <label for="input-author-name">Name</label>
+            <input id="input-author-name" type="text" name="author_name" placeholder="Alexandre Dumas, Maurice Leblanc, …" />
+        </p>
+        <div class="row">
+            <input class="button" type="submit" name="form_author" value="Add author" />
+        </div>
+    </form>
+</div>
 
-<form action="{% url 'orgapy:create_quote' %}" method="post">
-    {% csrf_token %}
-    <div class="input-group">
-        <input class="form-input" type="text" name="author_name" placeholder="Author name" />
-        <input class="btn btn-primary input-group-btn" type="submit" name="form_author" value="Add author" />
-    </div>
-</form>
+<div class="card">
+    <h2>Add Work</h2>
+    {% if authors %}
+    <form action="{% url 'orgapy:create_quote' %}" method="post">
+        {% csrf_token %}
+        <p>
+            <label for="selector-work-author">Author</label>
+            <select id="select-work-author" name="work_author">
+                {% for author in authors %}
+                <option value="{{ author.id }}">{{ author.name }}</option>
+                {% endfor %}
+            </select>
+        </p>
+        <p>
+            <label for="input-work-title">Title</label>
+            <input id="input-work-title" type="text" name="work_title" placeholder="Le Parfum, Les Trois mousquetaires, …" />
+        </p>
+        <div class="row">
+            <input class="button" type="submit" name="form_work" value="Add work" />
+        </div>
+    </form>
+    {% else %}
+    <p>
+        You must add at least one author to add a work.
+    </p>
+    {% endif %}
+</div>
 
-<h2 class="m-top">Add a work</h2>
-
-{% if authors %}
-<form action="{% url 'orgapy:create_quote' %}" method="post">
-    {% csrf_token %}
-    <div class="input-group">
-        <select class="form-select" name="work_author">
-            {% for author in authors %}
-            <option value="{{ author.id }}">{{ author.name }}</option>
-            {% endfor %}
-        </select>
-        <input class="form-input" type="text" name="work_title" placeholder="Work title" />
-        <input class="btn btn-primary input-group-btn" type="submit" name="form_work" value="Add work" />
-    </div>
-</form>
-{% else %}
-<p>
-    You must add at least one author to add a work.
-</p>
-{% endif %}
-
-<h2 class="m-top">Add a quote</h2>
-
-{% if works %}
-<form action="{% url 'orgapy:create_quote' %}" method="post">
-    {% csrf_token %}
-    <div class="form-group">
-        <label class="form-label" for="input-work">Work</label>
-        <select class="form-select" id="input-work" name="quote_work">
-            {% for work in works %}
-            <option value="{{ work.id }}">{{ work.author.name }} &ndash; {{ work.title }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label class="form-label" for="input-quote">Quote</label>
-        <textarea class="form-input" id="input-quote" name="quote_content" placeholder="Quote content" rows="8"></textarea>
-    </div>
-    <div class="btn-group">
-        <input class="btn btn-primary" type="submit" name="form_quote_edit" value="Add quote and stay" />
-        <input class="btn btn-primary" type="submit" name="form_quote" value="Add quote" />
-    </div>
-</form>
-{% else %}
-<p>
-    You must add at least one work to add a quote.
-</p>
-{% endif %}
+<div class="card">
+    <h2>Add Quote</h2>
+    {% if works %}
+    <form action="{% url 'orgapy:create_quote' %}" method="post">
+        {% csrf_token %}
+        <p>
+            <label for="input-work">Work</label>
+            <select id="input-work" name="quote_work">
+                {% for work in works %}
+                <option value="{{ work.id }}">{{ work.author.name }} &ndash; {{ work.title }}</option>
+                {% endfor %}
+            </select>
+        </p>
+        <p>
+            <label for="input-quote">Content</label>
+            <textarea id="input-quote" name="quote_content" placeholder="Quote content" rows="8"></textarea>
+        </p>
+        <div class="row">
+            <input class="button" type="submit" name="form_quote_edit" value="Add quote and stay" />
+            <input class="button" type="submit" name="form_quote" value="Add quote" />
+        </div>
+    </form>
+    {% else %}
+    <p>
+        You must add at least one work to add a quote.
+    </p>
+    {% endif %}
+</div>
 
 {% endblock main_content %}

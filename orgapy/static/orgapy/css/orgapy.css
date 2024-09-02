@@ -18,7 +18,7 @@ html {
 }
 
 body {
-    background: #293c4a;
+    background: hsl(206, 29%, 17%);
     color: #f0f0f0;
     padding: 0;
     margin: 0;
@@ -135,6 +135,16 @@ button:focus {
     color: #8ed2ff;
 }
 
+.card-highlight .button-inline {
+    color: #2e4453;
+}
+
+.card-highlight .button-inline:active,
+.card-highlight .button-inline:focus,
+.card-highlight .button-inline:hover {
+    color: black;
+}
+
 .row {
     display: flex;
     flex-wrap: wrap;
@@ -207,15 +217,15 @@ button:focus {
     transform: translate(-50%, -50%);
 }
 
-.modal input,
-.modal select,
-.modal textarea,
-.modal .toggle-slider,
-.modal button {
+.card input,
+.card select,
+.card textarea,
+.card .toggle-slider,
+.card button {
     background: #303030;
 }
 
-.modal button:hover {
+.card button:hover {
     background: #1b2931;
 }
 
@@ -451,6 +461,23 @@ header.card h1 {
 .card-slim .card-commands a.button {
     background: #101010;
     border-color: black;
+}
+
+.card-block {
+    background: #303030;
+    padding: .4rem;
+    border-radius: .4rem;
+    margin: .4rem 0;
+}
+
+.card-block + .card-commands {
+    margin-top: .8rem;
+}
+
+.card-highlight {
+    border-color: #6393b2;
+    background: #8ed2ff;
+    color: black;
 }
 
 /**
@@ -870,6 +897,20 @@ input:checked+.toggle-slider+.toggle-text {
         bottom: 0;
         opacity: 0;
     }
+}
+
+/**
+ * Quotes
+ */
+
+.quote-content.markdown p {
+    font-size: inherit;
+    margin: 0;
+}
+
+.quote-reference {
+    font-size: small;
+    color: #888;
 }
 
 /******************************************************************************

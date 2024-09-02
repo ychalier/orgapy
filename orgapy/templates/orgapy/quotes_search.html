@@ -12,7 +12,7 @@
 
 {% block main_content %}
 
-<form class="searchbar" action="{% url 'orgapy:quotes' %}" method="get">
+<form class="searchbar" action="{% url 'orgapy:quotes_search' %}" method="get">
     <div class="searchbar-container">         
         <input class="searchbar-input" type="text" name="query" placeholder="Search a quote content" value="{% if query %}{{query}}{% endif %}" />
         <i class="searchbar-icon"></i>
@@ -22,40 +22,25 @@
 </form>
 
 {% if work %}
-<p>
-    Filter: <i>{{work.title}}</i>, {{work.author.name}} <a class="button" href="{% url 'orgapy:quotes' %}">Clear</a>
-</p>
-{% elif author %}
-<p>
-    Filter: {{author.name}} <a class="button" href="{% url 'orgapy:quotes' %}">Clear</a>
-</p>
-{% endif %}
-
-{% if authors %}
-<div class="card card-oneline">
-    <h2 class="card-oneline-title">Auteurs</h2>
-    {% for author_ in authors %}
-    <div class="oneline oneline-striped">
-        <span class="oneline-truncate">
-            <a class="link-hidden" href="{% url 'orgapy:quotes_author' author=author_.slug %}">{{ author_.name }}</a> :
-            {% for work_ in author_.work_set.all %}{% if not forloop.first %}, {% endif %}<i><a class="link-hidden" href="{% url 'orgapy:quotes_work' author=author_.slug work=work_.slug %}">{{ work_.title }}</a></i>{% endfor %}
-        </span>
-    </div>
-    {% endfor %}
+<div class="card card-highlight">
+    {{work.author.name}}, <i>{{work.title}}</i> <a class="button-inline" href="{% url 'orgapy:quotes_search' %}"><i class="ri-close-line"></i></a>
 </div>
-{% else %}
-<!-- TODO -->
+{% elif author %}
+<div class="card card-highlight">
+    {{author.name}}  <a class="button-inline" href="{% url 'orgapy:quotes_search' %}"><i class="ri-close-line"></i></a>
+</div>
 {% endif %}
 
 {% if quotes %}
 <div>
     {% for quote in quotes %}
-    <div class="card my-2">
-        <div class="card-header" style="background: #101010;">
-            <a href="{% url 'orgapy:quotes_work' author=quote.from_work.author.slug work=quote.from_work.slug %}">{{ quote.from_work.title }}</a>,
-            <a href="{% url 'orgapy:quotes_author' author=quote.from_work.author.slug %}">{{ quote.from_work.author.name }}</a>
+    <div class="card quote">
+        <div class="quote-content markdown">{{ quote.content | safe }}</div>
+        <div class="quote-reference">
+            <a class="link-hidden" href="{% url 'orgapy:quotes_author' author=quote.from_work.author.slug %}">{{ quote.from_work.author.name }}</a>,
+            <i><a class="link-hidden" href="{% url 'orgapy:quotes_work' author=quote.from_work.author.slug work=quote.from_work.slug %}">{{ quote.from_work.title }}</a></i>
+            <a class="link-hidden" href="{% url 'admin:orgapy_quote_change' quote.id %}" title="Edit in admin"><i class="ri-pencil-fill"></i></a>
         </div>
-        <div class="card-body markdown">{{ quote.content | safe }}</div>
     </div>
     {% endfor %}
 </div>

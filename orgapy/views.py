@@ -415,11 +415,9 @@ def view_quotes_search(request, author=None, work=None):
     ), page_size)
     page = request.GET.get("page")
     quotes = paginator.get_page(page)
-    authors = models.Author.objects.filter(user=request.user).order_by("name")
     return render(request, "orgapy/quotes_search.html", {
         "quotes": quotes,
         "query": query,
-        "authors": authors,
         "author": author,
         "work": work,
         "quote_paginator": pretty_paginator(quotes, query=query),
@@ -446,7 +444,7 @@ def view_create_quote(request):
             if models.Work.objects.filter(id=work_id, user=request.user).exists():
                 add_quote(request, work_id, request.POST.get("quote_content").strip())
         if "form_quote" in request.POST:
-            return redirect("orgapy:quotes")
+            return redirect("orgapy:quotes_search")
     authors = models.Author.objects.filter(user=request.user).order_by("-date_creation")
     works = models.Work.objects.filter(user=request.user).order_by("-date_creation")
     return render(request, "orgapy/create_quote.html", {
