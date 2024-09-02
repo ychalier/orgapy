@@ -1,6 +1,8 @@
 function createToc(contentContainer, tocContainer) {    
     function removeToc() {
-        tocContainer.previousElementSibling.style.flexDirection = "column";
+        if (tocContainer.previousElementSibling != null) {
+            tocContainer.previousElementSibling.style.flexDirection = "column";
+        }
         tocContainer.parentElement.removeChild(tocContainer);
     }
     let bounds = contentContainer.getBoundingClientRect();

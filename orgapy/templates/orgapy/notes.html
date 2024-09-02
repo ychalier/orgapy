@@ -7,7 +7,60 @@
 
 {% include "orgapy/partials/note_searchbar.html" %}
 
-{% include "orgapy/partials/note_list.html" %}
+{% if notes %}
+<div class="card card-oneline">
+    {% for note in notes %}
+    <div class="oneline oneline-striped">
+        <a class="oneline-truncate link-hidden" href="{% url 'orgapy:note' nid=note.id %}" title="{{ note.title }}">{{note.title}}</a>
+        <span>
+            {% if note.categories.all %}
+            {% for category in note.categories.all %}
+            <a class="link-tenuous" href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+            {% endfor%}
+            {% else %}
+            <a class="link-tenuous" href="{% url 'orgapy:notes' %}?uncategorized=1">uncategorized</a>
+            {% endif %}
+        </span>
+        {% if note.pinned %}
+        <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>
+        {% endif %}
+        {% if note.public %}
+        <a class="button-inline" href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" title="Make private"><i class="ri-lock-line"></i></a>
+        {% endif %}
+        <span class="show-on-parent-hover">
+            <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
+            <div class="dropdown">
+                <a class="button-inline dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-fill"></i></a>
+                <ul class="menu">
+                    {% if not note.pinned %}
+                    <li class="menu-item"><a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" title="Mark as favorite"><i class="ri-bookmark-fill"></i> Pin</a></li>
+                    {% endif %}
+                    {% if not note.public %}
+                    <li class="menu-item"><a href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" title="Make public"><i class="ri-lock-unlock-line"></i> Publish</a></li>
+                    {% else %}
+                    <li class="menu-item"><a href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" title="Make private"><i class="ri-lock-line"></i> Make private</a></li>
+                    {% endif %}
+                    <li class="menu-item"><a href="{% url 'orgapy:export_note' nid=note.id %}" title="Download as Markdown"><i class="ri-download-line"></i> Download</a></li>
+                    <li class="menu-item"><a href="{% url 'orgapy:delete_note' nid=note.id %}" class="link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+                </ul>
+            </div>
+        </span>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="empty">
+    <div class="empty-icon">
+        <i class="icon icon-note icon-2x"></i>
+    </div>
+    <p class="empty-title h5">You have no note</p>
+    <p class="empty-subtitle">Click the button to write a note.</p>
+    <div class="empty-action">
+        <a class="btn btn-primary" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}">Create note</a>
+    </div>
+</div>
+{% endif %}
 
 {% include 'orgapy/partials/pagination.html' with paginator=note_paginator %}
 

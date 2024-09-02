@@ -17,18 +17,23 @@
 {% block left_column %}<div style="height: {% if note.project_set.all %}11.4rem{% else %}10.2rem{% endif %}"></div><div class="toc"></div>{% endblock left_column %}
 
 {% block main_content %}
-<h1>{{note.title}}</h1>
 
-{% if note.content %}
-<div class="markdown p-4">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
-{% endif %}
+<header class="card">
+    <h1 class="note-title">{{note.title}}</h1>
+</header>
+
+<div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 
 {% endblock main_content %}
+
+{% block right_column %}
+<div class="card" id="toc"></div>
+{% endblock right_column %}
 
 {% block body_scripts %}
 {{ block.super }}
 <script>
     markdownToHtml(".markdown", true);
-    createToc(document.querySelector(".markdown"), document.querySelector(".toc"));
+    createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
 </script>
 {% endblock body_scripts %}
