@@ -5,10 +5,10 @@
 
 {% block head %}
 {{ block.super }}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="{% static 'orgapy/js/Leaflet.Editable.js' %}"></script>
-<script src="{% static 'orgapy/js/Path.Drag.js' %}"></script>
+<link rel="stylesheet" href="{% static 'orgapy/dependencies/leaflet.css' %}" />
+<script src="{% static 'orgapy/dependencies/leaflet.js' %}"></script>
+<script src="{% static 'orgapy/dependencies/Leaflet.Editable.js' %}"></script>
+<script src="{% static 'orgapy/dependencies/Path.Drag.js' %}"></script>
 <script src="{% static 'orgapy/js/dragrank.js' %}"></script>
 <script src="{% static 'orgapy/js/maps.js' %}"></script>
 <link rel="stylesheet" href="{% static 'orgapy/css/maps.css' %}" />
@@ -16,14 +16,9 @@
 
 {% block main_content %}
 
-
-{% endblock main_content %}
-
-{% block fullscreen_content %}
-
 <div class="map-seed" map-id="{{map.id}}"></div>
 
-{% endblock fullscreen_content %}
+{% endblock %}
 
 {% block body_scripts %}
 {{ block.super }}

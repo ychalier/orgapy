@@ -881,7 +881,7 @@ class Layer {
             });
         }
         this.container.innerHTML = "";        
-        let header_container = create(this.container, "div", ["d-flex"]);
+        let header_container = create(this.container, "div", ["row"]);
         header_container.style.alignItems = "center";
         let header_container_label = create(create(header_container, "div", ["form-group", "mb-0"]), "label", ["form-switch"]);
         header_container_label.addEventListener("click", (event) => {
@@ -1497,7 +1497,7 @@ class LayerStyleDialog extends Dialog {
         super.open();
         let title = create(this.container, "div", ["dialog-title"]);
         title.textContent = "Edit Layer Style";
-        let form = create(this.container, "form", ["d-flex"]);
+        let form = create(this.container, "form", ["row"]);
         form.style.flexDirection = "column";
         let layer = this.map.get_selected_layer();
 
@@ -1577,7 +1577,7 @@ class MoveFeatureDialog extends Dialog {
         super.open();
         let title = create(this.container, "div", ["dialog-title"]);
         title.textContent = "Move Feature to another Layer";
-        let form = create(this.container, "form", ["d-flex"]);
+        let form = create(this.container, "form", ["row"]);
         form.style.flexDirection = "column";
         let group = create(form, "div", ["form-group"]);
         create(group, "label", ["form-label"]).textContent = "Destination Layer";
@@ -1590,7 +1590,7 @@ class MoveFeatureDialog extends Dialog {
             }
             option.textContent = layer.label;
         });
-        let buttons = create(form, "div", ["d-flex"]);
+        let buttons = create(form, "div", ["row"]);
         let move_button = create(buttons, "button", ["btn", "btn-primary", "mr-1"]);
         move_button.textContent = "Move";
         let cancel_button = create(buttons, "button", ["btn"]);

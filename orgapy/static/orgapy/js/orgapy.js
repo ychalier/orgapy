@@ -74,6 +74,7 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
         const container = searchbar.querySelector(".searchbar-suggestions");
         icon.addEventListener("click", () => {
             input.value = "";
+            container.innerHTML = "";
             input.focus();
         });
         input.addEventListener("input", () => {

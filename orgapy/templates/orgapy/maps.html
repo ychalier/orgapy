@@ -5,22 +5,26 @@
 
 {% block main_content %}
 
-<form class="searchbar" action="{% url 'orgapy:maps' %}" method="get">
+<form id="map-searchbar" class="searchbar" action="{% url 'orgapy:maps' %}" method="get">
     <div class="searchbar-container">         
         <input class="searchbar-input" type="text" name="query" placeholder="Search a map" value="{% if query %}{{query}}{% endif %}" />
-        <i class="searchbar-icon"></i>
+        <i class="searchbar-icon ri-close-line"></i>
+        <div class="searchbar-suggestions"></div>
     </div>
     <button class="searchbar-search">Search</button>
     <a class="searchbar-create button" href="{% url 'orgapy:create_map' %}{% if query %}?title={{query}}{% endif %}">Create map</a>
 </form>
 
-{% if maps %}
+<script>
+    bindSearchbarSuggestions(document.getElementById("map-searchbar"), "map-suggestions");
+</script>
 
-<table class="table table-hover table-striped table-condensed maps-table">
+{% if maps %}
+<div class="card card-oneline">
     {% for map in maps %}
-    <tr><td>{% include 'orgapy/partials/map_list_item.html' %}</td></tr>
+    <div class="oneline oneline-striped">{% include 'orgapy/partials/map_list_item.html' %}</div>
     {% endfor %}
-</table>
+</div>
 {% else %}
 <div class="empty">
     <div class="empty-icon">

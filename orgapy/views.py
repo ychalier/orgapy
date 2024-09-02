@@ -725,6 +725,8 @@ def api(request):
             return api_map(request)
         case "save-map":
             return api_save_map(request)
+        case "map-suggestions":
+            return api_map_suggestions(request)
         case _:
             raise BadRequest("Wrong action")
 
@@ -1372,3 +1374,22 @@ def api_save_map(request):
     mmap.date_modification = timezone.now()
     mmap.save()
     return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.view_map")
+def api_map_suggestions(request):
+    query = request.GET.get("q", "").strip()
+    results = []
+    if len(query) >= 1:
+        results = models.Map.objects.filter(user=request.user, title__startswith=query)[:5]
+    data = {
+        "results": [
+            {
+                "id": result.id,
+                "title": result.title,
+                "url": result.get_absolute_url()
+            }
+            for result in results
+        ]
+    }
+    return JsonResponse(data)
