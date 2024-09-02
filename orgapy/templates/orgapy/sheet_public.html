@@ -1,4 +1,4 @@
-{% extends "orgapy/layout/skeleton.html" %}
+{% extends "orgapy/layout/fullscreen.html" %}
 {% load static %}
 
 {% block title %}{% block subtitle %} {{sheet.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
@@ -10,7 +10,9 @@
 {% endblock head %}
 
 {% block main_content %}
-<h1>{{sheet.title}}</h1>
+<header class="card">
+    <h1>{{sheet.title}}</h1>
+</header>
 
 <div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
 {% endblock main_content %}

@@ -2604,7 +2604,7 @@ class Sheet {
         this.toolbar = create(this.container, "div", ["sheet-toolbar"]);
 
         this.toolbar_button_save = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        this.toolbar_button_save.innerHTML = `<i class="icon icon-save"></i>`;
+        this.toolbar_button_save.innerHTML = `<i class="ri-save-line"></i>`;
         this.toolbar_button_save.title = "Save";
         this.toolbar_button_save.setAttribute("disabled", true);
         this.toolbar_button_save.addEventListener("click", () => {
@@ -2618,21 +2618,21 @@ class Sheet {
         });
 
         this.toolbar_button_toggle_shrink = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        this.toolbar_button_toggle_shrink.innerHTML = `<i class="icon icon-shrink"></i>`;
+        this.toolbar_button_toggle_shrink.innerHTML = `<i class="ri-fullscreen-exit-line"></i>`;
         this.toolbar_button_toggle_shrink.title = "Toggle shrink";
         this.toolbar_button_toggle_shrink.addEventListener("click", () => {
             self.toggle_shrink();
         });
 
         let btn_import = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        btn_import.innerHTML = `<i class="icon icon-upload"></i>`;
+        btn_import.innerHTML = `<i class="ri-upload-line"></i>`;
         btn_import.title = "Import";
         btn_import.addEventListener("click", () => {
             self.open_import_modal();
         });
 
         let btn_export = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        btn_export.innerHTML = `<i class="icon icon-download"></i>`;
+        btn_export.innerHTML = `<i class="ri-download-line"></i>`;
         btn_export.title = "Export";
         btn_export.addEventListener("click", () => {
             self.export_tsv();

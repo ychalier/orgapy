@@ -5,44 +5,33 @@
 
 {% block main_content %}
 
-<form action="{% url 'orgapy:sheets' %}" method="get">
-    <div class="search-create-bar">
-        <div class="searchbar-with-clear-button has-icon-right">         
-            <input autocomplete="off" class="form-input" type="text" name="query" placeholder="Search a sheet" value="{% if query %}{{query}}{% endif %}" />
+{% include 'orgapy/partials/sheet_searchbar.html' %}
+
+<div class="card card-oneline">
+    <h1 class="card-oneline-title">{{group.title}}</h1>
+    {% if group.sheet_set.all %}
+        {% for sheet in group.sheet_set.all %}
+        <div class="oneline oneline-striped">{% include 'orgapy/partials/sheet_list_item.html' %}</div>
+        {% endfor %}
+    {% else %}
+    <div class="empty">
+        <div class="empty-icon">
+            <i class="icon icon-note icon-2x"></i>
         </div>
-        <button class="btn btn-primary input-group-btn">Search</button>
-        <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
+        <p class="empty-title h5">You have no sheet</p>
+        <p class="empty-subtitle">Click the button to create a sheet.</p>
+        <div class="empty-action">
+            <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
+        </div>
     </div>
-</form>
-
-<h1 class="mb-2">{{group.title}}</h1>
-
-{% if group.sheet_set.all %}
-
-<table class="table table-hover table-striped table-condensed sheets-table">
-    {% for sheet in group.sheet_set.all %}
-    <tr><td>{% include 'orgapy/partials/sheet_list_item.html' %}</td></tr>
-    {% endfor %}
-</table>
-{% else %}
-<div class="empty">
-    <div class="empty-icon">
-        <i class="icon icon-note icon-2x"></i>
-    </div>
-    <p class="empty-title h5">You have no sheet</p>
-    <p class="empty-subtitle">Click the button to create a sheet.</p>
-    <div class="empty-action">
-        <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
-    </div>
+    {% endif %}
 </div>
-{% endif %}
 
-{% include 'orgapy/partials/modal_create_sheet_group.html' %}
+<div class="row">
+    <a class="button" href="{% url 'orgapy:edit_sheet_group' group.id %}"><i class="ri-pencil-fill"></i> Edit</a>
+    <a class="button link-confirm" href="{% url 'orgapy:delete_sheet_group' group.id %}"><i class="ri-delete-bin-line"></i> Delete</a>
+</div>
+
 
 {% endblock main_content %}
 
-{% block right_column %}
-
-<span class="btn mb-2" onclick="showModal('modal-create-sheet-group')">Add group</span>
-
-{% endblock right_column %}

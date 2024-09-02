@@ -719,6 +719,8 @@ def api(request):
             return api_sheet(request)
         case "save-sheet":
             return api_save_sheet(request)
+        case "sheet-suggestions":
+            return api_sheet_suggestions(request)
         case "map":
             return api_map(request)
         case "save-map":
@@ -1321,6 +1323,25 @@ def api_save_sheet(request):
     sheet.date_modification = timezone.now()
     sheet.save()
     return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.view_sheet")
+def api_sheet_suggestions(request):
+    query = request.GET.get("q", "").strip()
+    results = []
+    if len(query) >= 1:
+        results = models.Sheet.objects.filter(user=request.user, title__startswith=query)[:5]
+    data = {
+        "results": [
+            {
+                "id": result.id,
+                "title": result.title,
+                "url": result.get_absolute_url()
+            }
+            for result in results
+        ]
+    }
+    return JsonResponse(data)
 
 
 def api_map(request):

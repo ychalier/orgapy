@@ -425,10 +425,7 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     border-radius: .4rem;
     height: 28px;
     width: 28px;
-}
-
-.sheet-toolbar-button .icon {
-    margin-top: -4px;
+    padding: 0;
 }
 
 .sheet-toolbar-button + .sheet-toolbar-button {

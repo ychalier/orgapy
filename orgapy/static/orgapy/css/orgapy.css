@@ -543,6 +543,8 @@ header.card h1 {
 .toggle input {
     position: absolute;
     visibility: hidden;
+    width: 0;
+    height: 0;
 }
 
 .toggle-slider {
@@ -913,27 +915,25 @@ input:checked+.toggle-slider+.toggle-text {
     color: #888;
 }
 
+/**
+ * Fullscreen
+ */
+
+#fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100%;
+    padding: 0 .8rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
 /******************************************************************************
 /* OLD STUFF                                                                  *
 /******************************************************************************/
-
-body.fullscreen {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    height: 100vh;
-}
-
-.fullscreen-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    width: 100vw;
-    height: 100%;
-    margin-bottom: 1em;
-    flex-grow: 0;
-}
 
 .sheets-table ul {
     margin: 0 0 0 .8rem;

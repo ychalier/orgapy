@@ -13,33 +13,28 @@
 {% endblock head %}
 
 {% block main_content %}
-<h1 class="mb-0">{{sheet.title}}</h1>
 
-<div class="mb-4">
-    {% if sheet.description %}
-    <div class="markdown-inline">{{sheet.description | safe}}</div>
-    {% endif %}
-    {% if sheet.group %}
-    <span>Group: <a href="{{sheet.group.get_absolute_url}}">{{sheet.group.title}}</a></span><br>
-    {% endif %}
-    <span class="text-small">
-        Created on <b>{{ sheet.date_creation | date }}</b>
-    </span>
-    <span class="ml-2">    
-        <a class="btn-inline mr-1 {% if sheet.public %}btn-primary{% endif %}" href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="icon icon-lock"></i></a>
-        <a class="btn-inline mr-1" href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" title="Edit"><i class="icon icon-edit"></i></a>
-        <a class="btn-inline link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="icon icon-delete"></i></a>
-    </span>
-</div>
-
-{% endblock main_content %}
-
-{% block fullscreen_content %}
-
+<header class="card">
+    <h1>{{sheet.title}}</h1>
+    <div>
+        {% if sheet.group %}
+        <a href="{{sheet.group.get_absolute_url}}">{{sheet.group.title}}</a> ·
+        {% endif %}
+        {% if sheet.description %}
+        <span class="markdown-inline">{{sheet.description | safe}}</span> ·
+        {% endif %}
+        <span><i class="ri-calendar-line"></i> {{ sheet.date_creation | date }}</span>
+        <span>  
+            <a class="button-inline" href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" title="Edit"><i class="ri-pencil-fill"></i></a>
+            <a class="button-inline" href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i></a>
+            <a class="button-inline link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
+        </span>
+    </div>
+</header>
 
 <div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
 
-{% endblock fullscreen_content %}
+{% endblock %}
 
 {% block body_scripts %}
 {{ block.super }}

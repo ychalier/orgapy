@@ -25,7 +25,7 @@
     {% endblock head %}
 </head>
 
-<body class="{% block body_class %}{% endblock body_class %}">
+<body>
     {% block body %}
     {% block before_columns %}{% endblock before_columns %}
     <div id="columns">
@@ -57,8 +57,8 @@
         <div id="column-right"><div id="column-right-sticky">{% block right_column %}{% endblock right_column %}</div></div>
     </div>
     {% block after_columns %}{% endblock after_columns %}
-    <div id="snackbar"></div>
     {% endblock body %}
+    <div id="snackbar"></div>
     {% block body_bottom %}{% endblock body_bottom %}
     {% block body_scripts %}{% endblock body_scripts %}
 </body>

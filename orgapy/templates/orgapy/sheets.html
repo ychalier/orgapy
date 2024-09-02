@@ -5,42 +5,33 @@
 
 {% block main_content %}
 
-<form class="searchbar" action="{% url 'orgapy:sheets' %}" method="get">
-    <div class="searchbar-container">         
-        <input class="searchbar-input" type="text" name="query" placeholder="Search a sheet" value="{% if query %}{{query}}{% endif %}" />
-        <i class="searchbar-icon"></i>
-    </div>
-    <button class="searchbar-search">Search</button>
-    <a class="searchbar-create button" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
-</form>
+{% include 'orgapy/partials/sheet_searchbar.html' %}
 
 {% if groups or standalone_sheets %}
 
-<table class="table table-hover table-striped table-condensed sheets-table">
+<div class="card card-oneline">
     {% for group in groups %}
-    <tr>
-        <td>
-            <details>
-                <summary>
-                    <a class="link-hidden mr-2" href="{{group.get_absolute_url}}">{{group.title}}</a>
-                    <span class="show-on-parent-hover">
-                        <a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="btn-inline" title="Edit"><i class="icon icon-edit"></i></a>
-                        <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="link-confirm btn-inline" title="Delete"><i class="icon icon-delete"></i></a>
-                    </span>
-                </summary>
-                <ul>
-                    {% for sheet in group.sheet_set.all %}
-                    <li>{% include 'orgapy/partials/sheet_list_item.html' %}</li>
-                    {% endfor %}
-                </ul>
-            </details>
-        </td>
-    </tr>
+    <div class="oneline oneline-striped">
+        <details>
+            <summary>
+                <a class="link-hidden" href="{{group.get_absolute_url}}">{{ group.title }}</a>
+                <span class="show-on-parent-hover">
+                    <a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
+                    <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="link-confirm button-inline" title="Delete"><i class="ri-delete-bin-line"></i></a>
+                </span>
+            </summary>
+            <ul>
+                {% for sheet in group.sheet_set.all %}
+                <li>{% include 'orgapy/partials/sheet_list_item.html' %}</li>
+                {% endfor %}
+            </ul>
+        </details>
+    </div>
     {% endfor %}
     {% for sheet in standalone_sheets %}
-    <tr><td>{% include 'orgapy/partials/sheet_list_item.html' %}</td></tr>
+    <div class="oneline oneline-striped">{% include 'orgapy/partials/sheet_list_item.html' %}</div>
     {% endfor %}
-</table>
+</div>
 {% else %}
 <div class="empty">
     <div class="empty-icon">
@@ -54,12 +45,25 @@
 </div>
 {% endif %}
 
-{% include 'orgapy/partials/modal_create_sheet_group.html' %}
+<button onclick="showModal('modal-create-sheet-group')">Create sheet group</button>
+
+<div id="modal-create-sheet-group" class="modal">
+    <span class="modal-overlay" onclick="closeModal('modal-create-sheet-group')"></span>
+    <div class="modal-container">
+        <form method="post" action="{% url 'orgapy:create_sheet_group' %}?next={{ request.path }}">
+            {% csrf_token %}
+            <div class="card">
+                <b>Create sheet group</b>
+                <p>
+                    <label for="input-sheet-group-title">Title</label>
+                    <input required type="text" name="title" placeholder="My Sheet Group" id="input-sheet-group-title" />
+                </p>
+                <div class="row">
+                    <button>Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 {% endblock main_content %}
-
-{% block right_column %}
-
-<span class="btn mb-2" onclick="showModal('modal-create-sheet-group')">Add group</span>
-
-{% endblock right_column %}
