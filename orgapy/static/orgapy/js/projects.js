@@ -384,7 +384,7 @@ class Project {
         input.addEventListener("focusout", callback);
         input.addEventListener("keydown", (e) => { if (e.key == "Enter") { 
             callback();
-            if (e.ctrlKey) {
+            if (e.ctrlKey || e.altKey || e.shiftKey) {
                 let checklist = self.container.querySelector(".project-checklist");
                 self.addNewChecklistItem(checklist);
             }
