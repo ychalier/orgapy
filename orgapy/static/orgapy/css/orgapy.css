@@ -760,6 +760,7 @@ input:checked+.toggle-slider+.toggle-text {
 
 .card.markdown {
     padding-bottom: 1.6rem;
+    overflow-x: hidden;
 }
 
 .markdown p {
@@ -777,6 +778,14 @@ input:checked+.toggle-slider+.toggle-text {
 .markdown table,
 .markdown pre {
     overflow-x: auto;
+}
+
+.markdown .table-wrapper {
+    overflow-x: auto;
+}
+
+.markdown a {
+    overflow-wrap: break-word;
 }
 
 .markdown code {
@@ -947,6 +956,15 @@ input:checked+.toggle-slider+.toggle-text {
     #column-right {
         padding: 0 .8rem .8rem .8rem;
     }
+    
+    #column-right-sticky {
+        width: 100%;
+    }
+
+    #column-right .action-buttons {
+        flex-direction: row !important;
+    }
+    
 }
 
 /******************************************************************************

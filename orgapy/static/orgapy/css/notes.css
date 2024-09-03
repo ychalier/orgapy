@@ -29,7 +29,7 @@
     display: block;
     padding: .8rem;
     margin: .8rem 0;
-    height: 100%;
+    /*height: 100%;*/
     resize: none;
 }
 
