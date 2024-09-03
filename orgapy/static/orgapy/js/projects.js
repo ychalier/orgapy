@@ -786,7 +786,11 @@ class Project {
                 this.checklistItems.splice(i, 1);
             }
         }
-        this.concatChecklist();
+        if (this.checklistItems.length == 0) {
+            this.onEmptyChecklist();
+        } else {
+            this.concatChecklist();
+        }
         this.update();
     }
 
