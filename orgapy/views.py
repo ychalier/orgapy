@@ -807,6 +807,8 @@ def api_edit_project(request):
     if not models.Project.objects.filter(id=project_id, user=request.user).exists():
         raise Http404("Project not found")
     project = models.Project.objects.get(id=project_id, user=request.user)
+    if project.date_modification.timestamp() > project_data["modification"]:
+        return JsonResponse({"success": False, "reason": "Project has newer modifications"})
     project.title = project_data["title"]
     project.category = project_data["category"]
     project.rank = float(project_data["rank"])
@@ -835,7 +837,10 @@ def api_edit_project(request):
     else:
         project.note = None
     project.save()
-    return JsonResponse({"success": True})
+    return JsonResponse({
+        "success": True,
+        "modification": project.date_modification.timestamp()
+    })
 
 
 @permission_required("orgapy.change_project")

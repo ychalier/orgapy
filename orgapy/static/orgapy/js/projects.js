@@ -737,6 +737,7 @@ class Project {
     toDict() {
         return {
             title: this.title,
+            modification: this.modification,
             category: this.category,
             limitDate: this.limitDate,
             progress: this.progress,
@@ -758,11 +759,13 @@ class Project {
             return;
         }
         this.previousProjectData = projectData;
+        var self = this;
         fetchApiPost("edit-project",
             {
                 project_id: this.id,
                 project_data: projectData
-            }, () => {
+            }, (data) => {
+                self.modification = data.modification;
                 toast("Saved!", 600);
                 if (refreshList) {
                     fetchProjectsAndInflate();

@@ -41,6 +41,9 @@ function fetchApi(url, method, formData=null, onSuccess=null) {
                     onSuccess(data);
                 }
             } else {
+                if ("reason" in data) {
+                    alert(data.reason);
+                }
                 toast("An error occured", 600);
             }
         })
