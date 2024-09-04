@@ -2507,39 +2507,35 @@ class Sheet {
         this.script.evaluate(this);
     }
 
-    open_import_modal() {
+    openImportModal() {
         var self = this;
-        let modal = create(document.body, "div", "modal");
-        let modalOverlay = create(modal, "span", "modal-overlay");
+        const modal = create(document.body, "div", "modal");
+        const modalOverlay = create(modal, "span", "modal-overlay");
         modalOverlay.addEventListener("click", () => {
             remove(modal);
         });
-        let modalContainer = create(modal, "div", "modal-container");
-        let modalHeader = create(modalContainer, "div", "modal-header");
-        let modalTitle = create(modalHeader, "div", "modal-title h5");
-        modalTitle.textContent = "Import Sheet";
-        let modalSubtitle = create(modalHeader, "div", "modal-subtitle text-gray");
-        modalSubtitle.textContent = "Upload a CSV or TSV file";
-        let modalBody = create(modalContainer, "div", "modal-body");
-        let modalFormGroup = create(modalBody, "div", "form-group");
-        let modalFormLabel = create(modalFormGroup, "label", "form-label");
-        modalFormLabel.textContent = "Local file";
-        let modalInput = create(modalFormGroup, "input", "form-input");
-        modalInput.setAttribute("type", "file");
-        modalInput.setAttribute("accept", ".tsv,.csv,.txt");
-        let modalFooter = create(modalContainer, "div", "modal-footer");
-        let modalButtonCancel = create(modalFooter, "button", "btn mr-1");
-        modalButtonCancel.textContent = "Cancel";
-        modalButtonCancel.addEventListener("click", () => {
+        const modalContainer = create(modal, "div", "modal-container");
+        const card = create(modalContainer, "div", "card");
+        create(card, "h3").textContent = "Import Sheet";
+        create(card, "div").textContent = "Upload a CSV or TSV file";
+        const inputParagraph = create(card, "p");
+        create(inputParagraph, "label").textContent = "Local file";
+        const input = create(inputParagraph, "input");
+        input.setAttribute("type", "file");
+        input.setAttribute("accept", ".tsv,.csv,.txt");
+        const bottomRow = create(card, "div", "row");
+        const buttonCancel = create(bottomRow, "button");
+        buttonCancel.textContent = "Cancel";
+        buttonCancel.addEventListener("click", () => {
             remove(modal);
         });
-        let modalButtonImport = create(modalFooter, "button", "btn btn-primary");
-        modalButtonImport.textContent = "Import";
+        const buttonImport = create(bottomRow, "button");
+        buttonImport.textContent = "Import";
         modal.classList.add("active");
-        modalButtonImport.addEventListener("click", () => {
-            if (modalInput.files.length > 0) {
+        buttonImport.addEventListener("click", () => {
+            if (input.files.length > 0) {
                 let reader = new FileReader();
-                reader.readAsText(modalInput.files[0]);
+                reader.readAsText(input.files[0]);
                 reader.onload = () => {
                     self.importTsv(reader.result.replaceAll("\r", ""));
                 }
@@ -2550,43 +2546,39 @@ class Sheet {
 
     openScriptModal() {
         var self = this;
-        let modal = create(document.body, "div", "modal");
-        let modalOverlay = create(modal, "span", "modal-overlay");
+        const modal = create(document.body, "div", "modal");
+        const modalOverlay = create(modal, "span", "modal-overlay");
         modalOverlay.addEventListener("click", () => {
             remove(modal);
         });
-        let modalContainer = create(modal, "div", "modal-container");
-        let modalHeader = create(modalContainer, "div", "modal-header");
-        let modalTitle = create(modalHeader, "div", "modal-title h5");
-        modalTitle.textContent = "Script";
-        let modalSubtitle = create(modalHeader, "div", "modal-subtitle text-gray");
-        modalSubtitle.textContent = "Write script formula, one per line";
-        let modalBody = create(modalContainer, "div", "modal-body");
-        let modalFormGroup = create(modalBody, "div", "form-group");
-        let modalTextarea = create(modalFormGroup, "textarea", "form-input script-textarea");
-        modalTextarea.addEventListener("keydown", (event) => {
+        const modalContainer = create(modal, "div", "modal-container");
+        const card = create(modalContainer, "div", "card");
+        create(card, "h3").textContent = "Script";
+        create(card, "div").textContent = "Write script formula, one per line";
+        const textarea = create(create(card, "p"), "textarea", "script-textarea");
+        textarea.addEventListener("keydown", (event) => {
             event.stopPropagation();
         });
         if (this.script != null) {
-            modalTextarea.value = this.script.string;
+            textarea.value = this.script.string;
         }
-        let modalFooter = create(modalContainer, "div", "modal-footer");
-        let modalButtonCancel = create(modalFooter, "button", "btn mr-1");
-        modalButtonCancel.textContent = "Cancel";
-        modalButtonCancel.addEventListener("click", () => {
+        const bottomRow = create(card, "div", "row");
+        const buttonCancel = create(bottomRow, "button");
+        buttonCancel.textContent = "Cancel";
+        buttonCancel.addEventListener("click", () => {
             remove(modal);
         });
-        let modalButtonCompute = create(modalFooter, "button", "btn mr-1");
-        modalButtonCompute.textContent = "Save";
-        modalButtonCompute.addEventListener("click", () => {
-            self.updateScript(modalTextarea.value);
+        const buttonCompute = create(bottomRow, "button");
+        buttonCompute.textContent = "Save";
+        buttonCompute.addEventListener("click", () => {
+            self.updateScript(textarea.value);
         });
-        let modalButtonSave = create(modalFooter, "button", "btn btn-primary");
-        modalButtonSave.textContent = "Save & close";
+        const buttonSave = create(bottomRow, "button");
+        buttonSave.textContent = "Save & close";
         modal.classList.add("active");
-        modalTextarea.focus();
-        modalButtonSave.addEventListener("click", () => {
-            self.updateScript(modalTextarea.value);
+        textarea.focus();
+        buttonSave.addEventListener("click", () => {
+            self.updateScript(textarea.value);
             remove(modal);
         });
     }
@@ -2622,7 +2614,7 @@ class Sheet {
         btnImport.innerHTML = `<i class="ri-upload-line"></i>`;
         btnImport.title = "Import";
         btnImport.addEventListener("click", () => {
-            self.open_import_modal();
+            self.openImportModal();
         });
 
         let btnExport = create(this.toolbar, "button", "sheet-toolbar-button");
