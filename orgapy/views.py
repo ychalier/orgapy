@@ -393,7 +393,7 @@ def view_toggle_note_public(request, nid):
 def view_quotes(request):
     recent_quotes = models.Quote.objects.filter(user=request.user).order_by("-date_creation")[:3]
     random_quotes = models.Quote.objects.filter(user=request.user).exclude(id__in=[q.id for q in recent_quotes]).order_by("?")[:3]
-    authors = models.Author.objects.all()
+    authors = models.Author.objects.all().order_by("name")
     return render(request, "orgapy/quotes.html", {
         "recent_quotes": recent_quotes,
         "random_quotes": random_quotes,
