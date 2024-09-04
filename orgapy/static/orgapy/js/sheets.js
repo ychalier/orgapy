@@ -45,7 +45,7 @@ const FUNCTION_MIN = 6;
 const FUNCTION_MAX = 7;
 
 
-function find_closing_parenthesis(string, start=0) {
+function findClosingParenthesis(string, start=0) {
     if (string.charAt(start) != "(") throw new Error("First char should be '('");
     let level = 0;
     for (let i = start; i < string.length; i++) {
@@ -62,7 +62,7 @@ class AxisLocation {
 
     constructor() {}
 
-    static from_string(string) {
+    static fromString(string) {
         let clean = string.trim();
         if (clean == "*") return new AxisLocationRange();
         if (clean.includes(":")) {
@@ -83,11 +83,11 @@ class AxisLocation {
         return new AxisLocationAbsolute(string);
     }
 
-    evaluate(k, min, max, index_of) {
+    evaluate(k, min, max, indexOf) {
         throw new Error("Not implemented!");
     }
 
-    indices(k, min, max, index_of) {
+    indices(k, min, max, indexOf) {
         throw new Error("Not implemented!");
     }
 
@@ -105,14 +105,14 @@ class AxisLocationAbsolute extends AxisLocation {
         return `<Absolute ${this.position}>`;
     }
 
-    evaluate(k, min, max, index_of) {
-        let l = index_of(this.position);
+    evaluate(k, min, max, indexOf) {
+        let l = indexOf(this.position);
         if (l < min || l > max) throw new Error(`Index out of bounds: ${l} (original position: ${this.position})`);
         return l;
     }
 
-    indices(k, min, max, index_of) {
-        return [this.evaluate(k, min, max, index_of)];
+    indices(k, min, max, indexOf) {
+        return [this.evaluate(k, min, max, indexOf)];
     }
 
 }
@@ -129,14 +129,14 @@ class AxisLocationRelative extends AxisLocation {
         return `<Relative ${this.offset > 0 ? "+" : ""}${this.offset}>`;
     }
 
-    evaluate(k, min, max, index_of) {
+    evaluate(k, min, max, indexOf) {
         let l = k + this.offset;
         if (l < min || l > max) throw new Error(`Index out of bounds: ${l}`);
         return l;
     }
 
-    indices(k, min, max, index_of) {
-        return [this.evaluate(k, min, max, index_of)];
+    indices(k, min, max, indexOf) {
+        return [this.evaluate(k, min, max, indexOf)];
     }
 
 }
@@ -162,17 +162,17 @@ class AxisLocationRange extends AxisLocation {
         }
     }
 
-    evaluate(k, min, max, index_of) {
+    evaluate(k, min, max, indexOf) {
         throw new Error("Can not evaluate range axis location");
     }
 
-    indices(k, min, max, index_of) {
-        let l_min = min;
-        if (this.start != null) l_min = Math.max(l_min, index_of(this.start));
-        let l_max = max;
-        if (this.end != null) l_max = Math.min(l_max, index_of(this.end));
+    indices(k, min, max, indexOf) {
+        let lMin = min;
+        if (this.start != null) lMin = Math.max(lMin, indexOf(this.start));
+        let lMax = max;
+        if (this.end != null) lMax = Math.min(lMax, indexOf(this.end));
         let indices = [];
-        for (let l = l_min; l <= l_max; l++) {
+        for (let l = lMin; l <= lMax; l++) {
             indices.push(l);
         }
         return indices;
@@ -183,16 +183,16 @@ class AxisLocationRange extends AxisLocation {
 
 class CellLocation {
 
-    constructor(row_location, column_location) {
-        this.row = row_location;
-        this.column = column_location;
+    constructor(rowLocation, columnLocation) {
+        this.row = rowLocation;
+        this.column = columnLocation;
     }
 
-    static from_string(string) {
+    static fromString(string) {
         let split = string.split(",");
         return new CellLocation(
-            AxisLocation.from_string(split[1]),
-            AxisLocation.from_string(split[0]));
+            AxisLocation.fromString(split[1]),
+            AxisLocation.fromString(split[0]));
     }
 
     toString() {
@@ -201,17 +201,17 @@ class CellLocation {
 
     evaluate(sheet, i, j) {
         return {
-            i: this.row.evaluate(i, 0, sheet.height - 1, s => sheet.index_of_rows(s)),
-            j: this.column.evaluate(j, 0, sheet.width - 1, s => sheet.index_of_columns(s))
+            i: this.row.evaluate(i, 0, sheet.height - 1, s => sheet.indexOfRows(s)),
+            j: this.column.evaluate(j, 0, sheet.width - 1, s => sheet.indexOfColumns(s))
         };
     }
 
     indices(sheet, i, j) {
-        let row_indices = this.row.indices(i, 0, sheet.height - 1, s => sheet.index_of_rows(s));
-        let column_indices = this.column.indices(j, 0, sheet.width - 1, s => sheet.index_of_columns(s));
+        let rowIndices = this.row.indices(i, 0, sheet.height - 1, s => sheet.indexOfRows(s));
+        let columnIndices = this.column.indices(j, 0, sheet.width - 1, s => sheet.indexOfColumns(s));
         let indices = { idx: [] };
-        row_indices.forEach(p => {
-            column_indices.forEach(q => {
+        rowIndices.forEach(p => {
+            columnIndices.forEach(q => {
                 indices.idx.push([p, q]);
             });
         });
@@ -230,7 +230,7 @@ class Expression {
 
     constructor() {}
 
-    static from_string(string) {
+    static fromString(string) {
         let clean = string.trim();
         if (clean == "") return null;
         let left = null;
@@ -239,13 +239,13 @@ class Expression {
         let tail = null;
         let constant = null;
         if (clean.charAt(0) == "(") {
-            let i = find_closing_parenthesis(clean);
-            left = Expression.from_string(clean.substring(1, i).trim());
+            let i = findClosingParenthesis(clean);
+            left = Expression.fromString(clean.substring(1, i).trim());
             tail = clean.substring(i + 1).trim();
         } else if (clean.match(SCRIPT_FUNCTION_PATTERN)) {
             let match = clean.match(SCRIPT_FUNCTION_PATTERN)[0];
-            let i = find_closing_parenthesis(clean, match.length - 1);
-            let inner_string = clean.substring(match.length, i).trim();
+            let i = findClosingParenthesis(clean, match.length - 1);
+            let innerString = clean.substring(match.length, i).trim();
             let fun = null;
             switch (match.substring(0, match.length - 1)) {
                 case "Round":
@@ -274,9 +274,9 @@ class Expression {
                     break;
             }
             if (fun == FUNCTION_ROUND || fun == FUNCTION_FLOOR || fun == FUNCTION_CEIL) {
-                left = new ExpressionBaseFunction(fun, Expression.from_string(inner_string));
+                left = new ExpressionBaseFunction(fun, Expression.fromString(innerString));
             } else {
-                left = new ExpressionRangeFunction(fun, CellLocation.from_string(inner_string));
+                left = new ExpressionRangeFunction(fun, CellLocation.fromString(innerString));
             }
             tail = clean.substring(i + 1).trim();
         } else if (clean.match(SCRIPT_CONSTANT_PATTERN)) {
@@ -289,14 +289,14 @@ class Expression {
             tail = clean.substring(constant.length).trim();
         } else if (clean.match(SCRIPT_LOCATION_PATTERN)) {
             let match = clean.match(SCRIPT_LOCATION_PATTERN)[0];
-            left = new ExpressionCell(CellLocation.from_string(match));
+            left = new ExpressionCell(CellLocation.fromString(match));
             tail = clean.substring(match.length).trim();
         } else {
             throw new Error("Could not parse expression:", clean);
         }
         if (tail != null && tail != "") {
-            let operator_match = tail.match(SCRIPT_OPERATOR_PATTERN)[0];
-            switch (operator_match) {
+            let operatorMatch = tail.match(SCRIPT_OPERATOR_PATTERN)[0];
+            switch (operatorMatch) {
                 case "+":
                     operator = OPERATOR_ADD;
                     break;
@@ -316,7 +316,7 @@ class Expression {
                     operator = OPERATOR_POW;
                     break;
             }
-            right = Expression.from_string(tail.substring(operator_match.length));
+            right = Expression.fromString(tail.substring(operatorMatch.length));
             return new ExpressionTernary(left, operator, right);
         } else {
             return left;
@@ -350,17 +350,17 @@ class ExpressionConstant extends Expression {
 
 class ExpressionCell extends Expression {
 
-    constructor(cell_location) {
+    constructor(cellLocation) {
         super();
-        this.cell_location = cell_location;
+        this.cellLocation = cellLocation;
     }
 
     toString() {
-        return `<CellLocation: ${this.cell_location.toString()}>`;
+        return `<CellLocation: ${this.cellLocation.toString()}>`;
     }
 
     evaluate(sheet, i, j) {
-        let position = this.cell_location.evaluate(sheet, i, j);
+        let position = this.cellLocation.evaluate(sheet, i, j);
         return sheet.values[position.i][position.j];
     }
 
@@ -397,17 +397,17 @@ class ExpressionBaseFunction extends Expression {
 
 class ExpressionRangeFunction extends Expression {
     
-    constructor(fun, cell_location) {
+    constructor(fun, cellLocation) {
         super();
         this.fun = fun;
-        this.cell_location = cell_location;
+        this.cellLocation = cellLocation;
     }
 
     toString() {
-        return `<Function ${this.fun} of range ${this.cell_location.toString()}>`;
+        return `<Function ${this.fun} of range ${this.cellLocation.toString()}>`;
     }
 
-    evaluate_sum(indices) {
+    evaluateSum(sheet, indices) {
         let r = 0;
         indices.forEach((i, j) => {
             if (sheet.values[i][j] != null) r += sheet.values[i][j];
@@ -415,7 +415,7 @@ class ExpressionRangeFunction extends Expression {
         return r;
     }
 
-    evaluate_mean(indices) {
+    evaluateMean(sheet, indices) {
         let r = 0;
         let s = 0;
         indices.forEach((i, j) => {
@@ -427,7 +427,7 @@ class ExpressionRangeFunction extends Expression {
         return r / s;
     }
 
-    evaluate_count(indices) {
+    evaluateCount(sheet, indices) {
         let r = 0;
         indices.forEach((i, j) => {
             if (sheet.values[i][j] != null) r++;
@@ -435,7 +435,7 @@ class ExpressionRangeFunction extends Expression {
         return r;
     }
 
-    evaluate_min(indices) {
+    evaluateMin(sheet, indices) {
         let r = null;
         indices.forEach((i, j) => {
             if (sheet.values[i][j] != null && (r == null || sheet.values[i][j] < r)) r = sheet.values[i][j];
@@ -443,7 +443,7 @@ class ExpressionRangeFunction extends Expression {
         return r;
     }
 
-    evaluate_max(indices) {
+    evaluateMax(sheet, indices) {
         let r = null;
         indices.forEach((i, j) => {
             if (sheet.values[i][j] != null && (r == null || sheet.values[i][j] > r)) r = sheet.values[i][j];
@@ -452,18 +452,18 @@ class ExpressionRangeFunction extends Expression {
     }
 
     evaluate(sheet, i, j) {
-        let indices = this.cell_location.indices(sheet, i, j);
+        let indices = this.cellLocation.indices(sheet, i, j);
         switch(this.fun) {
             case FUNCTION_SUM:
-                return this.evaluate_sum(indices);
+                return this.evaluateSum(sheet, indices);
             case FUNCTION_MEAN:
-                return this.evaluate_mean(indices);
+                return this.evaluateMean(sheet, indices);
             case FUNCTION_COUNT:
-                return this.evaluate_count(indices);
+                return this.evaluateCount(sheet, indices);
             case FUNCTION_MIN:
-                return this.evaluate_min(indices);
+                return this.evaluateMin(sheet, indices);
             case FUNCTION_MAX:
-                return this.evaluate_max(indices);
+                return this.evaluateMax(sheet, indices);
         }
     }
 
@@ -513,7 +513,7 @@ class Script {
         this.string = string;
     }
 
-    static from_string(string) {
+    static fromString(string) {
         let formulas = [];
         string.split("\n").forEach((line, i) => {
             if (line.trim() != "" && line.charAt(0) != "#") {
@@ -522,8 +522,8 @@ class Script {
                     let split = line.split("=");
                     if (split.length != 2) throw new Error("Syntax error: Could not parse formula");
                     let formula = {
-                        location: CellLocation.from_string(split[0]),
-                        expression: Expression.from_string(split[1])
+                        location: CellLocation.fromString(split[0]),
+                        expression: Expression.fromString(split[1])
                     };
                     formulas.push(formula);
                     //console.log(formula.location.toString(), formula.expression.toString());
@@ -540,13 +540,13 @@ class Script {
             try {
                 formula.location.indices(sheet, 0, 0).forEach((i, j) => {
                     sheet.values[i][j] = formula.expression.evaluate(sheet, i, j);
-                    sheet.set_cell_content(i, j);
+                    sheet.setCellContent(i, j);
                 });
             } catch (error) {
                 console.error("Encountered an error while evaluating", formula, ":", error);
             }
         });     
-        sheet.update_filters();
+        sheet.updateFilters();
     }
 
 }
@@ -558,22 +558,6 @@ function tidy(array, order) {
         buffer.push(array[i]);
     });
     return buffer;
-}
-
-
-function create(parent, tag="div", classes=null) {
-    let el = parent.appendChild(document.createElement(tag));
-    if (classes != null) {
-        classes.forEach(cls => {
-            el.classList.add(cls);
-        });
-    }
-    return el;
-}
-
-
-function remove(element) {
-    element.parentNode.removeChild(element);
 }
 
 
@@ -595,10 +579,10 @@ function colname(i) {
     let string = (i - lb).toString(26);
     let codes = [];
     for (let k = 0; k < string.length; k++) {
-        let in_code = string.charCodeAt(k);
-        let digit = in_code <= 57 ? in_code - 48 : in_code - 87;
-        let out_code = digit + 65;
-        codes.push(out_code);
+        let inCode = string.charCodeAt(k);
+        let digit = inCode <= 57 ? inCode - 48 : inCode - 87;
+        let outCode = digit + 65;
+        codes.push(outCode);
     }
     for (let k = codes.length; k < p; k++) {
         codes.splice(0, 0, 65);
@@ -614,7 +598,7 @@ const MARKDOWN_PATTERN_LINK = /\[([^\[\]]*)\]\(([^\(\)]*)\)/;
 const MARKDOWN_PATTERN_URL = /((?:https?:\/\/)?(?:[-a-zA-Z0-9éèàç@:%._\+~#=]{2,256}\.(?:[a-z]{2,10})|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b(?:[-a-zA-Z0-9éèàç@:%_\+.~#?&//=]*))/
 
 
-function convert_markdownToHtml(string) {
+function convertMarkdownToHtml(string) {
     string = string.replace(MARKDOWN_PATTERN_BOLD, "<b>$1</b>");
     string = string.replace(MARKDOWN_PATTERN_ITALIC, "<i>$1</i>");
     string = string.replace(MARKDOWN_PATTERN_STRIKE, "<s>$1</s>");
@@ -628,7 +612,7 @@ function convert_markdownToHtml(string) {
 }
 
 
-function safe_format(value, formatter) {
+function safeFormat(value, formatter) {
     if (value == null) return "";
     try {
         return formatter(value);
@@ -638,7 +622,7 @@ function safe_format(value, formatter) {
 }
 
 
-function safe_parse(string, parser) {
+function safeParse(string, parser) {
     if (string == null) string = "";
     if (typeof(string) != typeof("")) string = `${string}`;
     let trimmed = string.trim();
@@ -651,51 +635,51 @@ function safe_parse(string, parser) {
 }
 
 
-function parse_tsv(string) {
+function parseTsv(string) {
     string = string.replaceAll("\r", "");
     let array = [[]];
     let buffer = "";
     let i = 0;
-    let is_next_row = false;
-    let is_escaped_string = false;
+    let isNextRow = false;
+    let isEscapedString = false;
     while (i < string.length) {
         buffer = "";
-        is_next_row = false;
-        is_escaped_string = false;
+        isNextRow = false;
+        isEscapedString = false;
         let first_char = string.charAt(i);
-        is_escaped_string = first_char == "\"";
-        if (is_escaped_string) i++;
+        isEscapedString = first_char == "\"";
+        if (isEscapedString) i++;
         while (i < string.length) {
             let char = string.charAt(i);
-            if (char == "\t" && !is_escaped_string) {
+            if (char == "\t" && !isEscapedString) {
                 i++;
                 break;
             }
-            if (char == "\n" && !is_escaped_string) {
-                is_next_row = true;
+            if (char == "\n" && !isEscapedString) {
+                isNextRow = true;
                 i++;
                 break;
             }
-            if (char == "\\" && is_escaped_string) {
+            if (char == "\\" && isEscapedString) {
                 console.log("double slash here!");
                 i++;
                 if (i < string.length) {
-                    let next_char = string.charAt(i);
-                    console.log("next char is", next_char);
-                    if (next_char == "\"") {
-                        buffer += next_char;
+                    let nextChar = string.charAt(i);
+                    console.log("next char is", nextChar);
+                    if (nextChar == "\"") {
+                        buffer += nextChar;
                         i++;
                         continue;
                     }
                 }
                 i--;
             }
-            if (char == "\"" && is_escaped_string) {
+            if (char == "\"" && isEscapedString) {
                 i++;
                 if (i < string.length) {
-                    let next_char = string.charAt(i);
-                    if (next_char == "\n") {
-                        is_next_row = true;
+                    let nextChar = string.charAt(i);
+                    if (nextChar == "\n") {
+                        isNextRow = true;
                     }
                     i++;
                 }
@@ -705,13 +689,13 @@ function parse_tsv(string) {
             i++;
         }
         array[array.length - 1].push(buffer);
-        if (is_next_row) array.push([]);
+        if (isNextRow) array.push([]);
     }
     return array;
 }
 
 
-function escape_tsv_value(value) {
+function escapeTsvValue(value) {
     if (value.includes("\n") || value.includes("\t")) {
         return `"${value.replaceAll("\"", "\\\"")}"`;
     }
@@ -719,10 +703,10 @@ function escape_tsv_value(value) {
 }
 
 
-function format_tsv(array) {
+function formatTsv(array) {
     let rows = [];
     array.forEach(row => {
-        rows.push(row.map(escape_tsv_value).join("\t"));
+        rows.push(row.map(escapeTsvValue).join("\t"));
     });
     return rows.join("\n");
 }
@@ -730,93 +714,93 @@ function format_tsv(array) {
 
 class SelectionRange {
 
-    constructor(sheet, start_i, start_j, end_i=null, end_j=null) {
+    constructor(sheet, startI, startJ, endI=null, endJ=null) {
         this.sheet = sheet;
-        this.start_i = start_i;
-        this.start_j = start_j;
-        this.end_i = end_i == null ? this.start_i : end_i;
-        this.end_j = end_j == null ? this.start_j : end_j;
+        this.startI = startI;
+        this.startJ = startJ;
+        this.endI = endI == null ? this.startI : endI;
+        this.endJ = endJ == null ? this.startJ : endJ;
         this.top = null;
         this.bottom = null;
         this.left = null;
         this.right = null;
-        this.update_bounds();
+        this.updateBounds();
     }
 
-    update_bounds() {
-        this.top = Math.min(this.start_i, this.end_i);
-        this.bottom = Math.max(this.start_i, this.end_i);
-        this.left = Math.min(this.start_j, this.end_j);
-        this.right = Math.max(this.start_j, this.end_j);
+    updateBounds() {
+        this.top = Math.min(this.startI, this.endI);
+        this.bottom = Math.max(this.startI, this.endI);
+        this.left = Math.min(this.startJ, this.endJ);
+        this.right = Math.max(this.startJ, this.endJ);
     }
 
-    iterate(inner_callback, outer_callback=null) {
+    iterate(innerCallback, outerCallback=null) {
         for (let i = this.top; i <= this.bottom; i++) {
             let top = i == this.top;
             let bottom = i == this.bottom;
-            if (outer_callback != null) outer_callback(i, top, bottom);
+            if (outerCallback != null) outerCallback(i, top, bottom);
             for (let j = this.left; j <= this.right; j++) {
                 let left = j == this.left;
                 let right = j == this.right;
-                inner_callback(i, j, top, left, bottom, right);
+                innerCallback(i, j, top, left, bottom, right);
             }
         }
     }
 
-    contains_row(i) {
+    containsRow(i) {
         return i >= this.top && i <= this.bottom;
     }
 
-    contains_column(j) {
+    containsColumn(j) {
         return j >= this.left && j <= this.right;
     }
 
     contains(i, j) {
-        return this.contains_row(i) && this.contains_column(j);
+        return this.containsRow(i) && this.containsColumn(j);
     }
 
     update(i, j) {
-        this.end_i = i;
-        this.end_j = j;
-        this.update_bounds();
+        this.endI = i;
+        this.endJ = j;
+        this.updateBounds();
     }
     
-    actual_di(di) {
-        let actual_di = 0;
-        let visible_di = 0;
+    actualDi(di) {
+        let actualDi = 0;
+        let visibleDi = 0;
         if (di >= 0) {
-            while (visible_di < di && this.bottom + actual_di < this.sheet.height) {
-                actual_di++;
-                if (this.sheet.filtered_rows.has(this.bottom + actual_di)) visible_di++;
+            while (visibleDi < di && this.bottom + actualDi < this.sheet.height) {
+                actualDi++;
+                if (this.sheet.filteredRows.has(this.bottom + actualDi)) visibleDi++;
             }
         } else {
-            while (visible_di > di && this.top + actual_di >= 0) {
-                actual_di--;
-                if (this.sheet.filtered_rows.has(this.top + actual_di)) visible_di--;
+            while (visibleDi > di && this.top + actualDi >= 0) {
+                actualDi--;
+                if (this.sheet.filteredRows.has(this.top + actualDi)) visibleDi--;
             }
         }
-        return actual_di;
+        return actualDi;
     }
 
-    move(di, dj, keep_shape) {
-        di = this.actual_di(di);
-        this.start_i = Math.max(0, Math.min(this.sheet.height-1, this.start_i + di));
-        this.start_j = Math.max(0, Math.min(this.sheet.width-1, this.start_j + dj));
-        if (keep_shape) {
-            this.end_i = Math.max(0, Math.min(this.sheet.height-1, this.end_i + di));
-            this.end_j = Math.max(0, Math.min(this.sheet.width-1, this.end_j + dj));
+    move(di, dj, keepShape) {
+        di = this.actualDi(di);
+        this.startI = Math.max(0, Math.min(this.sheet.height-1, this.startI + di));
+        this.startJ = Math.max(0, Math.min(this.sheet.width-1, this.startJ + dj));
+        if (keepShape) {
+            this.endI = Math.max(0, Math.min(this.sheet.height-1, this.endI + di));
+            this.endJ = Math.max(0, Math.min(this.sheet.width-1, this.endJ + dj));
         } else {
-            this.end_i = this.start_i;
-            this.end_j = this.start_j;
+            this.endI = this.startI;
+            this.endJ = this.startJ;
         }
-        this.update_bounds();
+        this.updateBounds();
     }
 
     expand(di, dj) {
-        di = this.actual_di(di);
-        this.end_i = Math.max(0, Math.min(this.sheet.height-1, this.end_i + di));
-        this.end_j = Math.max(0, Math.min(this.sheet.width-1, this.end_j + dj));
-        this.update_bounds();
+        di = this.actualDi(di);
+        this.endI = Math.max(0, Math.min(this.sheet.height-1, this.endI + di));
+        this.endJ = Math.max(0, Math.min(this.sheet.width-1, this.endJ + dj));
+        this.updateBounds();
     }
 
 }
@@ -827,12 +811,12 @@ class Selection {
     constructor(sheet) {
         this.sheet = sheet;
         this.ranges = [];
-        this.filtered_ranges = [];
+        this.filteredRanges = [];
     }
 
     root() {
         if (this.ranges.length == 0) return {i: 0, j: 0};
-        return {i: this.ranges[0].start_i, j: this.ranges[0].start_j};
+        return {i: this.ranges[0].startI, j: this.ranges[0].startJ};
     }
 
     clear() {
@@ -850,20 +834,20 @@ class Selection {
             delete this.ranges[k];
             this.ranges.splice(k, 1);
         }
-        for (let k = this.filtered_ranges.length - 1; k >= 0; k--) {
-            delete this.filtered_ranges[k];
-            this.filtered_ranges.splice(k, 1);
+        for (let k = this.filteredRanges.length - 1; k >= 0; k--) {
+            delete this.filteredRanges[k];
+            this.filteredRanges.splice(k, 1);
         }
     }
 
     set() {
         this.clear();
-        let selected_rows = new Set();
-        let selected_columns = new Set();
-        this.filtered_ranges.forEach(range => {
+        let selectedRows = new Set();
+        let selectedColumns = new Set();
+        this.filteredRanges.forEach(range => {
             range.iterate((i, j, top, left, bottom, right) => {
-                selected_rows.add(i);
-                selected_columns.add(j);
+                selectedRows.add(i);
+                selectedColumns.add(j);
                 this.sheet.cells[i][j].classList.add("selected");
                 if (top) this.sheet.cells[i][j].classList.add("selected-top");
                 if (left) this.sheet.cells[i][j].classList.add("selected-left");
@@ -871,24 +855,24 @@ class Selection {
                 if (right) this.sheet.cells[i][j].classList.add("selected-right");
             });
         });
-        selected_rows.forEach(i => {
-            this.sheet.row_heads[i].classList.add("selected");
+        selectedRows.forEach(i => {
+            this.sheet.rowHeads[i].classList.add("selected");
         });
-        selected_columns.forEach(j => {
-            this.sheet.column_heads[j].classList.add("selected");
+        selectedColumns.forEach(j => {
+            this.sheet.columnHeads[j].classList.add("selected");
         });
     }
 
-    contains_row(i) {
+    containsRow(i) {
         for (let k = 0; k < this.ranges.length; k++) {
-            if (this.ranges[k].contains_row(i)) return true;
+            if (this.ranges[k].containsRow(i)) return true;
         }
         return false;
     }
 
-    contains_column(j) {
+    containsColumn(j) {
         for (let k = 0; k < this.ranges.length; k++) {
-            if (this.ranges[k].contains_column(j)) return true;
+            if (this.ranges[k].containsColumn(j)) return true;
         }
         return false;
     }
@@ -900,46 +884,46 @@ class Selection {
         return false;
     }
 
-    start(i, j, selecting_rows, selecting_columns) {
+    start(i, j, selectingRows, selectingColumns) {
         this.reset();
-        this.add(i, j, selecting_rows, selecting_columns);
+        this.add(i, j, selectingRows, selectingColumns);
     }
 
-    add(i, j, selecting_rows, selecting_columns) {
-        let end_i = selecting_columns ? this.sheet.height - 1 : null;
-        let end_j = selecting_rows ? this.sheet.width - 1 : null;
-        this.ranges.push(new SelectionRange(this.sheet, i, j, end_i, end_j));
-        this.set_filtered_ranges();
+    add(i, j, selectingRows, selectingColumns) {
+        let endI = selectingColumns ? this.sheet.height - 1 : null;
+        let endJ = selectingRows ? this.sheet.width - 1 : null;
+        this.ranges.push(new SelectionRange(this.sheet, i, j, endI, endJ));
+        this.setFilteredRanges();
     }
 
     update(i, j) {
         if (this.ranges.length == 0) return;
         this.ranges[this.ranges.length - 1].update(i, j);
-        this.set_filtered_ranges();
+        this.setFilteredRanges();
         this.set();
     }
 
     all() {
         this.reset();
         this.ranges.push(new SelectionRange(this.sheet, 0, 0, this.sheet.height - 1, this.sheet.width - 1));
-        this.set_filtered_ranges();
+        this.setFilteredRanges();
         this.set();
     }
 
     iterate(callback) {
-        this.filtered_ranges.forEach(range => {
+        this.filteredRanges.forEach(range => {
             range.iterate(callback);
         });
     }
 
-    move(di, dj, keep_shape=false) {
+    move(di, dj, keepShape=false) {
         this.ranges.forEach(range => {
-            range.move(di, dj, keep_shape);
+            range.move(di, dj, keepShape);
         });
         // TODO: merge ranges!
-        this.set_filtered_ranges();
+        this.setFilteredRanges();
         this.set();
-        this.check_sheet_scroll(di < 0);
+        this.checkSheetScroll(di < 0);
     }
 
     expand(di, dj) {
@@ -947,22 +931,22 @@ class Selection {
             range.expand(di, dj);
         });
         // TODO: merge ranges!
-        this.set_filtered_ranges();
+        this.setFilteredRanges();
         this.set();
-        this.check_sheet_scroll(di < 0);
+        this.checkSheetScroll(di < 0);
     }
 
-    check_sheet_scroll(move_up=false) {
+    checkSheetScroll(moveUp=false) {
         let root = this.root();
         let i = root.i;
-        if (move_up && i > 0) i--;
+        if (moveUp && i > 0) i--;
         let cell = this.sheet.cells[i][root.j];
         cell.scrollIntoView({
             behavior: "auto",
             block: "nearest",
             inline: "nearest",
         });
-        if (move_up && root.i == 0) {
+        if (moveUp && root.i == 0) {
             this.sheet.table.parentNode.scrollTo(this.sheet.table.parentNode.scrollLeft, 0);
         }
     }
@@ -983,38 +967,38 @@ class Selection {
         return b;
     }
 
-    set_filtered_ranges() {
-        this.filtered_ranges = [];
+    setFilteredRanges() {
+        this.filteredRanges = [];
         this.ranges.forEach(range => {
-            this.filtered_ranges.push(new SelectionRange(this.sheet, range.start_i, range.start_j, range.end_i, range.end_j));
+            this.filteredRanges.push(new SelectionRange(this.sheet, range.startI, range.startJ, range.endI, range.endJ));
         });
         for (let i = 0; i < this.sheet.height; i++) {
-            if (this.sheet.filtered_rows.has(i)) continue;
+            if (this.sheet.filteredRows.has(i)) continue;
             let changed = true;
             while (changed) {
                 changed = false;
-                for (let k = 0; k < this.filtered_ranges.length; k++) {
-                    if (!this.filtered_ranges[k].contains_row(i)) continue;
-                    if (i > this.filtered_ranges[k].top) {
-                        this.filtered_ranges.push(new SelectionRange(
+                for (let k = 0; k < this.filteredRanges.length; k++) {
+                    if (!this.filteredRanges[k].containsRow(i)) continue;
+                    if (i > this.filteredRanges[k].top) {
+                        this.filteredRanges.push(new SelectionRange(
                             this.sheet,
-                            this.filtered_ranges[k].top,
-                            this.filtered_ranges[k].start_j,
+                            this.filteredRanges[k].top,
+                            this.filteredRanges[k].startJ,
                             i - 1,
-                            this.filtered_ranges[k].end_j
+                            this.filteredRanges[k].endJ
                         ));
                     }
-                    if (i < this.filtered_ranges[k].bottom) {
-                        this.filtered_ranges.push(new SelectionRange(
+                    if (i < this.filteredRanges[k].bottom) {
+                        this.filteredRanges.push(new SelectionRange(
                             this.sheet,
                             i + 1,
-                            this.filtered_ranges[k].start_j,
-                            this.filtered_ranges[k].bottom,
-                            this.filtered_ranges[k].end_j
+                            this.filteredRanges[k].startJ,
+                            this.filteredRanges[k].bottom,
+                            this.filteredRanges[k].endJ
                         ));
                     }
-                    delete this.filtered_ranges[k];
-                    this.filtered_ranges.splice(k, 1);
+                    delete this.filteredRanges[k];
+                    this.filteredRanges.splice(k, 1);
                     changed = true;
                     break;
                 }
@@ -1053,16 +1037,16 @@ class ColumnType {
 
     constructor() {}
 
-    format_html(value) {
-        return this.format_text(value);
+    formatHtml(value) {
+        return this.formatText(value);
     }
 
-    format_text(value) {
-        return safe_format(value, x => x);
+    formatText(value) {
+        return safeFormat(value, x => x);
     }
 
     parse(string) {
-        return safe_parse(string, x => x);
+        return safeParse(string, x => x);
     }
 
 }
@@ -1074,8 +1058,8 @@ class ColumnTypeText extends ColumnType {
     static ALIGNEMENT = "aleft";
     static LABEL = "Text";
 
-    format_html(value) {
-        return safe_format(value, convert_markdownToHtml);
+    formatHtml(value) {
+        return safeFormat(value, convertMarkdownToHtml);
     }
 
 }
@@ -1087,8 +1071,8 @@ class ColumnTypeBoolean extends ColumnType {
     static ALIGNEMENT = "acenter";
     static LABEL = "Boolean";
 
-    format_html(value) {
-        return safe_format(value, x => x != "false" && x != "0" && x != "no" ? "✔️": "❌");
+    formatHtml(value) {
+        return safeFormat(value, x => x != "false" && x != "0" && x != "no" ? "✔️": "❌");
     }
 
 }
@@ -1100,12 +1084,12 @@ class ColumnTypeInteger extends ColumnType {
     static ALIGNEMENT = "aright";
     static LABEL = "Integer";
 
-    format_text(value) {
-        return safe_format(value, x => x.toString());
+    formatText(value) {
+        return safeFormat(value, x => x.toString());
     }
 
     parse(string) {
-        return safe_parse(string, x => {
+        return safeParse(string, x => {
             let parsed = parseInt(x);
             if (isNaN(parsed)) throw new Error("NaN");
             return parsed;
@@ -1121,12 +1105,12 @@ class ColumnTypeFloat extends ColumnType {
     static ALIGNEMENT = "aright";
     static LABEL = "Float";
 
-    format_text(value) {
-        return safe_format(value, x => x.toString());
+    formatText(value) {
+        return safeFormat(value, x => x.toString());
     }
 
     parse(string) {
-        return safe_parse(string, x => {
+        return safeParse(string, x => {
             let parsed = parseFloat(x);
             if (isNaN(parsed)) throw new Error("NaN");
             return parsed;
@@ -1142,8 +1126,8 @@ class ColumnTypeScientific extends ColumnTypeFloat {
     static ALIGNEMENT = "aright";
     static LABEL = "Scientific";
 
-    format_html(value) {
-        return safe_format(value, x => x.toExponential(3));
+    formatHtml(value) {
+        return safeFormat(value, x => x.toExponential(3));
     }
 
 }
@@ -1155,8 +1139,8 @@ class ColumnTypePercentage extends ColumnTypeFloat {
     static ALIGNEMENT = "aright";
     static LABEL = "Percentage";
 
-    format_html(value) {
-        return safe_format(value, x => (x * 100).toFixed(2) + " %");
+    formatHtml(value) {
+        return safeFormat(value, x => (x * 100).toFixed(2) + " %");
     }
 
 }
@@ -1168,8 +1152,8 @@ class ColumnTypeMonetary extends ColumnTypeFloat {
     static ALIGNEMENT = "aright";
     static LABEL = "Monetary";
 
-    format_html(value) {
-        return safe_format(value, x => x.toFixed(2) + " €");
+    formatHtml(value) {
+        return safeFormat(value, x => x.toFixed(2) + " €");
     }
 
 }
@@ -1181,12 +1165,12 @@ class ColumnTypeDatetime extends ColumnType {
     static ALIGNEMENT = "aleft";
     static LABEL = "Datetime";
 
-    format_text(value) {
-        return safe_format(value, x => x.toLocaleString());
+    formatText(value) {
+        return safeFormat(value, x => x.toLocaleString());
     }
 
     parse(string) {
-        return safe_parse(string, x => {
+        return safeParse(string, x => {
             let timestamp = Date.parse(x);
             if (isNaN(timestamp)) throw new Error("Could not parse datetime");
             new Date(timestamp);
@@ -1202,14 +1186,14 @@ class ColumnTypeDate extends ColumnType {
     static ALIGNEMENT = "aleft";
     static LABEL = "Date";
 
-    format_text(value) {
-        return safe_format(value, x => {
+    formatText(value) {
+        return safeFormat(value, x => {
             return `${x.getFullYear()}-${(x.getMonth() + 1).toString().padStart(2, "0")}-${x.getDate().toString().padStart(2, "0")}`;
         });
     }
 
     parse(string) {
-        return safe_parse(string, x => {
+        return safeParse(string, x => {
             const pattern = /(\d+)[/-](\d+)(?:[/-](\d+))?/g;
             const match = pattern.exec(x);
             if (match == null) throw new Error("Could not parse date");
@@ -1251,14 +1235,14 @@ class ColumnTypeTime extends ColumnType {
     static ALIGNEMENT = "aleft";
     static LABEL = "Time";
 
-    format_text(value) {
-        return safe_format(value, x => {
+    formatText(value) {
+        return safeFormat(value, x => {
             return `${x.getHours().toString().padStart(2, "0")}:${x.getMinutes().toString().padStart(2, "0")}:${x.getSeconds().toString().padStart(2, "0")}`
         });
     }
 
     parse(string) {
-        return safe_parse(string, x => {
+        return safeParse(string, x => {
             const pattern = /(\d+)[h:](\d+)(?::(\d+))?/g;
             const match = pattern.exec(x);
             if (match == null) throw new Error("Could not parse time");
@@ -1284,8 +1268,8 @@ class ColumnTypeDuration extends ColumnType {
     static ALIGNEMENT = "aright";
     static LABEL = "Duration";
 
-    format_text(value) {
-        return safe_format(value, x => {
+    formatText(value) {
+        return safeFormat(value, x => {
             let hours = Math.floor(x / 3600);
             let minutes = Math.floor((x - 3600 * hours) / 60);
             let seconds = Math.floor(x - 3600 * hours - 60 * minutes);
@@ -1297,7 +1281,7 @@ class ColumnTypeDuration extends ColumnType {
     }
 
     parse(string) {
-        return safe_parse(string, x => {
+        return safeParse(string, x => {
             const pattern = /(\d+)[h:](\d+)(?::(\d+))?/g;
             const match = pattern.exec(x);
             if (match == null) throw new Error("Could not parse duration");
@@ -1333,7 +1317,7 @@ class ContextMenu {
     }
 
     setup() {
-        this.container = create(document.body, "div", ["context-menu"]);
+        this.container = create(document.body, "div", "context-menu");
         var self = this;
         window.addEventListener("click", () => {
             self.close();
@@ -1345,8 +1329,8 @@ class ContextMenu {
         this.container.classList.remove("active");
     }
 
-    add_item(label, callback) {
-        let element = create(this.container, "div", ["context-menu-item"]);
+    addItem(label, callback) {
+        let element = create(this.container, "div", "context-menu-item");
         element.innerHTML = label;
         var self = this;
         element.addEventListener("click", () => {
@@ -1358,12 +1342,12 @@ class ContextMenu {
     }
 
     add_menu(label) {
-        let wrapper = create(this.container, "div", ["context-menu-item", "context-submenu"]);
-        let item = create(wrapper, "span", ["context-submenu-title"]);
+        let wrapper = create(this.container, "div", "context-menu-item", "context-submenu");
+        let item = create(wrapper, "span", "context-submenu-title");
         item.innerHTML = label;
-        let menu = create(wrapper, "div", ["context-submenu-container"]);
-        menu.add_item = (label, callback) => {
-            let element = create(menu, "div", ["context-menu-item"]);
+        let menu = create(wrapper, "div", "context-submenu-container");
+        menu.addItem = (label, callback) => {
+            let element = create(menu, "div", "context-menu-item");
             element.innerHTML = label;
             element.addEventListener("click", (event) => {
                 event.stopPropagation();
@@ -1407,10 +1391,10 @@ class Sheet {
         this.width = 4;
         this.height = 10;
         this.values = [];
-        this.column_names = [];
-        this.column_widths = [];
-        this.column_types = [];
-        this.row_heights = [];
+        this.columnNames = [];
+        this.columnWidths = [];
+        this.columnTypes = [];
+        this.rowHeights = [];
         this.filters = [];
         this.highlights = {};
         this.readonly = readonly;
@@ -1419,106 +1403,106 @@ class Sheet {
         // DOM
         this.container = container;
         this.toolbar = null;
-        this.toolbar_button_save = null;
-        this.toolbar_button_toggle_shrink = null;
+        this.toolbarButtonSave = null;
+        this.toolbarButtonToggleShrink = null;
         this.table = null;
         this.cells = [];
-        this.column_handles = [];
-        this.row_handles = [];
+        this.columnHandles = [];
+        this.rowHandles = [];
         this.rows = [];
-        this.column_heads = [];
-        this.row_heads = [];
+        this.columnHeads = [];
+        this.rowHeads = [];
         
         // Flags
         this.selecting = false;
-        this.selecting_rows = false;
-        this.selecting_columns = false;
+        this.selectingRows = false;
+        this.selectingColumns = false;
         this.editing = false;
-        this.editing_column_name = false;
+        this.editingColumnName = false;
         this.resizing = false;
         
         // Attributes
-        this.resizing_start = null;
-        this.resizing_column = null;
-        this.resizing_row = null;
+        this.resizingStart = null;
+        this.resizingColumn = null;
+        this.resizingRow = null;
         this.selection = new Selection(this);
-        this.context_menu = new ContextMenu();
-        this.filtered_rows = new Set();
+        this.contextMenu = new ContextMenu();
+        this.filteredRows = new Set();
         this.script = null;
         this.shrunk = false;
     }
 
-    on_change(data_changed, config_changed) {
-        if (data_changed) {
-            this.evaluate_script();
+    onChange(dataChanged, configChanged) {
+        if (dataChanged) {
+            this.evaluateScript();
         }
-        if (this.toolbar_button_save != null) {
-            this.toolbar_button_save.removeAttribute("disabled");
+        if (this.toolbarButtonSave != null) {
+            this.toolbarButtonSave.removeAttribute("disabled");
         }
     }
 
-    index_of_rows(row_name) {
-        return parseInt(row_name) - 1;
+    indexOfRows(rowName) {
+        return parseInt(rowName) - 1;
     }
 
-    index_of_columns(column_name) {
-        return this.column_names.indexOf(column_name);
+    indexOfColumns(columnName) {
+        return this.columnNames.indexOf(columnName);
     }
 
-    start_selection(i, j) {
+    startSelection(i, j) {
         let root = this.selection.root();
-        let was_root = i == root.i && j == root.j;
-        if (this.editing && !was_root) {
-            this.stop_editing();
+        let wasRoot = i == root.i && j == root.j;
+        if (this.editing && !wasRoot) {
+            this.stopEditing();
         }
         this.selecting = true;
-        this.selection.start(i, j, this.selecting_rows, this.selecting_columns);
+        this.selection.start(i, j, this.selectingRows, this.selectingColumns);
         this.selection.set();
     }
 
-    add_selection(i, j) {
-        if (this.editing) this.stop_editing();
+    addSelection(i, j) {
+        if (this.editing) this.stopEditing();
         this.selecting = true;
-        this.selection.add(i, j, this.selecting_rows, this.selecting_columns);
+        this.selection.add(i, j, this.selectingRows, this.selectingColumns);
         this.selection.set();
     }
 
-    update_selection(i, j) {
-        this.selection.update(this.selecting_columns ? this.height - 1 : i, this.selecting_rows ? this.width - 1 : j);
+    updateSelection(i, j) {
+        this.selection.update(this.selectingColumns ? this.height - 1 : i, this.selectingRows ? this.width - 1 : j);
         this.selection.set();
     }
 
-    end_selection() {
+    endSelection() {
         this.selecting = false;
-        this.selecting_rows = false;
-        this.selecting_columns = false;
+        this.selectingRows = false;
+        this.selectingColumns = false;
         this.selection.set();
     }
 
-    get_selection_as_tsv() {
+    getSelectionAsTsv() {
         if (this.selection == null) return "";      
         let bounds = this.selection.bounds();
         let array = [];
         for (let i = bounds.top; i <= bounds.bottom; i++) {
-            if (!this.filtered_rows.has(i) || !this.selection.contains_row(i)) continue;
+            if (!this.filteredRows.has(i) || !this.selection.containsRow(i)) continue;
             array.push([]);
             let k = array.length - 1;
             for (let j = bounds.left; j <= bounds.right; j++) {
-                if (!this.selection.contains_column(j)) continue;
-                array[k].push(this.column_types[j].format_text(this.values[i][j]));
+                if (!this.selection.containsColumn(j)) continue;
+                array[k].push(this.columnTypes[j].formatText(this.values[i][j]));
             }
         }  
-        return format_tsv(array);
+        return formatTsv(array);
     }
 
-    start_editing(caused_by_click=false) {
+    startEditing(causedByClick=false) {
         this.editing = true;
         let root = this.selection.root();
         let cell = this.cells[root.i][root.j];
         let value = this.values[root.i][root.j];
-        let input = create(cell, "textarea", ["sheet-cell-input"]);
-        input.value = this.column_types[root.j].format_text(value);
-        if (caused_by_click) {
+        let input = create(cell, "textarea", "sheet-cell-input");
+        input.value = this.columnTypes[root.j].formatText(value);
+        if (causedByClick) {
             setTimeout(() => {
                 input.focus();
             }, 1);
@@ -1528,32 +1512,32 @@ class Sheet {
         }
     }
 
-    start_editing_column_name(j) {
+    startEditingColumnName(j) {
         var self = this;
         this.selection.reset();
         this.selection.clear();
-        this.editing_column_name = true;
+        this.editingColumnName = true;
         let input = document.createElement("input");
         input.classList.add("sheet-column-name-input");
-        input.value = this.column_names[j];
+        input.value = this.columnNames[j];
         input.placeholder = colname(j);
-        function save_column_name() {
-            self.set_column_name(j, input.value.trim());
+        function saveColumnName() {
+            self.setColumnName(j, input.value.trim());
         }
-        function stop_editing_column_name() {
-            save_column_name();
-            self.editing_column_name = false;
+        function stopEditingColumnName() {
+            saveColumnName();
+            self.editingColumnName = false;
             remove(input);
         }
         input.addEventListener("click", (event) => {
             event.stopPropagation();
         });
-        input.addEventListener("change", save_column_name);
-        input.addEventListener("blur", stop_editing_column_name);
+        input.addEventListener("change", saveColumnName);
+        input.addEventListener("blur", stopEditingColumnName);
         input.addEventListener("keydown", (event) => {
             if (event.key == "Enter") {
                 event.preventDefault();
-                stop_editing_column_name();
+                stopEditingColumnName();
             } else if (event.key == "Tab") {
                 event.preventDefault();
                 let target = null;
@@ -1562,22 +1546,22 @@ class Sheet {
                 } else {
                     target = j + 1;
                 }
-                stop_editing_column_name();
+                stopEditingColumnName();
                 if (target >= 0 && target < self.width) {
-                    self.start_editing_column_name(target);
+                    self.startEditingColumnName(target);
                 }
             }
         });
-        this.column_heads[j].appendChild(input);
+        this.columnHeads[j].appendChild(input);
         input.focus();
         input.select();
     }
 
-    set_cell_content(i, j) {
+    setCellContent(i, j) {
         this.cells[i][j].innerHTML = "";
         let key = `${i},${j}`;
         if (key in this.highlights) {
-            let highlight = create(this.cells[i][j], "span", ["highlight"]);
+            let highlight = create(this.cells[i][j], "span", "highlight");
             if (this.highlights[key] == HIGHLIGHT_ACCENT) {
                 highlight.classList.add("highlight-accent");
             } else if (this.highlights[key] == HIGHLIGHT_SUCCESS) {
@@ -1586,12 +1570,12 @@ class Sheet {
                 highlight.classList.add("highlight-error");
             }
         }
-        let wrapper = create(this.cells[i][j], "span", ["sheet-cell-content"]);
+        let wrapper = create(this.cells[i][j], "span", "sheet-cell-content");
         if (this.values[i][j] == null) return;
-        wrapper.innerHTML = this.column_types[j].format_html(this.values[i][j]);
+        wrapper.innerHTML = this.columnTypes[j].formatHtml(this.values[i][j]);
     }
 
-    stop_editing() {
+    stopEditing() {
         this.editing = false;
         let root = this.selection.root();
         let cell = this.cells[root.i][root.j];
@@ -1600,14 +1584,14 @@ class Sheet {
             //console.warn("Tried to stop editing an empty cell:", cell);
             return;
         }
-        let value = this.column_types[root.j].parse(input.value);
+        let value = this.columnTypes[root.j].parse(input.value);
         this.values[root.i][root.j] = value;
         remove(input);
-        this.set_cell_content(root.i, root.j);
-        this.on_change(true, false);
+        this.setCellContent(root.i, root.j);
+        this.onChange(true, false);
     }
 
-    get_cursor_row(y) {
+    getCursorRow(y) {
         for (let i = 0; i < this.height; i++) {
             let bounds = this.cells[i][0].getBoundingClientRect();
             if (y >= bounds.top && y <= bounds.bottom) {
@@ -1620,7 +1604,7 @@ class Sheet {
         return this.height - 1;
     }
 
-    get_cursor_column(x) {
+    getCursorColumn(x) {
         for (let j = 0; j < this.width; j++) {
             let bounds = this.cells[0][j].getBoundingClientRect();
             if (x >= bounds.left && x <= bounds.right) {
@@ -1633,148 +1617,148 @@ class Sheet {
         return this.width - 1;
     }
 
-    start_resizing_column(j, event) {
+    startResizingColumn(j, event) {
         this.resizing = true;
-        this.resizing_column = j;
-        this.resizing_start = event.clientX;
+        this.resizingColumn = j;
+        this.resizingStart = event.clientX;
     }
 
-    start_resizing_row(i, event) {
+    startResizingRow(i, event) {
         this.resizing = true;
-        this.resizing_row = i;
-        this.resizing_start = event.clientY;
+        this.resizingRow = i;
+        this.resizingStart = event.clientY;
     }
 
-    update_resizing_column(event) {
-        let dx = event.clientX - this.resizing_start;
-        let width = Math.max(MINIMUM_COLUMN_WIDTH, this.column_widths[this.resizing_column] + dx);
-        this.set_column_width(this.resizing_column, width);
-        this.resizing_start = event.clientX;
+    updateResizingColumn(event) {
+        let dx = event.clientX - this.resizingStart;
+        let width = Math.max(MINIMUM_COLUMN_WIDTH, this.columnWidths[this.resizingColumn] + dx);
+        this.setColumnWidth(this.resizingColumn, width);
+        this.resizingStart = event.clientX;
     }
 
-    set_column_width(j, width) {
-        this.column_widths[j] = width;
-        this.column_heads[j].style.width = this.column_widths[j] + "px";
+    setColumnWidth(j, width) {
+        this.columnWidths[j] = width;
+        this.columnHeads[j].style.width = this.columnWidths[j] + "px";
         let x = FIRST_COLUMN_WIDTH;
         for (let k = 0; k < this.width; k++) {
-            x += this.column_widths[k] - 1;
-            this.column_handles[k].style.left = (x - HANDLE_SIZE/2) + "px";
+            x += this.columnWidths[k] - 1;
+            this.columnHandles[k].style.left = (x - HANDLE_SIZE/2) + "px";
         }
-        this.on_change(false, true);
+        this.onChange(false, true);
     }
 
-    set_row_height(i, height) {
-        this.row_heights[i] = height;
-        this.row_heads[i].style.height = this.row_heights[i] + "px";
+    setRowHeight(i, height) {
+        this.rowHeights[i] = height;
+        this.rowHeads[i].style.height = this.rowHeights[i] + "px";
         let y = 0;
         for (let k = 0; k < this.height; k++) {
-            if (!this.row_handles[k].classList.contains("hidden")) {
-                y += this.row_heights[k] - 1;
+            if (!this.rowHandles[k].classList.contains("hidden")) {
+                y += this.rowHeights[k] - 1;
             }
-            this.row_handles[k].style.top = (y - HANDLE_SIZE/2) + "px";
+            this.rowHandles[k].style.top = (y - HANDLE_SIZE/2) + "px";
         }
-        this.on_change(false, true);
+        this.onChange(false, true);
     }
 
-    update_resizing_row(event) {
-        let dy = event.clientY - this.resizing_start;
-        let height = Math.max(this.shrunk ? SHRUNK_ROW_HEIGHT : MINIMUM_ROW_HEIGHT, this.row_heights[this.resizing_row] + dy);
-        this.set_row_height(this.resizing_row, height);
-        this.resizing_start = event.clientY;
+    updateResizingRow(event) {
+        let dy = event.clientY - this.resizingStart;
+        let height = Math.max(this.shrunk ? SHRUNK_ROW_HEIGHT : MINIMUM_ROW_HEIGHT, this.rowHeights[this.resizingRow] + dy);
+        this.setRowHeight(this.resizingRow, height);
+        this.resizingStart = event.clientY;
     }
 
-    update_resizing(event) {
-        if (this.resizing_column != null) {
-            this.update_resizing_column(event);
+    updateResizing(event) {
+        if (this.resizingColumn != null) {
+            this.updateResizingColumn(event);
         }
-        if (this.resizing_row != null) {
-            this.update_resizing_row(event);
+        if (this.resizingRow != null) {
+            this.updateResizingRow(event);
         }
     }
 
-    end_resizing() {
+    endResizing() {
         this.resizing = false;
-        this.resizing_start = null;
-        this.resizing_row = null;
-        this.resizing_column = null;
+        this.resizingStart = null;
+        this.resizingRow = null;
+        this.resizingColumn = null;
     }
 
-    auto_resize_column(j) {
-        let max_width = MINIMUM_COLUMN_WIDTH;
+    autoResizeColumn(j) {
+        let maxWidth = MINIMUM_COLUMN_WIDTH;
         for (let i = 0; i < this.height; i++) {
             let wrapper = this.cells[i][j].querySelector(".sheet-cell-content");
             if (wrapper == null) continue;
             let width = wrapper.getBoundingClientRect().width;
-            max_width = Math.max(max_width, width);
+            maxWidth = Math.max(maxWidth, width);
         }
-        this.set_column_width(j, max_width);
+        this.setColumnWidth(j, maxWidth);
     }
 
-    auto_resize_row(i) {
-        let max_height = this.shrunk ? SHRUNK_ROW_HEIGHT : MINIMUM_ROW_HEIGHT;
+    autoResizeRow(i) {
+        let maxHeight = this.shrunk ? SHRUNK_ROW_HEIGHT : MINIMUM_ROW_HEIGHT;
         for (let j = 0; j < this.width; j++) {
             let wrapper = this.cells[i][j].querySelector(".sheet-cell-content");
             if (wrapper == null) continue;
             let height = wrapper.getBoundingClientRect().height;
-            max_height = Math.max(max_height, height);
+            maxHeight = Math.max(maxHeight, height);
         }
-        this.set_row_height(i, max_height);
+        this.setRowHeight(i, maxHeight);
     }
 
-    insert_column(j) {
-        if (this.editing) this.stop_editing();
+    insertColumn(j) {
+        if (this.editing) this.stopEditing();
         let n = prompt("How many columns to insert?", 1);
         if (n != null) {
             n = parseInt(n);
             for (let p = 0; p < n; p++) {
                 for (let k = j; k < this.width; k++) {
-                    if (this.column_names[k] == colname(k)) {
-                        this.column_names[k] = colname(k + 1);
+                    if (this.columnNames[k] == colname(k)) {
+                        this.columnNames[k] = colname(k + 1);
                     }
                 }
                 this.width++;
-                this.column_names.splice(j, 0, colname(j));
-                this.column_widths.splice(j, 0, DEFAULT_COLUMN_WIDTH);
-                this.column_types.splice(j, 0, new COLUMN_TYPES[CTYPE_TEXT]());
+                this.columnNames.splice(j, 0, colname(j));
+                this.columnWidths.splice(j, 0, DEFAULT_COLUMN_WIDTH);
+                this.columnTypes.splice(j, 0, new COLUMN_TYPES[CTYPE_TEXT]());
                 this.filters.splice(j, 0, new Set());
                 for (let i = 0; i < this.height; i++) {
                     this.values[i].splice(j, 0, null);
                 }
             }
             this.inflate();
-            this.on_change(true, false);
+            this.onChange(true, false);
         }
     }
 
-    delete_column(j) {
-        if (this.editing) this.stop_editing();
+    deleteColumn(j) {
+        if (this.editing) this.stopEditing();
         this.selection.clear();
         this.selection.reset();
         for (let k = j+1; k < this.width; k++) {
-            if (this.column_names[k] == colname(k)) {
-                this.column_names[k] = colname(k - 1);
+            if (this.columnNames[k] == colname(k)) {
+                this.columnNames[k] = colname(k - 1);
             }
         }
         this.width--;
-        this.column_names.splice(j, 1);
-        this.column_widths.splice(j, 1);
-        this.column_types.splice(j, 1);
+        this.columnNames.splice(j, 1);
+        this.columnWidths.splice(j, 1);
+        this.columnTypes.splice(j, 1);
         this.filters.splice(j, 1);
         for (let i = 0; i < this.height; i++) {
             this.values[i].splice(j, 1);
         }
         this.inflate();
-        this.on_change(true, false);
+        this.onChange(true, false);
     }
 
-    insert_row(i) {
-        if (this.editing) this.stop_editing();
+    insertRow(i) {
+        if (this.editing) this.stopEditing();
         let n = prompt("How many rows to insert?", 1);
         if (n != null) {
             n = parseInt(n);
             for (let p = 0; p < n; p++) {
                 this.height++;
-                this.row_heights.splice(i, 0, this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT);
+                this.rowHeights.splice(i, 0, this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT);
                 let row = [];
                 for (let j = 0; j < this.width; j++) {
                     row.push(null);
@@ -1782,23 +1766,23 @@ class Sheet {
                 this.values.splice(i, 0, row);
             }
             this.inflate();
-            this.on_change(true, false);
+            this.onChange(true, false);
         }
     }
 
-    delete_row(i) {
-        if (this.editing) this.stop_editing();
+    deleteRow(i) {
+        if (this.editing) this.stopEditing();
         this.selection.clear();
         this.selection.reset();
         this.height--;
-        this.row_heights.splice(i, 1);
+        this.rowHeights.splice(i, 1);
         this.values.splice(i, 1);
         this.inflate();
-        this.on_change(true, false);
+        this.onChange(true, false);
     }
 
-    toggle_filter(j, value) {
-        this.on_change(false, true);
+    toggleFilter(j, value) {
+        this.onChange(false, true);
         if (this.filters[j].has(value)) {
             this.filters[j].delete(value);
             return false;
@@ -1808,119 +1792,119 @@ class Sheet {
         }
     }
 
-    open_column_context_menu(x, y, j) {
-        this.context_menu.reset();
+    openColumnContextMenu(x, y, j) {
+        this.contextMenu.reset();
         var self = this;
-        let type_menu = this.context_menu.add_menu("Type");
+        let type_menu = this.contextMenu.add_menu("Type");
         COLUMN_TYPES.forEach(ctype => {
-            let el = type_menu.add_item(ctype.LABEL, () => {
-                self.set_column_type(j, ctype.ID);
+            let el = type_menu.addItem(ctype.LABEL, () => {
+                self.setColumnType(j, ctype.ID);
                 type_menu.querySelectorAll(".selected").forEach(e => {
                     e.classList.remove("selected");
                 });
                 el.classList.add("selected");
             });
-            if (ctype.ID == this.column_types[j].constructor.ID) {
+            if (ctype.ID == this.columnTypes[j].constructor.ID) {
                 el.classList.add("selected");
             }
         });
-        let values = Array.from(this.get_value_set(j));
+        let values = Array.from(this.getValueSet(j));
         if (values.length < 20) {
-            let filter_menu = this.context_menu.add_menu("Filter");
+            let filter_menu = this.contextMenu.add_menu("Filter");
             values.sort();
             values.splice(0, 0, null);
             values.forEach(value => {
-                let el = filter_menu.add_item(`<input type="checkbox" ${this.filters[j].has(value) ? "" : "checked"} /> ${value == null ? "(Empty)" : value}`, () => {
-                    el.querySelector("input").checked = !self.toggle_filter(j, value);
-                    self.update_filters();
+                let el = filter_menu.addItem(`<input type="checkbox" ${this.filters[j].has(value) ? "" : "checked"} /> ${value == null ? "(Empty)" : value}`, () => {
+                    el.querySelector("input").checked = !self.toggleFilter(j, value);
+                    self.updateFilters();
                 });
             });
         }
-        this.context_menu.add_item("Resize", () => {
-            let new_width = prompt(`Column width (default is ${DEFAULT_COLUMN_WIDTH}):`, self.column_widths[j]);
-            if (new_width != null) {    
+        this.contextMenu.addItem("Resize", () => {
+            let newWidth = prompt(`Column width (default is ${DEFAULT_COLUMN_WIDTH}):`, self.columnWidths[j]);
+            if (newWidth != null) {    
                 self.selection.columns().forEach(q => {
-                    self.set_column_width(q, new_width);
+                    self.setColumnWidth(q, newWidth);
                 });
             }
         });
-        this.context_menu.add_item("Insert left", () => {
+        this.contextMenu.addItem("Insert left", () => {
             let bounds = self.selection.bounds();
-            self.insert_column(bounds.left);
+            self.insertColumn(bounds.left);
             self.selection.move(0, 1, true);
         });
-        this.context_menu.add_item("Insert right", () => {
+        this.contextMenu.addItem("Insert right", () => {
             let bounds = self.selection.bounds();
-            self.insert_column(bounds.right + 1);
+            self.insertColumn(bounds.right + 1);
         });
-        this.context_menu.add_item("Delete", () => {
-            let columns_to_delete = self.selection.columns();
-            columns_to_delete.sort((a, b) => a - b);
-            columns_to_delete.reverse();
-            columns_to_delete.forEach(k => self.delete_column(k));
+        this.contextMenu.addItem("Delete", () => {
+            let columnsToDelete = self.selection.columns();
+            columnsToDelete.sort((a, b) => a - b);
+            columnsToDelete.reverse();
+            columnsToDelete.forEach(k => self.deleteColumn(k));
         });
-        this.context_menu.add_item("Copy values", () => {
+        this.contextMenu.addItem("Copy values", () => {
             let strings = [];
-            self.get_value_set(j).forEach(value => {
-                strings.push(self.column_types[j].format_text(value));
+            self.getValueSet(j).forEach(value => {
+                strings.push(self.columnTypes[j].formatText(value));
             });
             navigator.clipboard.writeText(strings.join("\n"));
         });
-        this.context_menu.open(x, y);
+        this.contextMenu.open(x, y);
     }
 
-    open_row_context_menu(x, y, i) {
-        this.context_menu.reset();
+    openRowContextMenu(x, y, i) {
+        this.contextMenu.reset();
         var self = this;
-        this.context_menu.add_item("Resize", () => {
-            let new_height = prompt(`Row height (default is ${DEFAULT_ROW_HEIGHT}):`, self.row_heights[i]);
-            if (new_height != null) {
+        this.contextMenu.addItem("Resize", () => {
+            let newHeight = prompt(`Row height (default is ${DEFAULT_ROW_HEIGHT}):`, self.rowHeights[i]);
+            if (newHeight != null) {
                 self.selection.rows().forEach(p => {
-                    self.set_row_height(p, new_height);
+                    self.setRowHeight(p, newHeight);
                 });
             }
         });
-        this.context_menu.add_item("Insert top", () => {
+        this.contextMenu.addItem("Insert top", () => {
             let bounds = self.selection.bounds();
-            self.insert_row(bounds.top);
+            self.insertRow(bounds.top);
             self.selection.move(1, 0, true);
         });
-        this.context_menu.add_item("Insert bottom", () => {
+        this.contextMenu.addItem("Insert bottom", () => {
             let bounds = self.selection.bounds();
-            self.insert_row(bounds.bottom + 1);
+            self.insertRow(bounds.bottom + 1);
         });
-        this.context_menu.add_item("Delete", () => {
-            let rows_to_delete = self.selection.rows();
-            rows_to_delete.sort((a, b) => a - b);
-            rows_to_delete.reverse();
-            rows_to_delete.forEach(k => self.delete_row(k));
+        this.contextMenu.addItem("Delete", () => {
+            let rowsToDelete = self.selection.rows();
+            rowsToDelete.sort((a, b) => a - b);
+            rowsToDelete.reverse();
+            rowsToDelete.forEach(k => self.deleteRow(k));
         } );
-        this.context_menu.open(x, y);
+        this.contextMenu.open(x, y);
     }
 
-    set_column_type(j, ctype) {
-        let old_ctype = this.column_types[j];
-        let new_ctype = new (COLUMN_TYPES[ctype])();
-        this.column_types[j] = new_ctype;
+    setColumnType(j, ctype) {
+        let oldCtype = this.columnTypes[j];
+        let newCtype = new (COLUMN_TYPES[ctype])();
+        this.columnTypes[j] = newCtype;
         for (let i = 0; i < this.height; i++) {
-            this.cells[i][j].classList.remove(old_ctype.constructor.ALIGNEMENT);
-            this.cells[i][j].classList.add(new_ctype.constructor.ALIGNEMENT);
+            this.cells[i][j].classList.remove(oldCtype.constructor.ALIGNEMENT);
+            this.cells[i][j].classList.add(newCtype.constructor.ALIGNEMENT);
             if (this.values[i][j] == null) continue;
-            this.values[i][j] = new_ctype.parse(old_ctype.format_text(this.values[i][j]));
-            this.set_cell_content(i, j);
+            this.values[i][j] = newCtype.parse(oldCtype.formatText(this.values[i][j]));
+            this.setCellContent(i, j);
         }
-        this.on_change(true, true);
+        this.onChange(true, true);
     }
 
-    set_column_name(j, name) {
-        this.column_names[j] = name.trim() == "" ? colname(j) : name.trim();
-        let el = this.column_heads[j].querySelector(".sheet-column-name"); 
-        el.textContent = this.column_names[j];
-        el.title = this.column_names[j];
-        this.on_change(true, false);
+    setColumnName(j, name) {
+        this.columnNames[j] = name.trim() == "" ? colname(j) : name.trim();
+        let el = this.columnHeads[j].querySelector(".sheet-column-name"); 
+        el.textContent = this.columnNames[j];
+        el.title = this.columnNames[j];
+        this.onChange(true, false);
     }
 
-    sort_rows(j, ascending) {
+    sortRows(j, ascending) {
         //TODO: use ctype comparator?
         let order = [];
         var self = this;
@@ -1951,206 +1935,206 @@ class Sheet {
             this.ordering = tidy(this.ordering, order);
         }
         this.values = tidy(this.values, order);
-        this.row_heights = tidy(this.row_heights, order);
+        this.rowHeights = tidy(this.rowHeights, order);
         this.inflate();
         this.container.querySelectorAll(`.sheet-column-sort`).forEach(element => {
             element.classList.remove("ascending");
             element.classList.remove("descending");
         });
-        if (j != null) this.column_heads[j].querySelector(".sheet-column-sort").classList.add(ascending ? "ascending" : "descending");
-        this.set_row_names();
-        this.on_change(true, true);
+        if (j != null) this.columnHeads[j].querySelector(".sheet-column-sort").classList.add(ascending ? "ascending" : "descending");
+        this.setRowNames();
+        this.onChange(true, true);
     }
 
-    update_filters() {
-        this.filtered_rows = new Set();
+    updateFilters() {
+        this.filteredRows = new Set();
         let y = 0;
-        let row_top = 0;
+        let rowTop = 0;
         for (let i = 0; i < this.height; i++) {
-            let should_be_displayed = true;
+            let shouldBeDisplayed = true;
             for (let j = 0; j < this.width; j++) {
                 if (this.filters[j].has(this.values[i][j])) {
-                    should_be_displayed = false;
+                    shouldBeDisplayed = false;
                     break;
                 }
             }
-            if (should_be_displayed) {
-                this.filtered_rows.add(i);
-                y += this.row_heights[i] - 1;
+            if (shouldBeDisplayed) {
+                this.filteredRows.add(i);
+                y += this.rowHeights[i] - 1;
                 this.rows[i].classList.remove("hidden");
-                this.row_handles[i].classList.remove("hidden");
-                this.row_handles[i].style.top = (y - HANDLE_SIZE/2) + "px";
-                this.rows[i].style.top = `${row_top}px`;
-                row_top--;
+                this.rowHandles[i].classList.remove("hidden");
+                this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
+                this.rows[i].style.top = `${rowTop}px`;
+                rowTop--;
             } else {
                 this.rows[i].classList.add("hidden");
-                this.row_handles[i].classList.add("hidden");
+                this.rowHandles[i].classList.add("hidden");
             }
         }
-        this.selection.set_filtered_ranges();
+        this.selection.setFilteredRanges();
         this.selection.set();
     }
 
-    set_cells_event_listeners() {
+    setCellsEventListeners() {
         var self = this;
         for (let i = 0; i < this.height; i++) {
             for (let j = 0; j < this.width; j++) {
                 this.cells[i][j].addEventListener("mousedown", (event) => {
-                    let in_selection = self.selection.contains(i, j);
-                    if (event.ctrlKey && !in_selection) {
-                        self.add_selection(i, j);
-                    } else if (event.shiftKey  && !in_selection) {
-                        self.update_selection(i, j);
+                    let inSelection = self.selection.contains(i, j);
+                    if (event.ctrlKey && !inSelection) {
+                        self.addSelection(i, j);
+                    } else if (event.shiftKey  && !inSelection) {
+                        self.updateSelection(i, j);
                     } else if (!event.ctrlKey && !event.shiftKey) {
-                        self.start_selection(i, j);
+                        self.startSelection(i, j);
                     }
                 });
                 this.cells[i][j].addEventListener("dblclick", () => {
-                    if (!self.editing && !self.readonly) self.start_editing(true);
+                    if (!self.editing && !self.readonly) self.startEditing(true);
                 });
                 this.cells[i][j].addEventListener("mousemove", () => {
                     if (self.selecting) {
-                        self.update_selection(i, j);
+                        self.updateSelection(i, j);
                     }
                 });
             }
         }
         for (let j = 0; j < this.width; j++) {
-            let handle = this.column_handles[j];
+            let handle = this.columnHandles[j];
             handle.addEventListener("mousedown", (event) => {
                 if (!self.readonly) {
-                    self.start_resizing_column(j, event);
+                    self.startResizingColumn(j, event);
                 }
             });
             handle.addEventListener("dblclick", () => {
                 if (!self.readonly) {
-                    self.auto_resize_column(j);
+                    self.autoResizeColumn(j);
                 }
             });
         }
         for (let i = 0; i < this.height; i++) {
-            let handle = this.row_handles[i];
+            let handle = this.rowHandles[i];
             handle.addEventListener("mousedown", (event) => {
                 if (!self.readonly) {
-                    self.start_resizing_row(i, event);
+                    self.startResizingRow(i, event);
                 }
             });
             handle.addEventListener("dblclick", () => {
                 if (!self.readonly) {
-                    self.auto_resize_row(i);
+                    self.autoResizeRow(i);
                 }
             });
         }
         for (let i = 0; i < this.height; i++) {
-            this.row_heads[i].addEventListener("mousedown", (event) => {
+            this.rowHeads[i].addEventListener("mousedown", (event) => {
                 if (event.button == 0) {
-                    self.selecting_rows = true;
-                    self.start_selection(i, 0);
+                    self.selectingRows = true;
+                    self.startSelection(i, 0);
                 }
             });
-            this.row_heads[i].addEventListener("contextmenu", (event) => {
+            this.rowHeads[i].addEventListener("contextmenu", (event) => {
                 event.preventDefault();
-                if (!self.selection.contains_row(i)) {
-                    self.selecting_rows = true;
-                    self.start_selection(i, 0);
-                    self.end_selection();
+                if (!self.selection.containsRow(i)) {
+                    self.selectingRows = true;
+                    self.startSelection(i, 0);
+                    self.endSelection();
                 }
                 if (!self.readonly) {
-                    self.open_row_context_menu(event.clientX, event.clientY, i);
+                    self.openRowContextMenu(event.clientX, event.clientY, i);
                 }
             });
-            this.row_heads[i].addEventListener("mousemove", () => {
+            this.rowHeads[i].addEventListener("mousemove", () => {
                 if (self.selecting) {
-                    self.update_selection(i, 0);
+                    self.updateSelection(i, 0);
                 }
             });
         }
-        let cell_top_left = this.container.querySelector(".sheet-row-head .sheet-cell:first-child");
-        cell_top_left.addEventListener("click", () => {
+        let cellTopLeft = this.container.querySelector(".sheet-row-head .sheet-cell:first-child");
+        cellTopLeft.addEventListener("click", () => {
             self.selection.all();
         });
-        cell_top_left.addEventListener("dblclick", () => {
-            self.sort_rows(null, true);
+        cellTopLeft.addEventListener("dblclick", () => {
+            self.sortRows(null, true);
             self.selection.reset();
             self.selection.clear();
         });
         for (let j = 0; j < this.width; j++) {
-            this.column_heads[j].addEventListener("mousedown", (event) => {
+            this.columnHeads[j].addEventListener("mousedown", (event) => {
                 if (event.button == 0) {
-                    self.selecting_columns = true;
-                    self.start_selection(0, j);
+                    self.selectingColumns = true;
+                    self.startSelection(0, j);
                 }
             });
-            this.column_heads[j].addEventListener("contextmenu", (event) => {
+            this.columnHeads[j].addEventListener("contextmenu", (event) => {
                 event.preventDefault();
-                if (!self.selection.contains_column(j)) {
-                    self.selecting_columns = true;
-                    self.start_selection(0, j);
-                    self.end_selection();
+                if (!self.selection.containsColumn(j)) {
+                    self.selectingColumns = true;
+                    self.startSelection(0, j);
+                    self.endSelection();
                 }
                 if (!self.readonly) {
-                    self.open_column_context_menu(event.clientX, event.clientY, j);
+                    self.openColumnContextMenu(event.clientX, event.clientY, j);
                 }
             });
-            this.column_heads[j].addEventListener("mousemove", () => {
+            this.columnHeads[j].addEventListener("mousemove", () => {
                 if (self.selecting) {
-                    self.update_selection(0, j);
+                    self.updateSelection(0, j);
                 }
             });
-            let cell_sort = this.column_heads[j].querySelector(".sheet-column-sort");
-            cell_sort.addEventListener("click", (event) => {
-                self.sort_rows(j, !cell_sort.classList.contains("ascending"));
+            let cellSort = this.columnHeads[j].querySelector(".sheet-column-sort");
+            cellSort.addEventListener("click", (event) => {
+                self.sortRows(j, !cellSort.classList.contains("ascending"));
             });
-            let cell_name = this.column_heads[j].querySelector(".sheet-column-name");
-            cell_name.addEventListener("dblclick", (event) => {
+            let cellName = this.columnHeads[j].querySelector(".sheet-column-name");
+            cellName.addEventListener("dblclick", (event) => {
                 if (!self.readonly) {
-                    self.start_editing_column_name(j);
+                    self.startEditingColumnName(j);
                 }
             });
         }
     }
 
-    toggle_marker(marker) {
+    toggleMarker(marker) {
         let enabled = null;
-        let regex_left = new RegExp(`^${marker.replaceAll("*", "\\*")}`);
-        let regex_right = new RegExp(`${marker.replaceAll("*", "\\*")}$`);
+        let regexLeft = new RegExp(`^${marker.replaceAll("*", "\\*")}`);
+        let regexRight = new RegExp(`${marker.replaceAll("*", "\\*")}$`);
         this.selection.iterate((i, j) => {
-            if (this.column_types[j].constructor.ID == CTYPE_TEXT) {
+            if (this.columnTypes[j].constructor.ID == CTYPE_TEXT) {
                 if (enabled == null) {
                     enabled = this.values[i][j].startsWith(marker) && this.values[i][j].endsWith(marker);
                 }
                 if (enabled) {
-                    this.values[i][j] = this.values[i][j].replace(regex_left, "").replace(regex_right, "")
+                    this.values[i][j] = this.values[i][j].replace(regexLeft, "").replace(regexRight, "")
                 } else {
                     this.values[i][j] = marker + this.values[i][j] + marker;
                 }
-                this.set_cell_content(i, j);
+                this.setCellContent(i, j);
             }
         });
-        this.on_change(true, false);
+        this.onChange(true, false);
     }
 
-    toggle_bold() {
-        this.toggle_marker("**");
+    toggleBold() {
+        this.toggleMarker("**");
     }
 
-    toggle_italic() {
-        this.toggle_marker("*");
+    toggleItalic() {
+        this.toggleMarker("*");
     }
 
-    set_global_event_listeners() {
+    setGlobalEventListeners() {
         var self = this;
         this.container.addEventListener("paste", (event) => {
             if (self.readonly) return;
             if (self.selection != null && !self.editing) {
                 event.preventDefault();
                 let string = event.clipboardData.getData("text");
-                let array = parse_tsv(string);
+                let array = parseTsv(string);
                 let root = self.selection.root();
                 if (array.length == 1 && array[0].length == 1) {
                     self.selection.iterate((i, j) => {
-                        self.values[i][j] = self.column_types[j].parse(array[0][0]);
-                        self.set_cell_content(i, j);
+                        self.values[i][j] = self.columnTypes[j].parse(array[0][0]);
+                        self.setCellContent(i, j);
                     });
                 } else {
                     self.selection.reset();
@@ -2160,49 +2144,49 @@ class Sheet {
                         Math.min(self.width - 1, root.j + array[0].length - 1)
                     )
                     self.selection.iterate((i, j) => {
-                        self.values[i][j] = self.column_types[j].parse(array[i - root.i][j - root.j]);
-                        self.set_cell_content(i, j);
+                        self.values[i][j] = self.columnTypes[j].parse(array[i - root.i][j - root.j]);
+                        self.setCellContent(i, j);
                     });
                 }
-                self.on_change(true, false);
+                self.onChange(true, false);
             }
         });
         document.addEventListener("mousemove", (event) => {
             if (self.resizing && !self.readonly) {
-                self.update_resizing(event);
+                self.updateResizing(event);
             }
         });
         document.addEventListener("mouseup", () => {
             if (self.selecting) {
-                self.end_selection();
+                self.endSelection();
             }
             if (self.resizing && !self.readonly) {
-                self.end_resizing();
+                self.endResizing();
             }
         });
         document.addEventListener("keydown", (event) => {
-            if (self.editing_column_name) {
+            if (self.editingColumnName) {
                 //pass
             } else if (event.key == "a" && event.ctrlKey && !self.editing) {
                 self.selection.all();
                 event.preventDefault();
             } else if (event.key == "s" && event.ctrlKey && !self.readonly) {
                 event.preventDefault();
-                self.save_data();
+                self.saveData();
             } else if (self.selection != null) {
                 if (event.key == "Enter") {
                     if (event.altKey && self.editing) {
                         if (!self.readonly) {
                             let root = self.selection.root();
                             let textarea = self.cells[root.i][root.j].querySelector(".sheet-cell-input");
-                            let start_pos = textarea.selectionStart;
-                            let end_pos = textarea.selectionEnd;
-                            textarea.value = textarea.value.substring(0, start_pos) + "\n" + textarea.value.substring(end_pos)
+                            let startPos = textarea.selectionStart;
+                            let endPos = textarea.selectionEnd;
+                            textarea.value = textarea.value.substring(0, startPos) + "\n" + textarea.value.substring(endPos)
                             textarea.scrollTop = textarea.scrollHeight;
-                            textarea.setSelectionRange(start_pos + 1, end_pos + 1);
+                            textarea.setSelectionRange(startPos + 1, endPos + 1);
                         }
                     } else {
-                        if (self.editing && !self.readonly) self.stop_editing();
+                        if (self.editing && !self.readonly) self.stopEditing();
                         self.selection.move(1, 0);
                     }
                 } else if (event.key == "ArrowUp" && !self.editing) {
@@ -2264,11 +2248,11 @@ class Sheet {
                 } else if (!self.editing && (event.key == "Delete" || event.key == "Backspace") && !self.readonly) {
                     self.selection.iterate((i, j) => {
                         self.values[i][j] = null;
-                        self.set_cell_content(i, j);
+                        self.setCellContent(i, j);
                     });
-                    self.on_change(true, false);
+                    self.onChange(true, false);
                 } else if (event.key == "Tab") {
-                    if (self.editing && !self.readonly) self.stop_editing();
+                    if (self.editing && !self.readonly) self.stopEditing();
                     if (event.shiftKey) {
                         self.selection.move(0, -1);
                     } else {
@@ -2277,10 +2261,10 @@ class Sheet {
                     event.preventDefault();
                 } else if (event.key == "b" && event.ctrlKey && !self.readonly) {
                     event.preventDefault();
-                    self.toggle_bold();
+                    self.toggleBold();
                 } else if (event.key == "i" && event.ctrlKey && !self.readonly) {
                     event.preventDefault();
-                    self.toggle_italic();
+                    self.toggleItalic();
                 } else if (event.key == "k" && event.ctrlKey && !self.readonly) {
                     let root = self.selection.root();
                     let value = self.values[root.i][root.j];
@@ -2293,20 +2277,20 @@ class Sheet {
                             } else {
                                 self.values[root.i][root.j] = `[${match[1]}](${url})`;
                             }
-                            self.set_cell_content(root.i, root.j);
-                            self.on_change(true, false);
+                            self.setCellContent(root.i, root.j);
+                            self.onChange(true, false);
                         } else {
                             let url = prompt("Enter a URL:");
                             if (url != null) {
                                 self.values[root.i][root.j] = `[${value}](${url})`;
-                                self.set_cell_content(root.i, root.j);
-                                self.on_change(true, false);
+                                self.setCellContent(root.i, root.j);
+                                self.onChange(true, false);
                             }
                         }
                     }
                 } else if (event.key == "c" && event.ctrlKey) {
                     event.preventDefault();
-                    let string = self.get_selection_as_tsv();
+                    let string = self.getSelectionAsTsv();
                     navigator.clipboard.writeText(string);
                 } else if (event.altKey && (event.key == "²" || event.key == "&" || event.key == "é" || event.key == "\"") && !self.readonly) {
                     if (event.key == "²") {
@@ -2314,7 +2298,7 @@ class Sheet {
                             let key = `${i},${j}`;
                             if (key in self.highlights) {
                                 delete self.highlights[key];
-                                self.set_cell_content(i, j);
+                                self.setCellContent(i, j);
                             }
                         });
                     } else {
@@ -2329,19 +2313,19 @@ class Sheet {
                         self.selection.iterate((i, j) => {
                             let key = `${i},${j}`;
                             self.highlights[key] = highlight;
-                            self.set_cell_content(i, j);
+                            self.setCellContent(i, j);
                         });
                     }
-                    self.on_change(false, true);
+                    self.onChange(false, true);
                 } else if (!self.editing && event.key.length == 1 && !event.ctrlKey && !event.altKey && !self.readonly) {
                     //console.log(event.key);
-                    self.start_editing();
+                    self.startEditing();
                 }
             }
         });
     }
 
-    get_value_set(j) {
+    getValueSet(j) {
         let vset = new Set();
         for (let i = 0; i < this.height; i++) {
             if (this.values[i][j] == null) continue;
@@ -2350,102 +2334,102 @@ class Sheet {
         return Array.from(vset);
     }
 
-    toggle_shrink() {
+    toggleShrink() {
         this.shrunk = !this.shrunk;
         for (let i = 0; i < this.height; i++) {
-            if (this.shrunk && this.row_heights[i] == DEFAULT_ROW_HEIGHT) {
-                this.row_heights[i] = SHRUNK_ROW_HEIGHT;
-            } else if (!this.shrunk && this.row_heights[i] == SHRUNK_ROW_HEIGHT) {
-                this.row_heights[i] = DEFAULT_ROW_HEIGHT;
+            if (this.shrunk && this.rowHeights[i] == DEFAULT_ROW_HEIGHT) {
+                this.rowHeights[i] = SHRUNK_ROW_HEIGHT;
+            } else if (!this.shrunk && this.rowHeights[i] == SHRUNK_ROW_HEIGHT) {
+                this.rowHeights[i] = DEFAULT_ROW_HEIGHT;
             }
         }
         this.inflate();
-        this.on_change(false, true);
+        this.onChange(false, true);
     }
 
-    inflate_table() {
-        let table_wrapper = create(this.container, "div", ["sheet-table-wrapper"]);
-        this.table = create(table_wrapper, "table", ["sheet-table"]);
+    inflateTable() {
+        let tableWrapper = create(this.container, "div", "sheet-table-wrapper");
+        this.table = create(tableWrapper, "table", "sheet-table");
     }
 
-    set_row_names() {
+    setRowNames() {
         for (let i = 0; i < this.height; i++) {
-            this.row_heads[i].innerHTML = `<span class="sheet-cell-content">${this.ordering == null ? rowname(i) : rowname(this.ordering[i])}</span>`;
+            this.rowHeads[i].innerHTML = `<span class="sheet-cell-content">${this.ordering == null ? rowname(i) : rowname(this.ordering[i])}</span>`;
         }
     }
 
     inflate() {
         if (this.shrunk) {
             this.container.classList.add("sheet-shrink");
-            if (this.toolbar_button_toggle_shrink != null) {
-                this.toolbar_button_toggle_shrink.classList.add("active");
+            if (this.toolbarButtonToggleShrink != null) {
+                this.toolbarButtonToggleShrink.classList.add("active");
             }
         } else {
             this.container.classList.remove("sheet-shrink");
-            if (this.toolbar_button_toggle_shrink != null) {
-                this.toolbar_button_toggle_shrink.classList.remove("active");
+            if (this.toolbarButtonToggleShrink != null) {
+                this.toolbarButtonToggleShrink.classList.remove("active");
             }
         }
         this.table.innerHTML = "";
-        let table_head = create(this.table, "thead");
-        let table_body = create(this.table, "tbody");
+        let tableHead = create(this.table, "thead");
+        let tableBody = create(this.table, "tbody");
         
-        let row_head = create(table_head, "tr", ["sheet-row", "sheet-row-head"]);
-        let cell_top_left = create(row_head, "th", ["sheet-cell", "sheet-cell-head", "sheet-cell-top-left"]);
-        cell_top_left.style.height = (this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT) + "px";
-        this.column_heads = [];
+        let rowHead = create(tableHead, "tr", "sheet-row sheet-row-head");
+        let cellTopLeft = create(rowHead, "th", "sheet-cell sheet-cell-head sheet-cell-top-left");
+        cellTopLeft.style.height = (this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT) + "px";
+        this.columnHeads = [];
         for (let j = 0; j < this.width; j++) {
-            this.column_heads.push(create(row_head, "th", ["sheet-cell"]));
-            this.column_heads[j].style.width = this.column_widths[j] + "px";
-            this.column_heads[j].style.left = `-${j}px`;
-            let shelf = create(this.column_heads[j], "div", ["sheet-cell-shelf"]);
-            let cell_sort = create(shelf, "span", ["sheet-cell-shelf-item", "sheet-column-sort"]);
-            cell_sort.title = "Sort";
-            let cell_name = create(shelf, "span", ["sheet-cell-shelf-item", "sheet-column-name"]);
-            cell_name.textContent = this.column_names[j];
-            cell_name.title = this.column_names[j];
+            this.columnHeads.push(create(rowHead, "th", "sheet-cell"));
+            this.columnHeads[j].style.width = this.columnWidths[j] + "px";
+            this.columnHeads[j].style.left = `-${j}px`;
+            let shelf = create(this.columnHeads[j], "div", "sheet-cell-shelf");
+            let cellSort = create(shelf, "span", "sheet-cell-shelf-item sheet-column-sort");
+            cellSort.title = "Sort";
+            let cellName = create(shelf, "span", "sheet-cell-shelf-item sheet-column-name");
+            cellName.textContent = this.columnNames[j];
+            cellName.title = this.columnNames[j];
         }
 
         let x = FIRST_COLUMN_WIDTH;
-        this.column_handles = [];
+        this.columnHandles = [];
         for (let j = 0; j < this.width; j++) {
-            this.column_handles.push(create(row_head, "div", ["handle", "handle-column"]));
-            x += this.column_widths[j] - 1;
-            this.column_handles[j].style.left = (x - HANDLE_SIZE/2) + "px";
+            this.columnHandles.push(create(rowHead, "div", "handle handle-column"));
+            x += this.columnWidths[j] - 1;
+            this.columnHandles[j].style.left = (x - HANDLE_SIZE/2) + "px";
         }
 
         this.cells = [];
         this.rows = [];
-        this.row_heads = [];
+        this.rowHeads = [];
         for (let i = 0; i < this.height; i++) {
-            this.rows.push(create(table_body, "tr", ["sheet-row"]));
-            this.row_heads.push(create(this.rows[i], "td", ["sheet-cell", "sheet-cell-head"]));
-            this.row_heads[i].style.height = this.row_heights[i] + "px";
+            this.rows.push(create(tableBody, "tr", "sheet-row"));
+            this.rowHeads.push(create(this.rows[i], "td", "sheet-cell sheet-cell-head"));
+            this.rowHeads[i].style.height = this.rowHeights[i] + "px";
             this.rows[i].style.top = `-${i}px`;
             this.cells.push([]);
             for (let j = 0; j < this.width; j++) {
-                this.cells[i].push(create(this.rows[i], "td", ["sheet-cell", this.column_types[j].constructor.ALIGNEMENT]));
+                this.cells[i].push(create(this.rows[i], "td", `sheet-cell ${this.columnTypes[j].constructor.ALIGNEMENT}`));
                 this.cells[i][j].style.left = `-${j}px`;
-                this.set_cell_content(i, j);
+                this.setCellContent(i, j);
             }
         }
-        this.set_row_names();
+        this.setRowNames();
 
         let y = 0;
-        this.row_handles = [];
+        this.rowHandles = [];
         for (let i = 0; i < this.height; i++) {
-            this.row_handles.push(create(table_body, "div", ["handle", "handle-row"]));
-            this.row_handles[i].setAttribute("i", i);
-            y += this.row_heights[i] - 1;
-            this.row_handles[i].style.top = (y - HANDLE_SIZE/2) + "px";
+            this.rowHandles.push(create(tableBody, "div", "handle handle-row"));
+            this.rowHandles[i].setAttribute("i", i);
+            y += this.rowHeights[i] - 1;
+            this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
         }
 
-        this.update_filters();
+        this.updateFilters();
 
-        this.set_cells_event_listeners();
+        this.setCellsEventListeners();
     }
 
-    initialize_values(data=null, config=null) {
+    initializeValues(data=null, config=null) {
         if (data != null) {
             this.height = data.length - 1;
             this.width = data[0].length;
@@ -2454,31 +2438,41 @@ class Sheet {
             this.highlights = config.highlights;
             this.shrunk = config.shrunk;
             this.ordering = config.ordering;
+            if (("column_widths" in config) && !("columnWidths" in config)) {
+                config.columnWidths = config["column_widths"];
+            }
+            if (("column_types" in config) && !("columnTypes" in config)) {
+                config.columnTypes = config["column_types"];
+            }
+            if (("row_heights" in config) && !("rowHeights" in config)) {
+                config.rowHeights = config["row_heights"];
+            }
         }
-        this.column_names = [];
-        this.column_types = [];
-        this.column_widths = [];
+
+        this.columnNames = [];
+        this.columnTypes = [];
+        this.columnWidths = [];
         for (let j = 0; j < this.width; j++) {
             if (config == null) {
-                this.column_widths.push(DEFAULT_COLUMN_WIDTH);
-                this.column_types.push(new COLUMN_TYPES[CTYPE_TEXT]());
+                this.columnWidths.push(DEFAULT_COLUMN_WIDTH);
+                this.columnTypes.push(new COLUMN_TYPES[CTYPE_TEXT]());
             } else {
-                this.column_widths.push(config.column_widths[j]);
-                this.column_types.push(new COLUMN_TYPES[config.column_types[j]]());
+                this.columnWidths.push(config.columnWidths[j]);
+                this.columnTypes.push(new COLUMN_TYPES[config.columnTypes[j]]());
             }
             if (data == null || data[0][j].trim() == "") {
-                this.column_names.push(colname(j));
+                this.columnNames.push(colname(j));
             } else {
-                this.column_names.push(data[0][j]);
+                this.columnNames.push(data[0][j]);
             }
             this.filters.push(new Set());
         }
-        this.row_heights = [];
+        this.rowHeights = [];
         for (let i = 0; i < this.height; i++) {
             if (config == null) {
-                this.row_heights.push(DEFAULT_ROW_HEIGHT);
+                this.rowHeights.push(DEFAULT_ROW_HEIGHT);
             } else {
-                this.row_heights.push(config.row_heights[i]);
+                this.rowHeights.push(config.rowHeights[i]);
             }
         }
         this.values = [];
@@ -2488,12 +2482,12 @@ class Sheet {
                 if (data == null) {
                     this.values[i].push(null);
                 } else {
-                    this.values[i].push(this.column_types[j].parse(data[i + 1][j]));
+                    this.values[i].push(this.columnTypes[j].parse(data[i + 1][j]));
                 }
             }
         }
         if (config != null) {
-            this.script = Script.from_string(config.script);
+            this.script = Script.fromString(config.script);
             this.filters = [];
             config.filters.forEach(array => {
                 this.filters.push(new Set(array));
@@ -2501,171 +2495,171 @@ class Sheet {
         }
     }
 
-    update_script(script_string) {
+    updateScript(scriptString) {
         if (this.script != null) delete this.script;
-        this.script = Script.from_string(script_string);
-        this.evaluate_script();
-        this.on_change(false, true);
+        this.script = Script.fromString(scriptString);
+        this.evaluateScript();
+        this.onChange(false, true);
     }
 
-    evaluate_script() {
+    evaluateScript() {
         if (this.script == null) return;
         this.script.evaluate(this);
     }
 
     open_import_modal() {
         var self = this;
-        let modal = create(document.body, "div", ["modal"]);
-        let modal_overlay = create(modal, "span", ["modal-overlay"]);
-        modal_overlay.addEventListener("click", () => {
+        let modal = create(document.body, "div", "modal");
+        let modalOverlay = create(modal, "span", "modal-overlay");
+        modalOverlay.addEventListener("click", () => {
             remove(modal);
         });
-        let modal_container = create(modal, "div", ["modal-container"]);
-        let modal_header = create(modal_container, "div", ["modal-header"]);
-        let modal_title = create(modal_header, "div", ["modal-title", "h5"]);
-        modal_title.textContent = "Import Sheet";
-        let modal_subtitle = create(modal_header, "div", ["modal-subtitle", "text-gray"]);
-        modal_subtitle.textContent = "Upload a CSV or TSV file";
-        let modal_body = create(modal_container, "div", ["modal-body"]);
-        let modal_form_group = create(modal_body, "div", ["form-group"]);
-        let modal_form_label = create(modal_form_group, "label", ["form-label"]);
-        modal_form_label.textContent = "Local file";
-        let modal_input = create(modal_form_group, "input", ["form-input"]);
-        modal_input.setAttribute("type", "file");
-        modal_input.setAttribute("accept", ".tsv,.csv,.txt");
-        let modal_footer = create(modal_container, "div", ["modal-footer"]);
-        let modal_button_cancel = create(modal_footer, "button", ["btn", "mr-1"]);
-        modal_button_cancel.textContent = "Cancel";
-        modal_button_cancel.addEventListener("click", () => {
+        let modalContainer = create(modal, "div", "modal-container");
+        let modalHeader = create(modalContainer, "div", "modal-header");
+        let modalTitle = create(modalHeader, "div", "modal-title h5");
+        modalTitle.textContent = "Import Sheet";
+        let modalSubtitle = create(modalHeader, "div", "modal-subtitle text-gray");
+        modalSubtitle.textContent = "Upload a CSV or TSV file";
+        let modalBody = create(modalContainer, "div", "modal-body");
+        let modalFormGroup = create(modalBody, "div", "form-group");
+        let modalFormLabel = create(modalFormGroup, "label", "form-label");
+        modalFormLabel.textContent = "Local file";
+        let modalInput = create(modalFormGroup, "input", "form-input");
+        modalInput.setAttribute("type", "file");
+        modalInput.setAttribute("accept", ".tsv,.csv,.txt");
+        let modalFooter = create(modalContainer, "div", "modal-footer");
+        let modalButtonCancel = create(modalFooter, "button", "btn mr-1");
+        modalButtonCancel.textContent = "Cancel";
+        modalButtonCancel.addEventListener("click", () => {
             remove(modal);
         });
-        let modal_button_import = create(modal_footer, "button", ["btn", "btn-primary"]);
-        modal_button_import.textContent = "Import";
+        let modalButtonImport = create(modalFooter, "button", "btn btn-primary");
+        modalButtonImport.textContent = "Import";
         modal.classList.add("active");
-        modal_button_import.addEventListener("click", () => {
-            if (modal_input.files.length > 0) {
+        modalButtonImport.addEventListener("click", () => {
+            if (modalInput.files.length > 0) {
                 let reader = new FileReader();
-                reader.readAsText(modal_input.files[0]);
+                reader.readAsText(modalInput.files[0]);
                 reader.onload = () => {
-                    self.import_tsv(reader.result.replaceAll("\r", ""));
+                    self.importTsv(reader.result.replaceAll("\r", ""));
                 }
             }
             remove(modal);
         });
     }
 
-    open_script_modal() {
+    openScriptModal() {
         var self = this;
-        let modal = create(document.body, "div", ["modal"]);
-        let modal_overlay = create(modal, "span", ["modal-overlay"]);
-        modal_overlay.addEventListener("click", () => {
+        let modal = create(document.body, "div", "modal");
+        let modalOverlay = create(modal, "span", "modal-overlay");
+        modalOverlay.addEventListener("click", () => {
             remove(modal);
         });
-        let modal_container = create(modal, "div", ["modal-container"]);
-        let modal_header = create(modal_container, "div", ["modal-header"]);
-        let modal_title = create(modal_header, "div", ["modal-title", "h5"]);
-        modal_title.textContent = "Script";
-        let modal_subtitle = create(modal_header, "div", ["modal-subtitle", "text-gray"]);
-        modal_subtitle.textContent = "Write script formula, one per line";
-        let modal_body = create(modal_container, "div", ["modal-body"]);
-        let modal_form_group = create(modal_body, "div", ["form-group"]);
-        let modal_textarea = create(modal_form_group, "textarea", ["form-input", "script-textarea"]);
-        modal_textarea.addEventListener("keydown", (event) => {
+        let modalContainer = create(modal, "div", "modal-container");
+        let modalHeader = create(modalContainer, "div", "modal-header");
+        let modalTitle = create(modalHeader, "div", "modal-title h5");
+        modalTitle.textContent = "Script";
+        let modalSubtitle = create(modalHeader, "div", "modal-subtitle text-gray");
+        modalSubtitle.textContent = "Write script formula, one per line";
+        let modalBody = create(modalContainer, "div", "modal-body");
+        let modalFormGroup = create(modalBody, "div", "form-group");
+        let modalTextarea = create(modalFormGroup, "textarea", "form-input script-textarea");
+        modalTextarea.addEventListener("keydown", (event) => {
             event.stopPropagation();
         });
         if (this.script != null) {
-            modal_textarea.value = this.script.string;
+            modalTextarea.value = this.script.string;
         }
-        let modal_footer = create(modal_container, "div", ["modal-footer"]);
-        let modal_button_cancel = create(modal_footer, "button", ["btn", "mr-1"]);
-        modal_button_cancel.textContent = "Cancel";
-        modal_button_cancel.addEventListener("click", () => {
+        let modalFooter = create(modalContainer, "div", "modal-footer");
+        let modalButtonCancel = create(modalFooter, "button", "btn mr-1");
+        modalButtonCancel.textContent = "Cancel";
+        modalButtonCancel.addEventListener("click", () => {
             remove(modal);
         });
-        let modal_button_compute = create(modal_footer, "button", ["btn", "mr-1"]);
-        modal_button_compute.textContent = "Save";
-        modal_button_compute.addEventListener("click", () => {
-            self.update_script(modal_textarea.value);
+        let modalButtonCompute = create(modalFooter, "button", "btn mr-1");
+        modalButtonCompute.textContent = "Save";
+        modalButtonCompute.addEventListener("click", () => {
+            self.updateScript(modalTextarea.value);
         });
-        let modal_button_save = create(modal_footer, "button", ["btn", "btn-primary"]);
-        modal_button_save.textContent = "Save & close";
+        let modalButtonSave = create(modalFooter, "button", "btn btn-primary");
+        modalButtonSave.textContent = "Save & close";
         modal.classList.add("active");
-        modal_textarea.focus();
-        modal_button_save.addEventListener("click", () => {
-            self.update_script(modal_textarea.value);
+        modalTextarea.focus();
+        modalButtonSave.addEventListener("click", () => {
+            self.updateScript(modalTextarea.value);
             remove(modal);
         });
     }
 
-    inflate_toolbar() {
+    inflateToolbar() {
         if (this.readonly) return;
         var self = this;
 
-        this.toolbar = create(this.container, "div", ["sheet-toolbar"]);
+        this.toolbar = create(this.container, "div", "sheet-toolbar");
 
-        this.toolbar_button_save = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        this.toolbar_button_save.innerHTML = `<i class="ri-save-line"></i>`;
-        this.toolbar_button_save.title = "Save";
-        this.toolbar_button_save.setAttribute("disabled", true);
-        this.toolbar_button_save.addEventListener("click", () => {
-            self.save_data();
+        this.toolbarButtonSave = create(this.toolbar, "button", "sheet-toolbar-button");
+        this.toolbarButtonSave.innerHTML = `<i class="ri-save-line"></i>`;
+        this.toolbarButtonSave.title = "Save";
+        this.toolbarButtonSave.setAttribute("disabled", true);
+        this.toolbarButtonSave.addEventListener("click", () => {
+            self.saveData();
         });
 
-        let btn_script = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        btn_script.textContent = "ℱ"; //ƒ
-        btn_script.addEventListener("click", () => {
-            self.open_script_modal();
+        let btnScript = create(this.toolbar, "button", "sheet-toolbar-button");
+        btnScript.textContent = "ℱ"; //ƒ
+        btnScript.addEventListener("click", () => {
+            self.openScriptModal();
         });
 
-        this.toolbar_button_toggle_shrink = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        this.toolbar_button_toggle_shrink.innerHTML = `<i class="ri-fullscreen-exit-line"></i>`;
-        this.toolbar_button_toggle_shrink.title = "Toggle shrink";
-        this.toolbar_button_toggle_shrink.addEventListener("click", () => {
-            self.toggle_shrink();
+        this.toolbarButtonToggleShrink = create(this.toolbar, "button", "sheet-toolbar-button");
+        this.toolbarButtonToggleShrink.innerHTML = `<i class="ri-fullscreen-exit-line"></i>`;
+        this.toolbarButtonToggleShrink.title = "Toggle shrink";
+        this.toolbarButtonToggleShrink.addEventListener("click", () => {
+            self.toggleShrink();
         });
 
-        let btn_import = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        btn_import.innerHTML = `<i class="ri-upload-line"></i>`;
-        btn_import.title = "Import";
-        btn_import.addEventListener("click", () => {
+        let btnImport = create(this.toolbar, "button", "sheet-toolbar-button");
+        btnImport.innerHTML = `<i class="ri-upload-line"></i>`;
+        btnImport.title = "Import";
+        btnImport.addEventListener("click", () => {
             self.open_import_modal();
         });
 
-        let btn_export = create(this.toolbar, "button", ["sheet-toolbar-button"]);
-        btn_export.innerHTML = `<i class="ri-download-line"></i>`;
-        btn_export.title = "Export";
-        btn_export.addEventListener("click", () => {
-            self.export_tsv();
+        let btnExport = create(this.toolbar, "button", "sheet-toolbar-button");
+        btnExport.innerHTML = `<i class="ri-download-line"></i>`;
+        btnExport.title = "Export";
+        btnExport.addEventListener("click", () => {
+            self.exportTsv();
         });
     }
 
     setup(data=null, config=null) {
         this.container.innerHTML = "";
         this.container.classList.add("sheet");
-        this.context_menu.setup();
-        this.initialize_values(data, config);
-        this.inflate_toolbar();
-        this.inflate_table();
+        this.contextMenu.setup();
+        this.initializeValues(data, config);
+        this.inflateToolbar();
+        this.inflateTable();
         this.inflate();
-        this.set_global_event_listeners();
-        this.evaluate_script();
+        this.setGlobalEventListeners();
+        this.evaluateScript();
     }
 
     export() {
-        let data_array = [[]];
+        let dataArray = [[]];
         for (let j = 0; j < this.width; j++) {
-            data_array[0].push(this.column_names[j]);
+            dataArray[0].push(this.columnNames[j]);
         }
         for (let i = 0; i < this.height; i++) {
-            data_array.push([]);
+            dataArray.push([]);
             for (let j = 0; j < this.width; j++) {
-                data_array[i + 1].push(this.column_types[j].format_text(this.values[i][j]));
+                dataArray[i + 1].push(this.columnTypes[j].formatText(this.values[i][j]));
             }
         }
-        let config_object = {
-            column_widths: [],
-            column_types: [],
-            row_heights: [],
+        let configObject = {
+            columnWidths: [],
+            columnTypes: [],
+            rowHeights: [],
             script: "",
             filters: [],
             highlights: this.highlights,
@@ -2673,36 +2667,36 @@ class Sheet {
             ordering: null,
         };
         if (this.ordering != null) {
-            config_object.ordering = [];
+            configObject.ordering = [];
             for (let i = 0; i < this.height; i++) {
-                config_object.ordering.push(this.ordering[i]);
+                configObject.ordering.push(this.ordering[i]);
             }
         }
         for (let i = 0; i < this.height; i++) {
-            config_object.row_heights.push(this.row_heights[i]);
+            configObject.rowHeights.push(this.rowHeights[i]);
         }
         for (let j = 0; j < this.width; j++) {
-            config_object.column_widths.push(this.column_widths[j]);
-            config_object.column_types.push(this.column_types[j].constructor.ID);
-            config_object.filters.push(Array.from(this.filters[j]));
+            configObject.columnWidths.push(this.columnWidths[j]);
+            configObject.columnTypes.push(this.columnTypes[j].constructor.ID);
+            configObject.filters.push(Array.from(this.filters[j]));
         }
-        if (this.script != null) config_object.script = this.script.string;
+        if (this.script != null) configObject.script = this.script.string;
         return {
-            data: format_tsv(data_array),
-            config: JSON.stringify(config_object)
+            data: formatTsv(dataArray),
+            config: JSON.stringify(configObject)
         };
     }
 
-    import_tsv(tsv_string) {
-        let data = parse_tsv(tsv_string);
-        this.initialize_values(data, null);
+    importTsv(tsvString) {
+        let data = parseTsv(tsvString);
+        this.initializeValues(data, null);
         this.inflate();
-        this.on_change(true, true);
+        this.onChange(true, true);
     }
 
-    export_tsv() {
-        let tsv_string = this.export().data;
-        let blob = new Blob([tsv_string], {type: "text/tab-separated-values"});
+    exportTsv() {
+        let tsvString = this.export().data;
+        let blob = new Blob([tsvString], {type: "text/tab-separated-values"});
         let link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         let title = document.querySelector("h1");
@@ -2714,53 +2708,38 @@ class Sheet {
         link.click();
     }
 
-    save_data() {
-        let save_form_data = new FormData();
-        save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-        save_form_data.set("sid", this.sid);
-        let sheet_export = this.export();
-        save_form_data.set("data", sheet_export.data);
-        save_form_data.set("config", sheet_export.config);
-        fetch(URL_API + "?action=save-sheet", {
-            method: "post",
-            body: save_form_data
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toast("Saved!", 600);
-                    if (this.toolbar_button_save != null) {
-                        this.toolbar_button_save.setAttribute("disabled", true);
-                    }
-                } else {
-                    toast("An error occured", 600);
+    saveData() {
+        let sheetExport = this.export();
+        fetchApiPost(
+            "save-sheet",
+            {sid: this.sid, data: sheetExport.data, config: sheetExport.config},
+            () => {
+                toast("Saved!", 600);
+                if (this.toolbarButtonSave != null) {
+                    this.toolbarButtonSave.setAttribute("disabled", true);
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                toast("An error occured", 600);
             });
     }
 
 }
 
 
-function initialize_sheet(sheet_seed, readonly, showlink) {
+function initializeSheet(sheetSeed, readonly, showlink) {
     var sheet = null;
-    let sheet_id = sheet_seed.getAttribute("sheet-id");
-    fetch(URL_API + `?action=sheet&sid=${sheet_id}`, {
+    let sheetId = sheetSeed.getAttribute("sheet-id");
+    fetch(URL_API + `?action=sheet&sid=${sheetId}`, {
         method: "get",
         })
         .then(res => res.json())
-        .then(sheet_data => {
-            sheet = new Sheet(sheet_id, sheet_seed, readonly);
+        .then(sheetData => {
+            sheet = new Sheet(sheetId, sheetSeed, readonly);
             let data = null;
-            if (sheet_data.data != null && sheet_data.data.trim() != "") {
-                data = parse_tsv(sheet_data.data);
+            if (sheetData.data != null && sheetData.data.trim() != "") {
+                data = parseTsv(sheetData.data);
             }
             let config = null;
-            if (sheet_data.config != null && sheet_data.config.trim() != "") {
-                config = JSON.parse(sheet_data.config);
+            if (sheetData.config != null && sheetData.config.trim() != "") {
+                config = JSON.parse(sheetData.config);
             }
             sheet.setup(data, config);
             if (showlink) {
@@ -2768,8 +2747,8 @@ function initialize_sheet(sheet_seed, readonly, showlink) {
                 link.classList.add("text-small");
                 link.classList.add("text-gray");
                 link.textContent = "View in editor";
-                link.href = sheet_data.url;
-                sheet_seed.insertBefore(link, sheet_seed.querySelector(".sheet-table-wrapper"));
+                link.href = sheetData.url;
+                sheetSeed.insertBefore(link, sheetSeed.querySelector(".sheet-table-wrapper"));
             }
         });
 
@@ -2777,7 +2756,7 @@ function initialize_sheet(sheet_seed, readonly, showlink) {
 
 
 function initialize_sheets(readonly, showlink) {
-    document.querySelectorAll(".sheet-seed").forEach(sheet_seed => {
-        initialize_sheet(sheet_seed, readonly, showlink);
+    document.querySelectorAll(".sheet-seed").forEach(sheetSeed => {
+        initializeSheet(sheetSeed, readonly, showlink);
     });
 }
