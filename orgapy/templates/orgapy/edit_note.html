@@ -5,6 +5,8 @@
 
 {% block head %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/dependencies/simplemde.min.css' %}" />
+<script src="{% static 'orgapy/dependencies/simplemde.min.js' %}"></script>
 <link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
 <script src="{% static 'orgapy/js/notes.js' %}"></script>
 {% endblock %}
@@ -29,7 +31,7 @@
     </div>
 </header>
 
-<textarea class="note-form-content" id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
+<textarea class="note-form-content" id="input-content" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
 
 {% endblock main_content %}
 
@@ -58,5 +60,26 @@
     const CATEGORIES = [{% for category in categories %}{% if not forloop.first %}, {% endif %}{name: "{{ category.name }}", id: {{ category.id }}}{% endfor %}];
     setupCategoryInput();
     bindSaveNoteButton();
+    const simplemde = new SimpleMDE({
+        element: document.getElementById("input-content"),
+        autoDownloadFontAwesome: false,
+        autofocus: true,
+        autosave: false,
+        forceSync: true, // ?
+        indentWithTabs: false,
+        initialValue: document.getElementById("input-content").value,
+        lineWrapping: true,
+        status: false,
+        toolbar: false,
+        toolbarTips: false,
+        spellChecker: false,
+        renderingConfig: {
+            singleLineBreaks: true,
+            codeSyntaxHighlighting: true,
+        }
+    });
+    window.addEventListener("load", () => {
+        simplemde.codemirror.refresh();
+    });
 </script>
 {% endblock body_scripts %}

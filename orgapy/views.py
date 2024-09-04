@@ -104,9 +104,14 @@ def save_note_categories(request, note):
         name = dirty_name.lower().strip()
         if name == "":
             continue
-        if models.Category.objects.filter(id=name, user=request.user).exists():
-            category = models.Category.objects.get(id=name, user=request.user)
-        elif models.Category.objects.filter(name=name, user=request.user).exist():
+        int_id = None
+        try:
+            int_id = int(name)
+        except ValueError:
+            pass
+        if int_id is not None and models.Category.objects.filter(id=int_id, user=request.user).exists():
+            category = models.Category.objects.get(id=int_id, user=request.user)
+        elif models.Category.objects.filter(name=name, user=request.user).exists():
             category = models.Category.objects.get(name=name, user=request.user)
         else:
             category = models.Category.objects.create(name=name, user=request.user)
