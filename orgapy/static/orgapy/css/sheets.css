@@ -201,6 +201,10 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     background-color: var(--sheet-color-head-hover-background);
 }
 
+.context-menu-item input[type=checkbox] {
+    width: fit-content;
+}
+
 .context-submenu {
     position: relative;
 }
@@ -229,7 +233,7 @@ tbody .sheet-row:last-of-type .sheet-cell:last-of-type {
     overflow-x: hidden;
 }
 
-.context-submenu:hover .context-submenu-container {
+.context-submenu:hover > .context-submenu-container {
     visibility: visible;
 }
 

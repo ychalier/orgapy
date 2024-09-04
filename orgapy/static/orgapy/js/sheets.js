@@ -1342,7 +1342,7 @@ class ContextMenu {
     }
 
     add_menu(label) {
-        let wrapper = create(this.container, "div", "context-menu-item", "context-submenu");
+        let wrapper = create(this.container, "div", "context-menu-item context-submenu");
         let item = create(wrapper, "span", "context-submenu-title");
         item.innerHTML = label;
         let menu = create(wrapper, "div", "context-submenu-container");
