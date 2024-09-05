@@ -74,9 +74,9 @@
     top: 32px;
     z-index: 2;
     background: #303030;
-    width: fit-content;
     height: fit-content;
     border-top: 1px solid var(--sheet-color-border);
+    border-bottom: 1px solid var(--sheet-color-border);
 }
 
 .sheet-body {
