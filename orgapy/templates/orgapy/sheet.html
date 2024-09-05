@@ -11,25 +11,30 @@
 
 {% block main_content %}
 
-<header class="card">
-    <h1>{{sheet.title}}</h1>
-    <div>
+<div class="sheet" sheet-id="{{sheet.id}}">
+    <div class="sheet-toolbar">
+        <a class="link-hidden" href="{% url 'orgapy:sheets' %}"><i class="ri-table-line"></i></a>
+        <span>{{sheet.title}}</span>
         {% if sheet.group %}
-        <a href="{{sheet.group.get_absolute_url}}">{{sheet.group.title}}</a> ·
+        <a href="{{sheet.group.get_absolute_url}}">[{{sheet.group.title}}]</a>
         {% endif %}
-        {% if sheet.description %}
-        <span class="markdown-inline">{{sheet.description | safe}}</span> ·
-        {% endif %}
-        <span><i class="ri-calendar-line"></i> {{ sheet.date_creation | date }}</span>
-        <span>  
+        <span class="sheet-toolbar-buttons">
             <a class="button-inline" href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" title="Edit"><i class="ri-pencil-fill"></i></a>
             <a class="button-inline" href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i></a>
             <a class="button-inline link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
+            <button title="Save"><i class="ri-save-line"></i></button>
+            <button title="Script">ℱ</button>
+            <button title="Shrink"><i class="ri-fullscreen-exit-line"></i></button>
+            <button title="Upload TSV"><i class="ri-upload-line"></i></button>
+            <button title="Download as TSV"><i class="ri-download-line"></i></button>
         </span>
+        {% if sheet.description %}
+        <span class="markdown-inline">{{sheet.description | safe}}</span>
+        {% endif %}
     </div>
-</header>
-
-<div class="sheet-seed" sheet-id="{{sheet.id}}"></div>
+    <div class="sheet-head"></div>
+    <div class="sheet-body"></div>
+</div>
 
 {% endblock %}
 
@@ -38,7 +43,7 @@
 <script>
     window.addEventListener("load", () => {
         markdownToHtml(".markdown-inline", false);
-        initialize_sheets(false, false);
+        initializeSheets(false, false);
     });
 </script>
 {% endblock body_scripts %}

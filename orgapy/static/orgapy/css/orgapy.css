@@ -958,26 +958,13 @@ input:checked+.toggle-slider+.toggle-text {
  * Fullscreen
  */
 
-#fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
+html {
+    width: 100%;
     height: 100%;
-    padding: 0 .8rem;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
 }
 
-/******************************************************************************
-/* OLD STUFF                                                                  *
-/******************************************************************************/
-
-.sheets-table ul {
-    margin: 0 0 0 .8rem;
-}
-
-.sheets-table li {
-    margin: 0;
+body.fullscreen {
+    width: 100%;
+    height: 100%;
+    background: #101010;
 }

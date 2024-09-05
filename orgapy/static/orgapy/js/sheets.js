@@ -1639,9 +1639,12 @@ class Sheet {
     setColumnWidth(j, width) {
         this.columnWidths[j] = width;
         this.columnHeads[j].style.width = this.columnWidths[j] + "px";
+        for (let i = 0; i < this.height; i++) {
+            this.cells[i][j].style.flexBasis = width + "px";
+        }
         let x = FIRST_COLUMN_WIDTH;
         for (let k = 0; k < this.width; k++) {
-            x += this.columnWidths[k] - 1;
+            x += this.columnWidths[k];
             this.columnHandles[k].style.left = (x - HANDLE_SIZE/2) + "px";
         }
         this.onChange(false, true);
@@ -1653,7 +1656,7 @@ class Sheet {
         let y = 0;
         for (let k = 0; k < this.height; k++) {
             if (!this.rowHandles[k].classList.contains("hidden")) {
-                y += this.rowHeights[k] - 1;
+                y += this.rowHeights[k];
             }
             this.rowHandles[k].style.top = (y - HANDLE_SIZE/2) + "px";
         }
@@ -1905,7 +1908,7 @@ class Sheet {
     }
 
     sortRows(j, ascending) {
-        //TODO: use ctype comparator?
+        // TODO: use ctype comparator?
         let order = [];
         var self = this;
         for (let i = 0; i < this.height; i++) {
@@ -1963,8 +1966,8 @@ class Sheet {
                 y += this.rowHeights[i] - 1;
                 this.rows[i].classList.remove("hidden");
                 this.rowHandles[i].classList.remove("hidden");
-                this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
-                this.rows[i].style.top = `${rowTop}px`;
+                //this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
+                //this.rows[i].style.top = `${rowTop}px`;
                 rowTop--;
             } else {
                 this.rows[i].classList.add("hidden");
@@ -2347,10 +2350,9 @@ class Sheet {
         this.onChange(false, true);
     }
 
-    inflateTable() {
-        let tableWrapper = create(this.container, "div", "sheet-table-wrapper");
-        this.table = create(tableWrapper, "table", "sheet-table");
-    }
+    // inflateTable() {
+    //     this.table = create(this.container, "div", "sheet-table");
+    // }
 
     setRowNames() {
         for (let i = 0; i < this.height; i++) {
@@ -2370,18 +2372,18 @@ class Sheet {
                 this.toolbarButtonToggleShrink.classList.remove("active");
             }
         }
-        this.table.innerHTML = "";
-        let tableHead = create(this.table, "thead");
-        let tableBody = create(this.table, "tbody");
-        
-        let rowHead = create(tableHead, "tr", "sheet-row sheet-row-head");
-        let cellTopLeft = create(rowHead, "th", "sheet-cell sheet-cell-head sheet-cell-top-left");
+        let tableHead = this.container.querySelector(".sheet-head");
+        tableHead.innerHTML = "";
+        let tableBody = this.container.querySelector(".sheet-body");
+        tableBody.innerHTML = "";
+
+        let rowHead = create(tableHead, "div", "sheet-row sheet-row-head");
+        let cellTopLeft = create(rowHead, "div", "sheet-cell sheet-cell-head sheet-cell-top-left");
         cellTopLeft.style.height = (this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT) + "px";
         this.columnHeads = [];
         for (let j = 0; j < this.width; j++) {
-            this.columnHeads.push(create(rowHead, "th", "sheet-cell"));
+            this.columnHeads.push(create(rowHead, "div", "sheet-cell"));
             this.columnHeads[j].style.width = this.columnWidths[j] + "px";
-            this.columnHeads[j].style.left = `-${j}px`;
             let shelf = create(this.columnHeads[j], "div", "sheet-cell-shelf");
             let cellSort = create(shelf, "span", "sheet-cell-shelf-item sheet-column-sort");
             cellSort.title = "Sort";
@@ -2393,8 +2395,8 @@ class Sheet {
         let x = FIRST_COLUMN_WIDTH;
         this.columnHandles = [];
         for (let j = 0; j < this.width; j++) {
-            this.columnHandles.push(create(rowHead, "div", "handle handle-column"));
-            x += this.columnWidths[j] - 1;
+            this.columnHandles.push(create(rowHead, "span", "handle handle-column"));
+            x += this.columnWidths[j];
             this.columnHandles[j].style.left = (x - HANDLE_SIZE/2) + "px";
         }
 
@@ -2402,14 +2404,14 @@ class Sheet {
         this.rows = [];
         this.rowHeads = [];
         for (let i = 0; i < this.height; i++) {
-            this.rows.push(create(tableBody, "tr", "sheet-row"));
-            this.rowHeads.push(create(this.rows[i], "td", "sheet-cell sheet-cell-head"));
+            this.rows.push(create(tableBody, "div", "sheet-row"));
+            this.rowHeads.push(create(this.rows[i], "div", "sheet-cell sheet-cell-head"));
             this.rowHeads[i].style.height = this.rowHeights[i] + "px";
-            this.rows[i].style.top = `-${i}px`;
             this.cells.push([]);
             for (let j = 0; j < this.width; j++) {
-                this.cells[i].push(create(this.rows[i], "td", `sheet-cell ${this.columnTypes[j].constructor.ALIGNEMENT}`));
-                this.cells[i][j].style.left = `-${j}px`;
+                const cell = create(this.rows[i], "div", `sheet-cell ${this.columnTypes[j].constructor.ALIGNEMENT}`);
+                this.cells[i].push(cell);
+                cell.style.flexBasis = this.columnWidths[j] + "px";
                 this.setCellContent(i, j);
             }
         }
@@ -2418,9 +2420,9 @@ class Sheet {
         let y = 0;
         this.rowHandles = [];
         for (let i = 0; i < this.height; i++) {
-            this.rowHandles.push(create(tableBody, "div", "handle handle-row"));
+            this.rowHandles.push(create(tableBody, "span", "handle handle-row"));
             this.rowHandles[i].setAttribute("i", i);
-            y += this.rowHeights[i] - 1;
+            y += this.rowHeights[i];
             this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
         }
 
@@ -2626,12 +2628,12 @@ class Sheet {
     }
 
     setup(data=null, config=null) {
-        this.container.innerHTML = "";
-        this.container.classList.add("sheet");
+        // this.container.innerHTML = "";
+        // this.container.classList.add("sheet");
         this.contextMenu.setup();
         this.initializeValues(data, config);
-        this.inflateToolbar();
-        this.inflateTable();
+        // this.inflateToolbar();
+        // this.inflateTable();
         this.inflate();
         this.setGlobalEventListeners();
         this.evaluateScript();
@@ -2734,6 +2736,8 @@ function initializeSheet(sheetSeed, readonly, showlink) {
                 config = JSON.parse(sheetData.config);
             }
             sheet.setup(data, config);
+            /*
+            TODO
             if (showlink) {
                 let link = document.createElement("a");
                 link.classList.add("text-small");
@@ -2742,13 +2746,14 @@ function initializeSheet(sheetSeed, readonly, showlink) {
                 link.href = sheetData.url;
                 sheetSeed.insertBefore(link, sheetSeed.querySelector(".sheet-table-wrapper"));
             }
+            */
         });
 
 }
 
 
-function initialize_sheets(readonly, showlink) {
-    document.querySelectorAll(".sheet-seed").forEach(sheetSeed => {
+function initializeSheets(readonly, showlink) {
+    document.querySelectorAll(".sheet").forEach(sheetSeed => {
         initializeSheet(sheetSeed, readonly, showlink);
     });
 }

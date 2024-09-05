@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/skeleton.html" %}
 
-{% block body %}
-<div id="fullscreen">{% block main_content %}{% endblock main_content %}</div>
-{% endblock %}
+{% block body_class %}fullscreen{% endblock%}
+
+{% block body %}{% block main_content %}{% endblock main_content %}{% endblock %}
 
 {% block body_bottom %}{% endblock body_bottom %}

@@ -28,7 +28,7 @@
     {% endblock head %}
 </head>
 
-<body>
+<body class="{% block body_class %}{% endblock %}">
     {% block body %}
     {% block before_columns %}{% endblock before_columns %}
     <div id="columns">
