@@ -14,19 +14,25 @@
 <div class="sheet" sheet-id="{{sheet.id}}">
     <div class="sheet-toolbar">
         <a class="link-hidden" href="{% url 'orgapy:sheets' %}"><i class="ri-table-line"></i></a>
-        <span>{{sheet.title}}</span>
+        <span class="sheet-title oneline-truncate">{{sheet.title}}</span>
         {% if sheet.group %}
-        <a href="{{sheet.group.get_absolute_url}}">[{{sheet.group.title}}]</a>
+        <a class="oneline-truncate" href="{{sheet.group.get_absolute_url}}">[{{sheet.group.title}}]</a>
         {% endif %}
         <span class="sheet-toolbar-buttons">
             <a class="button-inline" href="{% url 'orgapy:edit_sheet' sid=sheet.id %}" title="Edit"><i class="ri-pencil-fill"></i></a>
-            <a class="button-inline" href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i></a>
-            <a class="button-inline link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
             <button title="Save"><i class="ri-save-line"></i></button>
-            <button title="Script">ℱ</button>
-            <button title="Shrink"><i class="ri-fullscreen-exit-line"></i></button>
-            <button title="Upload TSV"><i class="ri-upload-line"></i></button>
-            <button title="Download as TSV"><i class="ri-download-line"></i></button>
+            <div class="dropdown">
+                <a class="button-inline dropdown-toggle" title="More" tabindex="0"><i class="ri-more-fill"></i></a>
+                <ul class="menu">
+                    <li class="menu-item"><a href="{% url 'orgapy:toggle_sheet_public' sid=sheet.id %}?next={{ request.path }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i> Publish</a></li>
+                    <li class="menu-item"><a class="link-confirm" href="{% url 'orgapy:delete_sheet' sid=sheet.id %}" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+                    <li class="menu-item"><button title="Script">ℱ Script</button></li>
+                    <li class="menu-item"><button title="Shrink"><i class="ri-fullscreen-exit-line"></i> Shrink</button></li>
+                    <li class="menu-item"><button title="Upload TSV"><i class="ri-upload-line"></i> Upload TSV</button></li>
+                    <li class="menu-item"><button title="Download as TSV"><i class="ri-download-line"></i> Download TSV</button></li>
+                
+                </ul>
+            </div>
         </span>
         {% if sheet.description %}
         <span class="markdown-inline">{{sheet.description | safe}}</span>

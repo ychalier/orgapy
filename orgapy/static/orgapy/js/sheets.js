@@ -947,7 +947,7 @@ class Selection {
             inline: "nearest",
         });
         if (moveUp && root.i == 0) {
-            this.sheet.table.parentNode.scrollTo(this.sheet.table.parentNode.scrollLeft, 0);
+            this.sheet.table.parentNode.scrollTo(this.sheet.table.parentNode.scrollLeft, 0); /* TODO: fixed this */
         }
     }
 
@@ -1637,10 +1637,10 @@ class Sheet {
     }
 
     setColumnWidth(j, width) {
-        this.columnWidths[j] = width;
+        this.columnWidths[j] = parseFloat(width);
         this.columnHeads[j].style.width = this.columnWidths[j] + "px";
         for (let i = 0; i < this.height; i++) {
-            this.cells[i][j].style.flexBasis = width + "px";
+            this.cells[i][j].style.width = width + "px";
         }
         let x = FIRST_COLUMN_WIDTH;
         for (let k = 0; k < this.width; k++) {
@@ -2411,7 +2411,7 @@ class Sheet {
             for (let j = 0; j < this.width; j++) {
                 const cell = create(this.rows[i], "div", `sheet-cell ${this.columnTypes[j].constructor.ALIGNEMENT}`);
                 this.cells[i].push(cell);
-                cell.style.flexBasis = this.columnWidths[j] + "px";
+                cell.style.width = this.columnWidths[j] + "px";
                 this.setCellContent(i, j);
             }
         }
@@ -2459,7 +2459,7 @@ class Sheet {
                 this.columnWidths.push(DEFAULT_COLUMN_WIDTH);
                 this.columnTypes.push(new COLUMN_TYPES[CTYPE_TEXT]());
             } else {
-                this.columnWidths.push(config.columnWidths[j]);
+                this.columnWidths.push(parseFloat(config.columnWidths[j]));
                 this.columnTypes.push(new COLUMN_TYPES[config.columnTypes[j]]());
             }
             if (data == null || data[0][j].trim() == "") {
@@ -2474,7 +2474,7 @@ class Sheet {
             if (config == null) {
                 this.rowHeights.push(DEFAULT_ROW_HEIGHT);
             } else {
-                this.rowHeights.push(config.rowHeights[i]);
+                this.rowHeights.push(parseFloat(config.rowHeights[i]));
             }
         }
         this.values = [];

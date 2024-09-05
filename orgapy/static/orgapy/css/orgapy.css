@@ -522,7 +522,7 @@ header.card h1 {
 }
 
 .oneline-striped:nth-child(even) {
-    background: #303030;
+    background: #202020;
 }
 
 .oneline:hover {
@@ -952,19 +952,4 @@ input:checked+.toggle-slider+.toggle-text {
 .quote-reference {
     font-size: small;
     color: #888;
-}
-
-/**
- * Fullscreen
- */
-
-html {
-    width: 100%;
-    height: 100%;
-}
-
-body.fullscreen {
-    width: 100%;
-    height: 100%;
-    background: #101010;
 }

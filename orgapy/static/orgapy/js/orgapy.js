@@ -164,7 +164,7 @@ function markdownToHtmlFancy(element) {
     window.addEventListener("load", () => {
         hljs.highlightAll();
     });
-    initialize_sheets(true, true); // TODO: redo this
+    initializeSheets(true, true); // TODO: redo this
     if (element.querySelectorAll(".sheet-seed").length > 0) {
     }
 }

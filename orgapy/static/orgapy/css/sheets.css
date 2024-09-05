@@ -7,6 +7,18 @@
     --sheet-color-selected-border: #8ed2ff;
 }
 
+.sheet {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background: #101010;
+}
+
+.sheet-title {
+    color: white;
+}
+
 .sheet-toolbar {
     position: fixed;
     top: 0;
@@ -29,6 +41,7 @@
 
 .sheet-toolbar a.button-inline,
 .sheet-toolbar button {
+    display: block;
     color: inherit;
     text-align: center;
     border-radius: .2rem;
@@ -41,6 +54,15 @@
     margin: 0;
 }
 
+.sheet-toolbar .menu button {
+    border: none;
+    display: inline-block;
+    background: none;
+    width: 100%;
+    height: unset;
+    text-align: left;
+}
+
 .sheet-toolbar a.button-inline:hover,
 .sheet-toolbar button:hover {
     background-color: #303030;
@@ -50,20 +72,28 @@
 .sheet-head {
     position: sticky;
     top: 32px;
-    z-index: 3;
+    z-index: 2;
     background: #303030;
+    width: fit-content;
+    height: fit-content;
+    border-top: 1px solid var(--sheet-color-border);
 }
 
 .sheet-body {
     display: flex;
     flex-direction: column;
-    position: relative;
+    padding-top: 30px;
+    width: fit-content;
+    height: fit-content;
 }
 
 .sheet-row {
     display: flex;
-    position: relative;
-    width: fit-content;    
+    /*width: fit-content;*/
+}
+
+.sheet-row:nth-child(even) .sheet-cell:not(.sheet-cell-head) {
+    background: #181818;
 }
 
 .sheet-row.hidden {
@@ -73,7 +103,8 @@
 .sheet-cell {
     position: relative;
     padding: 0;
-    border: 1px solid var(--sheet-color-border);
+    /*border: 1px solid var(--sheet-color-border);*/
+    outline: 1px solid var(--sheet-color-border);
     cursor: cell;
     white-space: nowrap;
     overflow: hidden;
@@ -84,6 +115,7 @@
     user-select: none;
 }
 
+/*
 .sheet-row:first-of-type {
     border-top: 1px solid var(--sheet-color-border);
 }
@@ -99,6 +131,7 @@
 .sheet-cell:last-of-type {
     border-right-width: 2px;
 }
+*/
 
 .sheet-cell-content {
     position: absolute;
@@ -109,6 +142,7 @@
     transform: translateY(-50%);
     line-height: 1;
     user-select: none;
+    overflow: hidden;
 }
 
 .sheet-cell-content b {
@@ -117,6 +151,10 @@
 
 .sheet-cell-head {
     width: 42px;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    border-left: 1px solid var(--sheet-color-border);
 }
 
 .sheet-row-head .sheet-cell,
