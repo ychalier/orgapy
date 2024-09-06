@@ -226,13 +226,17 @@ function toast(message, duration) {
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {
             event.preventDefault();
-            if (confirm("This can not be undone. Please confirm your decision.")) {
+            let message = link.getAttribute("message");
+            if (message == null) {
+                message = "This can not be undone. Please confirm your decision.";
+            }
+            if (confirm(message)) {
                 window.location.href = link.href;
             }
         });
     });
 
-    function row_is_lower(x, y) {
+    function rowIsLower(x, y) {
         const float_x = parseFloat(x.textContent);
         const float_y = parseFloat(y.textContent);
         if (!isNaN(float_x) && !isNaN(float_y)) {
@@ -253,7 +257,7 @@ function toast(message, duration) {
                         shouldSwitch = false;
                         x = rows[i].getElementsByTagName("TD")[thi];
                         y = rows[i + 1].getElementsByTagName("TD")[thi];
-                        if (row_is_lower(x, y)) {
+                        if (rowIsLower(x, y)) {
                             shouldSwitch = true;
                             break;
                         }

@@ -29,7 +29,7 @@
             </td>
             <td style="width: 100%">
                 <a class="btn-inline" href="{% url 'orgapy:edit_category' cid=category.id %}" title="Rename"><i class="icon icon-edit"></i></a>
-                <a class="btn-inline link-confirm" href="{% url 'orgapy:delete_category' cid=category.id %}" title="Delete"><i class="icon icon-delete"></i></a>
+                <a class="btn-inline link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' cid=category.id %}" title="Delete"><i class="icon icon-delete"></i></a>
             </td>           
         </tr>
         {% endfor %}

@@ -29,7 +29,7 @@
 
 <div class="row">
     <a class="button" href="{% url 'orgapy:edit_sheet_group' group.id %}"><i class="ri-pencil-fill"></i> Edit</a>
-    <a class="button link-confirm" href="{% url 'orgapy:delete_sheet_group' group.id %}"><i class="ri-delete-bin-line"></i> Delete</a>
+    <a class="button link-confirm" message="Please confirm deletion of '{{ group.title }}'" href="{% url 'orgapy:delete_sheet_group' group.id %}"><i class="ri-delete-bin-line"></i> Delete</a>
 </div>
 
 
