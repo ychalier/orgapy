@@ -358,6 +358,12 @@ button:disabled:hover {
     text-decoration: none;
 }
 
+.menu-item button {
+    border: none !important;
+    background: none !important;
+    padding: 0 !important;
+}
+
 /**
  * Dropdown
  */
