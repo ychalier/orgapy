@@ -62,6 +62,10 @@ input[type=checkbox] {
     accent-color: #8ed2ff;
 }
 
+input[type=submit] {
+    cursor: pointer;
+}
+
 button {
     font-family: inherit;
     font-size: 12pt;
@@ -143,6 +147,17 @@ button:disabled:hover {
     color: #8ed2ff;
 }
 
+.button-primary {
+    background-color: #8ed2ff !important;
+    color: black !important;
+    border-color: #6b9fc2 !important;
+}
+
+.button-primary:hover {
+    background-color: #6b9fc2 !important;
+    border-color: #45667c !important;
+}
+
 .card-highlight .button-inline {
     color: #2e4453;
 }
@@ -177,7 +192,7 @@ button:disabled:hover {
     font-family: inherit;
     font-size: 12pt;
     color: #f0f0f0;
-    border: 1px solid black;
+    border: 1px solid #202020;
     padding: .4rem;
     border-radius: .4rem;
     background-color: #101010;
