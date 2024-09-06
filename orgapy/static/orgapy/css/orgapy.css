@@ -83,6 +83,14 @@ button:focus {
     outline: 1px solid #8ed2ff;
 }
 
+button:disabled {
+    opacity: .5;
+}
+
+button:disabled:hover {
+    pointer-events: none;
+}
+
 /***** UTILITY CLASSES ********************************************************/
 
 .hidden {

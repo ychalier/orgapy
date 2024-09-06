@@ -2585,55 +2585,40 @@ class Sheet {
         });
     }
 
-    inflateToolbar() {
+    bindToolbar() {
         if (this.readonly) return;
         var self = this;
 
-        this.toolbar = create(this.container, "div", "sheet-toolbar");
+        this.toolbar = this.container.querySelector(".sheet-toolbar");
 
-        this.toolbarButtonSave = create(this.toolbar, "button", "sheet-toolbar-button");
-        this.toolbarButtonSave.innerHTML = `<i class="ri-save-line"></i>`;
-        this.toolbarButtonSave.title = "Save";
+        this.toolbarButtonSave = this.toolbar.querySelector(".sheet-button-save");
         this.toolbarButtonSave.setAttribute("disabled", true);
         this.toolbarButtonSave.addEventListener("click", () => {
             self.saveData();
         });
 
-        let btnScript = create(this.toolbar, "button", "sheet-toolbar-button");
-        btnScript.textContent = "ℱ"; //ƒ
-        btnScript.addEventListener("click", () => {
+        this.toolbar.querySelector(".sheet-button-script").addEventListener("click", () => {
             self.openScriptModal();
         });
 
-        this.toolbarButtonToggleShrink = create(this.toolbar, "button", "sheet-toolbar-button");
-        this.toolbarButtonToggleShrink.innerHTML = `<i class="ri-fullscreen-exit-line"></i>`;
-        this.toolbarButtonToggleShrink.title = "Toggle shrink";
+        this.toolbarButtonToggleShrink = this.toolbar.querySelector(".sheet-button-shrink");
         this.toolbarButtonToggleShrink.addEventListener("click", () => {
             self.toggleShrink();
         });
 
-        let btnImport = create(this.toolbar, "button", "sheet-toolbar-button");
-        btnImport.innerHTML = `<i class="ri-upload-line"></i>`;
-        btnImport.title = "Import";
-        btnImport.addEventListener("click", () => {
+        this.toolbar.querySelector(".sheet-button-upload").addEventListener("click", () => {
             self.openImportModal();
         });
 
-        let btnExport = create(this.toolbar, "button", "sheet-toolbar-button");
-        btnExport.innerHTML = `<i class="ri-download-line"></i>`;
-        btnExport.title = "Export";
-        btnExport.addEventListener("click", () => {
+        this.toolbar.querySelector(".sheet-button-download").addEventListener("click", () => {
             self.exportTsv();
         });
     }
 
     setup(data=null, config=null) {
-        // this.container.innerHTML = "";
-        // this.container.classList.add("sheet");
         this.contextMenu.setup();
         this.initializeValues(data, config);
-        // this.inflateToolbar();
-        // this.inflateTable();
+        this.bindToolbar();
         this.inflate();
         this.setGlobalEventListeners();
         this.evaluateScript();
@@ -2693,7 +2678,7 @@ class Sheet {
         let blob = new Blob([tsvString], {type: "text/tab-separated-values"});
         let link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        let title = document.querySelector("h1");
+        let title = this.container.querySelector(".sheet-title");
         if (title == null) {
             link.download = `Untitled.tsv`;
         } else {
