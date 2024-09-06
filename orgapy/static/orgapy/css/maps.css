@@ -1,11 +1,17 @@
 /* General layout */
 
+html {
+    height: 100%;
+}
+
+body.fullscreen {
+    height: 100%;
+}
+
 .map-container {
-    border-radius: .4rem;
+    height: 100%;
     display: flex;
     flex-direction: row;
-    width: 100%;
-    height: 100%;
 }
 
 /* Buttons */

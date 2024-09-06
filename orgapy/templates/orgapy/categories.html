@@ -28,8 +28,8 @@
                 <a class="link-hidden" href="{% url 'orgapy:notes' %}?query=%23{{ category.name }}">{{ category.name | capfirst }}</a>
             </td>
             <td style="width: 100%">
-                <a class="btn-inline" href="{% url 'orgapy:edit_category' cid=category.id %}" title="Rename"><i class="icon icon-edit"></i></a>
-                <a class="btn-inline link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' cid=category.id %}" title="Delete"><i class="icon icon-delete"></i></a>
+                <a class="btn-inline" href="{% url 'orgapy:edit_category' cid=category.id %}" title="Rename"><i class="ri-pencil-fill"></i></a>
+                <a class="btn-inline link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' cid=category.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
             </td>           
         </tr>
         {% endfor %}

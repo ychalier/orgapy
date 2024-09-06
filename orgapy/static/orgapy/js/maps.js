@@ -22,52 +22,40 @@ const PROVIDERS = [
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
         }
     },
-]
+];
 
 
-function create(parent=null, tag="div", classes=null) {
-    let element = document.createElement(tag);
-    if (parent != null) parent.appendChild(element);
-    if (classes != null) {
-        classes.forEach(cls => {
-            element.classList.add(cls);
-        });
-    }
-    return element;
+function orDefault(value, default_) {
+    return value == null ? default_ : value;
 }
 
 
-function remove(element) {
-    element.parentNode.removeChild(element);
-}
-
-
-function setdefault(object, attrname, value) {
+function setDefault(object, attrname, value) {
     if (object[attrname] == undefined) {
         object[attrname] = value;
     }
 }
 
 
-function stop_propagation(event) {
+function stopPropagation(event) {
     event.stopPropagation();
     return false;
 }
 
 
-function reverse_latlng(coordinates) {
+function reverseLatLng(coordinates) {
     if (coordinates.length == 2 && typeof(coordinates[0]) == "number") {
         return [coordinates[1], coordinates[0]];
     }
     let output = [];
     coordinates.forEach(part => {
-        output.push(reverse_latlng(part));
+        output.push(reverseLatLng(part));
     });
     return output;
 }
 
 
-function hex_to_hsl(hex) {
+function hexToHsl(hex) {
     // https://stackoverflow.com/questions/46432335
     let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     let r = parseInt(result[1], 16);
@@ -97,7 +85,7 @@ function hex_to_hsl(hex) {
 }
 
 
-function hsl_to_hex(h, s, l) {
+function hslToHex(h, s, l) {
     // https://stackoverflow.com/questions/36721830/
     l /= 100;
     const a = s * Math.min(l, 1 - l) / 100;
@@ -110,15 +98,15 @@ function hsl_to_hex(h, s, l) {
 }
 
 
-function get_opposite_color(color) {
+function getOppositeColor(color) {
     if (color == null || color == undefined) return DEFAULT_STROKE_COLOR;
-    let hsl = hex_to_hsl(color);
-    return hsl_to_hex((hsl[0] + 180) % 360, hsl[1], hsl[2]);
+    let hsl = hexToHsl(color);
+    return hslToHex((hsl[0] + 180) % 360, hsl[1], hsl[2]);
 }
 
 
-function get_hue_rotation(color, base_color="#2981ca") {
-    return hex_to_hsl(color)[0] - hex_to_hsl(base_color)[0];
+function getHueRotation(color, baseColor="#2981ca") {
+    return hexToHsl(color)[0] - hexToHsl(baseColor)[0];
 }
 
 
@@ -134,17 +122,17 @@ class CurrentPositionControl extends L.Control {
         label.style.cursor = "pointer";
         label.style.color = "black";
         label.title = "Click to copy";
-        function set_label_text(event) {
+        function setLabelText(event) {
             let point = event ? event.latlng : map.getCenter();
             label.textContent = `${point.lat.toFixed(6)},${point.lng.toFixed(6)}`;
         }
         label.addEventListener("click", (event) => {
             event.stopPropagation();
-            set_label_text();
+            setLabelText();
             navigator.clipboard.writeText(label.textContent);
         });
-        set_label_text();
-        map.addEventListener("mousemove", set_label_text);
+        setLabelText();
+        map.addEventListener("mousemove", setLabelText);
         return container;
     }
 
@@ -156,51 +144,51 @@ class PanelControl extends L.Control {
     constructor(map) {
         super({position: "topleft"});
         this.map = map;
-        this.map_title = null;
-        this.panel_container = null;
-        this.layers_container = null;
+        this.mapTitle = null;
+        this.panelContainer = null;
+        this.layersContainer = null;
     }
 
-    inflate_map_title() {
+    inflateMapTitle() {
         var self = this;
-        if (this.map_title == null) {
-            this.map_title = create(this.panel_container, "div", ["map-title"]);
+        if (this.mapTitle == null) {
+            this.mapTitle = create(this.panelContainer, "div", "map-title");
         } else {
-            let foo = create(null, "div", ["map-title"]);
-            this.map_title.replaceWith(foo);
-            this.map_title = foo;
+            let foo = create(null, "div", "map-title");
+            this.mapTitle.replaceWith(foo);
+            this.mapTitle = foo;
         }
-        this.map_title.textContent = this.map.title;
-        this.map_title.addEventListener("click", () => {
-            self.inflate_map_title_edit();
+        this.mapTitle.textContent = this.map.title;
+        this.mapTitle.addEventListener("click", () => {
+            self.inflateMapTitleEdit();
         });
     }
 
-    inflate_map_title_edit() {
+    inflateMapTitleEdit() {
         var self = this;
         let form = create(null, "form");
-        let input = create(form, "input", ["form-input", "mb-2"]);
+        let input = create(form, "input", "form-input mb-2");
         input.value = this.map.title;
-        this.map_title.replaceWith(form);
-        this.map_title = form;
+        this.mapTitle.replaceWith(form);
+        this.mapTitle = form;
         input.focus();
         form.addEventListener("submit", (event) => {
             event.preventDefault();
-            let new_title = input.value.trim();
-            if (new_title != "") {
-                self.map.set_title(new_title);
-                self.inflate_map_title();
+            let newTitle = input.value.trim();
+            if (newTitle != "") {
+                self.map.set_title(newTitle);
+                self.inflateMapTitle();
             }
         });
     }
 
-    inflate_base_map_form() {
+    inflateBaseMapForm() {
         var self = this;
-        let wrapper = create(this.panel_container, "div", ["basemap-form"]);
+        let wrapper = create(this.panelContainer, "div", "basemap-form");
         let label = create(wrapper, "label");
         label.textContent = "Base map";
         label.setAttribute("for", "select-base-map");
-        let select = create(this.panel_container, "select", ["form-select"]);
+        let select = create(this.panelContainer, "select", "form-select");
         select.setAttribute("id", "select-base-map");
         PROVIDERS.forEach((provider, i) => {
             let option = create(select, "option");
@@ -208,46 +196,46 @@ class PanelControl extends L.Control {
             option.textContent = provider.label;
         });
         select.addEventListener("input", () => {
-            let provider_index = null;
+            let providerIndex = null;
             select.querySelectorAll("option").forEach(option => {
-                if (option.selected) provider_index = parseInt(option.value);
+                if (option.selected) providerIndex = parseInt(option.value);
             });
-            self.map.set_tile_layer(provider_index);
+            self.map.setTileLayer(providerIndex);
         });
     }
 
-    inflate_panel() {
+    inflatePanel() {
         var self = this;
-        this.inflate_map_title();
+        this.inflateMapTitle();
         if (!this.map.readonly) {
-            let buttons = create(this.panel_container, "div", ["mb-2"]);
-            this.map.button_save = create(buttons, "button", ["btn", "btn-sm", "mr-1"]);
-            this.map.button_save.textContent = "Save";
-            this.map.button_save.setAttribute("disabled", true);
-            this.map.button_save.addEventListener("click", (event) => {
+            let buttons = create(this.panelContainer, "div");
+            this.map.buttonSave = create(buttons, "button");
+            this.map.buttonSave.textContent = "Save";
+            this.map.buttonSave.setAttribute("disabled", true);
+            this.map.buttonSave.addEventListener("click", (event) => {
                 event.stopPropagation();
-                self.map.save_data();
+                self.map.saveData();
             });
-            let button_add_layer = create(buttons, "span", ["btn", "btn-sm"]);
-            button_add_layer.innerHTML = `<i class="icon icon-plus mr-1"></i><span class="button-label">Layer</span>`;
-            button_add_layer.title = "Add layer";
-            button_add_layer.addEventListener("click", () => {
-                self.map.add_layer();
+            let buttonAddLayer = create(buttons, "span");
+            buttonAddLayer.innerHTML = `<i class="ri-add-line mr-1"></i><span class="button-label">Layer</span>`;
+            buttonAddLayer.title = "Add layer";
+            buttonAddLayer.addEventListener("click", () => {
+                self.map.addLayer();
             });
         }
-        this.layers_container = create(this.panel_container, "div", ["map-layers"]);
-        this.layers_container.addEventListener("wheel", (event) => {
+        this.layersContainer = create(this.panelContainer, "div", "map-layers");
+        this.layersContainer.addEventListener("wheel", (event) => {
             event.stopPropagation();
         });
         if (!this.map.readonly) {
-            this.inflate_base_map_form();
+            this.inflateBaseMapForm();
         }
     }
 
     onAdd(map) {
-        let container = create(null, "div", ["map-control"]);
-        this.panel_container = create(container, "div", ["map-panel"]);
-        this.inflate_panel();
+        let container = create(null, "div", "map-control");
+        this.panelContainer = create(container, "div", "map-panel");
+        this.inflatePanel();
         return container;
     }
 
@@ -259,10 +247,10 @@ class SearchControl extends L.Control {
     constructor(map) {
         super({position: "topright"});
         this.map = map;
-        this.searchbar_container = null;
+        this.searchbarContainer = null;
     }
 
-    search_nominatim(query) {
+    searchNominatim(query) {
         var self = this;
         let url = `https://nominatim.openstreetmap.org/search?q=${encodeURI(query)}&format=jsonv2`;
         fetch(url).then(res => res.json()).then(results => {
@@ -271,40 +259,40 @@ class SearchControl extends L.Control {
                 return;
             }
             //TODO?: handle choice between multiple results
-            let best_result = results[0];
-            self.onresult({
-                lat: best_result.lat,
-                lon: best_result.lon,
-                label: best_result.display_name
+            let bestResult = results[0];
+            self.onResult({
+                lat: bestResult.lat,
+                lon: bestResult.lon,
+                label: bestResult.display_name
             });
         });
     }
 
-    onresult(result) {
+    onResult(result) {
         let marker = new L.marker([parseFloat(result.lat), parseFloat(result.lon)]);
-        this.map.get_selected_layer().add_feature_from_map_element(marker, {label: result.label});
-        this.map.leaflet_map.panTo(marker.getLatLng());
+        this.map.getSelectedLayer().addFeatureFromMapElement(marker, {label: result.label});
+        this.map.leafletMap.panTo(marker.getLatLng());
     }
 
     search(query) {
         if (query.match(/^\d+(\.\d+)? *, *\d+(\.\d+)?$/g)) {
-            this.onresult({
+            this.onResult({
                 lat: parseFloat(query.split(",")[0]),
                 lon: parseFloat(query.split(",")[1]),
                 label: "GPS Point"
             });
         } else {
-            this.search_nominatim(query);
+            this.searchNominatim(query);
         }
     }
 
     inflate() {
-        let form = create(this.searchbar_container, "form", ["inline-form"]);
-        let input = create(form, "input", ["form-input"]);
+        let form = create(this.searchbarContainer, "form", "inline-form");
+        let input = create(form, "input", "form-input");
         input.type = "text";
         input.placeholder = "Search";
-        let button = create(form, "span", ["btn"]);
-        button.innerHTML = `<i class="icon icon-search"></i>`;
+        let button = create(form, "span", "btn");
+        button.innerHTML = `<i class="ri-search-line"></i>`;
         button.style.width = "38px";
         button.title = "Search";
         button.addEventListener("click", () => {
@@ -321,8 +309,8 @@ class SearchControl extends L.Control {
     }
 
     onAdd(map) {
-        let container = create(null, "div", ["map-control"]);
-        this.searchbar_container = create(container, "div", ["map-searchbar"]);
+        let container = create(null, "div", "map-control");
+        this.searchbarContainer = create(container, "div", "map-searchbar");
         this.inflate();
         return container;
     }
@@ -335,56 +323,56 @@ class ToolbarControl extends L.Control {
     constructor(map) {
         super({position: "topright"});
         this.map = map;
-        this.toolbar_container = null;
+        this.toolbarContainer = null;
     }
 
     inflate() {
         var self = this;
-        let button_home = create(this.toolbar_container, "span", ["btn", "btn-action", "mb-1"]);
-        button_home.innerHTML = `<i class="icon icon-home"></i>`;
-        button_home.title = "Reset view";
-        button_home.addEventListener("click", (event) => {
+        let buttonHome = create(this.toolbarContainer, "span");
+        buttonHome.innerHTML = `<i class="ri-home-line"></i>`;
+        buttonHome.title = "Reset view";
+        buttonHome.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.fit_view_to_features();
+            self.map.fitViewToFeatures();
         });
-        let button_marker = create(this.toolbar_container, "span", ["btn", "btn-action", "mb-1"]);
-        button_marker.innerHTML = `<i class="icon icon-marker"></i>`;
-        button_marker.title = "Add marker";
-        button_marker.addEventListener("click", (event) => {
+        let buttonMarker = create(this.toolbarContainer, "span");
+        buttonMarker.innerHTML = `<i class="ri-map-pin-line"></i>`;
+        buttonMarker.title = "Add marker";
+        buttonMarker.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.start_marker();
+            self.map.startMarker();
         });
-        let button_polyline = create(this.toolbar_container, "span", ["btn", "btn-action", "mb-1"]);
-        button_polyline.innerHTML = `<i class="icon icon-polyline"></i>`;
-        button_polyline.title = "Add polyline";
-        button_polyline.addEventListener("click", (event) => {
+        let buttonPolyline = create(this.toolbarContainer, "span");
+        buttonPolyline.innerHTML = `<i class="ri-route-line"></i>`;
+        buttonPolyline.title = "Add polyline";
+        buttonPolyline.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.start_polyline();
+            self.map.startPolyline();
         });
-        let button_polygon = create(this.toolbar_container, "span", ["btn", "btn-action", "mb-1"]);
-        button_polygon.innerHTML = `<i class="icon icon-polygon"></i>`;
-        button_polygon.title = "Add polygon";
-        button_polygon.addEventListener("click", (event) => {
+        let buttonPolygon = create(this.toolbarContainer, "span");
+        buttonPolygon.innerHTML = `<i class="ri-shape-line"></i>`;
+        buttonPolygon.title = "Add polygon";
+        buttonPolygon.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.start_polygon();
+            self.map.startPolygon();
         });
-        let button_toggle_edition = create(this.toolbar_container, "span", ["btn", "btn-action"]);
-        button_toggle_edition.innerHTML = `<i class="icon icon-edit"></i>`;
-        button_toggle_edition.title = "Toggle edition";
-        button_toggle_edition.addEventListener("click", (event) => {
+        let buttonToggleEdition = create(this.toolbarContainer, "span");
+        buttonToggleEdition.innerHTML = `<i class="ri-pencil-fill"></i>`;
+        buttonToggleEdition.title = "Toggle edition";
+        buttonToggleEdition.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.toggle_edition();
+            self.map.toggleEdition();
             if (self.map.editing) {
-                button_toggle_edition.querySelector("i").className = "icon icon-cross";
+                buttonToggleEdition.querySelector("i").className = "ri-close-line";
             } else {
-                button_toggle_edition.querySelector("i").className = "icon icon-edit";
+                buttonToggleEdition.querySelector("i").className = "ri-pencil-fill";
             }
         });
     }
 
     onAdd(map) {
-        let container = create(null, "div", ["map-control"]);
-        this.toolbar_container = create(container, "div", ["map-toolbar"]);
+        let container = create(null, "div", "map-control");
+        this.toolbarContainer = create(container, "div", "map-toolbar");
         this.inflate();
         return container;
     }
@@ -401,27 +389,27 @@ const DEFAULT_FILL_OPACITY = "0.25";
 
 class Feature {
 
-    constructor(layer, index, geojson_data) {
+    constructor(layer, index, geojsonData) {
         this.layer = layer;
         this.index = index;
         this.geometry = {};
-        this.geometry.type = geojson_data.geometry.type;
+        this.geometry.type = geojsonData.geometry.type;
         // NOTE: coordinates are stored using the GeoJson order,
         // ie. longitude first, then latitude.
         // Leafleft uses the reversed, order.
         // To switch, @see `reverse_latlng`
-        this.geometry.coordinates = geojson_data.geometry.coordinates;
-        this.properties = geojson_data.properties;
-        setdefault(this.properties, "label", this.layer.find_default_label());
-        setdefault(this.properties, "strokeColor", DEFAULT_STROKE_COLOR);
-        setdefault(this.properties, "strokeWidth", DEFAULT_STROKE_WIDTH);
-        setdefault(this.properties, "fillColor", DEFAULT_FILL_COLOR);
-        setdefault(this.properties, "fillOpacity", DEFAULT_FILL_OPACITY);
-        this.map_element = null;
-        this.panel_element = null;
+        this.geometry.coordinates = geojsonData.geometry.coordinates;
+        this.properties = geojsonData.properties;
+        setDefault(this.properties, "label", this.layer.findDefaultLabel());
+        setDefault(this.properties, "strokeColor", DEFAULT_STROKE_COLOR);
+        setDefault(this.properties, "strokeWidth", DEFAULT_STROKE_WIDTH);
+        setDefault(this.properties, "fillColor", DEFAULT_FILL_COLOR);
+        setDefault(this.properties, "fillOpacity", DEFAULT_FILL_OPACITY);
+        this.mapElement = null;
+        this.panelElement = null;
     }
 
-    to_geojson() {
+    toGeojson() {
         return {
             type: "Feature",
             geometry: {
@@ -432,21 +420,21 @@ class Feature {
         }
     }
 
-    set_style(custom_style=null) {
-        if (this.map_element == null) return;
-        let style = custom_style == null ? this.properties : custom_style;
+    setStyle(customStyle=null) {
+        if (this.mapElement == null) return;
+        let style = customStyle == null ? this.properties : customStyle;
         switch(this.geometry.type) {
             case "Point":
-                this.map_element._icon.style.filter = `hue-rotate(${get_hue_rotation(style.fillColor)}deg)`;
+                this.mapElement._icon.style.filter = `hue-rotate(${getHueRotation(style.fillColor)}deg)`;
                 break;
             case "LineString":
-                this.map_element.setStyle({
+                this.mapElement.setStyle({
                     color: style.strokeColor,
                     weight: style.strokeWidth,
                 });
                 break;
             case "Polygon":
-                this.map_element.setStyle({
+                this.mapElement.setStyle({
                     color: style.strokeColor,
                     weight: style.strokeWidth,
                     fillColor: style.fillColor,
@@ -454,12 +442,12 @@ class Feature {
                 });
                 break;
             case "MultiPoint":
-                this.map_element.getLayers().forEach(marker => {
-                    marker._icon.style.filter = `hue-rotate(${get_hue_rotation(style.fillColor)}deg)`;
+                this.mapElement.getLayers().forEach(marker => {
+                    marker._icon.style.filter = `hue-rotate(${getHueRotation(style.fillColor)}deg)`;
                 });
                 break;
             case "MultiLineString":
-                this.map_element.getLayers().forEach(polyline => {
+                this.mapElement.getLayers().forEach(polyline => {
                     polyline.setStyle({
                         color: style.strokeColor,
                         weight: style.strokeWidth,
@@ -467,7 +455,7 @@ class Feature {
                 });
                 break;
             case "MultiPolygon":
-                this.map_element.getLayers().forEach(polygon => {
+                this.mapElement.getLayers().forEach(polygon => {
                     polygon.setStyle({
                         color: style.strokeColor,
                         weight: style.strokeWidth,
@@ -481,252 +469,249 @@ class Feature {
         }
     }
 
-    inflate_popup(container) {
+    inflatePopup(container) {
         var self = this;
         container.innerHTML = "";
-        let wrapper = create(container, "div", ["feature-popup"]);
-        let label = create(wrapper, "span", ["feature-label"]);
+        let wrapper = create(container, "div", "feature-popup");
+        let label = create(wrapper, "span", "feature-label");
         label.textContent = this.properties.label;
-        let table = create(wrapper, "div", ["feature-properties"]);
+        let table = create(wrapper, "div", "feature-properties");
         for (let property in this.properties) {
             if (RESERVERD_PROPERTIES.has(property)) continue;
-            let tr = create(table, "div", ["feature-property"]);
-            let cell_property = create(tr, "div", ["feature-property-label"]);
-            cell_property.textContent = property;
-            let cell_value = create(tr, "div", ["feature-property-value"]);
-            cell_value.textContent = this.properties[property];
+            let tr = create(table, "div", "feature-property");
+            let cellProperty = create(tr, "div", "feature-property-label");
+            cellProperty.textContent = property;
+            let cellValue = create(tr, "div", "feature-property-value");
+            cellValue.textContent = this.properties[property];
         }
         if (this.layer.map.readonly) return;
-        let buttons = create(wrapper, "div", ["feature-buttons"]);
-        let button_edit = create(buttons, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        button_edit.innerHTML = `<i class="icon icon-edit"></i>`;
-        button_edit.title = "Edit";
-        button_edit.addEventListener("click", (event) => {
+        let buttons = create(wrapper, "div", "feature-buttons");
+        let buttonEdit = create(buttons, "span");
+        buttonEdit.innerHTML = `<i class="ri-pencil-fill"></i>`;
+        buttonEdit.title = "Edit";
+        buttonEdit.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.inflate_popup_edit(container);
+            self.inflatePopupEdit(container);
         });
-        let button_delete = create(buttons, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        button_delete.innerHTML = `<i class="icon icon-delete"></i>`;
-        button_delete.title = "Delete";
-        button_delete.addEventListener("click", (event) => {
+        let buttonDelete = create(buttons, "span");
+        buttonDelete.innerHTML = `<i class="ri-delete-bin-line"></i>`;
+        buttonDelete.title = "Delete";
+        buttonDelete.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.layer.delete_feature(self.index);
+            self.layer.deleteFeature(self.index);
         });
     }
 
-    inflate_popup_edit(container) {
+    inflatePopupEdit(container) {
         var self = this;
         container.innerHTML = "";
-        let wrapper = create(container, "div", ["feature-popup"]);
-        let inputs_values = {};
-        let inputs_labels = {};
-        let label_input = create(wrapper, "input", ["form-input"]);
-        label_input.value = this.properties.label;
-        inputs_values.label = label_input;
-        let table = create(wrapper, "div", ["feature-properties"]);
-        let added_properties_counter = 0;
+        let wrapper = create(container, "div", "feature-popup");
+        let inputsValues = {};
+        let inputsLabels = {};
+        let labelInput = create(wrapper, "input", "form-input");
+        labelInput.value = this.properties.label;
+        inputsValues.label = labelInput;
+        let table = create(wrapper, "div", "feature-properties");
+        let addedPropertiesCounter = 0;
         for (let property in this.properties) {
             if (RESERVERD_PROPERTIES.has(property)) continue;
-            let tr = create(table, "div", ["feature-property"]);
-            let cell_property = create(tr, "div", ["feature-property-label"]);
-            let input_label = create(cell_property, "input", ["form-input"]);
-            input_label.value = property;
-            inputs_labels[property] = input_label;
-            let cell_value = create(tr, "div", ["feature-property-value"]);
-            let input_value = create(cell_value, "input", ["form-input"]);
-            input_value.value = this.properties[property];
-            inputs_values[property] = input_value;
-            let cell_buttons = create(tr, "div", ["feature-property-buttons"]);
-            let delete_button = create(cell_buttons, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-            delete_button.innerHTML = `<i class="icon icon-delete"></i>`;
-            delete_button.addEventListener("click", (event) => {
+            let tr = create(table, "div", "feature-property");
+            let cellProperty = create(tr, "div", "feature-property-label");
+            let inputLabel = create(cellProperty, "input", "form-input");
+            inputLabel.value = property;
+            inputsLabels[property] = inputLabel;
+            let cellValue = create(tr, "div", "feature-property-value");
+            let inputValue = create(cellValue, "input", "form-input");
+            inputValue.value = this.properties[property];
+            inputsValues[property] = inputValue;
+            let cellButtons = create(tr, "div", "feature-property-buttons");
+            let deleteButton = create(cellButtons, "span");
+            deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i>`;
+            deleteButton.addEventListener("click", (event) => {
                 event.stopPropagation();
                 if (confirm(`Do you want to delete the property ${property}?`)) {
-                    delete inputs_values[property];
-                    delete inputs_labels[property];
+                    delete inputsValues[property];
+                    delete inputsLabels[property];
                     remove(tr);
                 }
             });
         }
-        let style_form = create(wrapper, "form", ["feature-style"]);
-        let stroke_color_input;
-        let stroke_width_input;
-        let fill_color_input;
-        let fill_opacity_input;
+        let styleForm = create(wrapper, "form", "feature-style");
+        let strokeColorInput, strokeWidthInput, fillColorInput, fillOpacityInput;
         if (this.geometry.type != "Point" && this.geometry.type != "MultiPoint") {
-            create(style_form, "span", ["feature-style-label"]).textContent = "Stroke color";
-            stroke_color_input = create(style_form, "input", ["feature-style-input", "form-input"]);
-            stroke_color_input.type = "color";
-            stroke_color_input.value = this.properties.strokeColor;
-            inputs_values["strokeColor"] = stroke_color_input;
-            create(style_form, "span", ["feature-style-label"]).textContent = "Stroke width";
-            stroke_width_input = create(style_form, "input",  ["feature-style-input", "form-input"]);
-            stroke_width_input.type = "range";
-            stroke_width_input.min = "0";
-            stroke_width_input.max = "10";
-            stroke_width_input.step = "0.1";
-            stroke_width_input.value = this.properties.strokeWidth;
-            inputs_values["strokeWidth"] = stroke_width_input;
+            create(styleForm, "span", "feature-style-label").textContent = "Stroke color";
+            strokeColorInput = create(styleForm, "input", "feature-style-input form-input");
+            strokeColorInput.type = "color";
+            strokeColorInput.value = this.properties.strokeColor;
+            inputsValues["strokeColor"] = strokeColorInput;
+            create(styleForm, "span", "feature-style-label").textContent = "Stroke width";
+            strokeWidthInput = create(styleForm, "input",  "feature-style-input form-input");
+            strokeWidthInput.type = "range";
+            strokeWidthInput.min = "0";
+            strokeWidthInput.max = "10";
+            strokeWidthInput.step = "0.1";
+            strokeWidthInput.value = this.properties.strokeWidth;
+            inputsValues["strokeWidth"] = strokeWidthInput;
         }
         if (this.geometry.type != "LineString" && this.geometry.type != "MultiLineString") {
-            create(style_form, "span", ["feature-style-label"]).textContent = "Fill color";
-            fill_color_input = create(style_form, "input", ["feature-style-input", "form-input"]);
-            fill_color_input.type = "color";
-            fill_color_input.value = this.properties.fillColor;
-            inputs_values["fillColor"] = fill_color_input;
+            create(styleForm, "span", "feature-style-label").textContent = "Fill color";
+            fillColorInput = create(styleForm, "input", "feature-style-input form-input");
+            fillColorInput.type = "color";
+            fillColorInput.value = this.properties.fillColor;
+            inputsValues["fillColor"] = fillColorInput;
             if (this.geometry.type != "Point" && this.geometry.type != "MultiPoint") {
-                create(style_form, "span", ["feature-style-label"]).textContent = "Fill opacity";
-                fill_opacity_input = create(style_form, "input", ["feature-style-input", "form-input"]);
-                fill_opacity_input.type = "range";
-                fill_opacity_input.min = "0";
-                fill_opacity_input.max = "1";
-                fill_opacity_input.step = "0.01";
-                fill_opacity_input.value = this.properties.fillOpacity;
-                inputs_values["fillOpacity"] = fill_opacity_input;
+                create(styleForm, "span", "feature-style-label").textContent = "Fill opacity";
+                fillOpacityInput = create(styleForm, "input", "feature-style-input form-input");
+                fillOpacityInput.type = "range";
+                fillOpacityInput.min = "0";
+                fillOpacityInput.max = "1";
+                fillOpacityInput.step = "0.01";
+                fillOpacityInput.value = this.properties.fillOpacity;
+                inputsValues["fillOpacity"] = fillOpacityInput;
             }
         }
-        style_form.addEventListener("change", () => {
+        styleForm.addEventListener("change", () => {
             let customStyle = {
-                strokeColor: stroke_color_input ? stroke_color_input.value : self.properties.strokeColor,
-                strokeWidth: stroke_width_input ? stroke_width_input.value : self.properties.strokeWidth,
-                fillColor: fill_color_input ? fill_color_input.value : self.properties.fillColor,
-                fillOpacity: fill_opacity_input ? fill_opacity_input.value : self.properties.fillOpacity,
+                strokeColor: strokeColorInput ? strokeColorInput.value : self.properties.strokeColor,
+                strokeWidth: strokeWidthInput ? strokeWidthInput.value : self.properties.strokeWidth,
+                fillColor: fillColorInput ? fillColorInput.value : self.properties.fillColor,
+                fillOpacity: fillOpacityInput ? fillOpacityInput.value : self.properties.fillOpacity,
             }
-            self.set_style(customStyle);
+            self.setStyle(customStyle);
         });
         let buttons = create(wrapper, "div");
-        let button_save = create(buttons, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        button_save.innerHTML = `<i class="icon icon-save"></i>`
-        button_save.title = "Save";
-        button_save.addEventListener("click", (event) => {
+        let buttonSave = create(buttons, "span");
+        buttonSave.innerHTML = `<i class="ri-save-line"></i>`
+        buttonSave.title = "Save";
+        buttonSave.addEventListener("click", (event) => {
             event.stopPropagation();
             self.properties = {};
-            for (let property in inputs_values) {    
-                if (property in inputs_labels) {
-                    self.properties[inputs_labels[property].value] = inputs_values[property].value;
+            for (let property in inputsValues) {    
+                if (property in inputsLabels) {
+                    self.properties[inputsLabels[property].value] = inputsValues[property].value;
                 } else {
-                    self.properties[property] = inputs_values[property].value;
+                    self.properties[property] = inputsValues[property].value;
                 }
             }
             self.inflate();
-            self.onchange("edit-feature");
+            self.onChange("edit-feature");
         });
-        let button_add = create(buttons, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        button_add.innerHTML = `<i class="icon icon-plus"></i>`
-        button_add.title = "Add";
-        button_add.addEventListener("click", (event) => {
+        let buttonAdd = create(buttons, "span");
+        buttonAdd.innerHTML = `<i class="ri-add-line"></i>`
+        buttonAdd.title = "Add";
+        buttonAdd.addEventListener("click", (event) => {
             event.stopPropagation();
-            added_properties_counter++;
-            let property = `Property ${added_properties_counter}`;
-            let tr = create(table, "div", ["feature-property"]);
-            let cell_property = create(tr, "div", ["feature-property-label"]);
-            let input_label = create(cell_property, "input", ["form-input"]);
-            input_label.value = "";
-            inputs_labels[property] = input_label;
-            let cell_value = create(tr, "div", ["feature-property-value"]);
-            let input_value = create(cell_value, "input", ["form-input"]);
-            input_value.value = "";
-            inputs_values[property] = input_value;
-            let cell_buttons = create(tr, "div", ["feature-property-buttons"]);
-            let delete_button = create(cell_buttons, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-            delete_button.innerHTML = `<i class="icon icon-delete"></i>`;
-            delete_button.addEventListener("click", (event) => {
+            addedPropertiesCounter++;
+            let property = `Property ${addedPropertiesCounter}`;
+            let tr = create(table, "div", "feature-property");
+            let cellProperty = create(tr, "div", "feature-property-label");
+            let inputLabel = create(cellProperty, "input", "form-input");
+            inputLabel.value = "";
+            inputsLabels[property] = inputLabel;
+            let cellValue = create(tr, "div", "feature-property-value");
+            let inputValue = create(cellValue, "input", "form-input");
+            inputValue.value = "";
+            inputsValues[property] = inputValue;
+            let cellButtons = create(tr, "div", "feature-property-buttons");
+            let deleteButton = create(cellButtons, "span");
+            deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i>`;
+            deleteButton.addEventListener("click", (event) => {
                 event.stopPropagation();
                 if (confirm(`Do you want to delete the property ${property}?`)) {
-                    delete inputs_values[property];
-                    delete inputs_labels[property];
+                    delete inputsValues[property];
+                    delete inputsLabels[property];
                     remove(tr);
                 }
             });
-            self.onchange("edit-feature");
+            self.onChange("edit-feature");
         });
-        let button_cancel = create(buttons, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        button_cancel.innerHTML = `<i class="icon icon-cross"></i>`
-        button_cancel.title = "Cancel";
-        button_cancel.addEventListener("click", (event) => {
+        let buttonCancel = create(buttons, "span");
+        buttonCancel.innerHTML = `<i class="ri-close-line"></i>`
+        buttonCancel.title = "Cancel";
+        buttonCancel.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.inflate_popup(container);
+            self.inflatePopup(container);
         });
     }
 
-    inflate_map_element() {
+    inflateMapElement() {
         var self = this;
-        if (this.map_element != null) {
-            this.layer.map.leaflet_map.removeLayer(this.map_element);
+        if (this.mapElement != null) {
+            this.layer.map.leafletMap.removeLayer(this.mapElement);
         }
         let parts = [];
         switch(this.geometry.type) {
             case "Point":
-                this.map_element = L.marker(reverse_latlng(this.geometry.coordinates));
+                this.mapElement = L.marker(reverseLatLng(this.geometry.coordinates));
                 break;
             case "LineString":
-                this.map_element = L.polyline(reverse_latlng(this.geometry.coordinates));
+                this.mapElement = L.polyline(reverseLatLng(this.geometry.coordinates));
                 break;
             case "Polygon":
-                this.map_element = L.polygon(reverse_latlng(this.geometry.coordinates));
+                this.mapElement = L.polygon(reverseLatLng(this.geometry.coordinates));
                 break;
             case "MultiPoint":
-                this.geometry.coordinates.forEach(part_coordinates => {
-                    parts.push(L.marker(reverse_latlng(part_coordinates)));
+                this.geometry.coordinates.forEach(partCoordinates => {
+                    parts.push(L.marker(reverseLatLng(partCoordinates)));
                 });
-                this.map_element = L.featureGroup(parts);
+                this.mapElement = L.featureGroup(parts);
                 break;
             case "MultiLineString":
-                this.geometry.coordinates.forEach(part_coordinates => {
-                    parts.push(L.polyline(reverse_latlng(part_coordinates)));
+                this.geometry.coordinates.forEach(partCoordinates => {
+                    parts.push(L.polyline(reverseLatLng(partCoordinates)));
                 });
-                this.map_element = L.featureGroup(parts);
+                this.mapElement = L.featureGroup(parts);
                 break;
             case "MultiPolygon":
-                this.geometry.coordinates.forEach(part_coordinates => {
-                    parts.push(L.polygon(reverse_latlng(part_coordinates)));
+                this.geometry.coordinates.forEach(partCoordinates => {
+                    parts.push(L.polygon(reverseLatLng(partCoordinates)));
                 });
-                this.map_element = L.featureGroup(parts);
+                this.mapElement = L.featureGroup(parts);
                 break;
             default:
                 throw new Error("Not implemented!");
         }
-        this.map_element.addTo(this.layer.map.leaflet_map);
-        this.set_style();
-        this.map_element.bindPopup(l => {
+        this.mapElement.addTo(this.layer.map.leafletMap);
+        this.setStyle();
+        this.mapElement.bindPopup(l => {
             let container = create();
-            self.inflate_popup(container);
+            self.inflatePopup(container);
             return container;
         }, {minWidth: 200, maxWidth: 500});
-        this.map_element.bindTooltip(this.properties.label);
-        this.map_element.addEventListener("popupclose", () => {
+        this.mapElement.bindTooltip(this.properties.label);
+        this.mapElement.addEventListener("popupclose", () => {
             try {
-                self.set_style();
+                self.setStyle();
             } catch {
                 //pass: this may fail if element is being recreated
             }
         });
-        this.map_element.addEventListener("editable:disable", () => {
-            self.save_geometry();
+        this.mapElement.addEventListener("editable:disable", () => {
+            self.saveGeometry();
         });
     }
 
-    save_geometry() {
+    saveGeometry() {
         switch(this.geometry.type) {
             case "Point":
-                let latlng = this.map_element.getLatLng();
+                let latlng = this.mapElement.getLatLng();
                 this.geometry.coordinates = [latlng.lng, latlng.lat]; 
                 break;
             case "LineString":
             case "Polygon":
-                this.geometry.coordinates = this.map_element.toGeoJSON().geometry.coordinates;
+                this.geometry.coordinates = this.mapElement.toGeoJSON().geometry.coordinates;
                 break;
             case "MultiPoint":
                 this.geometry.coordinates = [];
-                this.map_element.eachLayer(l => {
-                    let llatlng = this.map_element.getLatLng();
+                this.mapElement.eachLayer(l => {
+                    let llatlng = this.mapElement.getLatLng();
                     this.geometry.coordinates.push([llatlng.lng, llatlng.lat]); 
                 });
                 break;
             case "MultiLineString":
             case "MultiPolygon":
                 this.geometry.coordinates = [];
-                this.map_element.eachLayer(l => {
+                this.mapElement.eachLayer(l => {
                     this.geometry.coordinates.push(l.toGeoJSON().geometry.coordinates); 
                 });
                 break;
@@ -735,40 +720,40 @@ class Feature {
         }
     }
 
-    start_highlight() {
-        this.set_style({
-            strokeColor: get_opposite_color(this.properties.strokeColor),
+    startHighlight() {
+        this.setStyle({
+            strokeColor: getOppositeColor(this.properties.strokeColor),
             strokeWidth: this.properties.strokeWidth,
-            fillColor: get_opposite_color(this.properties.fillColor),
+            fillColor: getOppositeColor(this.properties.fillColor),
             fillOpacity: this.properties.fillOpacity,
         })
     }
 
-    end_highlight() {
-        this.set_style();
+    endHighlight() {
+        this.setStyle();
     }
 
-    inflate_panel_element() {
+    inflatePanelElement() {
         var self = this;
-        if (this.panel_element != null) {
-            remove(this.panel_element);
+        if (this.panelElement != null) {
+            remove(this.panelElement);
         }
-        this.panel_element = create(this.layer.features_container, "li", ["map-feature"]);
-        this.panel_element.innerHTML = "";
-        let label = create(this.panel_element, "span");
+        this.panelElement = create(this.layer.features_container, "li", "map-feature");
+        this.panelElement.innerHTML = "";
+        let label = create(this.panelElement, "span");
         label.textContent = this.properties.label;
-        let move_button = create(this.panel_element, "span", ["btn", "btn-sm", "show-on-parent-hover", "btn-feature"]);
-        move_button.innerHTML = `<i class="icon icon-arrow-right"></i>`;
-        move_button.title = "Move to another layer";
-        move_button.addEventListener("click", (event) => {
+        let moveButton = create(this.panelElement, "span", "show-on-parent-hover btn-feature");
+        moveButton.innerHTML = `<i class="ri-arrow-right-line"></i>`;
+        moveButton.title = "Move to another layer";
+        moveButton.addEventListener("click", (event) => {
             event.stopPropagation();
             new MoveFeatureDialog(self.layer.map, self.layer.index, self.index).open();
         });
-        this.panel_element.addEventListener("mouseenter", (event) => {
-            self.start_highlight();
+        this.panelElement.addEventListener("mouseenter", (event) => {
+            self.startHighlight();
         });
-        this.panel_element.addEventListener("mouseleave", (event) => {
-            self.end_highlight();
+        this.panelElement.addEventListener("mouseleave", (event) => {
+            self.endHighlight();
         });
         label.addEventListener("dblclick", (event) => {
             event.stopPropagation();
@@ -777,46 +762,46 @@ class Feature {
     }
 
     inflate() {
-        this.inflate_map_element();
-        this.inflate_panel_element();
+        this.inflateMapElement();
+        this.inflatePanelElement();
     }
 
-    onchange(change) {
-        this.layer.onchange(change);
+    onChange(change) {
+        this.layer.onChange(change);
     }
 
     delete() {
-        if (this.panel_element != null) {
-            remove(this.panel_element);
-            this.panel_element = null;
+        if (this.panelElement != null) {
+            remove(this.panelElement);
+            this.panelElement = null;
         }
-        if (this.map_element != null) {
-            this.map_element.remove();
-            this.map_element = null;
+        if (this.mapElement != null) {
+            this.mapElement.remove();
+            this.mapElement = null;
         }
     }
 
     goto() {
         if (this.geometry.type == "Point") {
-            this.layer.map.leaflet_map.flyTo(reverse_latlng(this.geometry.coordinates));
+            this.layer.map.leafletMap.flyTo(reverseLatLng(this.geometry.coordinates));
         } else {
-            this.layer.map.leaflet_map.fitBounds(this.map_element.getBounds());
+            this.layer.map.leafletMap.fitBounds(this.mapElement.getBounds());
         }
     }
 
     enableEdit() {
-        if (this.map_element instanceof L.FeatureGroup) {
-            this.map_element.eachLayer(l => l.enableEdit());
+        if (this.mapElement instanceof L.FeatureGroup) {
+            this.mapElement.eachLayer(l => l.enableEdit());
         } else {
-            this.map_element.enableEdit();
+            this.mapElement.enableEdit();
         }
     }
 
     disableEdit() {
-        if (this.map_element instanceof L.FeatureGroup) {
-            this.map_element.eachLayer(l => l.disableEdit());
+        if (this.mapElement instanceof L.FeatureGroup) {
+            this.mapElement.eachLayer(l => l.disableEdit());
         } else {
-            this.map_element.disableEdit();
+            this.mapElement.disableEdit();
         }
     }
 
@@ -831,14 +816,14 @@ class Layer {
         this.label = label;
         this.features = [];
         this.container = null;
-        this.visibility_checkbox = null;
-        this.label_element = null;
-        this.features_container = null;
+        this.visibilityCheckbox = null;
+        this.labelElement = null;
+        this.featuresContainer = null;
         this.selected = false;
-        this.feature_index_counter = 0;
+        this.featureIndexCounter = 0;
     }
 
-    find_default_label() {
+    findDefaultLabel() {
         let i = 0;
         while (true) {
             i++;
@@ -854,114 +839,114 @@ class Layer {
         }
     }
 
-    inflate_label_edit() {
+    inflateLabelEdit() {
         var self = this;
-        let input = create(null, "input", ["form-input"]);
+        let input = create(null, "input", "form-input");
         input.value = this.label;
-        input.addEventListener("mousedown", stop_propagation);
-        input.addEventListener("click", stop_propagation);
-        input.addEventListener("dblclick", stop_propagation);
+        input.addEventListener("mousedown", stopPropagation);
+        input.addEventListener("click", stopPropagation);
+        input.addEventListener("dblclick", stopPropagation);
         input.addEventListener("keydown", (event) => {
             if (event.key == "Enter") {
                 self.label = input.value.trim();
                 self.inflate();
-                self.onchange("edit-layer");
+                self.onChange("edit-layer");
             }
         });
-        this.label_element.replaceWith(input);
+        this.labelElement.replaceWith(input);
         input.focus();
     }
 
     inflate() {
         var self = this;
         if (this.container == null) {
-            this.container = create(this.map.panel_control.layers_container, "div", ["map-layer"]);
+            this.container = create(this.map.panelControl.layersContainer, "div", "map-layer");
             this.container.addEventListener("click", () => {
-                self.map.select_layer(self.index);
+                self.map.selectLayer(self.index);
             });
         }
         this.container.innerHTML = "";        
-        let header_container = create(this.container, "div", ["row"]);
-        header_container.style.alignItems = "center";
-        let header_container_label = create(create(header_container, "div", ["form-group", "mb-0"]), "label", ["form-switch"]);
-        header_container_label.addEventListener("click", (event) => {
+        let headerContainer = create(this.container, "div", "row");
+        headerContainer.style.alignItems = "center";
+        let headerContainerLabel = create(create(headerContainer, "div", "form-group mb-0"), "label", "form-switch");
+        headerContainerLabel.addEventListener("click", (event) => {
             event.stopPropagation();
         });
-        this.visibility_checkbox = create(header_container_label, "input");
-        this.visibility_checkbox.type = "checkbox";
-        this.visibility_checkbox.checked = true;
-        this.visibility_checkbox.addEventListener("dblclick", (event) => {
+        this.visibilityCheckbox = create(headerContainerLabel, "input");
+        this.visibilityCheckbox.type = "checkbox";
+        this.visibilityCheckbox.checked = true;
+        this.visibilityCheckbox.addEventListener("dblclick", (event) => {
             event.stopPropagation();
         });
-        this.visibility_checkbox.addEventListener("input", () => {
-            self.toggle_visibility();
+        this.visibilityCheckbox.addEventListener("input", () => {
+            self.toggleVisibility();
         });
-        create(header_container_label, "i", ["form-icon"]);
-        this.label_element = create(header_container, "span", ["map-layer-title"]);
-        this.label_element.textContent = this.label;
-        this.label_element.addEventListener("click", (event) => {
+        create(headerContainerLabel, "i", "form-icon");
+        this.labelElement = create(headerContainer, "span", "map-layer-title");
+        this.labelElement.textContent = this.label;
+        this.labelElement.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopImmediatePropagation();
-            self.inflate_label_edit();
+            self.inflateLabelEdit();
         });
         let details = create(this.container, "details");
         let summary = create(details, "summary");
         summary.textContent = `${this.features.length} elements`;
-        this.features_container = create(details, "ul", ["map-features"]);
+        this.featuresContainer = create(details, "ul", "map-features");
         this.features.forEach(feature => {
             feature.inflate();
         });
         if (this.map.readonly) return;
-        let edit_button = create(this.container, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        edit_button.innerHTML = `<i class="icon icon-edit"></i>`;
-        edit_button.title = "Edit style";
-        edit_button.addEventListener("click", (event) => {
+        let editButton = create(this.container, "span");
+        editButton.innerHTML = `<i class="ri-pencil-fill"></i>`;
+        editButton.title = "Edit style";
+        editButton.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.select_layer(self.index);
-            self.map.open_layer_style_dialog();
+            self.map.selectLayer(self.index);
+            self.map.openLayerStyleDialog();
         });
-        let import_button = create(this.container, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        import_button.innerHTML = `<i class="icon icon-upload"></i>`;
-        import_button.title = "Import GeoJson";
-        import_button.addEventListener("click", (event) => {
+        let importButton = create(this.container, "span");
+        importButton.innerHTML = `<i class="ri-upload-line"></i>`;
+        importButton.title = "Import GeoJson";
+        importButton.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.select_layer(self.index);
-            self.map.open_import_dialog();
+            self.map.selectLayer(self.index);
+            self.map.openImportDialog();
         });
-        let export_button = create(this.container, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        export_button.innerHTML = `<i class="icon icon-download"></i>`;
-        export_button.title = "Export to GeoJson";
-        export_button.addEventListener("click", (event) => {
+        let exportButton = create(this.container, "span");
+        exportButton.innerHTML = `<i class="ri-download-line"></i>`;
+        exportButton.title = "Export to GeoJson";
+        exportButton.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.select_layer(self.index);
-            self.export_to_geojson();
+            self.map.selectLayer(self.index);
+            self.exportToGeojson();
         });
-        let delete_button = create(this.container, "span", ["btn", "btn-action", "btn-sm", "mr-1"]);
-        delete_button.innerHTML = `<i class="icon icon-delete"></i>`;
-        delete_button.title = "Delete";
-        delete_button.addEventListener("click", (event) => {
+        let deleteButton = create(this.container, "span");
+        deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i>`;
+        deleteButton.title = "Delete";
+        deleteButton.addEventListener("click", (event) => {
             event.stopPropagation();
-            self.map.delete_layer(self.index);
+            self.map.deleteLayer(self.index);
         });
-        dragrank(this.features_container, ".map-feature", (ordering, permutation) => {
+        dragrank(this.featuresContainer, ".map-feature", (ordering, permutation) => {
             dragrankReorder(self.features, permutation);
-            self.onchange("feature-order");
+            self.onChange("feature-order");
         }, {
             dragid: "feature",
             domReorder: true,
         });
     }
 
-    onchange(change) {
-        this.map.onchange(change);
+    onChange(change) {
+        this.map.onChange(change);
     }
 
-    onselect() {
+    onSelect() {
         this.selected = true;
         this.container.classList.add("selected");
     }
 
-    onunselect() {
+    onUnselect() {
         this.selected = false;
         this.container.classList.remove("selected");
     }
@@ -973,48 +958,48 @@ class Layer {
         remove(this.container);
     }
 
-    add_feature(geojson_data) {
-        this.features.push(new Feature(this, this.feature_index_counter, geojson_data));
-        this.feature_index_counter++;
+    addFeature(geojsonData) {
+        this.features.push(new Feature(this, this.featureIndexCounter, geojsonData));
+        this.featureIndexCounter++;
         this.inflate();
-        this.onchange("add-feature");
+        this.onChange("add-feature");
     }
 
-    add_features(geojson_data, replace=false) {
+    addFeatures(geojsonData, replace=false) {
         while (replace) {
             let feature = this.features.pop();
             if (feature == undefined) break;
             feature.delete();
         }
-        geojson_data.features.forEach(geojson_feature_data => {
-            this.features.push(new Feature(this, this.feature_index_counter, geojson_feature_data));
-            this.feature_index_counter++;
+        geojsonData.features.forEach(geojsonFeatureData => {
+            this.features.push(new Feature(this, this.featureIndexCounter, geojsonFeatureData));
+            this.featureIndexCounter++;
         });
-        if (replace && "label" in geojson_data) {
-            this.label = geojson_data.label;
+        if (replace && "label" in geojsonData) {
+            this.label = geojsonData.label;
         }
         this.inflate();
     }
 
-    get_array_feature_index(feature_index) {
+    getArrayFeatureIndex(featureIndex) {
         for (let i = 0; i < this.features.length; i++) {
-            if (this.features[i].index == feature_index) return i;
+            if (this.features[i].index == featureIndex) return i;
         }
     }
 
-    get_feature(feature_index) {
-        return this.features[this.get_array_feature_index(feature_index)];
+    getFeature(featureIndex) {
+        return this.features[this.getArrayFeatureIndex(featureIndex)];
     }
 
-    delete_feature(feature_index) {
-        let i = this.get_array_feature_index(feature_index);
+    deleteFeature(featureIndex) {
+        let i = this.getArrayFeatureIndex(featureIndex);
         this.features[i].delete();
         this.features.splice(i, 1);
-        this.onchange("delete-feature");
+        this.onChange("delete-feature");
     }
 
-    add_feature_from_map_element(map_element, base_properties=null) {
-        let geojson_data = {
+    addFeatureFromMapElement(mapElement, baseProperties=null) {
+        let geojsonData = {
             type: "Feature",
             geometry: {
                 type: null,
@@ -1022,31 +1007,31 @@ class Layer {
             },
             properties: {}
         }
-        if (base_properties == null) base_properties = {};
-        let layer_style = this.most_common_or_default_style();
-        for (let key in layer_style) {
-            if (!(key in base_properties)) {
-                base_properties[key] = layer_style[key];
+        if (baseProperties == null) baseProperties = {};
+        let layerStyle = this.mostCommonOrDefaultStyle();
+        for (let key in layerStyle) {
+            if (!(key in baseProperties)) {
+                baseProperties[key] = layerStyle[key];
             }
         }
-        for (let property in base_properties) {
-            geojson_data.properties[property] = base_properties[property];
+        for (let property in baseProperties) {
+            geojsonData.properties[property] = baseProperties[property];
         }
-        if (map_element instanceof L.Marker) {
-            geojson_data.geometry.type = "Point";
-            let latlng = map_element.getLatLng();
-            geojson_data.geometry.coordinates = [latlng.lng, latlng.lat]; 
-        } else if (map_element instanceof L.Polygon) {
+        if (mapElement instanceof L.Marker) {
+            geojsonData.geometry.type = "Point";
+            let latlng = mapElement.getLatLng();
+            geojsonData.geometry.coordinates = [latlng.lng, latlng.lat]; 
+        } else if (mapElement instanceof L.Polygon) {
             //NOTE: this should be placed before L.Polyline,
             //      since it's a superclass of L.Polygon
-            geojson_data.geometry.type = "Polygon";
-            geojson_data.geometry.coordinates = map_element.toGeoJSON().geometry.coordinates;
-        } else if (map_element instanceof L.Polyline) {
-            geojson_data.geometry.type = "LineString";
-            geojson_data.geometry.coordinates = map_element.toGeoJSON().geometry.coordinates;
+            geojsonData.geometry.type = "Polygon";
+            geojsonData.geometry.coordinates = mapElement.toGeoJSON().geometry.coordinates;
+        } else if (mapElement instanceof L.Polyline) {
+            geojsonData.geometry.type = "LineString";
+            geojsonData.geometry.coordinates = mapElement.toGeoJSON().geometry.coordinates;
         }
-        this.map.leaflet_map.removeLayer(map_element);
-        this.add_feature(geojson_data);
+        this.map.leafletMap.removeLayer(mapElement);
+        this.addFeature(geojsonData);
     }
 
     enableEdit() {
@@ -1057,61 +1042,61 @@ class Layer {
         this.features.forEach(feature => feature.disableEdit());
     }
 
-    toggle_visibility() {
-        let visible = this.visibility_checkbox.checked;
+    toggleVisibility() {
+        let visible = this.visibilityCheckbox.checked;
         this.features.forEach(feature => {
             if (visible) {
-                feature.inflate_map_element();
+                feature.inflate_mapElement();
             } else {
-                feature.map_element.remove();
-                feature.map_element = null;
+                feature.mapElement.remove();
+                feature.mapElement = null;
             }
         });
     }
 
-    to_geojson() {
-        let feature_array = [];
+    toGeojson() {
+        let featureArray = [];
         this.features.forEach(feature => {
-            feature_array.push(feature.to_geojson());
+            featureArray.push(feature.toGeojson());
         });
         return {
             type: "FeatureCollection",
-            features: feature_array,
+            features: featureArray,
             label: this.label,
         }
     }
 
-    export_to_geojson() {
-        let geojson_data = this.to_geojson();
-        let geojson_string = JSON.stringify(geojson_data);
+    exportToGeojson() {
+        let geojsonData = this.toGeojson();
+        let geojsonString = JSON.stringify(geojsonData);
         let link = document.createElement("a");
-        link.href = "data:text/plain;charset=utf-8," + encodeURIComponent(geojson_string);
+        link.href = "data:text/plain;charset=utf-8," + encodeURIComponent(geojsonString);
         link.download = `${this.label}.geojson`;
         link.click();
     }
 
-    most_common_property_value(property) {
+    mostCommonPropertyValue(property) {
         let occs = {};
-        let max_value = null;
-        let max_count = 0;
+        let maxValue = null;
+        let maxCount = 0;
         this.features.forEach(f => {
             let value = property in f.properties ? f.properties[property] : null;
             if (!(value in occs)) occs[value] = 0;
             occs[value] += 1;
-            if (occs[value] > max_count) {
-                max_value = value;
-                max_count = occs[value];
+            if (occs[value] > maxCount) {
+                maxValue = value;
+                maxCount = occs[value];
             }
         });
-        return max_value;
+        return maxValue;
     }
 
-    most_common_or_default_style() {
+    mostCommonOrDefaultStyle() {
         return {
-            strokeColor: or_default(this.most_common_property_value("strokeColor"), DEFAULT_STROKE_COLOR),
-            strokeWidth: or_default(this.most_common_property_value("strokeWidth"), DEFAULT_STROKE_COLOR),
-            fillColor: or_default(this.most_common_property_value("fillColor"), DEFAULT_STROKE_COLOR),
-            fillOpacity: or_default(this.most_common_property_value("fillOpacity"), DEFAULT_STROKE_COLOR),
+            strokeColor: orDefault(this.mostCommonPropertyValue("strokeColor"), DEFAULT_STROKE_COLOR),
+            strokeWidth: orDefault(this.mostCommonPropertyValue("strokeWidth"), DEFAULT_STROKE_COLOR),
+            fillColor: orDefault(this.mostCommonPropertyValue("fillColor"), DEFAULT_STROKE_COLOR),
+            fillOpacity: orDefault(this.mostCommonPropertyValue("fillOpacity"), DEFAULT_STROKE_COLOR),
         };
     }
 
@@ -1124,95 +1109,95 @@ class Map {
         this.mid = mid;
         this.container = container;
         this.readonly = readonly;
-        this.container_left = null;
-        this.container_right = null;
-        this.leaflet_map = null;
+        this.containerLeft = null;
+        this.containerRight = null;
+        this.leafletMap = null;
         this.editable = true;
         this.layers = [];
-        this.panel_control = null;
-        this.selected_layer = null;
-        this.layer_index_counter = 0;
+        this.panelControl = null;
+        this.selectedLayer = null;
+        this.layerIndexCounter = 0;
         this.editing = false;
         this.title = "Untitled map";
-        this.provider_index = 0;
-        this.tile_layer = null;
-        this.button_save = null;
+        this.providerIndex = 0;
+        this.tileLayer = null;
+        this.buttonSave = null;
     }
 
-    set_tile_layer(provider_index) {
-        this.provider_index = provider_index;
-        this.load_tile_layer();
-        this.onchange("edit-map");
+    setTileLayer(provider_index) {
+        this.providerIndex = provider_index;
+        this.loadTileLayer();
+        this.onChange("edit-map");
     }
 
-    load_tile_layer() {
-        if (this.tile_layer != null) {
-            this.leaflet_map.removeLayer(this.tile_layer);
-            this.tile_layer = null;
+    loadTileLayer() {
+        if (this.tileLayer != null) {
+            this.leafletMap.removeLayer(this.tileLayer);
+            this.tileLayer = null;
         }
-        let provider = PROVIDERS[this.provider_index];
-        this.tile_layer = L.tileLayer(provider.tiles, provider.options);
-        this.tile_layer.addTo(this.leaflet_map);
+        let provider = PROVIDERS[this.providerIndex];
+        this.tileLayer = L.tileLayer(provider.tiles, provider.options);
+        this.tileLayer.addTo(this.leafletMap);
     }
 
-    inflate_map() {
-        this.leaflet_map = L.map(this.container, {
+    inflateMap() {
+        this.leafletMap = L.map(this.container, {
             editable: this.editable,
             zoomControl: false,
         }).setView([46, 2], 6);
-        this.leaflet_map.on('editable:vertex:ctrlclick editable:vertex:metakeyclick', function (e) {
+        this.leafletMap.on('editable:vertex:ctrlclick editable:vertex:metakeyclick', function (e) {
             e.vertex.continue();
         });
-        this.load_tile_layer();
-        L.control.zoom({position: "bottomright"}).addTo(this.leaflet_map);
-        this.panel_control = new PanelControl(this);
-        this.panel_control.addTo(this.leaflet_map);
-        new CurrentPositionControl().addTo(this.leaflet_map);
+        this.loadTileLayer();
+        L.control.zoom({position: "bottomright"}).addTo(this.leafletMap);
+        this.panelControl = new PanelControl(this);
+        this.panelControl.addTo(this.leafletMap);
+        new CurrentPositionControl().addTo(this.leafletMap);
         if (this.readonly) return;
-        new SearchControl(this).addTo(this.leaflet_map);
-        new ToolbarControl(this).addTo(this.leaflet_map);
+        new SearchControl(this).addTo(this.leafletMap);
+        new ToolbarControl(this).addTo(this.leafletMap);
     }
 
-    fit_view_to_features() {
+    fitViewToFeatures() {
         let features = [];
         this.layers.forEach(layer => {
             layer.features.forEach(feature => {
-                features.push(feature.map_element);
+                features.push(feature.mapElement);
             });
         });
         let group = new L.featureGroup(features);
-        this.leaflet_map.fitBounds(group.getBounds());
+        this.leafletMap.fitBounds(group.getBounds());
     }
 
     inflate() {
         this.container.innerHTML = "";
         this.container.classList.add("map-container");
-        this.inflate_map();
+        this.inflateMap();
         this.layers.forEach(layer => {
             layer.inflate();
         });
-        this.setup_layer_dragrank();
+        this.setupLayerDragrank();
     }
 
-    setup(geojson_data, config) {
+    setup(geojsonData, config) {
         if (config != null) {
             if ("title" in config) this.title = config.title;
-            if ("provider_index" in config) this.provider_index = config.provider_index;
+            if ("provider_index" in config) this.providerIndex = config.provider_index;
         }
         this.inflate();
-        if (geojson_data != null) {
-            geojson_data.forEach(layer_data => {
-                this.add_layer();
-                this.add_geojson_from_data(layer_data, true);
+        if (geojsonData != null) {
+            geojsonData.forEach(layerData => {
+                this.addLayer();
+                this.addGeojsonFromData(layerData, true);
             });
-            this.fit_view_to_features();
+            this.fitViewToFeatures();
         }
-        if (this.button_save != null) {
-            this.button_save.disabled = true;
+        if (this.buttonSave != null) {
+            this.buttonSave.disabled = true;
         }
     }
 
-    add_layer() {
+    addLayer() {
         let i = 0;
         let label = null; 
         while (true) {
@@ -1227,98 +1212,98 @@ class Map {
             }
             if (!found) break;
         }
-        let layer = new Layer(this, this.layer_index_counter, label);
-        this.layer_index_counter++;
+        let layer = new Layer(this, this.layerIndexCounter, label);
+        this.layerIndexCounter++;
         this.layers.push(layer);
         layer.inflate();
-        this.select_layer(layer.index);
-        this.onchange("add-layer");
-        this.setup_layer_dragrank();
+        this.selectLayer(layer.index);
+        this.onChange("add-layer");
+        this.setupLayerDragrank();
     }
 
-    setup_layer_dragrank() {
+    setupLayerDragrank() {
         if (this.readonly) return;
         var self = this;
         dragrankClear("layer");
-        dragrank(this.panel_control.layers_container, ".map-layer", (ordering, permutation) => {
+        dragrank(this.panelControl.layersContainer, ".map-layer", (ordering, permutation) => {
             dragrankReorder(self.layers, permutation);
-            self.onchange("layer-order");
+            self.onChange("layer-order");
         }, {
             dragid: "layer",
             domReorder: true,
         });
     }
 
-    get_array_layer_index(layer_index) {
+    getArrayLayerIndex(layerIndex) {
         for (let i = 0; i < this.layers.length; i++) {
-            if (this.layers[i].index == layer_index) return i;
+            if (this.layers[i].index == layerIndex) return i;
         }
     }
 
-    get_layer(layer_index) {
-        return this.layers[this.get_array_layer_index(layer_index)];
+    getLayer(layerIndex) {
+        return this.layers[this.getArrayLayerIndex(layerIndex)];
     }
 
-    get_selected_layer() {
-        if (this.selected_layer == null && this.layers.length > 0) {
-            this.selected_layer = this.layers[0].index;
+    getSelectedLayer() {
+        if (this.selectedLayer == null && this.layers.length > 0) {
+            this.selectedLayer = this.layers[0].index;
             this.layers[0].onselect();
         }
-        return this.get_layer(this.selected_layer);
+        return this.getLayer(this.selectedLayer);
     }
 
-    add_geojson_from_url(geojson_url, replace=false) {
+    addGeojsonFromUrl(geojsonUrl, replace=false) {
         var self = this;
-        fetch(geojson_url).then(res => res.json()).then(geojson_data => {
-            self.get_selected_layer().add_features(geojson_data, replace);
+        fetch(geojsonUrl).then(res => res.json()).then(geojsonData => {
+            self.getSelectedLayer().addFeatures(geojsonData, replace);
         });
     }
 
-    add_geojson_from_data(geojson_data, replace=false) {
-        this.get_selected_layer().add_features(geojson_data, replace);
+    addGeojsonFromData(geojsonData, replace=false) {
+        this.getSelectedLayer().addFeatures(geojsonData, replace);
     }
 
-    select_layer(layer_index) {
-        if (this.selected_layer != null) {
-            this.get_layer(this.selected_layer).onunselect();
+    selectLayer(layerIndex) {
+        if (this.selectedLayer != null) {
+            this.getLayer(this.selectedLayer).onUnselect();
         }
-        this.selected_layer = layer_index;
-        this.get_layer(this.selected_layer).onselect();
+        this.selectedLayer = layerIndex;
+        this.getLayer(this.selectedLayer).onSelect();
     }
 
-    delete_layer(layer_index) {
+    deleteLayer(layerIndex) {
         if (this.readonly) return;
-        this.get_layer(layer_index).delete();
-        this.layers.splice(this.get_array_layer_index(layer_index), 1);
-        if (this.selected_layer == layer_index) {
-            this.selected_layer = null;
+        this.getLayer(layerIndex).delete();
+        this.layers.splice(this.getArrayLayerIndex(layerIndex), 1);
+        if (this.selectedLayer == layerIndex) {
+            this.selectedLayer = null;
         }
-        this.onchange("delete-layer");
+        this.onChange("delete-layer");
     }
 
-    add_feature_on_commit(el) {
+    addFeatureOnCommit(el) {
         var self = this;
         el.addEventListener("editable:drawing:commit", (event) => {
-            self.get_selected_layer().add_feature_from_map_element(el);
+            self.getSelectedLayer().addFeatureFromMapElement(el);
         });
     }
 
-    start_marker() {
+    startMarker() {
         if (this.readonly) return;
-        this.add_feature_on_commit(this.leaflet_map.editTools.startMarker());
+        this.addFeatureOnCommit(this.leafletMap.editTools.startMarker());
     }
 
-    start_polyline() {
+    startPolyline() {
         if (this.readonly) return;
-        this.add_feature_on_commit(this.leaflet_map.editTools.startPolyline());
+        this.addFeatureOnCommit(this.leafletMap.editTools.startPolyline());
     }
 
-    start_polygon() {
+    startPolygon() {
         if (this.readonly) return;
-        this.add_feature_on_commit(this.leaflet_map.editTools.startPolygon());
+        this.addFeatureOnCommit(this.leafletMap.editTools.startPolygon());
     }
 
-    toggle_edition() {
+    toggleEdition() {
         if (this.readonly) return;
         this.editing = !this.editing;
         if (this.editing) {
@@ -1329,84 +1314,71 @@ class Map {
             this.layers.forEach(layer => {
                 layer.disableEdit();
             });
-            this.onchange("edit-feature");
+            this.onChange("edit-feature");
         }
     }
 
-    onchange(change) {
+    onChange(change) {
         if (this.readonly) return;
         console.log("Change:", change);
-        if (this.button_save != null) {
-            this.button_save.removeAttribute("disabled");
+        if (this.buttonSave != null) {
+            this.buttonSave.removeAttribute("disabled");
         }
     }
 
-    open_import_dialog() {
+    openImportDialog() {
         if (this.readonly) return;
         new ImportGeojsonDialog(this).open();
     }
 
-    open_layer_style_dialog() {
+    openLayerStyleDialog() {
         if (this.readonly) return;
         new LayerStyleDialog(this).open();
     }
 
-    to_geojson() {
-        let layer_array = [];
+    toGeojson() {
+        let layerArray = [];
         this.layers.forEach(layer => {
-            layer_array.push(layer.to_geojson());
+            layerArray.push(layer.toGeojson());
         });
-        return layer_array;
+        return layerArray;
     }
 
-    set_title(new_title) {
+    setTitle(newTitle) {
         if (this.readonly) return;
-        this.title = new_title;
-        this.onchange("edit-map");
+        this.title = newTitle;
+        this.onChange("edit-map");
     }
 
     export() {
-        let geojson_object = this.to_geojson();
-        let config_object = {
-            provider_index: this.provider_index,
+        let geojsonObject = this.toGeojson();
+        let configObject = {
+            providerIndex: this.providerIndex,
         }
         return {
             title: this.title,
-            geojson: JSON.stringify(geojson_object),
-            config: JSON.stringify(config_object)
+            geojson: JSON.stringify(geojsonObject),
+            config: JSON.stringify(configObject)
         };
     }
 
-    save_data() {
+    saveData() {
         if (this.readonly) return;
-        let save_form_data = new FormData();
-        save_form_data.set("csrfmiddlewaretoken", CSRF_TOKEN);
-        save_form_data.set("mid", this.mid);
-        let map_export = this.export();
-        save_form_data.set("title", map_export.title);
-        save_form_data.set("geojson", map_export.geojson);
-        save_form_data.set("config", map_export.config);
-        fetch(URL_API + "?action=save-map", {
-            method: "post",
-            body: save_form_data
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toast("Saved!", 600);
-                    if (this.button_save != null) {
-                        this.button_save.setAttribute("disabled", true);
-                    }
-                } else {
-                    toast("An error occured", 600);
+        let mapExport = this.export();
+        var self = this;
+        fetchApiPost("save-map", 
+            {
+                mid: this.mid,
+                "title": mapExport.title,
+                "geojson": mapExport.geojson,
+                "config": mapExport.config
+            }, () => {
+                toast("Saved!", 600);
+                if (self.buttonSave != null) {
+                    self.buttonSave.setAttribute("disabled", true);
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                toast("An error occured", 600);
-            });
+        });
     }
-
 }
 
 
@@ -1421,10 +1393,10 @@ class Dialog {
     open() {
         var self = this;
         document.querySelectorAll(".dialog").forEach(remove);
-        this.element = create(document.body, "div", ["dialog"]);
-        this.overlay = create(this.element, "span", ["dialog-overlay"]);
+        this.element = create(document.body, "div", "dialog");
+        this.overlay = create(this.element, "span", "dialog-overlay");
         this.overlay.addEventListener("click", () => { self.close(); });
-        this.container = create(this.element, "div", ["dialog-container"]);
+        this.container = create(this.element, "div", "dialog-container");
     }
 
     close() {
@@ -1444,10 +1416,10 @@ class ImportGeojsonDialog extends Dialog {
     open() {
         var self = this;
         super.open();
-        let title = create(this.container, "div", ["dialog-title"]);
+        let title = create(this.container, "div", "dialog-title");
         title.textContent = "Import GeoJson";
         let form = create(this.container, "form");
-        let input = create(form, "input", ["form-input", "my-2"]);
+        let input = create(form, "input", "form-input");
         input.type = "file";
         input.accept = ".json, .geojson";
         input.required = true;
@@ -1459,17 +1431,17 @@ class ImportGeojsonDialog extends Dialog {
             }
             self.close();
         });
-        let import_add = create(form, "input", ["btn", "mr-1"]);
-        import_add.type = "submit";
-        import_add.name = "add";
-        import_add.value = "Add";
-        let import_replace = create(form, "input", ["btn", "mr-1"]);
-        import_replace.type = "submit";
-        import_replace.name = "replace";
-        import_replace.value = "Replace";
-        let cancel_button = create(form, "button", ["btn"]);
-        cancel_button.textContent = "Cancel";
-        cancel_button.addEventListener("click", (event) => {
+        let importAdd = create(form, "input");
+        importAdd.type = "submit";
+        importAdd.name = "add";
+        importAdd.value = "Add";
+        let importReplace = create(form, "input");
+        importReplace.type = "submit";
+        importReplace.name = "replace";
+        importReplace.value = "Replace";
+        let cancelButton = create(form, "button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopPropagation();
             self.close();
@@ -1477,11 +1449,6 @@ class ImportGeojsonDialog extends Dialog {
         });
     }
 
-}
-
-
-function or_default(value, default_) {
-    return value == null ? default_ : value;
 }
 
 
@@ -1495,64 +1462,64 @@ class LayerStyleDialog extends Dialog {
     open() {
         var self = this;
         super.open();
-        let title = create(this.container, "div", ["dialog-title"]);
+        let title = create(this.container, "div", "dialog-title");
         title.textContent = "Edit Layer Style";
-        let form = create(this.container, "form", ["row"]);
+        let form = create(this.container, "form", "row");
         form.style.flexDirection = "column";
-        let layer = this.map.get_selected_layer();
+        let layer = this.map.getSelectedLayer();
 
         create(form, "span", ["feature-style-label"]).textContent = "Stroke color";
-        let stroke_color_input = create(form, "input", ["feature-style-input", "form-input"]);
-        stroke_color_input.type = "color";
-        stroke_color_input.value = or_default(layer.most_common_property_value("strokeColor"), DEFAULT_STROKE_COLOR);
+        let strokeColorInput = create(form, "input", "feature-style-input form-input");
+        strokeColorInput.type = "color";
+        strokeColorInput.value = orDefault(layer.most_common_property_value("strokeColor"), DEFAULT_STROKE_COLOR);
         
         create(form, "span", ["feature-style-label"]).textContent = "Stroke width";
-        let stroke_width_input = create(form, "input",  ["feature-style-input", "form-input"]);
-        stroke_width_input.type = "range";
-        stroke_width_input.min = "0";
-        stroke_width_input.max = "10";
-        stroke_width_input.step = "0.1";
-        stroke_width_input.value = or_default(layer.most_common_property_value("strokeWidth"), DEFAULT_STROKE_WIDTH);
+        let strokeWidthInput = create(form, "input",  "feature-style-input form-input");
+        strokeWidthInput.type = "range";
+        strokeWidthInput.min = "0";
+        strokeWidthInput.max = "10";
+        strokeWidthInput.step = "0.1";
+        strokeWidthInput.value = orDefault(layer.most_common_property_value("strokeWidth"), DEFAULT_STROKE_WIDTH);
 
         create(form, "span", ["feature-style-label"]).textContent = "Fill color";
-        let fill_color_input = create(form, "input", ["feature-style-input", "form-input"]);
-        fill_color_input.type = "color";
-        fill_color_input.value = or_default(layer.most_common_property_value("fillColor"), DEFAULT_FILL_COLOR);
+        let fillColorInput = create(form, "input", "feature-style-input form-input");
+        fillColorInput.type = "color";
+        fillColorInput.value = orDefault(layer.most_common_property_value("fillColor"), DEFAULT_FILL_COLOR);
 
         create(form, "span", ["feature-style-label"]).textContent = "Fill opacity";
-        let fill_opacity_input = create(form, "input", ["feature-style-input", "form-input"]);
-        fill_opacity_input.type = "range";
-        fill_opacity_input.min = "0";
-        fill_opacity_input.max = "1";
-        fill_opacity_input.step = "0.01";
-        fill_opacity_input.value = or_default(layer.most_common_property_value("fillOpacity"), DEFAULT_FILL_OPACITY);
+        let fillOpacityInput = create(form, "input", "feature-style-input form-input");
+        fillOpacityInput.type = "range";
+        fillOpacityInput.min = "0";
+        fillOpacityInput.max = "1";
+        fillOpacityInput.step = "0.01";
+        fillOpacityInput.value = orDefault(layer.most_common_property_value("fillOpacity"), DEFAULT_FILL_OPACITY);
 
         form.addEventListener("submit", (event) => {
             event.preventDefault();
-            let stroke_color = stroke_color_input.value;
-            let stroke_width = stroke_width_input.value;
-            let fill_color = fill_color_input.value;
-            let fill_opacity = fill_opacity_input.value;
+            let strokeColor = strokeColorInput.value;
+            let strokeWidth = strokeWidthInput.value;
+            let fillColor = fillColorInput.value;
+            let fillOpacity = fillOpacityInput.value;
             layer.features.forEach(f => {
-                f.properties.strokeColor = stroke_color;
-                f.properties.strokeWidth = stroke_width;
-                f.properties.fillColor = fill_color;
-                f.properties.fillOpacity = fill_opacity;
-                f.set_style();
+                f.properties.strokeColor = strokeColor;
+                f.properties.strokeWidth = strokeWidth;
+                f.properties.fillColor = fillColor;
+                f.properties.fillOpacity = fillOpacity;
+                f.setStyle();
             });
-            layer.onchange("edit-layer");
+            layer.onChange("edit-layer");
             self.close();
         });
 
-        let buttons = create(form, "div", ["mt-2"]);
+        let buttons = create(form, "div");
 
-        let save_button = create(buttons, "input", ["btn", "mr-1"]);
-        save_button.type = "submit";
-        save_button.name = "save";
-        save_button.value = "Save";
-        let cancel_button = create(buttons, "button", ["btn"]);
-        cancel_button.textContent = "Cancel";
-        cancel_button.addEventListener("click", (event) => {
+        let saveButton = create(buttons, "input");
+        saveButton.type = "submit";
+        saveButton.name = "save";
+        saveButton.value = "Save";
+        let cancelButton = create(buttons, "button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopPropagation();
             self.close();
@@ -1565,37 +1532,37 @@ class LayerStyleDialog extends Dialog {
 
 class MoveFeatureDialog extends Dialog {
 
-    constructor(map, src_layer_index, feature_index) {
+    constructor(map, srcLayerIndex, featureIndex) {
         super();
         this.map = map;
-        this.src_layer_index = src_layer_index;
-        this.feature_index = feature_index;
+        this.srcLayerIndex = srcLayerIndex;
+        this.featureIndex = featureIndex;
     }
 
     open() {
         var self = this;
         super.open();
-        let title = create(this.container, "div", ["dialog-title"]);
+        let title = create(this.container, "div", "dialog-title");
         title.textContent = "Move Feature to another Layer";
-        let form = create(this.container, "form", ["row"]);
+        let form = create(this.container, "form", "row");
         form.style.flexDirection = "column";
-        let group = create(form, "div", ["form-group"]);
-        create(group, "label", ["form-label"]).textContent = "Destination Layer";
-        let select = create(group, "select", ["form-select"]);
+        let group = create(form, "div", "form-group");
+        create(group, "label", "form-label").textContent = "Destination Layer";
+        let select = create(group, "select", "form-select");
         this.map.layers.forEach(layer => {
             let option = create(select, "option");
             option.value = layer.index;
-            if (layer.index == this.src_layer_index) {
+            if (layer.index == this.srcLayerIndex) {
                 option.selected = true;
             }
             option.textContent = layer.label;
         });
-        let buttons = create(form, "div", ["row"]);
-        let move_button = create(buttons, "button", ["btn", "btn-primary", "mr-1"]);
-        move_button.textContent = "Move";
-        let cancel_button = create(buttons, "button", ["btn"]);
-        cancel_button.textContent = "Cancel";
-        cancel_button.addEventListener("click", (event) => {
+        let buttons = create(form, "div", "row");
+        let moveButton = create(buttons, "button");
+        moveButton.textContent = "Move";
+        let cancelButton = create(buttons, "button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopPropagation();
             self.close();
@@ -1603,7 +1570,7 @@ class MoveFeatureDialog extends Dialog {
         });
         form.addEventListener("submit", (event) => {
             event.preventDefault();
-            let src = self.src_layer_index;
+            let src = self.srcLayerIndex;
             let dst = null;
             select.querySelectorAll("option").forEach(option => {
                 if (option.selected) {
@@ -1612,43 +1579,43 @@ class MoveFeatureDialog extends Dialog {
             });
             self.close();
             if (src == dst || dst == null) return;
-            let src_layer = self.map.get_layer(src);
-            let dst_layer = self.map.get_layer(dst);
-            dst_layer.add_feature(src_layer.get_feature(self.feature_index).to_geojson());
-            src_layer.delete_feature(self.feature_index);
+            let srcLayer = self.map.get_layer(src);
+            let dstLayer = self.map.get_layer(dst);
+            dstLayer.add_feature(srcLayer.get_feature(self.featureIndex).toGeojson());
+            srcLayer.deleteFeature(self.featureIndex);
         });
     }
 
 }
 
 
-function initialize_map(map_seed, readonly) {
+function initializeMap(mapSeed, readonly) {
     var map = null;
-    let map_id = map_seed.getAttribute("map-id");
-    fetch(URL_API + `?action=map&mid=${map_id}`, {
+    let mapId = mapSeed.getAttribute("map-id");
+    fetch(URL_API + `?action=map&mid=${mapId}`, {
         method: "get",
         })
         .then(res => res.json())
-        .then(map_data => {
+        .then(mapData => {
             // sheet = new Sheet(sheet_id, sheet_seed, readonly);
-            map = new Map(map_id, map_seed, readonly);
+            map = new Map(mapId, mapSeed, readonly);
             let geojson = null;
-            if (map_data.geojson != null && map_data.geojson.trim() != "") {
-                geojson = JSON.parse(map_data.geojson);
+            if (mapData.geojson != null && mapData.geojson.trim() != "") {
+                geojson = JSON.parse(mapData.geojson);
             }
             let config = {};
-            if (map_data.config != null && map_data.config.trim() != "") {
-                config = JSON.parse(map_data.config);
+            if (mapData.config != null && mapData.config.trim() != "") {
+                config = JSON.parse(mapData.config);
             }
-            config.title = map_data.title;
+            config.title = mapData.title;
             map.setup(geojson, config);
         });
 
 }
 
 
-function initialize_maps(readonly) {
-    document.querySelectorAll(".map-seed").forEach(map_seed => {
-        initialize_map(map_seed, readonly);
+function initializeMaps(readonly) {
+    document.querySelectorAll(".map-seed").forEach(mapSeed => {
+        initializeMap(mapSeed, readonly);
     });
 }
