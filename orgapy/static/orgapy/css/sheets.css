@@ -15,6 +15,20 @@
     background: #101010;
 }
 
+.sheet-embedded {
+    position: unset;
+    border: 1px solid #555;
+    max-height: 500px;
+}
+
+.sheet-embedded .sheet-head {
+    top: 0;
+}
+
+.sheet-embedded .sheet-body {
+    padding-top: 0;
+}
+
 .sheet-title {
     color: white;
 }

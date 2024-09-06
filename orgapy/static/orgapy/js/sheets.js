@@ -2591,6 +2591,8 @@ class Sheet {
 
         this.toolbar = this.container.querySelector(".sheet-toolbar");
 
+        if (this.toolbar == null) return;
+
         this.toolbarButtonSave = this.toolbar.querySelector(".sheet-button-save");
         this.toolbarButtonSave.setAttribute("disabled", true);
         this.toolbarButtonSave.addEventListener("click", () => {
