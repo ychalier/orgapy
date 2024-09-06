@@ -298,47 +298,42 @@ button:focus {
  * Menu
  */
 
+.contextmenu {
+    position: fixed;
+}
+
 .menu {
-    background: black;
-    border-radius: .1rem;
-    box-shadow: 0 .05rem .2rem rgba(48, 53, 66, 0.3);
+    display: flex;
+    flex-direction: column;
+    background: #303030;
+    border: 1px solid #555;
+    border-radius: .2rem;
+    overflow: hidden;
+    gap: .2rem;
+    box-shadow: 0 0 4px black;
+    padding: .4rem;
     list-style: none;
     margin: 0;
-    min-width: 180px;
-    padding: .4rem;
-    border: 1px solid #8ed2ff;
 }
 
-.menu .menu-item {
-    margin-top: 0;
-    padding: 0 .4rem;
-    position: relative;
-    text-decoration: none;
-}
-
-.menu .menu-item>a {
-    border-radius: .1rem;
-    color: inherit;
-    display: block;
-    margin: 0 -.4rem;
-    padding: .2rem .4rem;
-    text-decoration: none;
+.menu-item {
     cursor: pointer;
+    padding: .4rem;
+    border-radius: .2rem;
 }
 
-
-.menu .menu-item>a:active,
-.menu .menu-item>a.active,
-.menu .menu-item>a:focus,
-.menu .menu-item>a:hover {
-    background: #8ed2ff;
-    color: black;
+.menu-item:hover {
+    background: #888;
 }
 
-.menu .menu-item+.menu-item {
-    margin-top: .2rem;
+.menu-item * {
+    white-space: nowrap;
 }
 
+.menu-item a {
+    color: inherit;
+    text-decoration: none;
+}
 
 /**
  * Dropdown

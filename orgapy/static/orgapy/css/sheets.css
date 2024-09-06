@@ -1,7 +1,7 @@
 * {
     --sheet-color-background: #101010;
     --sheet-color-border: #555;
-    --sheet-color-head-background: #303030;
+    --sheet-color-head-background: #202020;
     --sheet-color-head-hover-background: hsl(0, 0%, 0%);
     --sheet-color-selected-background: #103a57;
     --sheet-color-selected-border: #8ed2ff;
@@ -27,7 +27,7 @@
     display: flex;
     height: 32px;
     width: 100%;
-    background: #303030;
+    background: #202020;
     line-height: 32px;
     gap: .4rem;
     padding-left: .4rem;
@@ -63,8 +63,8 @@
     text-align: left;
 }
 
-.sheet-toolbar a.button-inline:hover,
-.sheet-toolbar button:hover {
+.sheet-toolbar-buttons > a.button-inline:hover,
+.sheet-toolbar-buttons > button:hover {
     background-color: #303030;
     border-color: #555;
 }
@@ -115,24 +115,6 @@
     user-select: none;
 }
 
-/*
-.sheet-row:first-of-type {
-    border-top: 1px solid var(--sheet-color-border);
-}
-
-.sheet-row:last-of-type {
-    border-bottom: 1px solid var(--sheet-color-border);
-}
-
-.sheet-cell:first-of-type {
-    border-left-width: 2px;
-}
-
-.sheet-cell:last-of-type {
-    border-right-width: 2px;
-}
-*/
-
 .sheet-cell-content {
     position: absolute;
     top: 50%;
@@ -168,6 +150,7 @@
     background: var(--sheet-color-selected-background) !important;
 }
 
+/*
 .selected-top {
     border-top-color: var(--sheet-color-selected-border);
 }
@@ -178,12 +161,12 @@
 
 .selected-bottom {
     border-bottom-color: var(--sheet-color-selected-border);
-    /*border-bottom-width: 2px;*/
 }
 
 .selected-right {
     border-right-color: var(--sheet-color-selected-border);
 }
+*/
 
 .sheet-cell-input {
     position: absolute;

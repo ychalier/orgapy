@@ -297,31 +297,6 @@
     background: #22272b;
 }
 
-.contextmenu {
-    background: #101010;
-    position: fixed;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid #8ed2ff;
-    border-radius: .2rem;
-    overflow: hidden;
-}
-
-.contextmenu-entry {
-    padding: .4rem;
-    cursor: pointer;
-    border-bottom: 1px solid #375264;
-}
-
-.contextmenu-entry:hover {
-    background: #8ed2ff;
-    color: black;
-}
-
-.contextmenu-entry:last-child {
-    border-bottom: none;
-}
-
 .glimpse {
     min-height: .8rem;
 }

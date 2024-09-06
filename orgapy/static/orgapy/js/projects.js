@@ -57,7 +57,7 @@ function clearContextMenus() {
 
 function addContextMenuOption(menu, label, callback) {
     let option = menu.appendChild(document.createElement("span"));
-    option.classList.add("contextmenu-entry");
+    option.classList.add("menu-item");
     option.textContent = label;
     option.addEventListener("click", callback);
 }
@@ -653,10 +653,8 @@ class Project {
 
     inflateContextMenu(event) {
         clearContextMenus();
-        let menu = document.createElement("div");
-        menu.classList.add("contextmenu");
+        let menu = create(document.body, "div", "contextmenu menu");
         this.inflateContextMenuItems(menu);
-        document.body.appendChild(menu);
         let bounds = menu.getBoundingClientRect();
         menu.style.left = Math.min(event.clientX, window.innerWidth - (bounds.width + 8)) + "px";
         menu.style.top = Math.min(event.clientY, window.innerHeight - (bounds.height + 8)) + "px";
