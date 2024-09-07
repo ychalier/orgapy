@@ -874,6 +874,7 @@ class Layer {
                 event.stopPropagation();
                 self.map.deleteLayer(self.index);
             });
+            bindDropdown(buttonsDropdown);
         }
 
         /*

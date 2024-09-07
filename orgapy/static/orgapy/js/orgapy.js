@@ -217,12 +217,36 @@ function toast(message, duration) {
     }, duration);
 }
 
+function bindDropdown(dropdown) {
+
+    const toggle = dropdown.querySelector(".dropdown-toggle");
+    const menu = dropdown.querySelector(".menu");    
+
+    toggle.addEventListener("focusin", () => {
+        const toggleBounds = toggle.getBoundingClientRect();
+        menu.style.position = "absolute";
+        menu.style.zIndex = 9999;
+        menu.style.top = toggleBounds.bottom + "px";
+        const baseLeft = ((toggleBounds.left + toggleBounds.right) / 2);
+        const menuBounds = menu.getBoundingClientRect();
+        const maxLeft = window.innerWidth - menuBounds.width;
+        menu.style.left = Math.max(0, Math.min(baseLeft, maxLeft)) + "px";
+        document.body.prepend(menu);
+    });
+
+    toggle.addEventListener("focusout", () => {
+        dropdown.appendChild(menu);
+    });
+
+}
+
+
 /*******************************************************************************
  * OLD STUF
  *******************************************************************************
  */
 
- window.addEventListener("load", () => {
+window.addEventListener("load", () => {
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {
             event.preventDefault();
