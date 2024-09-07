@@ -115,6 +115,7 @@ class PanelControl extends L.Control {
     constructor(map) {
         super({position: "topleft"});
         this.map = map;
+        this.mapTitleContainer = null;
         this.mapTitle = null;
         this.panelContainer = null;
         this.layersContainer = null;
@@ -124,7 +125,7 @@ class PanelControl extends L.Control {
     inflateMapTitle() {
         var self = this;
         if (this.mapTitle == null) {
-            this.mapTitle = create(this.panelContainer, "div", "map-title");
+            this.mapTitle = create(this.mapTitleContainer, "div", "map-title");
         } else {
             let foo = create(null, "div", "map-title");
             this.mapTitle.replaceWith(foo);
@@ -156,6 +157,12 @@ class PanelControl extends L.Control {
 
     inflatePanel(map) {
         var self = this;
+
+        this.mapTitleContainer = create(this.panelContainer, "div", "map-title-container");
+        const mapsButton = create(this.mapTitleContainer, "a", "link-hidden");
+        mapsButton.href = "../maps";
+        create(mapsButton, "i", "ri-map-2-line");
+
         this.inflateMapTitle();
 
         if (!this.map.readonly) {
