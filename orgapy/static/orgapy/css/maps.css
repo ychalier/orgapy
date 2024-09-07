@@ -24,6 +24,20 @@ body.fullscreen {
     line-height: 1;
 }
 
+.leaflet-control-container {
+    height: 100%;
+}
+
+.leaflet-top.leaflet-left {
+    height: 100%;
+}
+
+.map-control {
+    height: 100%;
+    max-height: calc(100% - .8rem);
+    overflow-y: auto;
+}
+
 /* Form */
 
 .form-inline {
@@ -63,8 +77,15 @@ body.fullscreen {
 
 .map-toolbar {
     display: flex;
-    flex-direction: column;
-    gap: .2rem;
+    gap: .1rem;
+}
+
+.map-provider-select {
+    margin: .2rem 0 .4rem 0;
+}
+
+.map-coordinates {
+    color: #888;
 }
 
 /* Panel */
@@ -81,7 +102,6 @@ body.fullscreen {
     display: block;
     font-weight: bold;
     padding: .4rem;
-    margin-bottom: .4rem;
     height: 1.8rem;
     border: none;
 }
@@ -89,22 +109,27 @@ body.fullscreen {
 .map-layers {
     display: flex;
     flex-direction: column;
-    gap: .2rem;
+    margin-top: .2rem;
     margin-bottom: .4rem;
 }
 
 .map-layer {
     padding: .4rem;
     border-radius: .2rem;
+    margin-bottom: .2rem;
 }
 
 .map-layer.selected {
-    background: #303030;
+    background: #1b2931;
 }
 
 .map-layer summary {
     width: 100%;
-    margin-bottom: .2rem;
+    user-select: none;
+}
+
+.map-layer summary > * {
+    height: 19px;
 }
 
 .map-layer summary input[type=text] {
@@ -113,11 +138,13 @@ body.fullscreen {
 
 .map-layer summary .dropdown {
     float: right;
+    margin-right: .2rem;
 }
 
 .map-layer summary input[type=checkbox] {
     float: right;
     width: fit-content;
+    margin: 0;
 }
 
 .map-layer-title {
@@ -132,7 +159,7 @@ body.fullscreen {
 .map-features {
     padding: 0;
     list-style: none;
-    margin: 0;
+    margin: .2rem 0 0 0;
     line-height: 1.6 !important;
 }
 
@@ -144,6 +171,7 @@ body.fullscreen {
     text-overflow: ellipsis;
     white-space: nowrap;
     line-height: 1.6 !important;
+    user-select: none;
     
 }
 

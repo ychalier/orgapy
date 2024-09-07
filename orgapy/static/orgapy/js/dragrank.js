@@ -1,6 +1,6 @@
 var DRAG_RANK_LISTENERS = [];
 
-function dragrankClear(dragid=null) {
+function dragRankClear(dragid=null) {
     let indicesToRemove = [];
     DRAG_RANK_LISTENERS.forEach((listener, i) => {
         if (dragid == null || listener.dragid == dragid) {
@@ -13,9 +13,8 @@ function dragrankClear(dragid=null) {
     }
 }
 
-function dragrank(container, elementSelector, callback, options={}) {
+function dragRank(container, elementSelector, callback, options={}) {
     
-    if (!("zIndex" in options)) options.zIndex = 0;
     if (!("transition" in options)) options.transition = ".3s ease";
     if (!("dragid" in options)) options.dragid = "default";
     if (!("dragAllowed" in options)) options.dragAllowed = () => { return true; };
@@ -40,6 +39,7 @@ function dragrank(container, elementSelector, callback, options={}) {
         for (let i = 0; i < elements.length; i++) {
             let j = orderingReversed[i];
             if (dragging == null || dragging.i != j) {
+                elements[j].style.zIndex = elements.length - i - 1;
                 elements[j].style.top = (y - tops[j]) + "px";
             }
             y += heights[j];
@@ -59,7 +59,6 @@ function dragrank(container, elementSelector, callback, options={}) {
             ordering.push(i);
             element.style.cursor = "grab";
             element.style.position = "relative";
-            element.style.zIndex = options.zIndex;
             element.style.transition = options.transition;
             element.style.top = 0;
             element.addEventListener("mousedown", (event) => {
@@ -89,7 +88,7 @@ function dragrank(container, elementSelector, callback, options={}) {
                         top: parseFloat(element.style.top.replace("px", "")),
                     };
                     element.style.cursor = "grabbing";
-                    element.style.zIndex = options.zIndex + 1;
+                    element.style.zIndex = elements.length + 1;
                     element.style.transition = "none";
                     return false;
                 }
@@ -173,12 +172,11 @@ function dragrank(container, elementSelector, callback, options={}) {
         resetPositions();
     }
 
-    function on_mouseup(event) {
+    function onMouseUp(event) {
         if (dragging == null) return;
         event.stopPropagation();
         dragging.e.style.left = 0;
         dragging.e.style.cursor = "grab";
-        dragging.e.style.zIndex = options.zIndex;
         dragging.e.style.transition = options.transition;
         dragging = null;
         resetPositions();
@@ -199,17 +197,17 @@ function dragrank(container, elementSelector, callback, options={}) {
 
     document.addEventListener("mousemove", update);
     document.addEventListener("wheel", update);
-    document.addEventListener("mouseup", on_mouseup);
+    document.addEventListener("mouseup", onMouseUp);
 
     DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "mousemove", handler: update});
     DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "wheel", handler: update});
-    DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "mouseup", handler: on_mouseup});
+    DRAG_RANK_LISTENERS.push({dragid: options.dragid, type: "mouseup", handler: onMouseUp});
 
     resetPositions();
 
 }
 
-function dragrankReorder(array, permutation) {
+function dragRankReorder(array, permutation) {
     let cpy = [...array];
     for (let i = 0; i < array.length; i++) {
         array[permutation[i]] = cpy[i];

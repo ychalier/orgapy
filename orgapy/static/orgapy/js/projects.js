@@ -422,8 +422,8 @@ class Project {
                 return false;
             });
         });
-        dragrank(checklist, ".project-checklist-item", (ordering, permutation) => {
-            dragrankReorder(self.checklistItems, permutation);
+        dragRank(checklist, ".project-checklist-item", (ordering, permutation) => {
+            dragRankReorder(self.checklistItems, permutation);
             self.concatChecklist();
             self.update();
         }, {
@@ -873,7 +873,7 @@ function saveProjectRanks(ordering) {
 }
 
 function inflateProjects() {
-    dragrankClear();
+    dragRankClear();
     let container = document.getElementById("projects");
     container.innerHTML = "";
     let projectIndices = [...Object.keys(projects)];
@@ -881,7 +881,7 @@ function inflateProjects() {
     projectIndices.forEach(projectId => {
         container.appendChild(projects[projectId].create());
     });
-    dragrank(container, ".project", (ordering, permutation) => {
+    dragRank(container, ".project", (ordering, permutation) => {
         setTimeout(() => {saveProjectRanks(ordering)}, 300);
     }, {
         dragAllowed: (element) => { return !element.classList.contains("editing"); }
