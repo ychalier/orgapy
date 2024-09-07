@@ -234,8 +234,11 @@ function bindDropdown(dropdown) {
         document.body.prepend(menu);
     });
 
-    toggle.addEventListener("focusout", () => {
+    toggle.addEventListener("focusout", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
         dropdown.appendChild(menu);
+        return false;
     });
 
 }

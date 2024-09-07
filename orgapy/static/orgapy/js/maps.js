@@ -431,14 +431,14 @@ class Feature {
         }
         if (this.layer.map.readonly) return;
         let buttons = create(wrapper, "div", "feature-buttons");
-        let buttonEdit = create(buttons, "span");
+        let buttonEdit = create(buttons, "button");
         buttonEdit.innerHTML = `<i class="ri-pencil-fill"></i>`;
         buttonEdit.title = "Edit";
         buttonEdit.addEventListener("click", (event) => {
             event.stopPropagation();
             self.inflatePopupEdit(container);
         });
-        let buttonDelete = create(buttons, "span");
+        let buttonDelete = create(buttons, "button");
         buttonDelete.innerHTML = `<i class="ri-delete-bin-line"></i>`;
         buttonDelete.title = "Delete";
         buttonDelete.addEventListener("click", (event) => {
@@ -470,7 +470,7 @@ class Feature {
             inputValue.value = this.properties[property];
             inputsValues[property] = inputValue;
             let cellButtons = create(tr, "div", "feature-property-buttons");
-            let deleteButton = create(cellButtons, "span");
+            let deleteButton = create(cellButtons, "button");
             deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i>`;
             deleteButton.addEventListener("click", (event) => {
                 event.stopPropagation();
@@ -524,8 +524,8 @@ class Feature {
             }
             self.setStyle(customStyle);
         });
-        let buttons = create(wrapper, "div");
-        let buttonSave = create(buttons, "span");
+        let buttons = create(wrapper, "div", "row");
+        let buttonSave = create(buttons, "button");
         buttonSave.innerHTML = `<i class="ri-save-line"></i>`
         buttonSave.title = "Save";
         buttonSave.addEventListener("click", (event) => {
@@ -541,24 +541,24 @@ class Feature {
             self.inflate();
             self.onChange("edit-feature");
         });
-        let buttonAdd = create(buttons, "span");
+        let buttonAdd = create(buttons, "button");
         buttonAdd.innerHTML = `<i class="ri-add-line"></i>`
-        buttonAdd.title = "Add";
+        buttonAdd.title = "Add property";
         buttonAdd.addEventListener("click", (event) => {
             event.stopPropagation();
             addedPropertiesCounter++;
             let property = `Property ${addedPropertiesCounter}`;
             let tr = create(table, "div", "feature-property");
             let cellProperty = create(tr, "div", "feature-property-label");
-            let inputLabel = create(cellProperty, "input", "form-input");
+            let inputLabel = create(cellProperty, "input");
             inputLabel.value = "";
             inputsLabels[property] = inputLabel;
             let cellValue = create(tr, "div", "feature-property-value");
-            let inputValue = create(cellValue, "input", "form-input");
+            let inputValue = create(cellValue, "input");
             inputValue.value = "";
             inputsValues[property] = inputValue;
             let cellButtons = create(tr, "div", "feature-property-buttons");
-            let deleteButton = create(cellButtons, "span");
+            let deleteButton = create(cellButtons, "button");
             deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i>`;
             deleteButton.addEventListener("click", (event) => {
                 event.stopPropagation();
@@ -570,7 +570,7 @@ class Feature {
             });
             self.onChange("edit-feature");
         });
-        let buttonCancel = create(buttons, "span");
+        let buttonCancel = create(buttons, "button");
         buttonCancel.innerHTML = `<i class="ri-close-line"></i>`
         buttonCancel.title = "Cancel";
         buttonCancel.addEventListener("click", (event) => {
@@ -619,7 +619,7 @@ class Feature {
         this.mapElement.addTo(this.layer.map.leafletMap);
         this.setStyle();
         this.mapElement.bindPopup(l => {
-            let container = create();
+            const container = create();
             self.inflatePopup(container);
             return container;
         }, {minWidth: 200, maxWidth: 500});

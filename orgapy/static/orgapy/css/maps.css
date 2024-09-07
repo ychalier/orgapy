@@ -225,11 +225,28 @@ body.fullscreen {
 .leaflet-popup-content-wrapper {
     background: #101010;
     color: inherit;
+    padding: .4rem;
+    border-radius: .4rem;
+    border: 1px solid black;
+}
+
+.leaflet-popup-content {
+    margin: 0;
 }
 
 .feature-popup {
     display: flex;
     flex-direction: column;
+    font-size: 16px;
+}
+
+.feature-popup input,
+.feature-popup button {
+    background: #303030;
+}
+
+.feature-popup button:hover {
+    background: #1b2931;
 }
 
 .feature-properties {
@@ -240,7 +257,6 @@ body.fullscreen {
     overflow: auto;
 }
 
-
 .feature-property {
     display: flex;
     align-items: baseline;
@@ -250,6 +266,7 @@ body.fullscreen {
 
 .feature-property-label {
     font-weight: bold;
+    text-transform: capitalize;
 }
 
 .feature-property-label,
