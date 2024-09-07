@@ -235,10 +235,9 @@ function bindDropdown(dropdown) {
     });
 
     toggle.addEventListener("focusout", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        dropdown.appendChild(menu);
-        return false;
+        setTimeout(() => {
+            dropdown.appendChild(menu);
+        }, 100);
     });
 
 }
