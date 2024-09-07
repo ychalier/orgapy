@@ -373,6 +373,7 @@ class Feature {
 
     setStyle(customStyle=null) {
         if (this.mapElement == null) return;
+        this.layer.setVisibilityCheckboxColor();
         let style = customStyle == null ? this.properties : customStyle;
         switch(this.geometry.type) {
             case "Point":
@@ -807,6 +808,17 @@ class Layer {
         input.focus();
     }
 
+    setVisibilityCheckboxColor() {
+        let accentColor = DEFAULT_FILL_COLOR;
+        const layerStyle = this.mostCommonOrDefaultStyle();
+        if (layerStyle.fillColor != DEFAULT_FILL_COLOR) {
+            accentColor = layerStyle.fillColor;
+        } else if (layerStyle.strokeColor != DEFAULT_STROKE_COLOR) {
+            accentColor = layerStyle.strokeColor;
+        }
+        this.visibilityCheckbox.style.accentColor = accentColor;
+    }
+
     inflate() {
         var self = this;
         if (this.container == null) {
@@ -829,6 +841,8 @@ class Layer {
         this.visibilityCheckbox = create(summary, "input");
         this.visibilityCheckbox.type = "checkbox";
         this.visibilityCheckbox.checked = true;
+        this.setVisibilityCheckboxColor();
+        
         this.visibilityCheckbox.addEventListener("dblclick", (event) => {
             event.stopPropagation();
         });
