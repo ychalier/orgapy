@@ -38,6 +38,25 @@ body.fullscreen {
     overflow-y: auto;
 }
 
+.map-panel {
+    margin: 0;
+    padding: .4rem;
+    border-radius: .4rem;
+    width: 240px;
+}
+
+@media (max-width: 1000px) {
+
+    .map-control {
+        max-height: calc(50% - .8rem);
+    }
+
+    .map-panel {
+        width: calc(100vw - 1.2rem);
+    }
+
+}
+
 /* Form */
 
 .form-inline {
@@ -93,13 +112,6 @@ body.fullscreen {
 }
 
 /* Panel */
-
-.map-panel {
-    margin: 0;
-    padding: .4rem;
-    border-radius: .4rem;
-    width: 240px;
-}
 
 .map-title-container {
     display: flex;
