@@ -341,7 +341,6 @@ button:disabled:hover {
 
 .menu-item {
     cursor: pointer;
-    padding: .4rem;
     border-radius: .2rem;
 }
 
@@ -349,8 +348,10 @@ button:disabled:hover {
     background: #888;
 }
 
-.menu-item * {
+.menu-item > * {
+    display: block;
     white-space: nowrap;
+    padding: .2rem .4rem !important;
 }
 
 .menu-item a {
@@ -361,7 +362,9 @@ button:disabled:hover {
 .menu-item button {
     border: none !important;
     background: none !important;
-    padding: 0 !important;
+    width: 100%;
+    height: 100%;
+    text-align: left;
 }
 
 /**

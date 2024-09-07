@@ -1,8 +1,7 @@
 const PROVIDERS = [
     {
         label: "Open Street Map",
-        // tiles: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", TODO: this is just for debugging without querying the site multiple times
-        tiles: "http://localhost:8000/{z}/{x}/{y}.png",
+        tiles: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         options: {
             maxZoom: 19,
             attribution: `&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors`,
@@ -872,7 +871,9 @@ class Layer {
             deleteButton.title = "Delete";
             deleteButton.addEventListener("click", (event) => {
                 event.stopPropagation();
-                self.map.deleteLayer(self.index);
+                if (confirm(`Are you sure to delete "${self.label}"?`)) {
+                    self.map.deleteLayer(self.index);
+                }
             });
             bindDropdown(buttonsDropdown);
         }
@@ -1377,7 +1378,7 @@ class Dialog {
         this.element = create(document.body, "div", "dialog");
         this.overlay = create(this.element, "span", "dialog-overlay");
         this.overlay.addEventListener("click", () => { self.close(); });
-        this.container = create(this.element, "div", "dialog-container");
+        this.container = create(this.element, "div", "dialog-container card");
     }
 
     close() {
@@ -1400,7 +1401,7 @@ class ImportGeojsonDialog extends Dialog {
         let title = create(this.container, "div", "dialog-title");
         title.textContent = "Import GeoJson";
         let form = create(this.container, "form");
-        let input = create(form, "input", "form-input");
+        let input = create(create(form, "p"), "input");
         input.type = "file";
         input.accept = ".json, .geojson";
         input.required = true;
@@ -1412,15 +1413,16 @@ class ImportGeojsonDialog extends Dialog {
             }
             self.close();
         });
-        let importAdd = create(form, "input");
+        const buttonsContainer = create(form, "div", "row");
+        let importAdd = create(buttonsContainer, "input", "button button-primary");
         importAdd.type = "submit";
         importAdd.name = "add";
         importAdd.value = "Add";
-        let importReplace = create(form, "input");
+        let importReplace = create(buttonsContainer, "input", "button button-primary");
         importReplace.type = "submit";
         importReplace.name = "replace";
         importReplace.value = "Replace";
-        let cancelButton = create(form, "button");
+        let cancelButton = create(buttonsContainer, "button");
         cancelButton.textContent = "Cancel";
         cancelButton.addEventListener("click", (event) => {
             event.preventDefault();
@@ -1445,30 +1447,34 @@ class LayerStyleDialog extends Dialog {
         super.open();
         let title = create(this.container, "div", "dialog-title");
         title.textContent = "Edit Layer Style";
-        let form = create(this.container, "form", "row");
+        let form = create(this.container, "form");
         form.style.flexDirection = "column";
         let layer = this.map.getSelectedLayer();
 
-        create(form, "span", ["feature-style-label"]).textContent = "Stroke color";
-        let strokeColorInput = create(form, "input", "feature-style-input form-input");
+        const pStrokeColor = create(form, "p");
+        create(pStrokeColor, "span", ["feature-style-label"]).textContent = "Stroke color";
+        let strokeColorInput = create(pStrokeColor, "input", "feature-style-input");
         strokeColorInput.type = "color";
         strokeColorInput.value = orDefault(layer.mostCommonPropertyValue("strokeColor"), DEFAULT_STROKE_COLOR);
         
-        create(form, "span", ["feature-style-label"]).textContent = "Stroke width";
-        let strokeWidthInput = create(form, "input",  "feature-style-input form-input");
+        const pStrokeWidth = create(form, "p");
+        create(pStrokeWidth, "span", ["feature-style-label"]).textContent = "Stroke width";
+        let strokeWidthInput = create(pStrokeWidth, "input",  "feature-style-input");
         strokeWidthInput.type = "range";
         strokeWidthInput.min = "0";
         strokeWidthInput.max = "10";
         strokeWidthInput.step = "0.1";
         strokeWidthInput.value = orDefault(layer.mostCommonPropertyValue("strokeWidth"), DEFAULT_STROKE_WIDTH);
 
-        create(form, "span", ["feature-style-label"]).textContent = "Fill color";
-        let fillColorInput = create(form, "input", "feature-style-input form-input");
+        const pFillColor = create(form, "p");
+        create(pFillColor, "span", ["feature-style-label"]).textContent = "Fill color";
+        let fillColorInput = create(pFillColor, "input", "feature-style-input");
         fillColorInput.type = "color";
         fillColorInput.value = orDefault(layer.mostCommonPropertyValue("fillColor"), DEFAULT_FILL_COLOR);
 
-        create(form, "span", ["feature-style-label"]).textContent = "Fill opacity";
-        let fillOpacityInput = create(form, "input", "feature-style-input form-input");
+        const pFillOpacity = create(form, "p");
+        create(pFillOpacity, "span", ["feature-style-label"]).textContent = "Fill opacity";
+        let fillOpacityInput = create(pFillOpacity, "input", "feature-style-input");
         fillOpacityInput.type = "range";
         fillOpacityInput.min = "0";
         fillOpacityInput.max = "1";
@@ -1492,13 +1498,12 @@ class LayerStyleDialog extends Dialog {
             self.close();
         });
 
-        let buttons = create(form, "div");
-
-        let saveButton = create(buttons, "input");
+        const buttons = create(form, "div", "row");
+        const saveButton = create(buttons, "input", "button button-primary");
         saveButton.type = "submit";
         saveButton.name = "save";
         saveButton.value = "Save";
-        let cancelButton = create(buttons, "button");
+        const cancelButton = create(buttons, "button");
         cancelButton.textContent = "Cancel";
         cancelButton.addEventListener("click", (event) => {
             event.preventDefault();
@@ -1525,11 +1530,11 @@ class MoveFeatureDialog extends Dialog {
         super.open();
         let title = create(this.container, "div", "dialog-title");
         title.textContent = "Move Feature to another Layer";
-        let form = create(this.container, "form", "row");
+        let form = create(this.container, "form");
         form.style.flexDirection = "column";
-        let group = create(form, "div", "form-group");
+        let group = create(form, "p");
         create(group, "label", "form-label").textContent = "Destination Layer";
-        let select = create(group, "select", "form-select");
+        let select = create(group, "select");
         this.map.layers.forEach(layer => {
             let option = create(select, "option");
             option.value = layer.index;
@@ -1539,7 +1544,7 @@ class MoveFeatureDialog extends Dialog {
             option.textContent = layer.label;
         });
         let buttons = create(form, "div", "row");
-        let moveButton = create(buttons, "button");
+        let moveButton = create(buttons, "button", "button-primary");
         moveButton.textContent = "Move";
         let cancelButton = create(buttons, "button");
         cancelButton.textContent = "Cancel";
