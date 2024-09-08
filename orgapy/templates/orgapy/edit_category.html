@@ -6,21 +6,20 @@
 
 {% block main_content %}
 
-<h1>#{{ category.name }}</h1>
+<header class="card">
+    <h1>#{{ category.name }}</h1>
+</header>
 
-<p>{{ category.note_set.count }} note{{ category.note_set.count | pluralize }} with this tag.</p>
-
-<p>
+<div class="card">
+    <p>{{ category.note_set.count }} note{{ category.note_set.count | pluralize }} with this tag.</p>
     <form method="post" action="">
         {% csrf_token %}
-        <div class="form-group">
-            <label class="form-label" for="input-name">Name</label>
-            <input class="form-input" id="input-name" type="text" name="name" value="{{ category.name }}" placeholder="Category name" />
-        </div>
-        <button class="btn">Save</button>
+        <p>
+            <label for="input-name">Name</label>
+            <input id="input-name" type="text" name="name" value="{{ category.name }}" placeholder="Category name" />
+        </p>
+        <button>Save</button>
     </form>
-</p>
-
-{# <p><a class="btn" href="{% url 'orgapy:delete_category' cid=category.id %}">Delete</a></p> #}
+</div>
 
 {% endblock main_content %}

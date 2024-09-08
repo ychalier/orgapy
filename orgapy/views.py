@@ -315,7 +315,8 @@ def view_edit_category(request, cid):
                     category.name = new_name.lower()
                     category.save()
             return render(request, "orgapy/edit_category.html", {
-                "category": category
+                "category": category,
+                "active": "notes",
             })
     return redirect("orgapy:categories")
 
