@@ -556,11 +556,24 @@ def view_delete_sheet_group(request, sid):
 
 def view_sheet(request, sid):
     sheet = get_sheet_from_sid(sid)
+    has_permission = False
+    read_only = False
+    if request.GET.get("embed"):
+        read_only = True
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet"):
-        return render(request, "orgapy/sheet.html", { "sheet": sheet, "active": "sheets" })
+        has_permission = True
     elif sheet.public:
-        return render(request, "orgapy/sheet_public.html", { "sheet": sheet, "active": "sheets" })
-    raise PermissionDenied
+        has_permission = True
+        read_only = True
+    if not has_permission:
+        raise PermissionDenied()
+    response = render(request, "orgapy/sheet.html", {
+        "sheet": sheet,
+        "active": "sheets",
+        "readonly": read_only
+    })
+    response["X-Frame-Options"] = "SAMEORIGIN"
+    return response
 
 
 @permission_required("orgapy.change_sheet")

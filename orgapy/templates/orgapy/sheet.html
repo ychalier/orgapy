@@ -15,6 +15,7 @@
     <div class="sheet-toolbar">
         <a class="link-hidden" href="{% url 'orgapy:sheets' %}"><i class="ri-table-line"></i></a>
         <span class="sheet-title oneline-truncate">{{sheet.title}}</span>
+        {% if not readonly %}
         {% if sheet.group %}
         <a class="oneline-truncate" href="{{sheet.group.get_absolute_url}}">[{{sheet.group.title}}]</a>
         {% endif %}
@@ -34,6 +35,7 @@
                 </ul>
             </div>
         </span>
+        {% endif %}
         {% if sheet.description %}
         <span class="markdown-inline">{{sheet.description | safe}}</span>
         {% endif %}
@@ -49,7 +51,7 @@
 <script>
     window.addEventListener("load", () => {
         markdownToHtml(".markdown-inline", false);
-        initializeSheets(false, false);
+        initializeSheets({% if readonly %}true{% else %}false{% endif %});
     });
 </script>
 {% endblock body_scripts %}

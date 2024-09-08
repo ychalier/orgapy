@@ -2705,8 +2705,7 @@ class Sheet {
 }
 
 
-function initializeSheet(sheetSeed, readonly, showlink) {
-    // TODO: how about showlink?
+function initializeSheet(sheetSeed, readonly) {
     var sheet = null;
     let sheetId = sheetSeed.getAttribute("sheet-id");
     fetch(URL_API + `?action=sheet&sid=${sheetId}`, {
@@ -2729,8 +2728,8 @@ function initializeSheet(sheetSeed, readonly, showlink) {
 }
 
 
-function initializeSheets(readonly, showlink) {
+function initializeSheets(readonly) {
     document.querySelectorAll(".sheet").forEach(sheetSeed => {
-        initializeSheet(sheetSeed, readonly, showlink);
+        initializeSheet(sheetSeed, readonly);
     });
 }

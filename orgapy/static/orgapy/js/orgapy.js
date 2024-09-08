@@ -158,12 +158,12 @@ function markdownToHtmlFancy(element) {
             {
                 type: "output",
                 regex: /@sheet\/(\d+)/g,
-                replace: `<div class="sheet sheet-embedded" sheet-id="$1"><div class="sheet-head"></div><div class="sheet-body"></div></div>`
+                replace: `<iframe src="../sheets/$1?embed=1"></iframe><a href="../sheets/$1"><small>Edit sheet</small></a>`
             },
             {
                 type: "output",
                 regex: /@map\/(\d+)/g,
-                replace: `<iframe src="../maps/$1?embed=1"></iframe>`
+                replace: `<iframe src="../maps/$1?embed=1"></iframe><a href="../maps/$1"><small>Edit map</small></a>`
             },
             {
                 type: "output",
@@ -184,7 +184,6 @@ function markdownToHtmlFancy(element) {
     window.addEventListener("load", () => {
         hljs.highlightAll();
     });
-    initializeSheets(true, true);
 }
 
 function markdownToHtmlBasic(element) {
