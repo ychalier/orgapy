@@ -182,6 +182,11 @@ button:disabled:hover {
     cursor: pointer;
 }
 
+.widget {
+    cursor: pointer;
+    user-select: none;
+}
+
 /***** GENERAL COMPONENTS *****************************************************/
 
 /**

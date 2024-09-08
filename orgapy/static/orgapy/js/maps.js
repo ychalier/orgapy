@@ -1369,7 +1369,7 @@ class Map {
         if (this.readonly) return;
         let mapExport = this.export();
         var self = this;
-        fetchApiPost("save-map", 
+        apiPost("save-map", 
             {
                 mid: this.mid,
                 "title": mapExport.title,

@@ -671,7 +671,7 @@ class Project {
     delete() {
         var self = this;
         if (confirm(`Are you sure to delete '${this.title}'?`) == true) {
-            fetchApiPost("delete-project", {project_id: this.id}, () => {
+            apiPost("delete-project", {project_id: this.id}, () => {
                 toast("Deleted!", 600);
                 delete projects[self.id];
                 inflateProjects();
@@ -683,7 +683,7 @@ class Project {
     archive() {
         var self = this;
         if (confirm(`Are you sure to archive '${this.title}'?`) == true) {
-            fetchApiPost("archive-project", {project_id: this.id}, () => {
+            apiPost("archive-project", {project_id: this.id}, () => {
                 self.archived = true;
                 toast("Archived!", 600);
                 const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
@@ -699,7 +699,7 @@ class Project {
     unarchive() {
         var self = this;
         if (confirm(`Are you sure to unarchive '${this.title}'?`) == true) {
-            fetchApiPost("unarchive-project", {project_id: this.id}, () => {
+            apiPost("unarchive-project", {project_id: this.id}, () => {
                 self.archived = false;
                 toast("Unarchived!", 600);
                 inflateProjects();
@@ -758,7 +758,7 @@ class Project {
         }
         this.previousProjectData = projectData;
         var self = this;
-        fetchApiPost("edit-project",
+        apiPost("edit-project",
             {
                 project_id: this.id,
                 project_data: projectData
@@ -828,7 +828,7 @@ class TemporaryProject extends Project {
         if (match[2] != undefined) {
             note = parseInt(match[2]);
         }
-        fetchApiPost("create-project", {}, (data) => {
+        apiPost("create-project", {}, (data) => {
             projects[data.project.id] = new Project(data.project);
             projects[data.project.id].title = title;
             projects[data.project.id].note = note;
@@ -867,7 +867,7 @@ function saveProjectRanks(ordering) {
         projects[projectId].rank = ordering[i];
     }); 
     inflateProjects();
-    fetchApiPost("edit-project-ranks", {ranks: JSON.stringify(ranks)}, () => {
+    apiPost("edit-project-ranks", {ranks: JSON.stringify(ranks)}, () => {
         toast("Ranks saved!", 600);
     });
 }
@@ -944,7 +944,7 @@ class CalendarEvent {
     }
 
     delete() {
-        fetchApiPost("delete-calendar", {href: this.url, calendarid: this.calendarId}, () => {
+        apiPost("delete-calendar", {href: this.url, calendarid: this.calendarId}, () => {
             toast("Event deleted", 600);
             fetchEvents(false);
         });
@@ -990,7 +990,7 @@ class Task {
     }
 
     complete() {
-        fetchApiPost("complete-task", {id: this.id}, () => {
+        apiPost("complete-task", {id: this.id}, () => {
             toast("Task completed!", 600);
             fetchTasks();
         });
@@ -1374,7 +1374,7 @@ class Objective {
 }
 
 function saveObjectiveHistory(objectiveId) {
-    fetchApiPost("edit-objective-history",
+    apiPost("edit-objective-history",
         {
             objective_id: objectiveId,
             objective_history: JSON.stringify(objectives[objectiveId].history)

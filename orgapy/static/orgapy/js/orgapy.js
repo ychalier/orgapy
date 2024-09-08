@@ -53,7 +53,7 @@ function fetchApi(url, method, formData=null, onSuccess=null) {
         });
 }
 
-function fetchApiPost(action, body, onSuccess=null) {
+function apiPost(action, body, onSuccess=null) {
     let formData = new FormData();
     formData.set("csrfmiddlewaretoken", CSRF_TOKEN);
     for (const key in body) {
@@ -159,6 +159,16 @@ function markdownToHtmlFancy(element) {
                 type: "output",
                 regex: /@map\/(\d+)/g,
                 replace: `<iframe src="../maps/$1?embed=1"></iframe>`
+            },
+            {
+                type: "output",
+                regex: /input type="checkbox"/g,
+                replace: `input type="checkbox" class="widget widget-checkbox"`
+            },
+            {
+                type: "output",
+                regex: /(✅|❌|⏺️)/g,
+                replace: `<span class="widget widget-status">$1</span>`
             }
         ]
     });
@@ -169,9 +179,7 @@ function markdownToHtmlFancy(element) {
     window.addEventListener("load", () => {
         hljs.highlightAll();
     });
-    initializeSheets(true, true); // TODO: redo this
-    if (element.querySelectorAll(".sheet-seed").length > 0) {
-    }
+    initializeSheets(true, true);
 }
 
 function markdownToHtmlBasic(element) {

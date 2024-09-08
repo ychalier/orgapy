@@ -49,6 +49,7 @@
 {{ block.super }}
 <script>
     markdownToHtml(".markdown", true);
+    bindWidgets({{ note.id }});
     createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
 </script>
 {% endblock body_scripts %}

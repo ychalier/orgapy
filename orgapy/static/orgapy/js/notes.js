@@ -173,3 +173,64 @@ function bindSaveNoteButton() {
         });
     });
 }
+
+function bindWidgets(noteId) {
+
+    const WIDGET_UPDATE_TIMEOUT = 1000;
+
+    var widgetUpdateBuffer = [];
+    var widgetUpdateTimeout = null;
+
+    function submitWidgetUpdates() {
+        const seenKeys = [];
+        while (widgetUpdateBuffer.length > 0) {
+            const update = widgetUpdateBuffer.pop();
+            const key = `${update.type}${update.index}`;
+            if (seenKeys.includes(key)) {
+                continue;
+            }
+            seenKeys.push(key);
+            apiPost("edit-widget", {
+                nid: noteId,
+                type: update.type,
+                index: update.index,
+                value: update.value
+            }, () => {
+                toast(`Saved widget!`, TOAST_SHORT);
+            });
+        }
+        widgetUpdateTimeout = null;
+    }
+
+    function updateWidget(type, index, value) {
+        widgetUpdateBuffer.push({type: type, index: index, value: value});
+        if (widgetUpdateTimeout != null) {
+            clearTimeout(widgetUpdateTimeout);
+        }
+        widgetUpdateTimeout = setTimeout(submitWidgetUpdates, WIDGET_UPDATE_TIMEOUT);
+    }
+
+    document.querySelectorAll(".widget-status").forEach((widget, index) => {
+        widget.setAttribute("index", index);
+        widget.addEventListener("click", () => {
+            let newTextContent = null;
+            if (widget.textContent == "✅") {
+                newTextContent = "⏺️";
+            } else if (widget.textContent == "⏺️") {
+                newTextContent = "❌";
+            } else {
+                newTextContent = "✅";
+            }
+            widget.textContent = newTextContent;
+            updateWidget("status", index, newTextContent);
+        });
+    });
+
+    document.querySelectorAll(".widget-checkbox").forEach((widget, index) => {
+        widget.setAttribute("index", index);
+        widget.addEventListener("input", () => {
+            updateWidget("checkbox", index, widget.checked);
+        });
+    });
+
+}

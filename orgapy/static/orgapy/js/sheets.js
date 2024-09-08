@@ -2691,7 +2691,7 @@ class Sheet {
 
     saveData() {
         let sheetExport = this.export();
-        fetchApiPost(
+        apiPost(
             "save-sheet",
             {sid: this.sid, data: sheetExport.data, config: sheetExport.config},
             () => {

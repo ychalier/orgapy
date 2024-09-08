@@ -1,10 +1,11 @@
 import json
 import datetime
+import re
 import urllib
 
 import dateutil.relativedelta
 from django.utils import timezone
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.text import slugify
@@ -733,6 +734,8 @@ def api(request):
             return api_note_title(request)
         case "note-suggestions":
             return api_notes_suggestions(request)
+        case "edit-widget":
+            return api_edit_widget(request)
         case "sheet":
             return api_sheet(request)
         case "save-sheet":
@@ -1324,6 +1327,45 @@ def api_notes_suggestions(request):
         ]
     }
     return JsonResponse(data)
+
+
+@permission_required("orgapy.change_note")
+def api_edit_widget(request):
+    nid = request.POST.get("nid")
+    widget_type = request.POST.get("type")
+    widget_index = request.POST.get("index")
+    widget_value = request.POST.get("value")
+    if nid is None\
+        or widget_index is None\
+        or widget_value is None\
+        or not (widget_type in ["status", "checkbox"]):
+        raise BadRequest()
+    query = models.Note.objects.filter(user=request.user, id=int(nid))
+    if not query.exists():
+        raise Http404("Not found")
+    note = query.get()
+    if widget_type == "status":
+        for i, widget_match in enumerate(re.finditer(r"(✅|❌|⏺️)", note.content)):
+            if i != int(widget_index):
+                continue
+            start, end = widget_match.span(0)
+            text = note.content
+            note.content = text[:start] + widget_value + text[end:]
+            break
+    elif widget_type == "checkbox":
+        for i, widget_match in enumerate(re.finditer(r"^ *- \[(x| )\]", note.content, re.MULTILINE)):
+            if i != int(widget_index):
+                continue
+            start, end = widget_match.span(1)
+            text = note.content
+            if widget_value == "true":
+                widget_value = "x"
+            else:
+                widget_value = " "
+            note.content = text[:start] + widget_value + text[end:]
+            break
+    note.save()
+    return JsonResponse({"success": True})
 
 
 def api_sheet(request):
