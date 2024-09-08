@@ -7,25 +7,26 @@
 
 {% include 'orgapy/partials/sheet_searchbar.html' %}
 
+{% if group.sheet_set.all %}
 <div class="card card-oneline">
     <h1 class="card-oneline-title">{{group.title}}</h1>
-    {% if group.sheet_set.all %}
-        {% for sheet in group.sheet_set.all %}
-        <div class="oneline oneline-striped">{% include 'orgapy/partials/sheet_list_item.html' %}</div>
-        {% endfor %}
-    {% else %}
-    <div class="empty">
-        <div class="empty-icon">
-            <i class="icon icon-note icon-2x"></i>
-        </div>
-        <p class="empty-title h5">You have no sheet</p>
-        <p class="empty-subtitle">Click the button to create a sheet.</p>
-        <div class="empty-action">
-            <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
-        </div>
-    </div>
-    {% endif %}
+    {% for sheet in group.sheet_set.all %}
+    <div class="oneline oneline-striped">{% include 'orgapy/partials/sheet_list_item.html' %}</div>
+    {% endfor %}
 </div>
+
+{% else %}
+<header class="card">
+    <h1>{{group.title}}</h1>
+</header>
+
+<div class="card">
+    <p>You have no sheet.</p>
+    <div class="card-commands">
+        <a class="button button-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-table-line"></i> Create sheet</a>
+    </div>
+</div>
+{% endif %}
 
 <div class="row">
     <a class="button" href="{% url 'orgapy:edit_sheet_group' group.id %}"><i class="ri-pencil-fill"></i> Edit</a>

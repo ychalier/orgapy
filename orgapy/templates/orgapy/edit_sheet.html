@@ -6,7 +6,7 @@
 {% block main_content %}
 
 <div class="card">
-    <h2>Edit sheet</h2>
+    <h2>{% block form_title %}Edit sheet{% endblock %}</h2>
     <form id="form-note-edit" action="{% url 'orgapy:save_sheet' %}" method="post">
         {% csrf_token %}
         {% if sheet %}<input type="hidden" name="id" value="{{sheet.id}}" />{% endif %}

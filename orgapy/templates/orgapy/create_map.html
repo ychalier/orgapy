@@ -3,36 +3,24 @@
 
 {% block title %}{% block subtitle %}Create map &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block before_columns %}
-<form id="form-note-edit" action="{% url 'orgapy:save_map' %}" method="post">
-{% csrf_token %}
-{% endblock before_columns %}
-
 {% block main_content %}
-    <div class="form-group">
-        <label class="form-label" for="input-title">Title</label>
-        <input class="form-input" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ sheet.title }}{% endif %}" />
-    </div>
-
-    <br>
+<div class="card">
+    <h2>Create map</h2>
+    <form id="form-note-edit" action="{% url 'orgapy:save_map' %}" method="post">
+        {% csrf_token %}
+        <p>
+            <label for="input-title">Title</label>
+            <input id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ sheet.title }}{% endif %}" />
+        </p>
+        <p>
+            <label class="toggle">
+                <input type="checkbox" name="public" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Public</span>
+            </label>
+        </p>
+        <button>Save</button>
+    </form>
+</div>
 {% endblock main_content %}
 
-{% block right_column %}
-<div class="side-menu-xl container">
-    
-    <button class="btn btn-primary mb-2">Save</button>
-    
-    <div class="form-group">
-        <label class="form-switch">
-            <input type="checkbox" name="public" />
-            <i class="form-icon"></i> Public
-        </label>
-    </div>
-    
-</div>
-{% endblock right_column %}
-
-{% block after_columns %}
-</form>
-
-{% endblock after_columns %}

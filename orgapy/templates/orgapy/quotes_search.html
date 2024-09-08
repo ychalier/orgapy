@@ -38,14 +38,10 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="empty my-2">
-    <div class="empty-icon">
-        <i class="icon icon-quote icon-2x"></i>
-    </div>
-    <p class="empty-title h5">You have no quote</p>
-    <p class="empty-subtitle">Click the button below to add a quote.</p>
-    <div class="empty-action">
-        <a class="btn btn-primary" href="{% url 'orgapy:create_quote' %}">Create quote</a>
+<div class="card">
+    <p>You have no quote.</p>
+    <div class="card-commands">
+        <a class="button button-primary" href="{% url 'orgapy:create_quote' %}"><i class="ri-quote-line"></i> Create quote</a>
     </div>
 </div>
 {% endif %}

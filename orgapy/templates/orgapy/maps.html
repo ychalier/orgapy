@@ -26,14 +26,10 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="empty">
-    <div class="empty-icon">
-        <i class="icon icon-note icon-2x"></i>
-    </div>
-    <p class="empty-title h5">You have no map</p>
-    <p class="empty-subtitle">Click the button to create a map.</p>
-    <div class="empty-action">
-        <a class="btn btn-primary" href="{% url 'orgapy:create_map' %}{% if query %}?title={{query}}{% endif %}">Create map</a>
+<div class="card">
+    <p>You have no map.</p>
+    <div class="card-commands">
+        <a class="button button-primary" href="{% url 'orgapy:create_map' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-map-2-line"></i> Create map</a>
     </div>
 </div>
 {% endif %}

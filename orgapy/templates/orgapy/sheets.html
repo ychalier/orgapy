@@ -33,14 +33,10 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="empty">
-    <div class="empty-icon">
-        <i class="icon icon-note icon-2x"></i>
-    </div>
-    <p class="empty-title h5">You have no sheet</p>
-    <p class="empty-subtitle">Click the button to create a sheet.</p>
-    <div class="empty-action">
-        <a class="btn btn-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}">Create sheet</a>
+<div class="card">
+    <p>You have no sheet.</p>
+    <div class="card-commands">
+        <a class="button button-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-table-line"></i> Create sheet</a>
     </div>
 </div>
 {% endif %}
