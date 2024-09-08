@@ -905,6 +905,11 @@ input:checked+.toggle-slider+.toggle-text {
     height: 500px;
 }
 
+.markdown input[type=checkbox]:checked + * {
+    color: #888;
+    text-decoration: line-through;
+}
+
 /**
  * Snackbar
  */

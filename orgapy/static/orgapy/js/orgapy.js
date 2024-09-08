@@ -117,6 +117,11 @@ function markdownToHtmlFancy(element) {
             },
             {
                 type: "output",
+                regex: /<input type="checkbox" disabled +style="([a-z: 0-9\-\.;]+)"( *checked)?> *(.*?) *\n/g,
+                replace: `<input type="checkbox" style="$1"$2><span>$3</span>\n`
+            },
+            {
+                type: "output",
                 regex: /&lt;/g,
                 replace: `<`,
             },

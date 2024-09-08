@@ -183,6 +183,7 @@ function bindWidgets(noteId) {
 
     function submitWidgetUpdates() {
         const seenKeys = [];
+        var selectedUpdates = [];
         while (widgetUpdateBuffer.length > 0) {
             const update = widgetUpdateBuffer.pop();
             const key = `${update.type}${update.index}`;
@@ -190,13 +191,14 @@ function bindWidgets(noteId) {
                 continue;
             }
             seenKeys.push(key);
-            apiPost("edit-widget", {
+            selectedUpdates.push(update);
+        }
+        if (selectedUpdates.length > 0) {
+            apiPost("edit-widgets", {
                 nid: noteId,
-                type: update.type,
-                index: update.index,
-                value: update.value
+                updates: JSON.stringify(selectedUpdates)
             }, () => {
-                toast(`Saved widget!`, TOAST_SHORT);
+                toast(`Saved widgets`, TOAST_SHORT);
             });
         }
         widgetUpdateTimeout = null;
