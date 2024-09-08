@@ -226,7 +226,7 @@ function toast(message, duration) {
             snackbar.classList.remove("show");
             snackbar.classList.remove("hide");
             snackbar.textContent = "";
-        }, 500);
+        }, 450);
     }, duration);
 }
 
