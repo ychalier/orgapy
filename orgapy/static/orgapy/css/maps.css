@@ -14,10 +14,6 @@ body.fullscreen {
     flex-direction: row;
 }
 
-#snackbar {
-    z-index: 700;
-}
-
 .map-container .card,
 .map-container .card * {
     font-size: 16px;

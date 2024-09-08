@@ -964,7 +964,7 @@ input:checked+.toggle-slider+.toggle-text {
     border-radius: .4rem;
     padding: .4rem;
     position: fixed;
-    z-index: 1;
+    z-index: 700;
     left: 50%;
     bottom: 2rem;
     font-size: medium;
