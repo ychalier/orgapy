@@ -14,7 +14,7 @@ function dragRankClear(dragid=null) {
 }
 
 function dragRank(container, elementSelector, callback, options={}) {
-    
+    if (!("zIndex" in options)) options.zIndex = 0;
     if (!("transition" in options)) options.transition = ".3s ease";
     if (!("dragid" in options)) options.dragid = "default";
     if (!("dragAllowed" in options)) options.dragAllowed = () => { return true; };
@@ -39,7 +39,7 @@ function dragRank(container, elementSelector, callback, options={}) {
         for (let i = 0; i < elements.length; i++) {
             let j = orderingReversed[i];
             if (dragging == null || dragging.i != j) {
-                elements[j].style.zIndex = elements.length - i - 1;
+                elements[j].style.zIndex = options.zIndex;
                 elements[j].style.top = (y - tops[j]) + "px";
             }
             y += heights[j];
@@ -88,7 +88,7 @@ function dragRank(container, elementSelector, callback, options={}) {
                         top: parseFloat(element.style.top.replace("px", "")),
                     };
                     element.style.cursor = "grabbing";
-                    element.style.zIndex = elements.length + 1;
+                    element.style.zIndex = options.zIndex + 1;
                     element.style.transition = "none";
                     return false;
                 }
