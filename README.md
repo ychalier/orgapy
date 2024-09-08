@@ -1,6 +1,6 @@
 # Orgapy
 
-A web application for storing **notes** and keeping track of **tasks** and **habits**.
+A personnal notebook webapp.
 
 ## Getting Started
 
@@ -10,10 +10,19 @@ You'll need Python 3, and a [Django](https://www.djangoproject.com/) project.
 
 ### Installation
 
-1. Install the latest release of `django-orgapy`
-2. Add `orgapy` to the `INSTALLED_APPS` variables in Django settings.py
+1. Install the [latest release](https://github.com/ychalier/orgapy/releases/latest)
+    ```console
+    pip install django-orgapy-X.X.X.tar.gz
+    ```
+2. Add `"orgapy"` to the `INSTALLED_APPS` variables in Django settings
 3. Migrate the database
+    ```console
+    python manage.py migrate
+    ```
 4. Collect new static files
+    ```console
+    python manage.py collectstatic
+    ```
 5. Setup URLs
 
     ```python
@@ -23,16 +32,37 @@ You'll need Python 3, and a [Django](https://www.djangoproject.com/) project.
         path("orgapy/", include("orgapy.urls", namespace="orgapy")),
     ]
     ```
-6. Reload your server, and it should be up.
+6. Restart the server
+
+## Description
+
+### Main Features
+
+- Write notes in Markdown
+- Track current projects
+- Track current tasks
+- Track regular habits
+- Integrate events from a CalDAV server
+- Store quotes
+- Edit spreadsheets (stored as TSV)
+- Edit maps (stored as GeoJSON)
 
 ### Permissions
 
-The app uses Django built-in authentication framework, meaning that users need a Django account to created and edit notes. They also need to be granted Orgapy's permissions, such as `orgapy.add_note` or `orgapy.view_note`. On my server, I use a Django group for that matter.
+The app uses Django built-in authentication framework, meaning that users need a Django account to created and edit notes. They also need to be granted Orgapy's permissions, such as `orgapy.add_note` or `orgapy.view_note`.
 
 ## Built With
 
--  [Django](https://www.djangoproject.com/) - Web application framework for Python.
--  [showdownjs](https://github.com/showdownjs/showdown) - A JavaScript library for parsing Markdown
+- [caldav](https://pypi.org/project/caldav/) - A CalDAV client library for Python.
+- [dateutil](https://pypi.org/project/python-dateutil/) - Useful extensions to the standard Python datetime features.
+- [Django](https://www.djangoproject.com/) - Web application framework for Python.
+- [Fira Code](https://docs.xz.style/fonts/fira/fira-code) - Monospace font.
+- [Fira Sans](https://docs.xz.style/fonts/fira/fira-sans) - Sans serif font.
+- [highlight.js](https://highlightjs.org/) - Syntax highlighter.
+- [Leaflet](https://leafletjs.com/) - An open-source JavaScript library for mobile-friendly interactive maps.
+- [Remix Icon](https://remixicon.com/) - An open source icon library.
+- [Showdown](https://showdownjs.com/) - A JavaScript library for parsing Markdown.
+- [SimpleMDE](https://simplemde.com/) - A simple, embeddable, and beautiful JS markdown editor.
 
 ## Contributing
 
