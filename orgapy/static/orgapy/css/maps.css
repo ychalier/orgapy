@@ -45,7 +45,7 @@ body.fullscreen {
     width: 240px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 500px) {
 
     .map-control {
         max-height: calc(50% - .8rem);

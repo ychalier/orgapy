@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/fullscreen.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %} {{map.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}{{map.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block head %}
 {{ block.super }}
@@ -24,7 +24,7 @@
 {{ block.super }}
 <script>
     window.addEventListener("load", () => {
-        initializeMaps(false);
+        initializeMaps({% if readonly %}true{% else %}false{% endif %});
     });
 </script>
 {% endblock body_scripts %}

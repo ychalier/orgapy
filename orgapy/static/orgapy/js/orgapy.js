@@ -154,6 +154,11 @@ function markdownToHtmlFancy(element) {
                 type: "output",
                 regex: /@sheet\/(\d+)/g,
                 replace: `<div class="sheet sheet-embedded" sheet-id="$1"><div class="sheet-head"></div><div class="sheet-body"></div></div>`
+            },
+            {
+                type: "output",
+                regex: /@map\/(\d+)/g,
+                replace: `<iframe src="../maps/$1?embed=1"></iframe>`
             }
         ]
     });

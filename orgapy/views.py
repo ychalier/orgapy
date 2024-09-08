@@ -630,11 +630,24 @@ def view_save_map(request):
 
 def view_map(request, mid):
     mmap = get_map_from_mid(mid)
+    has_permission = False
+    read_only = True
+    if not request.GET.get("embed"):
+        read_only = False
     if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map"):
-        return render(request, "orgapy/map.html", { "map": mmap, "active": "maps" })
+        has_permission = True
     elif mmap.public:
-        return render(request, "orgapy/map_public.html", { "map": mmap, "active": "maps" })
-    raise PermissionDenied
+        has_permission = True
+        read_only = True
+    if not has_permission:
+        raise PermissionDenied
+    response = render(request, "orgapy/map.html", {
+        "map": mmap,
+        "readonly": read_only,
+        "active": "maps",
+    })
+    response["X-Frame-Options"] = "SAMEORIGIN"
+    return response
 
 
 @permission_required("orgapy.view_map")

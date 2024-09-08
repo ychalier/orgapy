@@ -891,6 +891,15 @@ input:checked+.toggle-slider+.toggle-text {
     width: auto;
 }
 
+.markdown iframe {
+    width: 100%;
+    border: 1px solid black;
+    padding: 0;
+    border-radius: .4rem;
+    max-height: 80vh;
+    height: 500px;
+}
+
 /**
  * Snackbar
  */
