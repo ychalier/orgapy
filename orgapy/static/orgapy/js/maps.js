@@ -899,35 +899,6 @@ class Layer {
             bindDropdown(buttonsDropdown);
         }
 
-        /*
-        let headerContainer = create(this.container, "div", "row");
-        headerContainer.style.alignItems = "center";
-        let headerContainerLabel = create(create(headerContainer, "div", "form-group mb-0"), "label", "form-switch");
-        headerContainerLabel.addEventListener("click", (event) => {
-            event.stopPropagation();
-        });
-        this.visibilityCheckbox = create(headerContainerLabel, "input");
-        this.visibilityCheckbox.type = "checkbox";
-        this.visibilityCheckbox.checked = true;
-        this.visibilityCheckbox.addEventListener("dblclick", (event) => {
-            event.stopPropagation();
-        });
-        this.visibilityCheckbox.addEventListener("input", () => {
-            self.toggleVisibility();
-        });
-        create(headerContainerLabel, "i", "form-icon");
-        this.labelElement = create(headerContainer, "span", "map-layer-title");
-        this.labelElement.textContent = this.label;
-        this.labelElement.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            self.inflateLabelEdit();
-        });
-        let details = create(this.container, "details");
-        let summary = create(details, "summary");
-        summary.textContent = `${this.features.length} elements`;
-        */
-
         this.featuresContainer = create(this.container, "ul", "map-features");
         this.features.forEach(feature => {
             feature.inflate();

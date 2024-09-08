@@ -13,7 +13,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     license='GNU GPLv3',
-    description='A Django app to handles notes, tasks, and events.',
+    description='A personnal notebook webapp.',
     long_description=README,
     url='https://chalier.fr/orgapy',
     author='Yohan Chalier',

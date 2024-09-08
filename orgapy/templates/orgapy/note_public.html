@@ -9,9 +9,9 @@
 <script src="{% static 'orgapy/js/notes.js' %}"></script>
 <link rel="stylesheet" href="{% static 'orgapy/css/sheets.css' %}" />
 <script src="{% static 'orgapy/js/sheets.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/base16/darcula.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+<script src="{% static 'orgapy/dependencies/showdown.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'orgapy/dependencies/darcula.min.css' %}">
+<script src="{% static 'orgapy/dependencies/highlight.min.js' %}"></script>
 {% endblock head %}
 
 {% block left_column %}<div style="height: {% if note.project_set.all %}11.4rem{% else %}10.2rem{% endif %}"></div><div class="toc"></div>{% endblock left_column %}

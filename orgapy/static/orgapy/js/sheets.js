@@ -2706,6 +2706,7 @@ class Sheet {
 
 
 function initializeSheet(sheetSeed, readonly, showlink) {
+    // TODO: how about showlink?
     var sheet = null;
     let sheetId = sheetSeed.getAttribute("sheet-id");
     fetch(URL_API + `?action=sheet&sid=${sheetId}`, {
@@ -2723,17 +2724,6 @@ function initializeSheet(sheetSeed, readonly, showlink) {
                 config = JSON.parse(sheetData.config);
             }
             sheet.setup(data, config);
-            /*
-            TODO
-            if (showlink) {
-                let link = document.createElement("a");
-                link.classList.add("text-small");
-                link.classList.add("text-gray");
-                link.textContent = "View in editor";
-                link.href = sheetData.url;
-                sheetSeed.insertBefore(link, sheetSeed.querySelector(".sheet-table-wrapper"));
-            }
-            */
         });
 
 }
