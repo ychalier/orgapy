@@ -745,6 +745,8 @@ def api(request):
             return api_save_map(request)
         case "map-suggestions":
             return api_map_suggestions(request)
+        case "suggestions":
+            return api_suggestions(request)
         case _:
             raise BadRequest("Wrong action")
 
@@ -1405,6 +1407,29 @@ def api_map_suggestions(request):
     results = []
     if len(query) >= 1:
         results = models.Map.objects.filter(user=request.user, title__startswith=query)[:5]
+    data = {
+        "results": [
+            {
+                "id": result.id,
+                "title": result.title,
+                "url": result.get_absolute_url()
+            }
+            for result in results
+        ]
+    }
+    return JsonResponse(data)
+
+
+def api_suggestions(request):
+    query = request.GET.get("q", "").strip()
+    results = []
+    if len(query) >= 1:
+        if request.user.has_perm("orgapy.view_note"):
+            results += models.Note.objects.filter(user=request.user, title__startswith=query)[:5]
+        if request.user.has_perm("orgapy.view_sheet"):
+            results += models.Sheet.objects.filter(user=request.user, title__startswith=query)[:5]
+        if request.user.has_perm("orgapy.view_map"):
+            results += models.Map.objects.filter(user=request.user, title__startswith=query)[:5]
     data = {
         "results": [
             {

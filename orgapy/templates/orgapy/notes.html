@@ -5,7 +5,19 @@
 
 {% block main_content %}
 
-{% include "orgapy/partials/note_searchbar.html" %}
+<form id="note-searchbar" class="searchbar" action="{% url 'orgapy:notes' %}" method="get">
+    <div class="searchbar-container">         
+        <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search a note" value="{% if query %}{{query}}{% endif %}" />
+        <i class="searchbar-icon ri-close-line"></i>
+        <div class="searchbar-suggestions"></div>
+    </div>
+    <button class="searchbar-search">Search</button>
+    <a class="searchbar-create button" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}">Create note</a>
+</form>
+
+<script>
+    bindSearchbarSuggestions(document.getElementById("note-searchbar"), "note-suggestions");
+</script>
 
 {% if notes %}
 <div class="card card-oneline">
