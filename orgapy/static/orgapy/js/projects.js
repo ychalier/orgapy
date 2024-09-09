@@ -1166,14 +1166,12 @@ function openModalTasks() {
     tasksContainer.innerHTML = "";
     fetch(URL_API + "?action=list-tasks&limit=365").then(res => res.json()).then(data => {
         data.tasks.forEach(task => {
-            let taskElement = create(tasksContainer, "div");
-            let taskTitle = create(taskElement, "span", "label");
-            taskTitle.textContent = task.title;
-            taskTitle.addEventListener("click", () => {
+            const taskElement = create(tasksContainer, "li");
+            taskElement.textContent = `${task.title} (${new Date(task.due_date).toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "short"})})`;
+            taskElement.addEventListener("click", () => {
                 modal.classList.remove("active");
                 openModalTaskForm(new Task(task));
             });
-            create(taskElement, "span").textContent = `${new Date(task.due_date).toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "short"})}`;
         });
     });
     modal.classList.add("active");
