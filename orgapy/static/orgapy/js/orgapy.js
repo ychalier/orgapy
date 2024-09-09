@@ -259,6 +259,21 @@ function bindDropdown(dropdown) {
 
 }
 
+function bindGotoPaginatorButton(buttonSelector, currentPage, maxPage, attrString) {
+    const button = document.querySelector(buttonSelector);
+    button.addEventListener("click", () => {
+        const page = prompt(`Go to page (1-${maxPage}):`, currentPage.toString());
+        if (page) {
+            const pageNumber = Math.max(1, Math.min(maxPage, parseInt(page)));
+            console.log(pageNumber);
+            const baseUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+            console.log(baseUrl);
+            const newUrl = baseUrl + `?page=${pageNumber}${attrString}`;
+            window.location.href = newUrl;
+        }
+    });
+}
+
 window.addEventListener("load", () => {
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {

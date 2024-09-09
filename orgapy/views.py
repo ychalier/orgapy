@@ -43,6 +43,7 @@ def pretty_paginator(page, **attrs):
         "pages": list(),
         "active": page.number,
         "attr_string": attr_string,
+        "max": page.paginator.num_pages,
     }
     for item in to_show:
         if len(paginator["pages"]) > 0 and paginator["pages"][-1] < item - 1:
