@@ -57,8 +57,8 @@ class Note(models.Model):
         return self.date_modification.strftime("%Y-%m-%d")
     
     @staticmethod
-    def get_icon():
-        return '<i class="ri-sticky-note-line"></i>'
+    def get_class():
+        return "note"
 
 
 class Objective(models.Model):
@@ -196,8 +196,8 @@ class Quote(models.Model):
         return reverse("orgapy:quote", kwargs={"qid": self.id})
     
     @staticmethod
-    def get_icon():
-        return '<i class="ri-double-quotes-l"></i>'
+    def get_class():
+        return "quote"
 
 
 class Project(models.Model):
@@ -373,8 +373,8 @@ class Sheet(models.Model):
         return self.date_modification.strftime("%Y-%m-%d")
     
     @staticmethod
-    def get_icon():
-        return '<i class="ri-table-line"></i>'
+    def get_class():
+        return "sheet"
 
 
 class Map(models.Model):
@@ -399,5 +399,5 @@ class Map(models.Model):
         return reverse("orgapy:map", kwargs={"mid": self.id})
     
     @staticmethod
-    def get_icon():
-        return '<i class="ri-map-2-line"></i>'
+    def get_class():
+        return "map"

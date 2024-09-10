@@ -244,12 +244,18 @@ def view_projects(request):
 def view_search(request):
     page_size = 23
     query = request.GET.get("query", "")
-    objects = list(models.Note.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
-        + list(models.Quote.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
-        + list(models.Sheet.objects.filter(user=request.user, title__contains=query))\
-        + list(models.Map.objects.filter(user=request.user, title__contains=query))
+    if query == "public":
+        objects = list(models.Note.objects.filter(user=request.user, public=True))\
+            + list(models.Sheet.objects.filter(user=request.user, public=True))\
+            + list(models.Map.objects.filter(user=request.user, public=True))
+    else:
+        objects = list(models.Note.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
+            + list(models.Quote.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
+            + list(models.Sheet.objects.filter(user=request.user, title__contains=query))\
+            + list(models.Map.objects.filter(user=request.user, title__contains=query))
     if len(objects) == 1:
         return redirect(objects[0].get_absolute_url())
+    objects.sort(key=lambda o: o.date_creation, reverse=True)
     paginator = Paginator(objects, page_size)
     page = request.GET.get("page")
     objects = paginator.get_page(page)
