@@ -46,7 +46,7 @@
 </div>
 {% endif %}
 
-{% include 'orgapy/partials/pagination.html' with paginator=quote_paginator %}
+{% if quote_paginator %}{% include 'orgapy/partials/pagination.html' with paginator=quote_paginator %}{% endif %}
 
 {% endblock main_content %}
 

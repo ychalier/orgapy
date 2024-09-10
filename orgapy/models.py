@@ -55,6 +55,10 @@ class Note(models.Model):
         if self.date_modification.date() == now.date():
             return self.date_modification.strftime("%H:%M")
         return self.date_modification.strftime("%Y-%m-%d")
+    
+    @staticmethod
+    def get_icon():
+        return '<i class="ri-sticky-note-line"></i>'
 
 
 class Objective(models.Model):
@@ -141,6 +145,9 @@ class Author(models.Model):
         self.slug = slugify(self.name)
         models.Model.save(self, *args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse("orgapy:quotes_author", kwargs={"author": self.slug})
+
 
 class Work(models.Model):
 
@@ -156,6 +163,11 @@ class Work(models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.title)
         models.Model.save(self, *args, **kwargs)
+    
+    def get_absolute_url(self):
+        return reverse("orgapy:quote_work", kwargs={
+            "author": self.author.slug,
+            "work": self.slug})
 
 
 class Quote(models.Model):
@@ -179,6 +191,13 @@ class Quote(models.Model):
         if self.date_modification.date() == now.date():
             return self.date_modification.strftime("%H:%M")
         return self.date_modification.strftime("%Y-%m-%d")
+    
+    def get_absolute_url(self):
+        return reverse("orgapy:quote", kwargs={"qid": self.id})
+    
+    @staticmethod
+    def get_icon():
+        return '<i class="ri-double-quotes-l"></i>'
 
 
 class Project(models.Model):
@@ -352,6 +371,10 @@ class Sheet(models.Model):
         if self.date_modification.date() == now.date():
             return self.date_modification.strftime("%H:%M")
         return self.date_modification.strftime("%Y-%m-%d")
+    
+    @staticmethod
+    def get_icon():
+        return '<i class="ri-table-line"></i>'
 
 
 class Map(models.Model):
@@ -374,3 +397,7 @@ class Map(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:map", kwargs={"mid": self.id})
+    
+    @staticmethod
+    def get_icon():
+        return '<i class="ri-map-2-line"></i>'

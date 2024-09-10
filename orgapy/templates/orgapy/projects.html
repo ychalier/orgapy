@@ -16,18 +16,7 @@
 
 {% block main_content %}
 
-<form id="searchbar" class="searchbar" action="{% url 'orgapy:notes' %}" method="get">
-    <div class="searchbar-container">         
-        <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search a note, sheet or map" value="{% if query %}{{query}}{% endif %}" />
-        <i class="searchbar-icon ri-close-line"></i>
-        <div class="searchbar-suggestions"></div>
-    </div>
-    <button class="searchbar-search">Search</button>
-</form>
-
-<script>
-    bindSearchbarSuggestions(document.getElementById("searchbar"), "suggestions");
-</script>
+{% include 'orgapy/partials/searchbar.html' %}
 
 <div id="objectives-card" class="card hidden">
     <div id="objgraph-wrapper" class="objgraph-wrapper"></div>

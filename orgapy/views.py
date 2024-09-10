@@ -241,6 +241,25 @@ def view_projects(request):
     })
 
 
+def view_search(request):
+    page_size = 23
+    query = request.GET.get("query", "")
+    objects = list(models.Note.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
+        + list(models.Quote.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
+        + list(models.Sheet.objects.filter(user=request.user, title__contains=query))\
+        + list(models.Map.objects.filter(user=request.user, title__contains=query))
+    if len(objects) == 1:
+        return redirect(objects[0].get_absolute_url())
+    paginator = Paginator(objects, page_size)
+    page = request.GET.get("page")
+    objects = paginator.get_page(page)
+    return render(request, "orgapy/search.html", {
+        "objects": objects,
+        "query": query,
+        "paginator": pretty_paginator(objects, query=query),
+    })
+
+
 @permission_required("orgapy.view_note")
 def view_notes(request):
     page_size = 23
@@ -429,6 +448,20 @@ def view_quotes_search(request, author=None, work=None):
         "author": author,
         "work": work,
         "quote_paginator": pretty_paginator(quotes, query=query),
+        "active": "quotes",
+    })
+
+
+@permission_required("orgapy.view_quote")
+def view_quote(request, qid):
+    q = models.Quote.objects.filter(user=request.user, id=int(qid))
+    if not q.exists():
+        raise Http404("Not Found")
+    quote = q.get()
+    return render(request, "orgapy/quotes_search.html", {
+        "quotes": [quote],
+        "author": quote.from_work.author,
+        "work": quote.from_work,
         "active": "quotes",
     })
 

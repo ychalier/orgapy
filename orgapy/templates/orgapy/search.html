@@ -1,0 +1,17 @@
+{% extends "orgapy/layout/skeleton.html" %}
+
+{% block main_content %}
+
+{% include 'orgapy/partials/searchbar.html' %}
+
+<div class="card card-oneline">
+{% for o in objects %}
+    <div class="oneline oneline-striped">
+        <a href="{{ o.get_absolute_url }}" class="oneline-truncate link-hidden">{{ o.get_icon | safe }} {{ o.title }}</a>
+    </div>
+{% endfor %}
+</div>
+
+{% include 'orgapy/partials/pagination.html' %}
+
+{% endblock main_content %}
