@@ -107,6 +107,7 @@ function markdownToHtmlFancy(element) {
         tables: true,
         tasklists: true,
         simpleLineBreaks: true,
+        splitAdjacentBlockquotes: true,
         emoji: true,
         moreStyling: true,
         extensions: [
@@ -177,7 +178,7 @@ function markdownToHtmlFancy(element) {
             }
         ]
     });
-    element.innerHTML = converter.makeHtml(element.innerHTML);
+    element.innerHTML = converter.makeHtml(element.innerHTML.replace("&gt;", ">"));
     element.querySelectorAll("p").forEach(paragraph => {
         paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
     });
