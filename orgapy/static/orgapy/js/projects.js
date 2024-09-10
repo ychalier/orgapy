@@ -56,9 +56,9 @@ function clearContextMenus() {
 }
 
 function addContextMenuOption(menu, label, callback) {
-    let option = menu.appendChild(document.createElement("span"));
+    let option = menu.appendChild(document.createElement("li"));
     option.classList.add("menu-item");
-    option.textContent = label;
+    create(option, "span").innerHTML = label;
     option.addEventListener("click", callback);
 }
 
@@ -567,7 +567,7 @@ class Project {
     inflateContextMenuItems(menu) {
         var self = this;
         if (this.limitDate == null) {
-            addContextMenuOption(menu, "Add limit date", () => {
+            addContextMenuOption(menu, `<i class="ri-time-line"></i> Add limit date`, () => {
                 let now = new Date();
                 self.limitDate = dtf(now, "YYYY-mm-dd");
                 self.inflateHeader();
@@ -575,14 +575,14 @@ class Project {
                 self.inflateLimitDateInput(limitDateElement);
             });
         } else {
-            addContextMenuOption(menu, "Remove limit date", () => {
+            addContextMenuOption(menu, `<i class="ri-time-line"></i> Remove limit date`, () => {
                 self.limitDate = null;
                 self.update();
             })
         }
 
         if (this.description == null) {
-            addContextMenuOption(menu, "Add description", () => {
+            addContextMenuOption(menu, `<i class="ri-sticky-note-line"></i> Add description`, () => {
                 self.expanded = true;
                 self.description = "";
                 self.inflateBody();
@@ -590,14 +590,14 @@ class Project {
                 self.inflateDescriptionTextarea(descriptionElement);
             });
         } else {
-            addContextMenuOption(menu, "Remove description", () => {
+            addContextMenuOption(menu, `<i class="ri-sticky-note-line"></i> Remove description`, () => {
                 self.description = null;
                 self.update();
             })
         }
 
         if (this.checklist == null) {
-            addContextMenuOption(menu, "Add checklist", () => {
+            addContextMenuOption(menu, `<i class="ri-checkbox-circle-line"></i> Add checklist`, () => {
                 self.expanded = true;
                 self.checklist = "[ ] ";
                 self.splitChecklist();
@@ -606,54 +606,54 @@ class Project {
                 self.inflateChecklistItemLabelInput(checklistItemElement, "", 0);
             });
         } else {
-            addContextMenuOption(menu, "Clear checklist", () => {
+            addContextMenuOption(menu, `<i class="ri-close-line"></i> Clear checklist`, () => {
                 self.clearChecklist();
             });
-            addContextMenuOption(menu, "Remove checklist", () => {
+            addContextMenuOption(menu, `<i class="ri-checkbox-circle-line"></i> Remove checklist`, () => {
                 self.checklist = null;
                 self.update();
             });
         }
 
         if (this.progress == null) {
-            addContextMenuOption(menu, "Add progress", () => {
+            addContextMenuOption(menu, `<i class="ri-progress-5-line"></i> Add progress`, () => {
                 self.progress = {min: 0, max: parseInt(prompt("Number of steps", 10)), current: 0};
                 self.update();
             });
         } else {
-            addContextMenuOption(menu, "Remove progress", () => {
+            addContextMenuOption(menu, `<i class="ri-progress-5-line"></i> Remove progress`, () => {
                 self.progress = null;
                 self.update();
             });
         }
 
-        addContextMenuOption(menu, "Copy as Markdown", () => {
+        addContextMenuOption(menu, `<i class="ri-file-copy-2-line"></i> Copy as Markdown`, () => {
             navigator.clipboard.writeText(this.toMarkdown());
             toast("Copied to clipboard!", 600);
         });
 
-        addContextMenuOption(menu, "Edit in admin", () => {
+        addContextMenuOption(menu, `<i class="ri-pencil-fill"></i> Edit in admin`, () => {
             window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
         });
 
         if (this.archived) {
-            addContextMenuOption(menu, "Unarchive project", () => {
+            addContextMenuOption(menu, `<i class="ri-archive-line"></i> Unarchive project`, () => {
                 self.unarchive();
             });
         } else {
-            addContextMenuOption(menu, "Archive project", () => {
+            addContextMenuOption(menu, `<i class="ri-archive-line"></i> Archive project`, () => {
                 self.archive();
             });
         }
 
-        addContextMenuOption(menu, "Delete project", () => {
+        addContextMenuOption(menu, `<i class="ri-delete-bin-line"></i> Delete project`, () => {
             self.delete();
         });
     }
 
     inflateContextMenu(event) {
         clearContextMenus();
-        let menu = create(document.body, "div", "contextmenu menu");
+        let menu = create(document.body, "ul", "contextmenu menu");
         this.inflateContextMenuItems(menu);
         let bounds = menu.getBoundingClientRect();
         menu.style.left = Math.min(event.clientX, window.innerWidth - (bounds.width + 8)) + "px";
