@@ -2615,6 +2615,14 @@ class Sheet {
         this.toolbar.querySelector(".sheet-button-download").addEventListener("click", () => {
             self.exportTsv();
         });
+
+        this.toolbar.querySelector(".sheet-button-copy").addEventListener("click", () => {
+            const tsvString = this.export().data;
+            const splitter = "---\t".repeat(self.width).trim();
+            const markdownString = tsvString.replace("\n", "\n" + splitter + "\n").replaceAll("\t", " | ");
+            navigator.clipboard.writeText(markdownString);
+            toast("Copied as Markdown", TOAST_SHORT);
+        });
     }
 
     setup(data=null, config=null) {

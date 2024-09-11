@@ -178,7 +178,7 @@ function markdownToHtmlFancy(element) {
             }
         ]
     });
-    element.innerHTML = converter.makeHtml(element.innerHTML.replace("&gt;", ">"));
+    element.innerHTML = converter.makeHtml(element.innerHTML.replaceAll("&gt;", ">"));
     element.querySelectorAll("p").forEach(paragraph => {
         paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
     });
