@@ -1097,6 +1097,7 @@ function openModalTaskForm(task=null) {
         modal.querySelector("input[name='save']").style.display = "unset";
         modal.querySelector("input[name='delete']").style.display = "unset";
     } else {
+        modal.querySelector("input[name='start_date']").value = (new Date()).toISOString().substring(0, 10);
         modal.querySelector("input[name='add']").style.display = "unset";
         modal.querySelector("input[name='save']").style.display = "none";
         modal.querySelector("input[name='delete']").style.display = "none";
