@@ -34,7 +34,7 @@
             {% endif %}
         </span>
         {% if note.pinned %}
-        <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>
+        <a class="button-inline" href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>
         {% endif %}
         {% if note.public %}
         <a class="button-inline" href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" title="Make private"><i class="ri-lock-line"></i></a>

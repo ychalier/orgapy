@@ -373,6 +373,16 @@ blockquote {
     background-color: #1b2931;
 }
 
+.action-button.active {
+    background: #8ed2ff;
+    color: black;
+    border-color: transparent;
+}
+
+.action-button.active:hover {
+    background: #6b9fc2;
+}
+
 /**
  * Menu
  */
