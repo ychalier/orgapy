@@ -33,7 +33,7 @@
 }
 
 @font-face {
-    font-family: 'Fira Cide';
+    font-family: 'Fira Code';
     src: url('../fonts/fira-code/FiraCode-Regular.woff2') format('woff2'), url('../fonts/fira-code/FiraCode-Regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
