@@ -136,8 +136,15 @@ button:disabled:hover {
 
 blockquote {
     border-left: 0.2rem solid #8ed2ff;
+    background: hsl(204, 34%, 18%);
     margin-left: 1.6rem;
-    padding-left: .8rem;
+    padding: .8rem;
+    border-top-right-radius: .2rem;
+    border-bottom-right-radius: .2rem;
+}
+
+blockquote p {
+    margin: 0;
 }
 
 /***** UTILITY CLASSES ********************************************************/
