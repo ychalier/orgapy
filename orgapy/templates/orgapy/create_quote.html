@@ -28,7 +28,7 @@
             <label for="selector-work-author">Author</label>
             <select id="select-work-author" name="work_author">
                 {% for author in authors %}
-                <option value="{{ author.id }}">{{ author.name }}</option>
+                <option value="{{ author.id }}" {% if author.last_created %}selected{% endif %}>{{ author.name }}</option>
                 {% endfor %}
             </select>
         </p>
@@ -56,7 +56,7 @@
             <label for="input-work">Work</label>
             <select id="input-work" name="quote_work">
                 {% for work in works %}
-                <option value="{{ work.id }}">{{ work.author.name }} &ndash; {{ work.title }}</option>
+                <option value="{{ work.id }}" {% if work.last_created %}selected{% endif %}>{{ work.author.name }} &ndash; {{ work.title }}</option>
                 {% endfor %}
             </select>
         </p>

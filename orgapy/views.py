@@ -481,6 +481,13 @@ def view_quote(request, qid):
     })
 
 
+def set_last_attribute(items: list[models.Author | models.Work]):
+    dates = [item.date_creation for item in items]
+    last = max(dates)
+    for item in items:
+        item.last_created = item.date_creation == last
+
+
 @permission_required("orgapy.add_quote")
 def view_create_quote(request):
     if request.method == "POST":
@@ -501,8 +508,10 @@ def view_create_quote(request):
                 add_quote(request, work_id, request.POST.get("quote_content").strip())
         if "form_quote" in request.POST:
             return redirect("orgapy:quotes_search")
-    authors = models.Author.objects.filter(user=request.user).order_by("-date_creation")
-    works = models.Work.objects.filter(user=request.user).order_by("-date_creation")
+    authors = models.Author.objects.filter(user=request.user).order_by("name")
+    set_last_attribute(authors)
+    works = models.Work.objects.filter(user=request.user).order_by("author__name", "title")
+    set_last_attribute(works)
     return render(request, "orgapy/create_quote.html", {
         "authors": authors,
         "works": works,
