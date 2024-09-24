@@ -359,11 +359,20 @@ def view_delete_category(request, cid):
 
 def view_note(request, nid):
     note = get_note_from_nid(nid)
+    has_permission = False
+    readonly = True
     if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
-        return render(request, "orgapy/note.html", { "note": note, "active": "notes" })
+        readonly =  False
+        has_permission = True
     elif note.public:
-        return render(request, "orgapy/note_public.html", { "note": note, "active": "notes" })
-    raise PermissionDenied
+        has_permission = True
+    if not has_permission:
+        raise PermissionDenied
+    return render(request, "orgapy/note.html", {
+        "note": note,
+        "active": "notes",
+        "readonly": readonly
+    })
 
 
 @permission_required("orgapy.change_note")

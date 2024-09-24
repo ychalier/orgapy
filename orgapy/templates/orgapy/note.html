@@ -14,6 +14,7 @@
 <header class="card">
     <h1 class="note-title">{{note.title}}</h1>
     <div class="note-meta">
+        {% if not readonly %}
         {% if note.categories.all %}
         {% for category in note.categories.all %}
         <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
@@ -21,7 +22,9 @@
         {% else %}
         <a href="{% url 'orgapy:notes' %}?uncategorized=1">uncategorized</a>
         {% endif %}
-        · <span title="Created on {{ note.date_creation | date }}"><i class="ri-calendar-line"></i> {{ note.date_creation | date }}</span>
+        · 
+        {% endif %}
+        <span title="Created on {{ note.date_creation | date }}"><i class="ri-calendar-line"></i> {{ note.date_creation | date }}</span>
         {% if note.date_creation.date != note.date_modification.date %}
         · <span title="Edited on {{ note.date_modification | date }}"><i class="ri-edit-circle-line"></i> {{ note.date_modification | date }}</span>
         {% endif %}
@@ -33,6 +36,7 @@
 {% endblock main_content %}
 
 {% block right_column %}
+{% if not readonly %}
 <div class="action-buttons">
     <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="action-button" title="Edit"><i class="ri-pencil-fill"></i></a>
     <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" class="action-button {% if note.pinned %}active{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i></a>
@@ -40,6 +44,7 @@
     <a href="{% url 'orgapy:export_note' nid=note.id %}" class="action-button" title="Download as Markdown"><i class="ri-download-line"></i></a>
     <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="action-button link-confirm" message="Please confirm deletion of '{{ note.title }}'" title="Delete"><i class="ri-delete-bin-line"></i></a>
 </div>
+{% endif %}
 <div class="card" id="toc"></div>
 {% endblock right_column %}
 
@@ -47,7 +52,7 @@
 {{ block.super }}
 <script>
     markdownToHtml(".markdown", true);
-    bindWidgets({{ note.id }});
+    {% if not readonly %}bindWidgets({{ note.id }});{% endif %}
     createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
 </script>
 {% endblock body_scripts %}

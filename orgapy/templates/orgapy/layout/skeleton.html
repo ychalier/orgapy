@@ -33,7 +33,7 @@
     {% block before_columns %}{% endblock before_columns %}
     <div id="columns">
         <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
-        <main id="column-main">
+        <main id="column-main" {% if readonly %}class="readonly"{% endif %}>
         {% block center_column %}
             
             <nav class="navbar" id="navbar-large">

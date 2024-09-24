@@ -787,6 +787,10 @@ input:checked+.toggle-slider+.toggle-text {
     padding-top: calc(42.2px + 1.6rem);
 }
 
+#column-main.readonly + #column-right {
+    padding-top: 0;
+}
+
 #column-right .button-block:first-child {
     margin-top: 0;
 }
@@ -834,6 +838,10 @@ input:checked+.toggle-slider+.toggle-text {
 /** 
  * Navbar
  */
+
+#column-main.readonly .navbar {
+    display: none;
+}
 
 .navbar {
     display: flex;
