@@ -11,48 +11,46 @@
 <script src="{% static 'orgapy/js/notes.js' %}"></script>
 {% endblock %}
 
-{% block before_columns %}
-<form id="form-note-edit" action="{% url 'orgapy:save_note' %}" method="post">
-{% csrf_token %}
-{% if note %}<input type="hidden" name="id" value="{{note.id}}">{% endif %}
-{% endblock before_columns %}
+{% block menu %}{% include 'orgapy/partials/menu_notes.html' %}{% endblock menu %}
 
 {% block main_content %}
 
-<header class="card">
-    <input class="note-form-title" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
-    <div id="categories-input">
-        <input id="categories-input-hidden" type="hidden" name="categories" value="{% for category in note.categories.all %}{% if not forloop.first %};{% endif %}{{ category.id }}{% endfor %}" />
-        <div id="categories-input-current"></div>
-        <div id="categories-suggestions">
-            <input id="categories-input-new" type="text" placeholder="new category" />
-            <div id="categories-suggestions-items"></div>
-        </div>
-    </div>
-</header>
+<form id="form-note-edit" action="{% url 'orgapy:save_note' %}" method="post">
+    {% csrf_token %}
+    {% if note %}<input type="hidden" name="id" value="{{note.id}}">{% endif %}
 
-<textarea class="note-form-content" id="input-content" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
+    <header class="card">
+        <input class="note-form-title" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
+        <div id="categories-input">
+            <input id="categories-input-hidden" type="hidden" name="categories" value="{% for category in note.categories.all %}{% if not forloop.first %};{% endif %}{{ category.id }}{% endfor %}" />
+            <div id="categories-input-current"></div>
+            <div id="categories-suggestions">
+                <input id="categories-input-new" type="text" placeholder="new category" />
+                <div id="categories-suggestions-items"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="row note-form-commands">
+        <button id="btn-save-note" class="button-block">Save and continue</button>
+        <button class="button-block">Save and exit</button>
+        <label class="toggle">
+            <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Pinned</span>
+        </label>
+        <label class="toggle">
+            <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Public</span>
+        </label>
+    </div>
+
+    <textarea class="note-form-content" id="input-content" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
+
+</form>
 
 {% endblock main_content %}
-
-{% block right_column %}
-<button id="btn-save-note" class="button-block">Save and continue</button>
-<button class="button-block">Save and exit</button>
-<label class="toggle">
-    <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
-    <span class="toggle-slider"></span>
-    <span class="toggle-text">Pinned</span>
-</label>
-<label class="toggle">
-    <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
-    <span class="toggle-slider"></span>
-    <span class="toggle-text">Public</span>
-</label>
-{% endblock right_column %}
-
-{% block after_columns %}
-</form>
-{% endblock after_columns %}
 
 {% block body_scripts %}
 {{ block.super }}

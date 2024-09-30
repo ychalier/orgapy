@@ -675,7 +675,6 @@ class Project {
                 toast("Deleted!", 600);
                 delete projects[self.id];
                 inflateProjects();
-                updateProjectCount();
             });
         }
     }
@@ -691,7 +690,6 @@ class Project {
                     delete projects[self.id];
                 }
                 inflateProjects();
-                updateProjectCount();
             });
         }
     }
@@ -703,7 +701,6 @@ class Project {
                 self.archived = false;
                 toast("Unarchived!", 600);
                 inflateProjects();
-                updateProjectCount();
             });
         }
     }
@@ -833,7 +830,6 @@ class TemporaryProject extends Project {
             projects[data.project.id].title = title;
             projects[data.project.id].note = note;
             inflateProjects();
-            updateProjectCount();
             projects[data.project.id].save();
         });
     }
@@ -846,17 +842,6 @@ class TemporaryProject extends Project {
         return this.container;
     }
 
-}
-
-function updateProjectCount() {
-    let count = [...Object.keys(projects)].length;
-    if (count == 0) {
-        document.getElementById("project-count").textContent = "No project";
-    } else if (count == 1) {
-        document.getElementById("project-count").textContent = "1 project";
-    } else {
-        document.getElementById("project-count").textContent = count + " projects";
-    }
 }
 
 function saveProjectRanks(ordering) {
@@ -886,7 +871,6 @@ function inflateProjects() {
     }, {
         dragAllowed: (element) => { return !element.classList.contains("editing"); }
     });
-    updateProjectCount();
 }
 
 function fetchProjectsAndInflate() {
@@ -1050,8 +1034,7 @@ function inflateEvents() {
     container.innerHTML = "";
     
     if (events.length == 0) {
-        container.textContent = "No event";
-        return;
+        remove(container.parentElement);
     }
     
     let days = {};
@@ -1110,8 +1093,7 @@ function inflateTasks() {
     container.innerHTML = "";
 
     if (tasks.length == 0) {
-        container.innerHTML = "No task";
-        return;
+        remove(container.parentElement);
     }
     
     tasks.sort((a, b) => a.start_date - b.start_date);
@@ -1507,7 +1489,6 @@ function fetchObjectives() {
             objectives[data.id] = new Objective(data);
         });
         createObjgraph();
-        document.getElementById("objective-count").textContent = data.objectives.length + " objective" + (data.objectives.length > 0 ? "s" : "");
     });
 }
 
@@ -1594,12 +1575,20 @@ window.addEventListener("load", () => {
         closeModal("modal-add-event");
         fetchApi(form.action, form.method, formData, () => {
             toast("Event added", 600);
-            fetchEvents(false);
+            if (document.getElementById("events") == null) {
+                window.location.reload();
+            } else {
+                fetchEvents(false);
+            }
         });
     });
 
     document.getElementById("events-refresh").addEventListener("click", () => {
-        fetchEvents(true);
+        if (document.getElementById("events") == null) {
+            window.location.reload();
+        } else {
+            fetchEvents(true);
+        }
     });
 
     document.getElementById("events-add").addEventListener("click", () => {
@@ -1631,7 +1620,11 @@ window.addEventListener("load", () => {
         let formData = new FormData(event.target, event.submitter);
         fetchApi(url, "post", formData, () => {
             toast("Saved!", 600);
-            fetchTasks();
+            if (document.getElementById("tasks") == null) {
+                window.location.reload();
+            } else {
+                fetchTasks();
+            }
         });
     });
 

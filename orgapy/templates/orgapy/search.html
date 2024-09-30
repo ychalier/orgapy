@@ -1,9 +1,18 @@
 {% extends "orgapy/layout/skeleton.html" %}
 
+{% block menu %}
+{% include 'orgapy/partials/menu_notes.html' %}
+<hr class="menu-separator">
+{% include 'orgapy/partials/menu_quotes.html' %}
+<hr class="menu-separator">
+{% include 'orgapy/partials/menu_sheets.html' %}
+<hr class="menu-separator">
+{% include 'orgapy/partials/menu_maps.html' %}
+{% endblock menu %}
+
 {% block main_content %}
 
-{% include 'orgapy/partials/searchbar.html' %}
-
+{% if objects %}
 <div class="card card-oneline">
 {% for o in objects %}
     <div class="oneline oneline-striped">
@@ -93,5 +102,11 @@
 </div>
 
 {% include 'orgapy/partials/pagination.html' %}
+
+{% else %}
+<div class="card">
+    <p>Nothing found 😔</p>
+</div>
+{% endif %}
 
 {% endblock main_content %}

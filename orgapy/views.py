@@ -6,8 +6,8 @@ import urllib
 import dateutil.relativedelta
 from django.utils import timezone
 from django.contrib.auth.decorators import permission_required
-from django.shortcuts import redirect
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils.text import slugify
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -218,6 +218,45 @@ def save_map_core(request):
     return mmap
 
 
+def getenv(name):
+    match name:
+        case "projects":
+            return {
+                "active": "projects",
+                "search_url": reverse("orgapy:search"),
+                "suggestions_route": "suggestions",
+            }
+        case "general":
+            return {
+                "search_url": reverse("orgapy:search"),
+                "suggestions_route": "suggestions",
+            }
+        case "notes":
+            return {
+                "active": "notes",
+                "search_url": reverse("orgapy:notes"),
+                "suggestions_route": "note-suggestions",
+            }
+        case "quotes":
+            return {
+                "active": "quotes",
+                "search_url": reverse("orgapy:quotes_search"),
+            }
+        case "sheets":
+            return {
+                "active": "sheets",
+                "search_url": reverse("orgapy:sheets"),
+                "suggestions_route": "sheet-suggestions",
+            }
+        case "maps":
+            return {
+                "active": "maps",
+                "search_url": reverse("orgapy:maps"),
+                "suggestions_route": "map-suggestions",
+            }
+    return {}
+
+
 # ----------------------------------------------- #
 # VIEWS                                           #
 # ----------------------------------------------- #
@@ -237,12 +276,12 @@ def view_about(request):
 @permission_required("orgapy.view_project")
 def view_projects(request):
     return render(request, "orgapy/projects.html", {
-        "active": "projects"
+        **getenv("projects"),
     })
 
 
 def view_search(request):
-    page_size = 23
+    page_size = 24
     query = request.GET.get("query", "")
     if query == "public":
         objects = list(models.Note.objects.filter(user=request.user, public=True))\
@@ -263,12 +302,13 @@ def view_search(request):
         "objects": objects,
         "query": query,
         "paginator": pretty_paginator(objects, query=query),
+        **getenv("general"),
     })
 
 
 @permission_required("orgapy.view_note")
 def view_notes(request):
-    page_size = 23
+    page_size = 24
     query = request.GET.get("query", "")
     category = request.GET.get("category", "")    
     if len(query) > 0 and query[0] == "#":
@@ -296,8 +336,8 @@ def view_notes(request):
         "query": query,
         "category": category,
         "note_paginator": pretty_paginator(notes, query=query),
-        "active": "notes",
         "categories": models.Category.objects.all().order_by("name"),
+        **getenv("notes"),
     })
 
 
@@ -307,7 +347,7 @@ def view_create_note(request):
     return render(request, "orgapy/create_note.html", {
         "categories": categories,
         "note_category_ids": {},
-        "active": "notes",
+        **getenv("notes"),
     })
 
 
@@ -325,7 +365,7 @@ def view_categories(request):
     return render(request, "orgapy/categories.html", {
         "categories": models.Category.objects.filter(user=request.user),
         "uncategorized": models.Note.objects.filter(user=request.user, categories__isnull=True).count(),
-        "active": "notes",
+        **getenv("notes"),
     })
 
 
@@ -342,7 +382,7 @@ def view_edit_category(request, cid):
                     category.save()
             return render(request, "orgapy/edit_category.html", {
                 "category": category,
-                "active": "notes",
+                **getenv("notes"),
             })
     return redirect("orgapy:categories")
 
@@ -370,8 +410,8 @@ def view_note(request, nid):
         raise PermissionDenied
     return render(request, "orgapy/note.html", {
         "note": note,
-        "active": "notes",
-        "readonly": readonly
+        "readonly": readonly,
+        **getenv("notes"),
     })
 
 
@@ -384,7 +424,7 @@ def view_edit_note(request, nid):
         "note": note,
         "categories": categories,
         "note_category_ids": note_category_ids,
-        "active": "notes",
+        **getenv("notes"),
     })
 
 
@@ -435,7 +475,7 @@ def view_quotes(request):
         "recent_quotes": recent_quotes,
         "random_quotes": random_quotes,
         "authors": authors,
-        "active": "quotes",
+        **getenv("quotes"),
     })
 
 
@@ -463,7 +503,7 @@ def view_quotes_search(request, author=None, work=None):
         "author": author,
         "work": work,
         "quote_paginator": pretty_paginator(quotes, query=query),
-        "active": "quotes",
+        **getenv("quotes"),
     })
 
 
@@ -477,7 +517,7 @@ def view_quote(request, qid):
         "quotes": [quote],
         "author": quote.from_work.author,
         "work": quote.from_work,
-        "active": "quotes",
+        **getenv("quotes"),
     })
 
 
@@ -515,7 +555,7 @@ def view_create_quote(request):
     return render(request, "orgapy/create_quote.html", {
         "authors": authors,
         "works": works,
-        "active": "quotes",
+        **getenv("quotes"),
     })
 
 
@@ -533,7 +573,7 @@ def view_sheets(request):
         "groups": groups,
         "standalone_sheets": standalone_sheets,
         "query": query,
-        "active": "sheets",
+        **getenv("sheets"),
     })
 
 
@@ -541,8 +581,8 @@ def view_sheets(request):
 def view_create_sheet(request):
     sheet_groups = models.SheetGroup.objects.filter(user=request.user)
     return render(request, "orgapy/create_sheet.html", {
-        "active": "sheets",
         "sheet_groups": sheet_groups,
+        **getenv("sheets"),
     })
 
 
@@ -588,7 +628,7 @@ def view_sheet_group(request, sid):
     group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
     return render(request, "orgapy/sheet_group.html", {
         "group": group,
-        "active": "sheets",
+        **getenv("sheets"),
     })
 
 
@@ -599,7 +639,7 @@ def view_edit_sheet_group(request, sid):
     group = models.SheetGroup.objects.filter(user=request.user, id=int(sid)).get()
     return render(request, "orgapy/edit_sheet_group.html", {
         "group": group,
-        "active": "sheets",
+        **getenv("sheets"),
     })
 
 
@@ -627,8 +667,8 @@ def view_sheet(request, sid):
         raise PermissionDenied()
     response = render(request, "orgapy/sheet.html", {
         "sheet": sheet,
-        "active": "sheets",
-        "readonly": read_only
+        "readonly": read_only,
+        **getenv("sheets"),
     })
     response["X-Frame-Options"] = "SAMEORIGIN"
     return response
@@ -640,8 +680,8 @@ def view_edit_sheet(request, sid):
     sheet_groups = models.SheetGroup.objects.filter(user=request.user)
     return render(request, "orgapy/edit_sheet.html", {
         "sheet": sheet,
-        "active": "sheets",
         "sheet_groups": sheet_groups,
+        **getenv("sheets"),
     })
 
 
@@ -682,14 +722,14 @@ def view_maps(request):
     return render(request, "orgapy/maps.html", {
         "maps": maps,
         "query": query,
-        "active": "maps",
+        **getenv("maps"),
     })
 
 
 @permission_required("orgapy.add_map")
 def view_create_map(request):
     return render(request, "orgapy/create_map.html", {
-        "active": "maps",
+        **getenv("maps"),
     })
 
 
@@ -717,7 +757,7 @@ def view_map(request, mid):
     response = render(request, "orgapy/map.html", {
         "map": mmap,
         "readonly": read_only,
-        "active": "maps",
+        **getenv("maps"),
     })
     response["X-Frame-Options"] = "SAMEORIGIN"
     return response

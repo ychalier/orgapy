@@ -3,9 +3,14 @@
 
 {% block title %}{% block subtitle %}{{group.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block main_content %}
+{% block menu %}
+{% include 'orgapy/partials/menu_sheets.html' %}
+<hr class="menu-separator">
+<li class="menu-item"><a href="{% url 'orgapy:edit_sheet_group' group.id %}"><i class="ri-pencil-fill"></i> Edit sheet group</a></li>
+<li class="menu-item"><a class="link-confirm" message="Please confirm deletion of '{{ group.title }}'" href="{% url 'orgapy:delete_sheet_group' group.id %}"><i class="ri-delete-bin-line"></i> Delete</a></li>
+{% endblock %}
 
-{% include 'orgapy/partials/sheet_searchbar.html' %}
+{% block main_content %}
 
 {% if group.sheet_set.all %}
 <div class="card card-oneline">
@@ -27,12 +32,6 @@
     </div>
 </div>
 {% endif %}
-
-<div class="row">
-    <a class="button" href="{% url 'orgapy:edit_sheet_group' group.id %}"><i class="ri-pencil-fill"></i> Edit</a>
-    <a class="button link-confirm" message="Please confirm deletion of '{{ group.title }}'" href="{% url 'orgapy:delete_sheet_group' group.id %}"><i class="ri-delete-bin-line"></i> Delete</a>
-</div>
-
 
 {% endblock main_content %}
 

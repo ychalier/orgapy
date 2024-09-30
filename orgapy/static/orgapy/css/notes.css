@@ -25,11 +25,18 @@
     background: none;
 }
 
+.note-form-commands {
+    gap: .4rem;
+}
+
+.note-form-commands > * {
+    margin: 0;
+}
+
 .note-form-content {
     display: block;
     padding: .8rem;
     margin: .8rem 0;
-    /*height: 100%;*/
     resize: none;
 }
 

@@ -3,16 +3,9 @@
 
 {% block title %}{% block subtitle %}Quotes &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block main_content %}
+{% block menu %}{% include 'orgapy/partials/menu_quotes.html' %}{% endblock menu %}
 
-<form class="searchbar" action="{% url 'orgapy:quotes_search' %}" method="get">
-    <div class="searchbar-container">         
-        <input class="searchbar-input" type="text" name="query" placeholder="Search a quote content" value="{% if query %}{{query}}{% endif %}" />
-        <i class="searchbar-icon"></i>
-    </div>
-    <button class="searchbar-search">Search</button>
-    <a class="searchbar-create button" href="{% url 'orgapy:create_quote' %}">Create quote</a>
-</form>
+{% block main_content %}
 
 {% if recent_quotes %}
 

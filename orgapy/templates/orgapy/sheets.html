@@ -3,9 +3,12 @@
 
 {% block title %}{% block subtitle %}Sheets &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block main_content %}
+{% block menu %}
+{% include 'orgapy/partials/menu_sheets.html' %}
+<li class="menu-item"><button onclick="showModal('modal-create-sheet-group')"><i class="ri-add-line"></i> Create sheet group</a></li>
+{% endblock %}
 
-{% include 'orgapy/partials/sheet_searchbar.html' %}
+{% block main_content %}
 
 {% if groups or standalone_sheets %}
 
@@ -40,8 +43,6 @@
     </div>
 </div>
 {% endif %}
-
-<button onclick="showModal('modal-create-sheet-group')">Create sheet group</button>
 
 <div id="modal-create-sheet-group" class="modal">
     <span class="modal-overlay" onclick="closeModal('modal-create-sheet-group')"></span>

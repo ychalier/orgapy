@@ -7,6 +7,10 @@
     flex-direction: column;
 }
 
+.projects + .card {
+    margin-top: .4rem;
+}
+
 .project {
     position: relative;
     box-sizing: border-box;
@@ -301,10 +305,6 @@
     min-height: .8rem;
 }
 
-#projects-footer {
-    margin-top: 0;
-}
-
 /**
  * Events
  */
@@ -375,12 +375,7 @@
 
 /** OBJECTIVES ****************************************************************/
 
-#objectives-footer {
-    margin-top: .4rem;
-}
-
 #objectives-card {
-    margin-bottom: 0;
     border: none;
     position: relative;
     padding: 0;

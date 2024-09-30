@@ -30,28 +30,36 @@
 
 <body class="{% block body_class %}{% endblock %}">
     {% block body %}
-    {% block before_columns %}{% endblock before_columns %}
     <div id="columns">
         <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
         <main id="column-main" {% if readonly %}class="readonly"{% endif %}>
         {% block center_column %}
-            
-            <nav class="navbar" id="navbar-large">
-                <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}">Projects</a>
-                <a href="{% url 'orgapy:notes' %}" class="navbar-link {% if active == 'notes' %}active{% endif %}">Notes</a>
-                <a href="{% url 'orgapy:quotes' %}" class="navbar-link {% if active == 'quotes' %}active{% endif %}">Quotes</a>
-                <a href="{% url 'orgapy:sheets' %}" class="navbar-link {% if active == 'sheets' %}active{% endif %}">Sheets</a>
-                <a href="{% url 'orgapy:maps' %}" class="navbar-link {% if active == 'maps' %}active{% endif %}">Maps</a>
+            <nav class="navbar">
+                <div class="navbar-left">
+                    <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-checkbox-circle-line"></i>{% endif %}</a>
+                    <a href="{% url 'orgapy:notes' %}" class="navbar-link {% if active == 'notes' %}active{% endif %}" title="Notes">{% if active == 'notes' %}Notes{% else %}<i class="ri-sticky-note-line"></i>{% endif %}</a>
+                    <a href="{% url 'orgapy:quotes' %}" class="navbar-link {% if active == 'quotes' %}active{% endif %}" title="Quotes">{% if active == 'quotes' %}Quotes{% else %}<i class="ri-double-quotes-l"></i>{% endif %}</a>
+                    <a href="{% url 'orgapy:sheets' %}" class="navbar-link {% if active == 'sheets' %}active{% endif %}" title="Sheets">{% if active == 'sheets' %}Sheets{% else %}<i class="ri-table-line"></i>{% endif %}</a>
+                    <a href="{% url 'orgapy:maps' %}" class="navbar-link {% if active == 'maps' %}active{% endif %}" title="Maps">{% if active == 'maps' %}Maps{% else %}<i class="ri-map-2-line"></i>{% endif %}</a>
+                </div>
+                <div class="navbar-right">
+                    {% if search_url %}
+                    <form id="searchbar" class="searchbar" action="{{ search_url }}" method="get">
+                        <div class="searchbar-container">         
+                            <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search" value="{% if query %}{{query}}{% endif %}" />
+                            <i class="searchbar-icon ri-close-line"></i>
+                            <div class="searchbar-suggestions"></div>
+                        </div>
+                        <button class="searchbar-search"><i class="ri-search-line"></i></button>
+                        <button class="searchbar-search-small"><i class="ri-search-line"></i></button>
+                    </form>
+                    {% endif %}
+                    <div id="menu-dropdown" class="dropdown">
+                        <a class="navbar-link dropdown-toggle" tabindex="0"><i class="ri-menu-line"></i></a>
+                        <ul class="menu">{% block menu %}{% endblock menu %}</ul>
+                    </div>
+                </div>
             </nav>
-            
-            <nav class="navbar" id="navbar-small">
-                <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-checkbox-circle-line"></i>{% endif %}</a>
-                <a href="{% url 'orgapy:notes' %}" class="navbar-link {% if active == 'notes' %}active{% endif %}" title="Notes">{% if active == 'notes' %}Notes{% else %}<i class="ri-sticky-note-line"></i>{% endif %}</a>
-                <a href="{% url 'orgapy:quotes' %}" class="navbar-link {% if active == 'quotes' %}active{% endif %}" title="Quotes">{% if active == 'quotes' %}Quotes{% else %}<i class="ri-double-quotes-l"></i>{% endif %}</a>
-                <a href="{% url 'orgapy:sheets' %}" class="navbar-link {% if active == 'sheets' %}active{% endif %}" title="Sheets">{% if active == 'sheets' %}Sheets{% else %}<i class="ri-table-line"></i>{% endif %}</a>
-                <a href="{% url 'orgapy:maps' %}" class="navbar-link {% if active == 'maps' %}active{% endif %}" title="Maps">{% if active == 'maps' %}Maps{% else %}<i class="ri-map-2-line"></i>{% endif %}</a>
-            </nav>
-            
             {% block main_content_prev %}{% endblock main_content_prev %}
             {% block main_content %}{% endblock main_content %}
             {% block main_content_next %}{% endblock main_content_next %}
@@ -59,11 +67,15 @@
         </main>
         <div id="column-right"><div id="column-right-sticky">{% block right_column %}{% endblock right_column %}</div></div>
     </div>
-    {% block after_columns %}{% endblock after_columns %}
     {% endblock body %}
     <div id="snackbar"></div>
     {% block body_bottom %}{% endblock body_bottom %}
     {% block body_scripts %}{% endblock body_scripts %}
+    <script>
+        bindDropdown(document.getElementById("menu-dropdown"));
+        {% if search_url %}bindSearchButton(document.getElementById("searchbar"), document.querySelector("#searchbar .searchbar-search-small"));{% endif %}
+        {% if suggestions_route %}bindSearchbarSuggestions(document.getElementById("searchbar"), "{{ suggestions_route }}");{% endif %}
+    </script>
 </body>
 
 </html>

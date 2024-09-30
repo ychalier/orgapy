@@ -241,14 +241,21 @@ function bindDropdown(dropdown) {
     const menu = dropdown.querySelector(".menu");    
 
     toggle.addEventListener("focusin", () => {
-        const toggleBounds = toggle.getBoundingClientRect();
+        const padding = 4;
         menu.style.position = "absolute";
         menu.style.zIndex = 9999;
-        menu.style.top = toggleBounds.bottom + "px";
-        const baseLeft = ((toggleBounds.left + toggleBounds.right) / 2);
+        const toggleBounds = toggle.getBoundingClientRect();
         const menuBounds = menu.getBoundingClientRect();
-        const maxLeft = window.innerWidth - menuBounds.width;
-        menu.style.left = Math.max(0, Math.min(baseLeft, maxLeft)) + "px";
+        const fitsUnder = toggleBounds.bottom + padding + menuBounds.height <= window.innerHeight;
+        const baseLeft = toggleBounds.left;
+        const maxLeft = window.innerWidth - padding - menuBounds.width;
+        const left = Math.max(padding, Math.min(baseLeft, maxLeft));
+        menu.style.left = left + "px";
+        if (fitsUnder) {
+            menu.style.top = (toggleBounds.bottom + padding + window.scrollY) + "px";
+        } else {
+            menu.style.top = (toggleBounds.top - padding - menuBounds.height + window.scrollY) + "px";
+        }
         document.body.prepend(menu);
     });
 
@@ -272,6 +279,20 @@ function bindGotoPaginatorButton(buttonSelector, currentPage, maxPage, attrStrin
             const newUrl = baseUrl + `?page=${pageNumber}${attrString}`;
             window.location.href = newUrl;
         }
+    });
+}
+
+function bindSearchButton(form, button) {
+    button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const input = form.querySelector("input[name=query]");
+        const query = prompt("Search", input.value);
+        if (query) {
+            input.value = query;
+            form.submit(); 
+        }
+        return false;
     });
 }
 

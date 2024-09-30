@@ -425,6 +425,7 @@ blockquote p {
     display: block;
     white-space: nowrap;
     padding: .2rem .4rem !important;
+    line-height: 1.6;
 }
 
 .menu-item a {
@@ -438,6 +439,12 @@ blockquote p {
     width: 100%;
     height: 100%;
     text-align: left;
+}
+
+.menu-separator {
+    width: 100%;
+    margin: 0;
+    border: 1px solid #444;
 }
 
 /**
@@ -699,8 +706,6 @@ input:checked+.toggle-slider+.toggle-text {
 
 .searchbar {
     display: flex;
-    margin: .8rem 0;
-    width: 100%;
 }
 
 .searchbar-container {
@@ -730,11 +735,8 @@ input:checked+.toggle-slider+.toggle-text {
 
 .searchbar-search {
     border-radius: 0 .4rem .4rem 0;
-}
-
-.searchbar-create {
-    margin-left: .4rem;
-    white-space: nowrap;
+    padding: 0 .4rem;
+    border-left: none;
 }
 
 .searchbar-suggestions {
@@ -766,6 +768,24 @@ input:checked+.toggle-slider+.toggle-text {
     border-bottom: 1px solid black;
 }
 
+.searchbar-search-small {
+    display: none;
+    border: none;
+    background: none;
+}
+
+@media (max-width: 800px) {
+    .searchbar-container {
+        display: none;
+    }
+    .searchbar-search {
+        display: none;
+    }
+    .searchbar-search-small {
+        display: block;
+    }
+}
+
 /***** SPECIFIC COMPONENTS ****************************************************/
 
 /**
@@ -791,7 +811,7 @@ input:checked+.toggle-slider+.toggle-text {
     position: relative;
     flex-grow: 1;
     flex-basis: 0;
-    padding-top: calc(42.2px + 1.6rem);
+    padding-top: calc(48.6px + 1.6rem);
 }
 
 #column-main.readonly + #column-right {
@@ -852,14 +872,30 @@ input:checked+.toggle-slider+.toggle-text {
 
 .navbar {
     display: flex;
-    flex-wrap: wrap;
-    gap: .2rem;
+    justify-content: space-between;
     background: #07141d;
     margin: .8rem 0;
-    padding: .4rem;
-    justify-content: flex-start;
     border-radius: .4rem;
     border: 1px solid black;
+    padding: .4rem;
+    flex-wrap: wrap;
+    gap: .2rem;
+}
+
+.navbar-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.navbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .2rem;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .navbar-link {
@@ -880,16 +916,8 @@ input:checked+.toggle-slider+.toggle-text {
     color: #8ed2ff;
 }
 
-@media(min-width: 800px) {
-    #navbar-small {
-        display: none;
-    }
-}
-
-@media (max-width: 800px) {
-    #navbar-large {
-        display: none;
-    }
+.navbar-link.dropdown-toggle {
+    height: auto;
 }
 
 /**

@@ -16,36 +16,18 @@
 
 {% block main_content %}
 
-{% include 'orgapy/partials/searchbar.html' %}
+<div class="card">
+    <div id="tasks"></div>
+</div>
 
 <div id="objectives-card" class="card hidden">
     <div id="objgraph-wrapper" class="objgraph-wrapper"></div>
 </div>
 
-<div id="objectives-footer" class="card card-slim">
-    <div class="card-commands">
-        <span id="objective-count">No objective</span>
-        {% if not request.GET.archivedObjectives %}
-        <a class="button" href="{% url 'orgapy:projects' %}?archivedObjectives=1{% if request.GET.archivedProjects %}&archivedProjects=1{% endif %}">View Archived</a>
-        {% else %}
-        <a class="button" href="{% url 'orgapy:projects' %}{% if request.GET.archivedProjects %}?archivedProjects=1{% endif %}">Hide Archived</a>
-        {% endif %}
-        <button id="btn-objective-create"><i class="ri-add-line"></i> Add</button>
-    </div>
-</div>
-
 <div id="projects" class="projects"></div>
 
-<div id="projects-footer" class="card card-slim">
-    <div class="card-commands">
-        <span id="project-count">No project</span>
-        {% if not request.GET.archivedProjects %}
-        <a class="button" href="{% url 'orgapy:projects' %}?archivedProjects=1{% if request.GET.archivedObjectives %}&archivedObjectives=1{% endif %}">View Archived</a>
-        {% else %}
-        <a class="button" href="{% url 'orgapy:projects' %}{% if request.GET.archivedObjectives %}?archivedObjectives=1{% endif %}">Hide Archived</a>
-        {% endif %}
-        <button id="btn-project-create"><i class="ri-add-line"></i> Add</button>
-    </div>
+<div class="card">
+    <div id="events"></div>
 </div>
 
 <div class="modal" id="modal-objective-form">
@@ -221,21 +203,34 @@
 
 {% endblock main_content %}
 
+{% block menu %}
+<li class="menu-item"><button id="tasks-add"><i class="ri-add-line"></i> Add Task</button></li>
+<li class="menu-item"><button id="tasks-explore"><i class="ri-search-line"></i> Explore Tasks</button></li>
+<hr class="menu-separator">
+<li class="menu-item"><button id="events-add"><i class="ri-add-line"></i> Add Event</button></li>
+<li class="menu-item"><button id="events-refresh"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
+<hr class="menu-separator">
+<li class="menu-item"><button id="btn-objective-create"><i class="ri-add-line"></i> Add Objective</button></li>
+<li class="menu-item">
+{% if not request.GET.archivedObjectives %}
+<a href="{% url 'orgapy:projects' %}?archivedObjectives=1{% if request.GET.archivedProjects %}&archivedProjects=1{% endif %}"><i class="ri-eye-line"></i> All Objectives</a>
+{% else %}
+<a href="{% url 'orgapy:projects' %}{% if request.GET.archivedProjects %}?archivedProjects=1{% endif %}"><i class="ri-eye-off-line"></i> Active Objectives</a>
+{% endif %}
+</li>
+<hr class="menu-separator">
+<li class="menu-item"><button id="btn-project-create"><i class="ri-add-line"></i> Add Project</button></li>
+<li class="menu-item">
+{% if not request.GET.archivedProjects %}
+<a href="{% url 'orgapy:projects' %}?archivedProjects=1{% if request.GET.archivedObjectives %}&archivedObjectives=1{% endif %}"><i class="ri-eye-line"></i> All Projects</a>
+{% else %}
+<a href="{% url 'orgapy:projects' %}{% if request.GET.archivedObjectives %}?archivedObjectives=1{% endif %}"><i class="ri-eye-off-line"></i> Active Projects</a>
+{% endif %}
+</li>
+{% endblock menu %}
+
 {% block right_column %}
-<div class="card">
-    <div id="events"></div>
-    <div class="card-commands">
-        <button id="events-add"><i class="ri-add-line"></i> Add</button>
-        <button id="events-refresh"><i class="ri-reset-left-line"></i> Refresh</button>
-    </div>
-</div>
-<div class="card">
-    <div id="tasks"></div>
-    <div class="card-commands">
-        <button id="tasks-add"><i class="ri-add-line"></i> Add</button>
-        <button id="tasks-explore"><i class="ri-search-line"></i> Explore</button>
-    </div>
-</div>
+
 {% endblock right_column %}
 
 {% block body_scripts %}

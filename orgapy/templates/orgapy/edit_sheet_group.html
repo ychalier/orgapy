@@ -3,6 +3,8 @@
 
 {% block title %}{% block subtitle %}Edit sheet group &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
+{% block menu %}{% include 'orgapy/partials/menu_sheets.html' %}{% endblock %}
+
 {% block main_content %}
 <div class="card">
     <h2>Edit sheet group</h2>
