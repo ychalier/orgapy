@@ -81,9 +81,9 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
             input.focus();
         });
         input.addEventListener("input", () => {
-            container.innerHTML = "";
             const query = input.value.trim();
             fetch(URL_API + `?action=${apiAction}&q=${query}`).then(res => res.json()).then(data => {
+                container.innerHTML = "";
                 for (const entry of data.results) {
                     const element = document.createElement("a");
                     element.className = "searchbar-suggestion";
