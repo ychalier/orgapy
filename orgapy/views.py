@@ -550,11 +550,30 @@ def view_create_quote(request):
             return redirect("orgapy:quotes_search")
     authors = models.Author.objects.filter(user=request.user).order_by("name")
     set_last_attribute(authors)
-    works = models.Work.objects.filter(user=request.user).order_by("author__name", "title")
-    set_last_attribute(works)
+    works = models.Work.objects.filter(user=request.user).order_by("author__name", "title")    
+    
+    preselect_work_id = None
+    last_quote_added = None
+    q = models.Quote.objects.order_by("-date_creation")
+    if q.exists():
+        last_quote_added = q[0]
+    last_work_added = None
+    q = models.Work.objects.order_by("-date_creation")
+    if q.exists():
+        last_work_added = q[0]
+    if last_work_added is None and last_quote_added is None:
+        pass
+    elif last_work_added is not None and last_quote_added is None:
+        preselect_work_id = last_work_added.id
+    elif last_work_added.date_creation > last_quote_added.date_creation:
+        preselect_work_id = last_work_added.id
+    else:
+        preselect_work_id = last_quote_added.from_work.id
+
     return render(request, "orgapy/create_quote.html", {
         "authors": authors,
         "works": works,
+        "preselect_work_id": preselect_work_id,
         **getenv("quotes"),
     })
 

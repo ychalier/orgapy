@@ -58,7 +58,7 @@
             <label for="input-work">Work</label>
             <select id="input-work" name="quote_work">
                 {% for work in works %}
-                <option value="{{ work.id }}" {% if work.last_created %}selected{% endif %}>{{ work.author.name }} &ndash; {{ work.title }}</option>
+                <option value="{{ work.id }}" {% if work.id == preselect_work_id %}selected{% endif %}>{{ work.author.name }} &ndash; {{ work.title }}</option>
                 {% endfor %}
             </select>
         </p>
