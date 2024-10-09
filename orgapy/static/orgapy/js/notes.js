@@ -156,13 +156,14 @@ function setupCategoryInput() {
 }
 
 function bindSaveNoteButton() {
-    let buttonSaveNote = document.getElementById("btn-save-note");
+    const buttonSaveNote = document.getElementById("btn-save-note");
+    if (buttonSaveNote == null) return;
     buttonSaveNote.classList.add("disabled");
     buttonSaveNote.addEventListener("click", (event) => {
         event.preventDefault();
         buttonSaveNote.classList.add("disabled");
-        let form = document.getElementById("form-note-edit");
-        let formdata = new FormData(form);
+        const form = document.getElementById("form-note-edit");
+        const formdata = new FormData(form);
         fetch(form.action, {method: form.method, body: formdata}).then(res => {
             toast("Saved!", 600);
         });
