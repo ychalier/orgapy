@@ -46,6 +46,24 @@ const SLOT_STATE_COOLDOWN = 3;
 const SLOT_STATE_FUTURE = 4;
 const SLOT_STATE_FUTURE_COMPLETE = 5;
 
+const TASK_NO_DATE = 0;
+const TASK_TODAY = 1;
+const TASK_THIS_WEEK = 2;
+const TASK_NEXT_WEEK = 3;
+const TASK_THIS_MONTH = 4;
+const TASK_NEXT_MONTH = 5;
+const TASK_LATER = 6;
+
+const TASK_CATEGORY_LABELS = [
+    "No Date",
+    "Today",
+    "This Week",
+    "Next Week",
+    "This Month",
+    "Next Month",
+    "Later",
+];
+
 /** Projects ******************************************************************/
 
 function clearContextMenus() {
@@ -944,6 +962,50 @@ class Task {
         this.dueDate = data.due_date ? new Date(data.due_date) : null;
         this.recurringMode = data.recurring_mode;
         this.recurringPeriod = data.recurring_period;
+        this.category = this.getCategory();
+    }
+
+    getCategory() {
+        if (this.dueDate == null) return TASK_NO_DATE;
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const limitToday = new Date(now.getTime());
+        limitToday.setTime(limitToday.getTime() + 24 * 3600 * 1000);
+        if (this.dueDate < limitToday) {
+            return TASK_TODAY;
+        }
+        const limitThisWeek = new Date(limitToday.getTime());
+        const daysTillEndOfWeek = 6 - (now.getDay() + 6) % 7;
+        limitThisWeek.setTime(limitThisWeek.getTime() + daysTillEndOfWeek * 24 * 3600 * 1000);
+        if (this.dueDate < limitThisWeek) {
+            return TASK_THIS_WEEK;
+        }
+        const limitNextWeek = new Date(limitThisWeek.getTime() + 7 * 24 * 3600 * 1000);
+        if (this.dueDate < limitNextWeek) {
+            return TASK_NEXT_WEEK;
+        }
+        const limitThisMonth = new Date(now.getTime());
+        limitThisMonth.setDate(1);
+        if (now.getMonth() == 11) {
+            limitThisMonth.setFullYear(now.getFullYear() + 1);
+            limitThisMonth.setMonth(0);
+        } else {
+            limitThisMonth.setMonth(now.getMonth() + 1);
+        }
+        if (this.dueDate < limitThisMonth) {
+            return TASK_THIS_MONTH;
+        }
+        const limitNextMonth = new Date(limitThisMonth.getTime());
+        if (limitThisMonth.getMonth() == 11) {
+            limitNextMonth.setFullYear(limitThisMonth.getFullYear() + 1);
+            limitNextMonth.setMonth(0);
+        } else {
+            limitNextMonth.setMonth(limitThisMonth.getMonth() + 1);
+        }
+        if (this.dueDate < limitNextMonth) {
+            return TASK_NEXT_MONTH;
+        }
+        return TASK_LATER;
     }
 
     inflate(container) {
@@ -1011,7 +1073,7 @@ function fetchEvents(force=false) {
 }
 
 function fetchTasks() {
-    let url = URL_API + "?action=list-tasks&limit=5";
+    let url = URL_API + "?action=list-tasks&limit=0";
     fetch(url).then(res => res.json()).then(data => {
         tasks = [];
         const now = new Date();
@@ -1095,40 +1157,28 @@ function inflateTasks() {
     if (tasks.length == 0) {
         remove(container.parentElement);
     }
-    
-    tasks.sort((a, b) => a.start_date - b.start_date);
 
-    let seen = new Set();
-    let currentTasks = [];
-    let futureTasks = [];
-    const now = new Date();
-
-    tasks.forEach(task => {
-        if (task.startDate <= now) {
-            seen.add(task.id);
-            currentTasks.push(task);
-        } else if (!seen.has(task.id)) {
-            seen.add(task.id);
-            futureTasks.push(task);
+    tasks.sort((a, b) => {
+        if (a.dueDate == null && b.dueDate != null) {
+            return -1;
+        } else if (a.dueDate != null && b.dueDate == null) {
+            return 1;
+        } else if (a.dueDate == null && b.dueDate == null) {
+            return a.start_date - b.start_date;
+        } else {
+            return a.due_date - b.due_date;
         }
     });
 
-    let taskTitle = create(container, "div", "card-subtitle");
-    if (currentTasks.length > 0) {
-        taskTitle.textContent = `Current tasks (${currentTasks.length})`;
-        currentTasks.forEach(task => {
-            task.inflate(container);
-        });
-    } else {
-        taskTitle.textContent = `No current task`;
-    }
-
-    if (futureTasks.length > 0) {
-        let details = create(container, "details");
-        create(details, "summary", "card-subtitle").textContent = `Incoming tasks (${futureTasks.length})`;
-        futureTasks.forEach(task => {
+    for (let category = 0; category < 7; category++) {
+        const tasksInCategory = tasks.filter(task => task.category == category);
+        if (tasksInCategory.length == 0) continue;
+        const details = create(container, "details");
+        details.open = true;
+        create(details, "summary", "card-subtitle").textContent = `${TASK_CATEGORY_LABELS[category]} (${tasksInCategory.length})`;
+        for (const task of tasksInCategory) {
             task.inflate(details);
-        });
+        }
     }
     
 }

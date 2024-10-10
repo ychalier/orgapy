@@ -352,6 +352,10 @@
     line-height: 1.6;
 }
 
+#tasks > details:first-child > .card-subtitle {
+    margin-top: 0;
+}
+
 .task-overdue {
     color: #e65400;
 }
