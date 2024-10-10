@@ -393,7 +393,7 @@ def view_note(request, nid):
     if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
         readonly =  False
         has_permission = True
-    elif note.public:
+    elif note.public and isinstance(nid, str) and len(nid) == 12:
         has_permission = True
     if not has_permission:
         raise PermissionDenied
@@ -668,7 +668,7 @@ def view_sheet(request, sid):
         read_only = True
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet"):
         has_permission = True
-    elif sheet.public:
+    elif sheet.public and isinstance(sid, str) and len(sid) == 12:
         has_permission = True
         read_only = True
     if not has_permission:
@@ -757,7 +757,7 @@ def view_map(request, mid):
         read_only = False
     if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map"):
         has_permission = True
-    elif mmap.public:
+    elif mmap.public and isinstance(mid, str) and len(mid) == 12:
         has_permission = True
         read_only = True
     if not has_permission:
