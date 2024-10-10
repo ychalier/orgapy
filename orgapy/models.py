@@ -1,4 +1,7 @@
 import datetime
+import json
+import random
+
 from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
@@ -6,7 +9,12 @@ from django.urls import reverse
 from django.utils import timezone
 
 import caldav
-import json
+
+
+def generate_nonce() -> str:
+    tokens = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
+    choices = random.choices(tokens, k=12)
+    return "".join(choices)
 
 
 class Category(models.Model):
@@ -23,7 +31,6 @@ class Category(models.Model):
         return f"{ self.user } - { self.name }"
 
 
-
 class Note(models.Model):
     """Represent a general note, ie. a title and a text"""
 
@@ -36,6 +43,7 @@ class Note(models.Model):
     public = models.BooleanField(default=False)
     categories = models.ManyToManyField("Category", blank=True)
     pinned = models.BooleanField(default=False)
+    nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
 
     class Meta:
 
@@ -43,6 +51,11 @@ class Note(models.Model):
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
+
+    def save(self, *args, **kwargs):
+        if self.nonce is None:
+            self.nonce = generate_nonce()
+        return super(Note, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("orgapy:note", kwargs={"nid": self.id})
@@ -355,6 +368,7 @@ class Sheet(models.Model):
     config = models.TextField(blank=True, null=True)
     public = models.BooleanField(default=False)
     group = models.ForeignKey("SheetGroup", on_delete=models.SET_NULL, null=True, blank=True)
+    nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
 
     class Meta:
 
@@ -362,6 +376,11 @@ class Sheet(models.Model):
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
+
+    def save(self, *args, **kwargs):
+        if self.nonce is None:
+            self.nonce = generate_nonce()
+        return super(Sheet, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("orgapy:sheet", kwargs={"sid": self.id})
@@ -387,6 +406,7 @@ class Map(models.Model):
     geojson = models.TextField(blank=True, null=True)
     config = models.TextField(blank=True, null=True)
     public = models.BooleanField(default=False)
+    nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
 
     class Meta:
 
@@ -394,6 +414,11 @@ class Map(models.Model):
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
+
+    def save(self, *args, **kwargs):
+        if self.nonce is None:
+            self.nonce = generate_nonce()
+        return super(Map, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("orgapy:map", kwargs={"mid": self.id})
