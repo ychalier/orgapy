@@ -227,6 +227,14 @@
 <a href="{% url 'orgapy:projects' %}{% if request.GET.archivedObjectives %}?archivedObjectives=1{% endif %}"><i class="ri-eye-off-line"></i> Active Projects</a>
 {% endif %}
 </li>
+<hr class="menu-separator">
+{% include 'orgapy/partials/menu_notes.html' %}
+<hr class="menu-separator">
+{% include 'orgapy/partials/menu_quotes.html' %}
+<hr class="menu-separator">
+{% include 'orgapy/partials/menu_sheets.html' %}
+<hr class="menu-separator">
+{% include 'orgapy/partials/menu_maps.html' %}
 {% endblock menu %}
 
 {% block right_column %}
