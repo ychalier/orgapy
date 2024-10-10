@@ -10,6 +10,7 @@
             <li class="menu-item"><a href="{% url 'orgapy:toggle_map_public' mid=map.id %}?next={{ request.path }}" title="Make public"><i class="ri-lock-unlock-line"></i> Publish</a></li>
             {% else %}
             <li class="menu-item"><a href="{% url 'orgapy:toggle_map_public' mid=map.id %}?next={{ request.path }}" title="Make private"><i class="ri-lock-line"></i> Make private</a></li>
+            <li class="menu-item"><a href="{% url 'orgapy:map' mid=map.nonce %}"><i class="ri-share-line"></i> Share</a></li>
             {% endif %}
             <li class="menu-item"><a href="{% url 'orgapy:export_map' mid=map.id %}" title="Download as GeoJSON"><i class="ri-download-line"></i> Download</a></li>
             <li class="menu-item"><a href="{% url 'orgapy:delete_map' mid=map.id %}" class="link-confirm" message="Please confirm deletion of '{{ map.title }}'" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>

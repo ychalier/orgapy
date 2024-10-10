@@ -56,10 +56,17 @@ def pretty_paginator(page, **attrs):
     return paginator
 
 
-def get_note_from_nid(nid, required_user=None):
-    if not models.Note.objects.filter(id=nid).exists():
+def find_object(model, id_or_nonce, required_user=None):
+    if isinstance(id_or_nonce, int):
+        query = model.objects.filter(id=id_or_nonce)
+    else:
+        if len(id_or_nonce) == 12:
+            query = model.objects.filter(nonce=id_or_nonce)
+        else:
+            query = model.objects.filter(id=int(id_or_nonce))
+    if not query.exists():
         raise Http404("Note does not exist")
-    note = models.Note.objects.get(id=nid)
+    note = query.first()
     if required_user is not None and note.user != required_user:
         raise PermissionDenied
     return note
@@ -143,15 +150,6 @@ def parse_date(date_string):
     return datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
 
 
-def get_sheet_from_sid(sid, required_user=None):
-    if not models.Sheet.objects.filter(id=sid).exists():
-        raise Http404("Sheet does not exist")
-    sheet = models.Sheet.objects.get(id=sid)
-    if required_user is not None and sheet.user != required_user:
-        raise PermissionDenied
-    return sheet
-
-
 def save_sheet_core(request):
     original_sheet = None
     if ("id" in request.POST
@@ -183,15 +181,6 @@ def save_sheet_core(request):
     sheet.date_modification = timezone.now()
     sheet.save()
     return sheet
-
-
-def get_map_from_mid(mid, required_user=None):
-    if not models.Map.objects.filter(id=mid).exists():
-        raise Http404("Sheet does not exist")
-    mmap = models.Map.objects.get(id=mid)
-    if required_user is not None and mmap.user != required_user:
-        raise PermissionDenied
-    return mmap
 
 
 def save_map_core(request):
@@ -398,7 +387,7 @@ def view_delete_category(request, cid):
 
 
 def view_note(request, nid):
-    note = get_note_from_nid(nid)
+    note = find_object(models.Note, nid)
     has_permission = False
     readonly = True
     if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
@@ -417,7 +406,7 @@ def view_note(request, nid):
 
 @permission_required("orgapy.change_note")
 def view_edit_note(request, nid):
-    note = get_note_from_nid(nid, request.user)
+    note = find_object(models.Note, nid, request.user)
     categories = models.Category.objects.filter(user=request.user).order_by("name")
     note_category_ids = [category.id for category in note.categories.all()]
     return render(request, "orgapy/edit_note.html", {
@@ -431,7 +420,7 @@ def view_edit_note(request, nid):
 @permission_required("orgapy.view_note")
 def view_export_note(request, nid):
     """View to export a note's content as Markdown"""
-    note = get_note_from_nid(nid, request.user)
+    note = find_object(models.Note, nid, request.user)
     markdown = note.title + "\n\n" + note.content
     response = HttpResponse(content=markdown, content_type="text/markdown")
     response["Content-Disposition"] = "inline; filename=\"{}.md\"".format(slugify(note.title))
@@ -441,14 +430,14 @@ def view_export_note(request, nid):
 @permission_required("orgapy.delete_note")
 def view_delete_note(request, nid):
     """View to delete a note"""
-    note = get_note_from_nid(nid, request.user)
+    note = find_object(models.Note, nid, request.user)
     note.delete()
     return redirect("orgapy:notes")
 
 
 @permission_required("orgapy.change_note")
 def view_toggle_note_pin(request, nid):
-    note = get_note_from_nid(nid, request.user)
+    note = find_object(models.Note, nid, request.user)
     note.pinned = not note.pinned
     note.save()
     if "next" in request.GET:
@@ -458,7 +447,7 @@ def view_toggle_note_pin(request, nid):
 
 @permission_required("orgapy.change_note")
 def view_toggle_note_public(request, nid):
-    note = get_note_from_nid(nid, request.user)
+    note = find_object(models.Note, nid, request.user)
     note.public = not note.public
     note.save()
     if "next" in request.GET:
@@ -672,7 +661,7 @@ def view_delete_sheet_group(request, sid):
 
 
 def view_sheet(request, sid):
-    sheet = get_sheet_from_sid(sid)
+    sheet = find_object(models.Sheet, sid)
     has_permission = False
     read_only = False
     if request.GET.get("embed"):
@@ -695,7 +684,7 @@ def view_sheet(request, sid):
 
 @permission_required("orgapy.change_sheet")
 def view_edit_sheet(request, sid):
-    sheet = get_sheet_from_sid(sid)
+    sheet = find_object(models.Sheet, sid)
     sheet_groups = models.SheetGroup.objects.filter(user=request.user)
     return render(request, "orgapy/edit_sheet.html", {
         "sheet": sheet,
@@ -706,7 +695,7 @@ def view_edit_sheet(request, sid):
 
 @permission_required("orgapy.view_sheet")
 def view_export_sheet(request, sid):
-    sheet = get_sheet_from_sid(sid)
+    sheet = find_object(models.Sheet, sid)
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
         response = HttpResponse(sheet.data, content_type="text/tab-separated-values")
         response['Content-Disposition'] = f'attachment; filename="{sheet.title}.tsv"'
@@ -716,14 +705,14 @@ def view_export_sheet(request, sid):
 
 @permission_required("orgapy.delete_sheet")
 def view_delete_sheet(request, sid):
-    sheet = get_sheet_from_sid(sid, request.user)
+    sheet = find_object(models.Sheet, sid, request.user)
     sheet.delete()
     return redirect("orgapy:sheets")
 
 
 @permission_required("orgapy.change_sheet")
 def view_toggle_sheet_public(request, sid):
-    sheet = get_sheet_from_sid(sid, request.user)
+    sheet = find_object(models.Sheet, sid, request.user)
     sheet.public = not sheet.public
     sheet.save()
     if "next" in request.GET:
@@ -761,7 +750,7 @@ def view_save_map(request):
 
 
 def view_map(request, mid):
-    mmap = get_map_from_mid(mid)
+    mmap = find_object(models.Map, mid)
     has_permission = False
     read_only = True
     if not request.GET.get("embed"):
@@ -784,7 +773,7 @@ def view_map(request, mid):
 
 @permission_required("orgapy.view_map")
 def view_export_map(request, mid):
-    mmap = get_map_from_mid(mid)
+    mmap = find_object(models.Map, mid)
     if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map") or mmap.public:
         response = HttpResponse(mmap.geojson, content_type="application/geo+json")
         response['Content-Disposition'] = f'attachment; filename="{mmap.title}.geojson"'
@@ -794,14 +783,14 @@ def view_export_map(request, mid):
 
 @permission_required("orgapy.delete_map")
 def view_delete_map(request, mid):
-    mmap = get_map_from_mid(mid, request.user)
+    mmap = find_object(models.Map, mid, request.user)
     mmap.delete()
     return redirect("orgapy:maps")
 
 
 @permission_required("orgapy.change_map")
 def view_toggle_map_public(request, mid):
-    mmap = get_map_from_mid(mid, request.user)
+    mmap = find_object(models.Map, mid, request.user)
     mmap.public = not mmap.public
     mmap.save()
     if "next" in request.GET:
@@ -1502,7 +1491,7 @@ def api_edit_widgets(request):
 
 def api_sheet(request):
     sheet_id = request.GET.get("sid")
-    sheet = get_sheet_from_sid(int(sheet_id))
+    sheet = find_object(models.Sheet, int(sheet_id))
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
         return JsonResponse({
             "title": sheet.title,
@@ -1518,7 +1507,7 @@ def api_save_sheet(request):
     sheet_id = request.POST.get("sid")
     sheet_data = request.POST.get("data")
     sheet_config = request.POST.get("config")
-    sheet = get_sheet_from_sid(int(sheet_id), request.user)
+    sheet = find_object(models.Sheet, int(sheet_id), request.user)
     sheet.data = sheet_data
     sheet.config = sheet_config
     sheet.date_modification = timezone.now()
@@ -1547,7 +1536,7 @@ def api_sheet_suggestions(request):
 
 def api_map(request):
     map_id = request.GET.get("mid")
-    mmap = get_map_from_mid(int(map_id))
+    mmap = find_object(models.Map, int(map_id))
     if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map") or mmap.public:
         return JsonResponse({
             "title": mmap.title,
@@ -1566,7 +1555,7 @@ def api_save_map(request):
         raise BadRequest("Missing title")
     map_geojson = request.POST.get("geojson")
     map_config = request.POST.get("config")
-    mmap = get_map_from_mid(int(map_id), request.user)
+    mmap = find_object(models.Map, int(map_id), request.user)
     mmap.title = map_title
     mmap.geojson = map_geojson
     mmap.config = map_config
