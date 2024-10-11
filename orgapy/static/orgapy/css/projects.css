@@ -57,6 +57,34 @@
     background: #1b2931;
 }
 
+.note-suggestions {
+    position: absolute;
+    top: 2.3rem;
+    left: .8rem;
+    display: flex;
+    gap: .2rem;
+    flex-wrap: wrap;
+    background: #101010;
+}
+
+.note-suggestion {
+    font-size: small;
+    background: white;
+    color: black;
+    padding: .1rem .2rem;
+    border-radius: .2rem;
+    cursor: pointer;
+    transition: .2s ease;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 200px;
+    white-space: nowrap;
+}
+
+.note-suggestion:hover {
+    background: #ddd;
+}
+
 .project-corner {
     display: flex;
     flex-direction: row;

@@ -193,7 +193,35 @@ class Project {
         function callback() {
             self.onTitleInputChange(input);
         }
-        input.addEventListener("focusout", callback);
+        input.addEventListener("input", (e) => {
+            if (input.value.length == 0) return;
+            const match = input.value.match(/@([\w0-9]*)/);
+            if (match == null) {
+                this.container.querySelectorAll(".note-suggestions").forEach(remove);
+                return;
+            }
+            const query = match[1];
+            if (query.trim() == "") {
+                this.container.querySelectorAll(".note-suggestions").forEach(remove);
+                return;
+            }
+            fetch(URL_API + `?action=note-suggestions&q=${query}`).then(res => res.json()).then(data => {
+                this.container.querySelectorAll(".note-suggestions").forEach(remove);
+                const suggestions = create(this.container, "div", "note-suggestions");
+                for (const result of data.results.slice(0, 3)) {
+                    const note = create(suggestions, "div", "note-suggestion");
+                    note.textContent = result.title;
+                    note.addEventListener("click", (e2) => {
+                        e2.preventDefault();
+                        e2.stopPropagation();
+                        input.value = input.value.replace(/@[\w0-9]*/, `@${result.id}`);
+                        callback();
+                        return false;
+                    });
+                }
+            });
+        });
+        input.addEventListener("focusout", () => {setTimeout(callback, 100);});
         input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
         title.replaceWith(input);
         input.focus();
