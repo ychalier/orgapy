@@ -48,15 +48,17 @@ const SLOT_STATE_FUTURE_COMPLETE = 5;
 
 const TASK_NO_DATE = 0;
 const TASK_TODAY = 1;
-const TASK_THIS_WEEK = 2;
-const TASK_NEXT_WEEK = 3;
-const TASK_THIS_MONTH = 4;
-const TASK_NEXT_MONTH = 5;
-const TASK_LATER = 6;
+const TASK_TOMORROW = 2;
+const TASK_THIS_WEEK = 3;
+const TASK_NEXT_WEEK = 4;
+const TASK_THIS_MONTH = 5;
+const TASK_NEXT_MONTH = 6;
+const TASK_LATER = 7;
 
 const TASK_CATEGORY_LABELS = [
     "No Date",
     "Today",
+    "Tomorrow",
     "This Week",
     "Next Week",
     "This Month",
@@ -1001,6 +1003,11 @@ class Task {
         limitToday.setTime(limitToday.getTime() + 24 * 3600 * 1000);
         if (this.dueDate < limitToday) {
             return TASK_TODAY;
+        }
+        const limitTomorrow = new Date(limitToday.getTime());
+        limitTomorrow.setTime(limitTomorrow.getTime() + 24 * 3600 * 1000);
+        if (this.dueDate < limitTomorrow) {
+            return TASK_TOMORROW;
         }
         const limitThisWeek = new Date(limitToday.getTime());
         const daysTillEndOfWeek = 6 - (now.getDay() + 6) % 7;
