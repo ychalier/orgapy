@@ -1465,8 +1465,13 @@ def api_edit_widgets(request):
         widget_value = update.get("value")
         if widget_type is None or widget_index is None or widget_value is None:
             continue
-        if widget_type == "status":
-            for i, widget_match in enumerate(re.finditer(r"(✅|❌|⏺️)", note.content)):
+        if widget_type in ["status", "color_round", "color_square"]:
+            regex = {
+                "status": r"(✅|❌|⏺️)",
+                "color_round": r"(🔴|🟠|🟡|🟢|🔵|🟣|🟤|⚫|⚪)",
+                "color_square": r"(🟥|🟧|🟨|🟩|🟦|🟪|🟫|⬛|⬜)"
+            }[widget_type]
+            for i, widget_match in enumerate(re.finditer(regex, note.content)):
                 if i != widget_index:
                     continue
                 start, end = widget_match.span(0)

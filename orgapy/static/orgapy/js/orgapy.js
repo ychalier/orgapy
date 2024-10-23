@@ -175,6 +175,16 @@ function markdownToHtmlFancy(element) {
                 type: "output",
                 regex: /(✅|❌|⏺️)/g,
                 replace: `<span class="widget widget-status">$1</span>`
+            },
+            {
+                type: "output",
+                regex: /(🔴|🟠|🟡|🟢|🔵|🟣|🟤|⚫|⚪)/g,
+                replace: `<span class="widget widget-color-round">$1</span>`
+            },
+            {
+                type: "output",
+                regex: /(🟥|🟧|🟨|🟩|🟦|🟪|🟫|⬛|⬜)/g,
+                replace: `<span class="widget widget-color-square">$1</span>`
             }
         ]
     });

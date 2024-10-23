@@ -236,4 +236,28 @@ function bindWidgets(noteId) {
         });
     });
 
+    document.querySelectorAll(".widget-color-round").forEach((widget, index) => {
+        widget.setAttribute("index", index);
+        widget.addEventListener("click", () => {
+            const color = ["🔴", "🟠", "🟡", "🟢", "🔵", "🟣", "🟤", "⚫", "⚪"];
+            const oldEmojiIndex = color.indexOf(widget.textContent);
+            const newEmojiIndex = (oldEmojiIndex + 1) % color.length;
+            const newTextContent = color[newEmojiIndex];
+            widget.textContent = newTextContent;
+            updateWidget("color_round", index, newTextContent);
+        });
+    });
+
+    document.querySelectorAll(".widget-color-square").forEach((widget, index) => {
+        widget.setAttribute("index", index);
+        widget.addEventListener("click", () => {
+            const color = ["🟥", "🟧", "🟨", "🟩", "🟦", "🟪", "🟫", "⬛", "⬜"];
+            const oldEmojiIndex = color.indexOf(widget.textContent);
+            const newEmojiIndex = (oldEmojiIndex + 1) % color.length;
+            const newTextContent = color[newEmojiIndex];
+            widget.textContent = newTextContent;
+            updateWidget("color_square", index, newTextContent);
+        });
+    });
+
 }
