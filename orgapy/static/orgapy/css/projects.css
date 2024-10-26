@@ -19,7 +19,6 @@
     width: 100%;
     border: 1px solid black;
     border-radius: .4rem;
-    overflow: hidden;
 }
 
 .project.archived {
@@ -212,8 +211,7 @@
     overflow-y: hidden;
     transition: .2s ease;
     background: #303030;
-    border-top-left-radius: .4rem;
-    border-top-right-radius: .4rem;
+    border-radius: .4rem;
     min-height: 0;
 }
 
