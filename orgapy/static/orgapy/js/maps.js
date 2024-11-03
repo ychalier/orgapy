@@ -1258,7 +1258,11 @@ class Map {
     addFeatureOnCommit(el) {
         var self = this;
         el.addEventListener("editable:drawing:commit", (event) => {
-            self.getSelectedLayer().addFeatureFromMapElement(el);
+            if (self.getSelectedLayer() == undefined) {
+                toast("🛑 Select a layer first 🛑", TOAST_SHORT);
+            } else {
+                self.getSelectedLayer().addFeatureFromMapElement(el);
+            }
         });
     }
 
