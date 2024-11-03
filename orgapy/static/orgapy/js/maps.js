@@ -179,7 +179,7 @@ class PanelControl extends L.Control {
                 event.preventDefault();
                 let query = searchInput.value.trim();
                 if (query != "") {
-                    self.searchNominatim(query);
+                    self.search(query);
                 }
             });
         }
@@ -302,7 +302,7 @@ class PanelControl extends L.Control {
             }
             //TODO?: handle choice between multiple results
             let bestResult = results[0];
-            self.onNominatimResult({
+            self.onSearchResult({
                 lat: bestResult.lat,
                 lon: bestResult.lon,
                 label: bestResult.display_name
@@ -310,15 +310,15 @@ class PanelControl extends L.Control {
         });
     }
 
-    onNominatimResult(result) {
+    onSearchResult(result) {
         let marker = new L.marker([parseFloat(result.lat), parseFloat(result.lon)]);
         this.map.getSelectedLayer().addFeatureFromMapElement(marker, {label: result.label});
         this.map.leafletMap.panTo(marker.getLatLng());
     }
 
-    searchNominatim(query) {
+    search(query) {
         if (query.match(/^\d+(\.\d+)? *, *\d+(\.\d+)?$/g)) {
-            this.onNominatimResult({
+            this.onSearchResult({
                 lat: parseFloat(query.split(",")[0]),
                 lon: parseFloat(query.split(",")[1]),
                 label: "GPS Point"
