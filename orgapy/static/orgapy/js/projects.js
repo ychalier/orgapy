@@ -730,7 +730,8 @@ class Project {
     archive() {
         var self = this;
         if (confirm(`Are you sure to archive '${this.title}'?`) == true) {
-            apiPost("archive-project", {project_id: this.id}, () => {
+            apiPost("archive-project", {project_id: this.id}, (data) => {
+                self.modification = data.modification;
                 self.archived = true;
                 toast("Archived!", 600);
                 const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
@@ -745,7 +746,8 @@ class Project {
     unarchive() {
         var self = this;
         if (confirm(`Are you sure to unarchive '${this.title}'?`) == true) {
-            apiPost("unarchive-project", {project_id: this.id}, () => {
+            apiPost("unarchive-project", {project_id: this.id}, (data) => {
+                self.modification = data.modification;
                 self.archived = false;
                 toast("Unarchived!", 600);
                 inflateProjects();

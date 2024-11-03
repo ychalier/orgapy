@@ -1026,7 +1026,10 @@ def api_archive_project(request):
     project = models.Project.objects.get(id=project_id, user=request.user)
     project.archived = True
     project.save()
-    return JsonResponse({"success": True})
+    return JsonResponse({
+        "success": True,
+        "modification": project.date_modification.timestamp(),
+    })
 
 
 @permission_required("orgapy.change_project")
@@ -1045,7 +1048,10 @@ def api_unarchive_project(request):
     project = models.Project.objects.get(id=project_id, user=request.user)
     project.archived = False
     project.save()
-    return JsonResponse({"success": True})
+    return JsonResponse({
+        "success": True,
+        "modification": project.date_modification.timestamp(),
+    })
 
 
 @permission_required("orgapy.delete_project")
