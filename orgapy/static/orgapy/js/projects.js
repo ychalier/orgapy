@@ -1261,17 +1261,17 @@ function onAllDayInputChange() {
 /** Objectives ****************************************************************/
 
 function dayOffset(d) {
-    return (d - getYearStart()) / 3600 / 24 / 1000 * DAYW;
+    return Math.round((d - getYearStart()) / 1000 / 3600 / 24) * DAYW;
 }
 
 function addDays(baseDate, daysToAdd) {
-    let result = new Date(baseDate.getTime());
-    result.setDate(result.getDate() + Math.floor(daysToAdd));
+    let newDate = new Date(baseDate.getTime());
+    newDate.setDate(newDate.getDate() + Math.floor(daysToAdd));
     let remainder = daysToAdd - Math.floor(daysToAdd);        
     if (remainder > 0) {
-        result.setTime(result.getTime() + remainder * DAYMS);
+        newDate.setTime(newDate.getTime() + remainder * DAYMS);
     }
-    return result;
+    return newDate;
 }
 
 function inflateObjgraphHead(objgraph) {
@@ -1281,10 +1281,19 @@ function inflateObjgraphHead(objgraph) {
     });
     let yearStart = getYearStart();
     let today = new Date();
-    for (let i = 0; i < 365; i++) { //TODO: leap year check
+    const year = TODAY.getFullYear();
+    const daysInYear = ((year % 4 === 0 && year % 100 > 0) || year % 400 == 0) ? 366 : 365;
+    for (let i = 0; i < daysInYear; i++) {
         let day = (new Date(yearStart));
         day.setDate(yearStart.getDate() + i);
         let objgraphDay = create(objgraphHead, "div", "objgraph-head-day");
+        objgraphDay.style.left = (i * DAYW) + "px";
+        objgraphDay.title = day.toLocaleDateString(day.locales, {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
         if (day.getDate() == 1) {
             objgraphDay.textContent = day.toLocaleDateString(day.locales, {month: "short"});
         }
@@ -1363,7 +1372,7 @@ class Objective {
             } else {
                 state = SLOT_STATE_MISSED;
             }
-            slots.push(new Slot(dateStart, (dateEnd - dateStart) / DAYMS, state));
+            slots.push(new Slot(dateStart, this.rules.period, state));
             if (current) break;
             dateStart = new Date(dateEnd.getTime());
             if (NOW < dateStart) break;
@@ -1396,7 +1405,7 @@ class Objective {
             if ((dateEnd - dateStart) / DAYMS < minimumSize) {
                 dateEnd = new Date(dateEnd.getTime() + (minimumSize - (dateEnd - dateStart) / DAYMS) * DAYMS);
             }
-            let length = (dateEnd - dateStart) / DAYMS;
+            let length = Math.round((dateEnd - dateStart) / DAYMS);
             let early = (nextSlotState == SLOT_STATE_BUTTON || nextSlotState == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length < this.rules.period;
             let late = (nextSlotState == SLOT_STATE_BUTTON || nextSlotState == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length > this.rules.period + .9;
             slots.push(new Slot(dateStart, length, nextSlotState, early, late));
@@ -1433,7 +1442,7 @@ class Objective {
         }
         while (true) {
             let slot = new Slot(slots[slots.length - 1].end(), this.rules.period, SLOT_STATE_FUTURE);
-            if (slot.start >= YEAR_END) break;
+            if (slot.start >= YEAR_END - DAYMS) break;
             slots.push(slot);
         }
         return slots;
@@ -1465,28 +1474,11 @@ function inflateObjgraphObjective(objgraphBody, objectiveId, index) {
     let domObj = create(objgraphBody, "div", "objgraph-objective");
     let obj = objectives[objectiveId];
     let slots = obj.getSlots();
-    let dateStart = new Date(slots[0].start.getTime());
-    let objectiveOffset = dayOffset(dateStart);
-    domObj.style.marginLeft = objectiveOffset + "px";
-    obj.history.forEach(ts => {
-        let domCompletion = create(domObj, "div", "objgraph-completion");
-        domCompletion.title = (new Date(ts * 1000)).toLocaleString();
-        // This trick avoids having completion marks between two days.
-        // TODO: ideally, what should be avoided would be to be between two
-        // slots, eg. with a 3.5 days period.
-        let completionDate = new Date(ts * 1000);
-        let completionDayDate = new Date(ts * 1000);
-        completionDayDate.setHours(0, 0, 0, 0);
-        let completionOffset = dayOffset(completionDate);
-        let completionDayOffset = dayOffset(completionDayDate);
-        domCompletion.style.left = (completionOffset - objectiveOffset - 0.2 * (completionOffset - completionDayOffset)) + "px";
-        domCompletion.addEventListener("click", (event) => {
-            openModalCompletionForm(obj, ts);
-        });
-    });
     slots.forEach(slot => {
+        if (dayOffset(slot.start) + DAYW * slot.length < 0) return;
         let domSlot = create(domObj, "div", "objgraph-slot");
         domSlot.style.width = `${DAYW * slot.length}px`;
+        domSlot.style.left = `${dayOffset(slot.start)}px`;
         let domSlotBackground = create(domSlot, "div", "objgraph-slot-background");
         if (slot.state == SLOT_STATE_COMPLETE) {
             domSlotBackground.classList.add("bg-success");
@@ -1514,6 +1506,21 @@ function inflateObjgraphObjective(objgraphBody, objectiveId, index) {
                 onObjectiveCheck(objectiveId);
             });
         }
+    });
+    obj.history.forEach(ts => {
+        const offsetInDays = (ts * 1000 - getYearStart()) / DAYMS;
+        if (offsetInDays < 0) return;
+        let domCompletion = create(domObj, "div", "objgraph-completion");
+        domCompletion.title = (new Date(ts * 1000)).toLocaleString();
+        const OBJECTIVE_COMPLETION_WIDTH = 4;
+        const OBJECTIVE_COMPLETION_OFFSET = 4;
+        const completionOffset = Math.floor(offsetInDays) * DAYW
+            + (DAYW - 2 * OBJECTIVE_COMPLETION_OFFSET - OBJECTIVE_COMPLETION_WIDTH) * (offsetInDays - Math.floor(offsetInDays))
+            + OBJECTIVE_COMPLETION_OFFSET;
+        domCompletion.style.left = completionOffset + "px";
+        domCompletion.addEventListener("click", (event) => {
+            openModalCompletionForm(obj, ts);
+        });
     });
     let domName = create(objgraphBody, "div", "objgraph-name popover popover-bottom");
     if (obj.archived) {

@@ -427,58 +427,76 @@
     user-select: none;
 }
 
-.objgraph-head,
+.objgraph-head {
+    position: relative;
+    height: 16px;
+}
+
 .objgraph-objective {
     display: flex;
     flex-direction: row;
 }
 
 .objgraph-head-day {
+    position: absolute;
     box-sizing: border-box;
-    border-left: 1px solid #ccc;
     width: 32px;
     height: 16px;
-    flex-shrink: 0;
     font-size: small;
     line-height: 16px;
-    padding-left: 2px;
+    text-align: center;
 }
 
-.objgraph-head-week {
-    border-left: 2px solid white;
+.objgraph-head-day::before {
+    position: absolute;
+    left: -1px;
+    width: 2px;
+    content: " ";
+    height: 10px;
+    top: 3px;
+    background: #888;
+    border-radius: .2rem;
+} 
+
+.objgraph-head-week::before {
+    background: white;
+    height: 16px;
+    top: 0;
 }
 
-.objgraph-head-today {
-    position: relative;
+.objgraph-head-day:hover::after,
+.objgraph-head-today::after {
+    position: absolute;
+    left: 0px;
+    top: -.4rem;
+    content: "";
+    background: #c7c7c780;
+    width: 32px;
+    height: 500px;
 }
 
 .objgraph-head-today::after {
-    content: "";
-    background: #8ed2ff80;
-    position: absolute;
-    width: 32px;
-    height: 500px;
-    top: -.4rem;
-    left: -4px;
+    background: #8ed2ff80;;
 }
 
 .objgraph-objective {
-    display: flex;
-    flex-direction: row;
     position: relative;
+    height: 32px;
 }
 
 .objgraph-slot {
+    position: absolute;
     box-sizing: border-box;
     flex-shrink: 0;
     height: 32px;
     display: flex;
     flex-direction: row;
     justify-content: center;
+    overflow: hidden;
 }
 
 .objgraph-slot-background {
-    margin: .1rem;
+    margin: 1px;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -524,7 +542,7 @@
 .objgraph-completion {
     position: absolute;
     height: 100%;
-    width: .2rem;
+    width: 4px;
     overflow: hidden;
     top: 0;
     padding-top: .2rem;
@@ -536,7 +554,7 @@
     display: block;
     content: " ";
     background: #389b45;
-    border-radius: .2rem;
+    border-radius: 2px;
     height: 100%;
     opacity: 0;
 }
