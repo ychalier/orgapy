@@ -76,6 +76,7 @@
     {% block body_scrips_minimized %}
     <script>
         bindDropdown(document.getElementById("menu-dropdown"));
+        bindSearchbarClearIcon(document.getElementById("searchbar"));
         {% if search_url %}bindSearchButton(document.getElementById("searchbar"), document.querySelector("#searchbar .searchbar-search-small"));{% endif %}
         {% if suggestions_route %}bindSearchbarSuggestions(document.getElementById("searchbar"), "{{ suggestions_route }}");{% endif %}
     </script>

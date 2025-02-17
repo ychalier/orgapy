@@ -70,16 +70,25 @@ function closeModal(modalId) {
     document.getElementById(modalId).classList.remove("active");
 }
 
-function bindSearchbarSuggestions(searchbar, apiAction) {
+function bindSearchbarClearIcon(searchbar) {
     window.addEventListener("load", () => {
         const input = searchbar.querySelector(".searchbar-input");
         const icon = searchbar.querySelector(".searchbar-icon");
-        const container = searchbar.querySelector(".searchbar-suggestions");
+        const suggestionsContainer = searchbar.querySelector(".searchbar-suggestions");
         icon.addEventListener("click", () => {
             input.value = "";
-            container.innerHTML = "";
             input.focus();
+            if (suggestionsContainer != null) {
+                suggestionsContainer.innerHTML = "";
+            }
         });
+    });
+}
+
+function bindSearchbarSuggestions(searchbar, apiAction) {
+    window.addEventListener("load", () => {
+        const input = searchbar.querySelector(".searchbar-input");
+        const container = searchbar.querySelector(".searchbar-suggestions");
         input.addEventListener("input", () => {
             const query = input.value.trim();
             fetch(URL_API + `?action=${apiAction}&q=${query}`).then(res => res.json()).then(data => {
