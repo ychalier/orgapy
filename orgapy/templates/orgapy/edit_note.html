@@ -15,10 +15,11 @@
 
 {% block main_content %}
 
-<form id="form-note-edit" action="{% url 'orgapy:save_note' %}" method="post">
+<form id="form-note-edit-primary" action="{% url 'orgapy:save_note' %}" method="post">
     {% csrf_token %}
     {% if note %}<input type="hidden" name="id" value="{{note.id}}">{% endif %}
-
+    <input hidden type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
+    <input hidden type="checkbox" name="public" {% if note.public %}checked{% endif %} />
     <header class="card">
         <input class="note-form-title" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
         <div id="categories-input">
@@ -30,34 +31,34 @@
             </div>
         </div>
     </header>
-
-    <div class="row note-form-commands">
-        {% block save_and_continue %}<button id="btn-save-note" class="button-block">Save and continue</button>{% endblock %}
-        <button class="button-block">Save and exit</button>
-        <label class="toggle">
-            <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
-            <span class="toggle-slider"></span>
-            <span class="toggle-text">Pinned</span>
-        </label>
-        <label class="toggle">
-            <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
-            <span class="toggle-slider"></span>
-            <span class="toggle-text">Public</span>
-        </label>
-    </div>
-
     <textarea class="note-form-content" id="input-content" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
-
 </form>
 
 {% endblock main_content %}
+
+{% block right_column %}
+{% block save_and_continue %}<button id="btn-save-note-continue" class="button-block">Save and continue</button>{% endblock %}
+<button id="btn-save-note-exit" class="button-block">Save and exit</button>
+<form id="form-note-edit-secondary">
+    <label class="toggle">
+        <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Pinned</span>
+    </label>
+    <label class="toggle">
+        <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Public</span>
+    </label>
+</form>
+{% endblock right_column %}
 
 {% block body_scripts %}
 {{ block.super }}
 <script>
     const CATEGORIES = [{% for category in categories %}{% if not forloop.first %}, {% endif %}{name: "{{ category.name }}", id: {{ category.id }}}{% endfor %}];
     setupCategoryInput();
-    bindSaveNoteButton();
+    bindSaveNoteButtons();
     const simplemde = new SimpleMDE({
         element: document.getElementById("input-content"),
         autoDownloadFontAwesome: false,

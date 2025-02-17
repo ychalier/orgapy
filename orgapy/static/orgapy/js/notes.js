@@ -155,22 +155,44 @@ function setupCategoryInput() {
     updateCategories();
 }
 
-function bindSaveNoteButton() {
-    const buttonSaveNote = document.getElementById("btn-save-note");
-    if (buttonSaveNote == null) return;
-    buttonSaveNote.classList.add("disabled");
-    buttonSaveNote.addEventListener("click", (event) => {
+function bindSaveNoteButtons() {
+
+    const primaryForm = document.getElementById("form-note-edit-primary");
+    const secondaryForm = document.getElementById("form-note-edit-secondary");
+    
+    function mergeForms() {        
+        ["pinned", "public"].forEach(name => {
+            const primaryInput = primaryForm.querySelector(`input[name=${name}]`);
+            const secondaryInput = secondaryForm.querySelector(`input[name=${name}]`);
+            if (secondaryInput.checked) {
+                primaryInput.setAttribute("checked", "");
+            } else {
+                primaryInput.removeAttribute("checked");
+            }
+        });
+    }
+    
+    const buttonSaveNoteExit = document.getElementById("btn-save-note-exit");
+    buttonSaveNoteExit.addEventListener("click", () => {
+        mergeForms();
+        primaryForm.submit();
+    });
+
+    const buttonSaveNoteContinue = document.getElementById("btn-save-note-continue");
+    if (buttonSaveNoteContinue == null) return;
+    buttonSaveNoteContinue.classList.add("disabled");
+    buttonSaveNoteContinue.addEventListener("click", (event) => {
         event.preventDefault();
-        buttonSaveNote.classList.add("disabled");
-        const form = document.getElementById("form-note-edit");
-        const formdata = new FormData(form);
-        fetch(form.action, {method: form.method, body: formdata}).then(res => {
+        buttonSaveNoteContinue.classList.add("disabled");
+        mergeForms();
+        const formdata = new FormData(primaryForm);
+        fetch(primaryForm.action, {method: primaryForm.method, body: formdata}).then(res => {
             toast("Saved!", 600);
         });
     });
     document.querySelectorAll("input,textarea").forEach(input => {
         input.addEventListener("input", () => {
-            buttonSaveNote.classList.remove("disabled");
+            buttonSaveNoteContinue.classList.remove("disabled");
         });
     });
 }
