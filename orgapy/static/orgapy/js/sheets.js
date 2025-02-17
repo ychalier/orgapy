@@ -2275,7 +2275,7 @@ class Sheet {
                         if (value.match(MARKDOWN_PATTERN_LINK)) {
                             let match = MARKDOWN_PATTERN_LINK.exec(value);
                             let url = prompt("Current URL:", match[2]);
-                            if (url == null) {
+                            if (url == null || url.trim() == "") {
                                 self.values[root.i][root.j] = match[1];
                             } else {
                                 self.values[root.i][root.j] = `[${match[1]}](${url})`;
@@ -2284,7 +2284,7 @@ class Sheet {
                             self.onChange(true, false);
                         } else {
                             let url = prompt("Enter a URL:");
-                            if (url != null) {
+                            if (url != null && url.trim() != "") {
                                 self.values[root.i][root.j] = `[${value}](${url})`;
                                 self.setCellContent(root.i, root.j);
                                 self.onChange(true, false);
