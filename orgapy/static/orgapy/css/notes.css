@@ -177,3 +177,17 @@
 .CodeMirror-selected {
     background: #555 !important;
 }
+
+@media (max-width: 800px) {
+    #save-note-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+    #save-note-buttons button {
+        margin: 0;
+    }
+    #form-note-edit-secondary {
+        display: flex;
+        gap: 1rem;
+    }
+}
