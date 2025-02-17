@@ -30,5 +30,18 @@
 {{ block.super }}
 <script>
     markdownToHtml(".markdown", true);
+    {% if query %}
+    const searchQuery = "{{ query }}".trim();
+    const searchTokens = [];
+    for (const token of searchQuery.split(" ")) {
+        if (token.length > 2) {
+            searchTokens.push(token);
+        }
+    }
+    const searchRegex = new RegExp("(" + searchTokens.join("|") + ")", "ig");
+    document.querySelectorAll(".quote-content").forEach(div => {
+        div.innerHTML = div.innerHTML.replace(searchRegex, "<mark>$1</mark>");
+    });
+    {% endif %}
 </script>
 {% endblock body_scripts %}
