@@ -53,7 +53,9 @@
             </div>
         </span>
         {% elif o.get_class == 'quote' %}
-        <i title="Quote" class="ri-double-quotes-l"></i> <a href="{{ o.get_absolute_url }}" class="oneline-truncate link-hidden">{{ o.title }}</a>
+        <i title="Quote" class="ri-double-quotes-l"></i> 
+        <a class="link-hidden" href="{% url 'orgapy:quotes_search' %}?query={{ o.reference_nomarkup }}">{{ o.reference_html | safe }}</a>
+        <a class="link-hidden oneline-truncate" href="{{ o.get_absolute_url }}">{{ o.content | truncatechars:100 }}</a>
         <span class="show-on-parent-hover">
             <a href="{% url 'admin:orgapy_quote_change' o.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
         </span>

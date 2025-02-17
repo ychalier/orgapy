@@ -11,8 +11,9 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.db.models import F
 from django.db.models import Max
+from django.db.models import TextField
+from django.db.models.functions import Concat
 from django.http import HttpResponse, Http404, JsonResponse
 from django.core.exceptions import PermissionDenied, BadRequest
 
@@ -128,14 +129,11 @@ def save_note_categories(request, note):
     note.save()
 
 
-def add_quote(request, work_id, content):
-    work = models.Work.objects.get(id=work_id)
-    title = "%s - %s" % (work.author.name, work.title)
+def add_quote(request, reference, content):
     quote = models.Quote.objects.create(
         user=request.user,
-        from_work=work,
-        title=title,
         content=content,
+        reference=reference
     )
     return quote
 
@@ -278,7 +276,7 @@ def view_search(request):
             + list(models.Map.objects.filter(user=request.user, public=True))
     else:
         objects = list(models.Note.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
-            + list(models.Quote.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
+            + list(models.Quote.objects.filter(user=request.user).filter(Q(reference__contains=query) | Q(content__contains=query)))\
             + list(models.Sheet.objects.filter(user=request.user, title__contains=query))\
             + list(models.Map.objects.filter(user=request.user, title__contains=query))
     if len(objects) == 1:
@@ -459,28 +457,26 @@ def view_toggle_note_public(request, nid):
 def view_quotes(request):
     recent_quotes = models.Quote.objects.filter(user=request.user).order_by("-date_creation")[:3]
     random_quotes = models.Quote.objects.filter(user=request.user).exclude(id__in=[q.id for q in recent_quotes]).order_by("?")[:3]
-    authors = models.Author.objects.all().order_by("name")
     return render(request, "orgapy/quotes.html", {
         "recent_quotes": recent_quotes,
         "random_quotes": random_quotes,
-        "authors": authors,
         **getenv("quotes"),
     })
 
 
 @permission_required("orgapy.view_quote")
-def view_quotes_search(request, author=None, work=None):
+def view_quotes_search(request):
     page_size = 10
     query = request.GET.get("query", "")
     objects = models.Quote.objects.filter(user=request.user)
-    if author is not None:
-        author = models.Author.objects.get(slug=author, user=request.user)
-        objects = objects.filter(from_work__author=author)
-    if work is not None:
-        work = models.Work.objects.get(slug=work, user=request.user)
-        objects = objects.filter(from_work=work)
     if len(query) > 0:
-        objects = objects.filter(Q(title__contains=query) | Q(content__contains=query))
+        filters = None
+        for token in query.split(" "):
+            if filters is None:
+                filters = Q(search_text__contains=token)
+            else:
+                filters &= Q(search_text__contains=token)
+        objects = objects.annotate(search_text=Concat("reference", "content", output_field=TextField())).filter(filters)
     paginator = Paginator(objects.order_by(
         "-date_creation",
     ), page_size)
@@ -489,8 +485,6 @@ def view_quotes_search(request, author=None, work=None):
     return render(request, "orgapy/quotes_search.html", {
         "quotes": quotes,
         "query": query,
-        "author": author,
-        "work": work,
         "quote_paginator": pretty_paginator(quotes, query=query),
         **getenv("quotes"),
     })
@@ -504,65 +498,22 @@ def view_quote(request, qid):
     quote = q.get()
     return render(request, "orgapy/quotes_search.html", {
         "quotes": [quote],
-        "author": quote.from_work.author,
-        "work": quote.from_work,
         **getenv("quotes"),
     })
-
-
-def set_last_attribute(items: list[models.Author | models.Work]):
-    dates = [item.date_creation for item in items]
-    last = max(dates)
-    for item in items:
-        item.last_created = item.date_creation == last
 
 
 @permission_required("orgapy.add_quote")
 def view_create_quote(request):
     if request.method == "POST":
-        if "form_author" in request.POST:
-            name = request.POST.get("author_name", "").strip()
-            if len(name) > 0 and not models.Author.objects.filter(name=name, user=request.user).exists():
-                models.Author.objects.create(name=name, user=request.user)
-        elif "form_work" in request.POST:
-            author_id = request.POST.get("work_author", "").strip()
-            title = request.POST.get("work_title", "").strip()
-            if len(title) > 0 and models.Author.objects.filter(id=author_id).exists():
-                author = models.Author.objects.get(id=author_id, user=request.user)
-                if not models.Work.objects.filter(author=author, title=title, user=request.user).exists():
-                    models.Work.objects.create(author=author, title=title, user=request.user)
-        elif "form_quote" or "form_quote_edit" in request.POST:
-            work_id = request.POST.get("quote_work", "").strip()
-            if models.Work.objects.filter(id=work_id, user=request.user).exists():
-                add_quote(request, work_id, request.POST.get("quote_content").strip())
+        add_quote(request, request.POST.get("reference").strip(), request.POST.get("content").strip())
         if "form_quote" in request.POST:
             return redirect("orgapy:quotes_search")
-    authors = models.Author.objects.filter(user=request.user).order_by("name")
-    set_last_attribute(authors)
-    works = models.Work.objects.filter(user=request.user).order_by("author__name", "title")    
-    
-    preselect_work_id = None
-    last_quote_added = None
+    prefill_reference = None
     q = models.Quote.objects.order_by("-date_creation")
     if q.exists():
-        last_quote_added = q[0]
-    last_work_added = None
-    q = models.Work.objects.order_by("-date_creation")
-    if q.exists():
-        last_work_added = q[0]
-    if last_work_added is None and last_quote_added is None:
-        pass
-    elif last_work_added is not None and last_quote_added is None:
-        preselect_work_id = last_work_added.id
-    elif last_work_added.date_creation > last_quote_added.date_creation:
-        preselect_work_id = last_work_added.id
-    else:
-        preselect_work_id = last_quote_added.from_work.id
-
+        prefill_reference = q[0].reference
     return render(request, "orgapy/create_quote.html", {
-        "authors": authors,
-        "works": works,
-        "preselect_work_id": preselect_work_id,
+        "prefill_reference": prefill_reference,
         **getenv("quotes"),
     })
 

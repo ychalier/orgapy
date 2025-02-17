@@ -1,9 +1,9 @@
 import datetime
 import json
 import random
+import re
 
 from django.db import models
-from django.utils.text import slugify
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -144,60 +144,20 @@ class Task(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
 
-class Author(models.Model):
-
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True, max_length=255)
-    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
-
-    def __str__(self):
-        return str(self.name)
-
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
-        models.Model.save(self, *args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse("orgapy:quotes_author", kwargs={"author": self.slug})
-
-
-class Work(models.Model):
-
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True, max_length=255)
-    author = models.ForeignKey("Author", on_delete=models.CASCADE)
-    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
-
-    def __str__(self):
-        return "{} - {}".format(self.author, self.title)
-
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.title)
-        models.Model.save(self, *args, **kwargs)
-    
-    def get_absolute_url(self):
-        return reverse("orgapy:quote_work", kwargs={
-            "author": self.author.slug,
-            "work": self.slug})
-
-
 class Quote(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
-    title = models.CharField(max_length=255)
     content = models.TextField()
-    from_work = models.ForeignKey("Work", on_delete=models.CASCADE)
+    reference = models.CharField(max_length=255, default="", blank=True)
 
     class Meta:
 
         ordering = ["-date_creation"]
 
     def __str__(self):
-        return f"{ self.user} - { self.id }. { self.title }"
+        return f"{ self.user} - { self.id }. { self.reference_nomarkup }"
 
     def get_modification_date_display(self):
         now = datetime.datetime.now()
@@ -211,6 +171,14 @@ class Quote(models.Model):
     @staticmethod
     def get_class():
         return "quote"
+    
+    @property
+    def reference_html(self) -> str:
+        return re.sub(r"\*([^\*]*)\*", r"<i>\1</i>", self.reference)
+    
+    @property
+    def reference_nomarkup(self) -> str:
+        return re.sub(r"\*", r"", self.reference)
 
 
 class Project(models.Model):

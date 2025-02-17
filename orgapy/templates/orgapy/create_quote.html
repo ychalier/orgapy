@@ -8,74 +8,22 @@
 {% block main_content %}
 
 <div class="card">
-    <h2>Add Author</h2>
-    <form action="{% url 'orgapy:create_quote' %}" method="post">
-        {% csrf_token %}
-        <p>
-            <label for="input-author-name">Name</label>
-            <input id="input-author-name" type="text" name="author_name" placeholder="Alexandre Dumas, Maurice Leblanc, …" />
-        </p>
-        <div class="row">
-            <input class="button" type="submit" name="form_author" value="Add author" />
-        </div>
-    </form>
-</div>
-
-<div class="card">
-    <h2>Add Work</h2>
-    {% if authors %}
-    <form action="{% url 'orgapy:create_quote' %}" method="post">
-        {% csrf_token %}
-        <p>
-            <label for="selector-work-author">Author</label>
-            <select id="select-work-author" name="work_author">
-                {% for author in authors %}
-                <option value="{{ author.id }}" {% if author.last_created %}selected{% endif %}>{{ author.name }}</option>
-                {% endfor %}
-            </select>
-        </p>
-        <p>
-            <label for="input-work-title">Title</label>
-            <input id="input-work-title" type="text" name="work_title" placeholder="Le Parfum, Les Trois mousquetaires, …" />
-        </p>
-        <div class="row">
-            <input class="button" type="submit" name="form_work" value="Add work" />
-        </div>
-    </form>
-    {% else %}
-    <p>
-        You must add at least one author to add a work.
-    </p>
-    {% endif %}
-</div>
-
-<div class="card">
     <h2>Add Quote</h2>
-    {% if works %}
     <form action="{% url 'orgapy:create_quote' %}" method="post">
         {% csrf_token %}
         <p>
-            <label for="input-work">Work</label>
-            <select id="input-work" name="quote_work">
-                {% for work in works %}
-                <option value="{{ work.id }}" {% if work.id == preselect_work_id %}selected{% endif %}>{{ work.author.name }} &ndash; {{ work.title }}</option>
-                {% endfor %}
-            </select>
+            <label for="input-reference">Reference</label>
+            <input  id="input-reference" type="text" name="reference" value="{{ prefill_reference }}" placeholder="Albert Camus, *L'Étranger*" />
         </p>
         <p>
-            <label for="input-quote">Content</label>
-            <textarea id="input-quote" name="quote_content" placeholder="Quote content" rows="8"></textarea>
+            <label for="input-content">Content</label>
+            <textarea id="input-content" name="content" placeholder="Quote content" rows="8"></textarea>
         </p>
         <div class="row">
             <input class="button" type="submit" name="form_quote_edit" value="Add quote and stay" />
             <input class="button" type="submit" name="form_quote" value="Add quote" />
         </div>
     </form>
-    {% else %}
-    <p>
-        You must add at least one work to add a quote.
-    </p>
-    {% endif %}
 </div>
 
 {% endblock main_content %}

@@ -1,0 +1,7 @@
+<div class="{{ block_class }} quote">
+    <div class="quote-content markdown">{{ quote.content | safe }}</div>
+    <div class="quote-reference">
+        <a class="link-hidden" href="{% url 'orgapy:quotes_search' %}?query={{ quote.reference_nomarkup }}">{{ quote.reference_html | safe }}</a>
+        <a class="link-hidden" href="{% url 'admin:orgapy_quote_change' quote.id %}" title="Edit in admin"><i class="ri-pencil-fill"></i></a>
+    </div>
+</div>

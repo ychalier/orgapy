@@ -7,27 +7,10 @@
 
 {% block main_content %}
 
-{% if work %}
-<div class="card card-highlight">
-    {{work.author.name}}, <i>{{work.title}}</i> <a class="button-inline" href="{% url 'orgapy:quotes_search' %}"><i class="ri-close-line"></i></a>
-</div>
-{% elif author %}
-<div class="card card-highlight">
-    {{author.name}}  <a class="button-inline" href="{% url 'orgapy:quotes_search' %}"><i class="ri-close-line"></i></a>
-</div>
-{% endif %}
-
 {% if quotes %}
 <div>
     {% for quote in quotes %}
-    <div class="card quote">
-        <div class="quote-content markdown">{{ quote.content | safe }}</div>
-        <div class="quote-reference">
-            <a class="link-hidden" href="{% url 'orgapy:quotes_author' author=quote.from_work.author.slug %}">{{ quote.from_work.author.name }}</a>,
-            <i><a class="link-hidden" href="{% url 'orgapy:quotes_work' author=quote.from_work.author.slug work=quote.from_work.slug %}">{{ quote.from_work.title }}</a></i>
-            <a class="link-hidden" href="{% url 'admin:orgapy_quote_change' quote.id %}" title="Edit in admin"><i class="ri-pencil-fill"></i></a>
-        </div>
-    </div>
+    {% include 'orgapy/partials/quote.html' with block_class='card' %}
     {% endfor %}
 </div>
 {% else %}
