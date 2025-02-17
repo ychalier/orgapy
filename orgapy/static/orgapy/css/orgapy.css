@@ -126,10 +126,12 @@ button:focus {
     outline: 1px solid #8ed2ff;
 }
 
+button.disabled,
 button:disabled {
     opacity: .5;
 }
 
+button.disabled:hover,
 button:disabled:hover {
     pointer-events: none;
 }

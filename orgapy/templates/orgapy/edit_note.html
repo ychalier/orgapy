@@ -37,8 +37,8 @@
 {% endblock main_content %}
 
 {% block right_column %}
-{% block save_and_continue %}<button id="btn-save-note-continue" class="button-block">Save and continue</button>{% endblock %}
 <button id="btn-save-note-exit" class="button-block">Save and exit</button>
+{% block save_and_continue %}<button id="btn-save-note-continue" class="button-block">Save and continue</button>{% endblock %}
 <form id="form-note-edit-secondary">
     <label class="toggle">
         <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
@@ -57,8 +57,6 @@
 {{ block.super }}
 <script>
     const CATEGORIES = [{% for category in categories %}{% if not forloop.first %}, {% endif %}{name: "{{ category.name }}", id: {{ category.id }}}{% endfor %}];
-    setupCategoryInput();
-    bindSaveNoteButtons();
     const simplemde = new SimpleMDE({
         element: document.getElementById("input-content"),
         autoDownloadFontAwesome: false,
@@ -80,5 +78,7 @@
     window.addEventListener("load", () => {
         simplemde.codemirror.refresh();
     });
+    setupCategoryInput();
+    bindSaveNoteButtons();
 </script>
 {% endblock body_scripts %}
