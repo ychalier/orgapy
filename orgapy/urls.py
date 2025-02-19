@@ -44,5 +44,6 @@ urlpatterns = [
     path("maps/<mid>/export", views.view_export_map, name="export_map"),
     path("maps/<mid>/delete", views.view_delete_map, name="delete_map"),
     path("maps/<mid>/public", views.view_toggle_map_public, name="toggle_map_public"),
+    path("progress", views.view_progress, name="progress"),
     path("api", views.api, name="api"),
 ]

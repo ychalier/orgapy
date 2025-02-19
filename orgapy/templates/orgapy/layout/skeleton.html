@@ -36,7 +36,7 @@
         {% block center_column %}
             <nav class="navbar">
                 <div class="navbar-left">
-                    <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-checkbox-circle-line"></i>{% endif %}</a>
+                    <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-briefcase-line"></i>{% endif %}</a>
                     <a href="{% url 'orgapy:notes' %}" class="navbar-link {% if active == 'notes' %}active{% endif %}" title="Notes">{% if active == 'notes' %}Notes{% else %}<i class="ri-sticky-note-line"></i>{% endif %}</a>
                     <a href="{% url 'orgapy:quotes' %}" class="navbar-link {% if active == 'quotes' %}active{% endif %}" title="Quotes">{% if active == 'quotes' %}Quotes{% else %}<i class="ri-double-quotes-l"></i>{% endif %}</a>
                     <a href="{% url 'orgapy:sheets' %}" class="navbar-link {% if active == 'sheets' %}active{% endif %}" title="Sheets">{% if active == 'sheets' %}Sheets{% else %}<i class="ri-table-line"></i>{% endif %}</a>

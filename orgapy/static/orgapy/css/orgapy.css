@@ -155,6 +155,10 @@ blockquote p {
     display: none;
 }
 
+.secondary {
+    color: #888;
+}
+
 .link-hidden {
     color: inherit;
     text-decoration: none;

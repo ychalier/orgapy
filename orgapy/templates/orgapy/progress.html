@@ -1,0 +1,35 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Progress &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block menu_wrapper %}{% endblock menu_wrapper %}
+
+{% block main_content %}
+
+{% if logs %}
+<div class="card card-oneline">
+    {% for log in logs %}
+    <div class="oneline oneline-striped">
+        {% if log.type == "PR" %}
+        <i class="ri-briefcase-line" title="{{ log.get_type_display }}"></i>
+        {% elif log.type == "TA" %}
+        <i class="ri-checkbox-circle-line" title="{{ log.get_type_display }}"></i>
+        {% elif log.type == "OB" %}
+        <i class="ri-focus-2-line" title="{{ log.get_type_display }}"></i>
+        {% endif %}
+        <span class="secondary">{{ log.dt }}</span>
+        <span class="oneline-truncate">{{ log.description }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'orgapy/partials/pagination.html' with paginator=paginator %}
+
+{% else %}
+<div class="card">
+    <p>You have no log.</p>
+</div>
+{% endif %}
+
+{% endblock main_content %}

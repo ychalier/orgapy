@@ -205,6 +205,34 @@ def save_map_core(request):
     return mmap
 
 
+def get_checked_items(checklist: str) -> list[str]:
+    return re.findall(r"\[x\] (.*)", checklist)
+
+
+def compare_checklists(user, title: str, before: str | None, after: str | None):
+    if before is None or after is None:
+        return
+    checked_before = set(get_checked_items(before))
+    checked_after = set(get_checked_items(after))
+    for item in checked_after.difference(checked_before):
+        models.ProgressLog.objects.create(
+            user=user,
+            type=models.ProgressLog.PROJECT_CHECKLIST_ITEM_CHECKED,
+            description=f"{title} - {item}"
+        )
+
+
+def compare_objective_histories(user, name: str, before: str, after: str):
+    history_before = json.loads(before)
+    history_after = json.loads(after)
+    for _ in range(len(history_after) - len(history_before)):
+        models.ProgressLog.objects.create(
+            user=user,
+            type=models.ProgressLog.OBJECTIVE_COMPLETED,
+            description=name
+        )
+
+
 def getenv(name):
     match name:
         case "projects":
@@ -262,7 +290,12 @@ def view_about(request):
 
 @permission_required("orgapy.view_project")
 def view_projects(request):
+    query = models.ProgressCounter.objects.filter(user=request.user, year=datetime.datetime.now().year)
+    counter = None
+    if query.exists():
+        counter = query.get()
     return render(request, "orgapy/projects.html", {
+        "counter": counter,
         **getenv("projects"),
     })
 
@@ -749,6 +782,31 @@ def view_toggle_map_public(request, mid):
     return redirect("orgapy:maps")
 
 
+@permission_required("orgapy.view_progress_log")
+def view_progress(request):
+    page_size = 24
+    objects = models.ProgressLog.objects.filter(user=request.user)
+    try:
+        if "before" in request.GET:
+            dt_before = datetime.datetime.strptime(request.GET["before"], "%Y-%m-%d") + datetime.timedelta(days=1)
+            objects = objects.filter(dt__lte=dt_before)
+        if "after" in request.GET:
+            dt_after = datetime.datetime.strptime(request.GET["after"], "%Y-%m-%d")
+            objects = objects.filter(dt__gte=dt_after)
+    except ValueError:
+        raise BadRequest("Wrong date arg")
+    objects = objects.order_by("-dt")
+    paginator = Paginator(objects, page_size)
+    page = request.GET.get("page")
+    logs = paginator.get_page(page)
+    return render(request, "orgapy/progress.html", {
+        "logs": logs,
+        "year": datetime.datetime.now().year,
+        "paginator": pretty_paginator(logs),
+        **getenv("general"),
+    })
+
+
 # ----------------------------------------------- #
 # API                                             #
 # ----------------------------------------------- #
@@ -821,6 +879,8 @@ def api(request):
             return api_map_suggestions(request)
         case "suggestions":
             return api_suggestions(request)
+        case "progress":
+            return api_progress(request)
         case _:
             raise BadRequest("Wrong action")
 
@@ -922,6 +982,7 @@ def api_edit_project(request):
         project.description = project_data["description"]
     else:
         project.description = None
+    compare_checklists(request.user, project.title, project.checklist, project_data["checklist"])
     if project_data["checklist"] is not None:
         project.checklist = project_data["checklist"]
     else:
@@ -1159,7 +1220,9 @@ def api_edit_objective_history(request):
         raise BadRequest("Invalid values")
     if not models.Objective.objects.filter(id=objective_id, user=request.user).exists():
         raise Http404("Project not found")
+    
     objective = models.Objective.objects.get(id=objective_id, user=request.user)
+    compare_objective_histories(request.user, objective.name, objective.history, objective_history)
     objective.history = objective_history
     objective.save()
     return JsonResponse({"success": True})
@@ -1346,6 +1409,11 @@ def api_complete_task(request):
     task.completed = True
     task.date_completion = timezone.now()
     task.save()
+    models.ProgressLog.objects.create(
+        user=request.user,
+        type=models.ProgressLog.TASK_COMPLETED,
+        description=task.title
+    )
     if task.recurring_mode != models.Task.ONCE:
         due_date = None
         if task.recurring_mode == models.Task.DAILY:
@@ -1566,3 +1634,13 @@ def api_suggestions(request):
         ]
     }
     return JsonResponse(data)
+
+
+@permission_required("orgapy.view_progress_counter")
+def api_progress(request):
+    year = request.GET.get("year", datetime.datetime.now().year).strip()
+    query = models.ProgressCounter.objects.filter(user=request.user, year=int(year))
+    if not query.exists():
+        raise Http404("Progress counter does not exist")
+    counter = query.first()
+    return HttpResponse(counter.data, content_type="application/json")

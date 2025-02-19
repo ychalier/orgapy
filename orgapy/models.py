@@ -394,3 +394,91 @@ class Map(models.Model):
     @staticmethod
     def get_class():
         return "map"
+
+
+class ProgressCounter(models.Model):
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    year = models.PositiveIntegerField()
+    data = models.TextField(default="{}")
+    
+    class Meta:
+
+        ordering = ["user", "-year"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "year"], name="unique_user_year")
+        ]
+    
+    def __str__(self):
+        return f"{ self.user } - { self.year }"
+    
+    @property
+    def json(self) -> str:
+        return json.loads(self.data)
+    
+    def increment(self, dt: datetime.date):
+        key = dt.strftime(r"%Y-%m-%d")
+        json_data = self.json
+        json_data.setdefault(key, 0)
+        json_data[key] += 1
+        self.data = json.dumps(json_data)
+        self.save()
+    
+    def decrement(self, dt: datetime.date):
+        key = dt.strftime(r"%Y-%m-%d")
+        json_data = self.json
+        value = json_data.get(key, 0)
+        value -= 1
+        if value > 0:
+            json_data[key] = value
+        else:
+            del json_data[key]
+        self.data = json.dumps(json_data)
+        self.save()
+
+
+class ProgressLog(models.Model):
+    
+    OTHER = "OT"
+    PROJECT_CHECKLIST_ITEM_CHECKED = "PR"
+    TASK_COMPLETED = "TA"
+    OBJECTIVE_COMPLETED = "OB"
+    TYPE_CHOICES = [
+        (OTHER, "Other"),
+        (PROJECT_CHECKLIST_ITEM_CHECKED, "Project checklist item checked"),
+        (TASK_COMPLETED, "Task completed"),
+        (OBJECTIVE_COMPLETED, "Objective completed")
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    dt = models.DateTimeField(auto_now_add=True, auto_now=False)
+    type = models.CharField(max_length=2, choices=TYPE_CHOICES, default=OTHER)
+    description = models.CharField(max_length=255, blank=True, null=True)
+    
+    class Meta:
+
+        ordering = ["-dt"]
+    
+    def __str__(self):
+        return f"{ self.user } [{ self.type }] { self.description }"
+    
+    def save(self, *args, **kwargs):
+        if self.id is None:
+            now = datetime.datetime.now().date()
+            query = ProgressCounter.objects.filter(user=self.user, year=now.year)
+            if query.exists():
+                counter = query.get()
+            else:
+                counter = ProgressCounter.objects.create(user=self.user, year=now.year)
+            counter.increment(now)
+        return super(ProgressLog, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        query = ProgressCounter.objects.filter(user=self.user, year=self.dt.year)
+        if query.exists():
+            query.get().decrement(self.dt.date())
+        return super(ProgressLog, self).delete(*args, **kwargs)
+
+    def get_absolute_url(self):
+        dfs = self.dt.strftime(r"%Y-%m-%d")
+        return reverse("orgapy:progress") + f"?after={dfs}&before={dfs}"
