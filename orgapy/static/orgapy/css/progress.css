@@ -1,0 +1,48 @@
+.progress-chart {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    gap: 2px;
+}
+
+.progress-week {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    gap: 2px;
+}
+
+.progress-day {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1/1;
+    border-radius: .1rem;
+    cursor: pointer;
+}
+
+.progress-day-0 {
+    background: #161b22;
+}
+
+.progress-day-1 {
+    background: #0e4429;
+}
+
+.progress-day-2 {
+    background: #006d32;
+}
+
+.progress-day-3 {
+    background: #26a641;
+}
+
+.progress-day-4 {
+    background: #39d353;
+}
+
+.progress-day-hidden {
+    background: none;
+    pointer-events: none;
+    cursor: default;
+}

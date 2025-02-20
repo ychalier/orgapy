@@ -54,12 +54,15 @@
                         <button class="searchbar-search-small"><i class="ri-search-line"></i></button>
                     </form>
                     {% endif %}
-                    {% block menu_wrapper %}
                     <div id="menu-dropdown" class="dropdown">
                         <a class="navbar-link dropdown-toggle" tabindex="0"><i class="ri-menu-line"></i></a>
-                        <ul class="menu">{% block menu %}{% endblock menu %}</ul>
+                        <ul class="menu">
+                            {% block menu %}
+                            <li class="menu-item"><a href="{% url 'orgapy:about' %}">About</a><li>
+                            {% if request.user.is_authenticated %}<li class="menu-item"><a href="{% url 'orgapy:progress' %}">Progress</a><li>{% endif %}
+                            {% endblock menu %}
+                        </ul>
                     </div>
-                    {% endblock menu_wrapper %}
                 </div>
             </nav>
             {% block main_content_prev %}{% endblock main_content_prev %}

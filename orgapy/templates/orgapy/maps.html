@@ -3,7 +3,7 @@
 
 {% block title %}{% block subtitle %}Maps &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block menu %}{% include 'orgapy/partials/menu_maps.html' %}{% endblock menu %}
+{% block menu %}{% include 'orgapy/partials/menu_maps.html' %}<hr class="menu-separator">{{ block.super }}{% endblock menu %}
 
 {% block main_content %}
 

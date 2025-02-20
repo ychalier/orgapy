@@ -290,12 +290,7 @@ def view_about(request):
 
 @permission_required("orgapy.view_project")
 def view_projects(request):
-    query = models.ProgressCounter.objects.filter(user=request.user, year=datetime.datetime.now().year)
-    counter = None
-    if query.exists():
-        counter = query.get()
     return render(request, "orgapy/projects.html", {
-        "counter": counter,
         **getenv("projects"),
     })
 
@@ -783,26 +778,50 @@ def view_toggle_map_public(request, mid):
 
 
 @permission_required("orgapy.view_progress_log")
-def view_progress(request):
-    page_size = 24
-    objects = models.ProgressLog.objects.filter(user=request.user)
+def view_progress(request, year: str | None = None):
+    
+    if year is None:
+        year = datetime.datetime.now().year
+    else:
+        year = int(year)
+
+    dt_start = datetime.datetime(year, 1, 1, 0, 0, 0, 0)
+    dt_end = datetime.datetime(year, 12, 31, 0, 0, 0, 0)
+    dt_filter = False
     try:
-        if "before" in request.GET:
-            dt_before = datetime.datetime.strptime(request.GET["before"], "%Y-%m-%d") + datetime.timedelta(days=1)
-            objects = objects.filter(dt__lte=dt_before)
-        if "after" in request.GET:
-            dt_after = datetime.datetime.strptime(request.GET["after"], "%Y-%m-%d")
-            objects = objects.filter(dt__gte=dt_after)
+        if "start" in request.GET:
+            dt_filter = True
+            dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
+        if "end" in request.GET:
+            dt_filter = True
+            dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
+        if "date" in request.GET:
+            dt_filter = True
+            dt = datetime.datetime.strptime(request.GET["date"], "%Y-%m-%d")
+            dt_start = dt
+            dt_end = dt
     except ValueError:
         raise BadRequest("Wrong date arg")
-    objects = objects.order_by("-dt")
+
+    page_size = 24
+    objects = models.ProgressLog.objects.filter(user=request.user).filter(dt__range=[dt_start, dt_end + datetime.timedelta(days=1)]).order_by("-dt")
     paginator = Paginator(objects, page_size)
     page = request.GET.get("page")
     logs = paginator.get_page(page)
+
+    counter_query = models.ProgressCounter.objects.filter(user=request.user, year=year)
+    counter = None
+    if counter_query.exists():
+        counter = counter_query.get()
+    
     return render(request, "orgapy/progress.html", {
         "logs": logs,
-        "year": datetime.datetime.now().year,
+        "year": year,
         "paginator": pretty_paginator(logs),
+        "counter": counter,
+        "dt_filter": dt_filter,
+        "dt_start": dt_start,
+        "dt_end": dt_end,
         **getenv("general"),
     })
 

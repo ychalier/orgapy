@@ -8,6 +8,8 @@
 <hr class="menu-separator">
 <li class="menu-item"><a href="{% url 'orgapy:edit_sheet_group' group.id %}"><i class="ri-pencil-fill"></i> Edit sheet group</a></li>
 <li class="menu-item"><a class="link-confirm" message="Please confirm deletion of '{{ group.title }}'" href="{% url 'orgapy:delete_sheet_group' group.id %}"><i class="ri-delete-bin-line"></i> Delete</a></li>
+<hr class="menu-separator">
+{{ block.super }}
 {% endblock %}
 
 {% block main_content %}

@@ -30,12 +30,6 @@
     <div id="events"></div>
 </div>
 
-{% if counter %}
-<div class="card">
-    <div class="progress-chart" year="{{ counter.year }}" url="{% url 'orgapy:progress' %}"></div>
-</div>
-{% endif %}
-
 <div class="modal" id="modal-objective-form">
     <span class="modal-overlay" onclick="closeModal('modal-objective-form')"></span>
     <div class="modal-container">
@@ -241,6 +235,8 @@
 {% include 'orgapy/partials/menu_sheets.html' %}
 <hr class="menu-separator">
 {% include 'orgapy/partials/menu_maps.html' %}
+<hr class="menu-separator">
+{{ block.super }}
 {% endblock menu %}
 
 {% block right_column %}
@@ -251,6 +247,5 @@
 {{ block.super }}
 <script>
     markdownToHtml(".markdown", true);
-    {% if counter %}initializeProgressChart(document.querySelector(".progress-chart"));{% endif %}
 </script>
 {% endblock body_scripts %}

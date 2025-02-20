@@ -6,6 +6,8 @@
 {% block menu %}
 {% include 'orgapy/partials/menu_sheets.html' %}
 <li class="menu-item"><button onclick="showModal('modal-create-sheet-group')"><i class="ri-add-line"></i> Create sheet group</a></li>
+<hr class="menu-separator">
+{{ block.super }}
 {% endblock %}
 
 {% block main_content %}

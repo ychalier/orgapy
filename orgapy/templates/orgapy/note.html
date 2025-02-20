@@ -9,7 +9,7 @@
 <script src="{% static 'orgapy/js/notes.js' %}"></script>
 {% endblock head %}
 
-{% block menu %}{% include 'orgapy/partials/menu_notes.html' %}{% endblock menu %}
+{% block menu %}{% include 'orgapy/partials/menu_notes.html' %}<hr class="menu-separator">{{ block.super }}{% endblock menu %}
 
 {% block main_content %}
 

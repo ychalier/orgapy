@@ -1,11 +1,20 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}Progress &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}{{ year }} Progress &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block menu_wrapper %}{% endblock menu_wrapper %}
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/progress.css' %}" />
+<script src="{% static 'orgapy/js/progress.js' %}"></script>
+{% endblock head %}
 
 {% block main_content %}
+
+<header class="card">
+    <h1>{% if dt_filter %}{{ dt_start | date }}{% if dt_start != dt_end %} — {{ dt_end | date }}{% endif %}{% else %}{{ year }} Progress{% endif %}</h1>
+    {% if counter %}<div class="progress-chart" year="{{ counter.year }}" url="{% url 'orgapy:progress' %}"></div>{% endif %}
+</header>
 
 {% if logs %}
 <div class="card card-oneline">
@@ -28,8 +37,15 @@
 
 {% else %}
 <div class="card">
-    <p>You have no log.</p>
+    <p>No log at this date.</p>
 </div>
 {% endif %}
 
 {% endblock main_content %}
+
+{% if counter %}
+{% block body_scripts %}
+{{ block.super }}
+<script>initializeProgressChart(document.querySelector(".progress-chart"));</script>
+{% endblock body_scripts %}
+{% endif %}
