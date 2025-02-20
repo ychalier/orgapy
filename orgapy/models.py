@@ -7,6 +7,7 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 import caldav
 
@@ -79,7 +80,8 @@ class Objective(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     history = models.TextField(blank=True, null=True)
-    rules = models.TextField(blank=True, null=True)
+    period = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(365)])
+    flexible = models.BooleanField(default=False)
     archived = models.BooleanField(default=False)
 
     class Meta:
@@ -96,17 +98,12 @@ class Objective(models.Model):
                 history_dict = json.loads(self.history)
             except:
                 history_dict = None
-        rules_dict = None
-        if self.rules is not None:
-            try:
-                rules_dict = json.loads(self.rules)
-            except:
-                rules_dict = None
         return {
             "id": self.id,
             "name": self.name,
             "history": history_dict,
-            "rules": rules_dict,
+            "period": self.period,
+            "flexible": self.flexible,
             "archived": self.archived
         }
 

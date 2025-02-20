@@ -43,19 +43,15 @@
                     <input required minlength="1" name="name" type="text" id="input-objective-name" />
                 </p>
                 <p>
-                    <label for="input-objective-type">Type</label>
-                    <select required name="type" id="input-objective-type">
-                        <option value="strict">Strict</option>
-                        <option value="flexible">Flexible</option>
-                    </select>
-                </p>
-                <p>
                     <label cfor="input-objective-period">Period</label>
-                    <input required name="period" type="number" id="input-objective-period" min="0" step="0.5" />
+                    <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" />
                 </p>
                 <p>
-                    <label for="input-objective-cooldown">Cooldown</label>
-                    <input required name="cooldown" type="number" id="input-objective-cooldown" min="0" step="0.5" />
+                    <label for="input-objective-flexible" class="toggle">
+                        <input name="flexible" type="checkbox" id="input-objective-flexible" />
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">Flexible</span>
+                    </label>
                 </p>
                 <div class="row">
                     <input type="submit" class="button button-primary" name="add" value="Add"/>

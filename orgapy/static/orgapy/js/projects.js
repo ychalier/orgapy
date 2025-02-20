@@ -32,13 +32,18 @@ function getYearStart() {
     return yearStart;
 }
 
+const DAYMS = 24 * 3600 * 1000;
+const OBJECTIVE_START_HOURS = 5;
 const YEAR_START = getYearStart();
 const YEAR_END = new Date(YEAR_START.getTime());
 YEAR_END.setFullYear(YEAR_START.getFullYear() + 1);
 const TODAY = new Date();
-TODAY.setHours(0, 0, 0, 0);
+if (TODAY.getHours() < OBJECTIVE_START_HOURS) {
+    TODAY.setTime(TODAY.getTime() - DAYMS);
+}
+TODAY.setHours(OBJECTIVE_START_HOURS, 0, 0, 0);
 const NOW = new Date();
-const DAYMS = 24 * 3600 * 1000;
+
 const SLOT_STATE_COMPLETE = 0;
 const SLOT_STATE_MISSED = 1;
 const SLOT_STATE_BUTTON = 2;
@@ -1265,13 +1270,15 @@ function dayOffset(d) {
 }
 
 function addDays(baseDate, daysToAdd) {
-    let newDate = new Date(baseDate.getTime());
-    newDate.setDate(newDate.getDate() + Math.floor(daysToAdd));
-    let remainder = daysToAdd - Math.floor(daysToAdd);        
-    if (remainder > 0) {
-        newDate.setTime(newDate.getTime() + remainder * DAYMS);
-    }
+    const newDate = new Date(baseDate);
+    newDate.setDate(newDate.getDate() + daysToAdd);
     return newDate;
+}
+
+function daysDiff(a, b) {
+    const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((utc2 - utc1) / 1000 / 3600 / 24);
 }
 
 function inflateObjgraphHead(objgraph) {
@@ -1322,15 +1329,6 @@ class Slot {
 
 }
 
-function argmin(arr) {
-    if (arr.length == 0) return null;
-    let i = null;
-    for (let j = 0; j < arr.length; j++) {
-        if (arr[j] != null && (i == null || arr[j] < arr[i])) i = j;
-    }
-    return i;
-}
-
 class Objective {
     
     constructor(data) {
@@ -1340,111 +1338,93 @@ class Objective {
         if (this.history == null) {
             this.history = [];
         }
-        this.rules = data.rules;
+        this.period = data.period;
+        this.flexible = data.flexible;
         this.archived = data.archived;
         this.history.sort();
-    }
-
-    getSlotsStrict() {
-        let dateStart = new Date(this.history[0] * 1000);
-        dateStart.setHours(0, 0, 0, 0);
-        let slots = [];
-        let historyIndex = 0;
-        let isUnderCooldown = (NOW - new Date(this.history[this.history.length - 1] * 1000)) / DAYMS < this.rules.cooldown;
-        while (true) {
-            let dateEnd = addDays(dateStart, this.rules.period);
-            let state = null;
-            let dateStartTs = Math.floor(dateStart / 1000);
-            let dateEndTs = Math.floor(dateEnd / 1000);
-            let lastCompletion = null;
-            while (historyIndex < this.history.length && this.history[historyIndex] < dateEndTs) {
-                if (this.history[historyIndex] >= dateStartTs) {
-                    lastCompletion = new Date(this.history[historyIndex] * 1000);
-                }
-                historyIndex++;
-            }
-            let complete = lastCompletion != null;
-            let current = NOW >= dateStart && NOW < dateEnd;
-            if (complete) {
-                state = SLOT_STATE_COMPLETE;
-            } else if (current) {
-                state = isUnderCooldown ? SLOT_STATE_COOLDOWN : SLOT_STATE_BUTTON;
-            } else {
-                state = SLOT_STATE_MISSED;
-            }
-            slots.push(new Slot(dateStart, this.rules.period, state));
-            if (current) break;
-            dateStart = new Date(dateEnd.getTime());
-            if (NOW < dateStart) break;
-        }
-        return slots;
-    }
-
-    getSlotsFlexible() {
-        let dateStart = new Date(this.history[0] * 1000);
-        dateStart.setHours(0, 0, 0, 0);
-        let slots = [];
-        let nextHistoryIndex = 1;
-        let nextSlotState = SLOT_STATE_COMPLETE;
-        let isUnderCooldown = (NOW - new Date(this.history[this.history.length - 1] * 1000)) / DAYMS < this.rules.cooldown;
-        while (dateStart <= TODAY) {
-            let dateEndHistory = null;
-            if (nextHistoryIndex < this.history.length) {
-                dateEndHistory = new Date(this.history[nextHistoryIndex] * 1000);
-                dateEndHistory.setHours(0, 0, 0, 0);
-            }
-            let dateEndToday = new Date(TODAY.getTime());
-            let dateEndPeriod = addDays(dateStart, this.rules.period);
-            let dateEnds = [dateEndHistory, dateEndToday, dateEndPeriod];
-            if (nextSlotState == SLOT_STATE_MISSED) {
-                dateEnds.pop();
-            }
-            let i = argmin(dateEnds);
-            let dateEnd = dateEnds[i];
-            let minimumSize = 1;
-            if ((dateEnd - dateStart) / DAYMS < minimumSize) {
-                dateEnd = new Date(dateEnd.getTime() + (minimumSize - (dateEnd - dateStart) / DAYMS) * DAYMS);
-            }
-            let length = Math.round((dateEnd - dateStart) / DAYMS);
-            let early = (nextSlotState == SLOT_STATE_BUTTON || nextSlotState == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length < this.rules.period;
-            let late = (nextSlotState == SLOT_STATE_BUTTON || nextSlotState == SLOT_STATE_COOLDOWN) && slots[slots.length - 1].length > this.rules.period + .9;
-            slots.push(new Slot(dateStart, length, nextSlotState, early, late));
-            if (i == 0) {
-                nextHistoryIndex++;
-                nextSlotState = SLOT_STATE_COMPLETE;
-            } else if (i == 1) {
-                nextSlotState = isUnderCooldown ? SLOT_STATE_COOLDOWN : SLOT_STATE_BUTTON;
-            } else {
-                nextSlotState = SLOT_STATE_MISSED;
-            }
-            dateStart = new Date(dateEnd.getTime());
-        }
-        let futureDateEnd = addDays(new Date(this.history[this.history.length - 1] * 1000), this.rules.period);
-        let futureLength = Math.floor((futureDateEnd - dateStart) / DAYMS);
-        if (futureLength > 0) {
-            slots.push(new Slot(dateStart, futureLength, SLOT_STATE_FUTURE_COMPLETE, false, false));
-        }
-        return slots;
     }
 
     getSlots() {
         if (this.history == null || this.history.length == 0) {
             return [new Slot(TODAY, 1, SLOT_STATE_BUTTON)];
         }
-        let slots;
-        switch (this.rules.type) {
-            case "strict":
-                slots = this.getSlotsStrict();
-                break;
-            case "flexible":
-                slots = this.getSlotsFlexible();
-                break;
+        const completions = [];
+        for (const ts of this.history) {
+            let date = new Date(ts * 1000);
+            if (date.getHours() < OBJECTIVE_START_HOURS) {
+                date = addDays(date, -1);
+            }
+            date.setHours(OBJECTIVE_START_HOURS, 0, 0, 0);
+            completions.push(date);
         }
-        while (true) {
-            let slot = new Slot(slots[slots.length - 1].end(), this.rules.period, SLOT_STATE_FUTURE);
-            if (slot.start >= YEAR_END - DAYMS) break;
+        let n = this.history.length, i = 0, early = false, late = false, preset = false;
+        let slots = [];
+        let dateStart = completions[0];
+        while (dateStart < YEAR_END - DAYMS) {
+            let presetUsed = false;
+            while (i < n && completions[i] < dateStart) {
+                i++;
+            }
+            let dateEnd = addDays(dateStart, this.period);
+            let cut = false;
+            if (this.flexible) {
+                if (early) {
+                    dateEnd = addDays(dateStart, 1);
+                    preset = true;
+                } else if (late) {
+                    dateEnd = addDays(dateStart, 1);
+                } else if (preset) {
+                    let length = this.period - slots[slots.length - 2].length - 1;
+                    if (length > 0) {
+                        presetUsed = true;
+                        dateEnd = addDays(dateStart, length);
+                    }
+                } else {
+                    for (let j = i; j < n; j++) {
+                        if (completions[j] > dateStart && completions[j] < dateEnd) {
+                            dateEnd = completions[j];
+                            break;
+                        }
+                        if (completions[j] >= dateEnd) break;
+                    }
+                    if (TODAY > dateStart && TODAY < dateEnd) {
+                        cut = true;
+                        dateEnd = TODAY;
+                    }
+                } 
+            }
+            let completed = i < n && completions[i] < dateEnd;
+            let state = SLOT_STATE_MISSED;
+            if (presetUsed) {
+                state = SLOT_STATE_FUTURE_COMPLETE;
+            } else if (completed) {
+                state = SLOT_STATE_COMPLETE;
+            } else if (TODAY >= dateStart && TODAY < dateEnd) {
+                state = SLOT_STATE_BUTTON;
+            } else if (TODAY < dateStart) {
+                state = SLOT_STATE_FUTURE;
+            }
+            if (this.flexible && state == SLOT_STATE_BUTTON) {
+                dateEnd = addDays(dateStart, 1);
+            }
+            let slot = new Slot(dateStart, daysDiff(dateStart, dateEnd), state, early, late);
             slots.push(slot);
+            dateStart = dateEnd;
+            if (!early) {
+                preset = false;
+            }
+            if (cut) {
+                if (completed) {
+                    early = true;
+                } else {
+                    late = true;
+                }
+            } else {
+                early = false;
+                late = false;
+            }
         }
+
         return slots;
     }
 
@@ -1592,15 +1572,8 @@ function openModalObjectiveForm(objective=null) {
     if (objective != null) {
         modal.querySelector("input[name='id']").value = objective.id;
         modal.querySelector("input[name='name']").value = objective.name;
-        modal.querySelectorAll("select[name='type'] option").forEach(option => {
-            if (option.value == objective.rules.type) {
-                option.selected = true;
-            } else {
-                option.removeAttribute("selected");
-            }
-        });
-        modal.querySelector("input[name='period']").value = objective.rules.period;
-        modal.querySelector("input[name='cooldown']").value = objective.rules.cooldown;
+        modal.querySelector("input[name='flexible']").checked = objective.flexible;
+        modal.querySelector("input[name='period']").value = objective.period;
         modal.querySelector("input[name='add']").style.display = "none";
         if (objective.archived) {
             modal.querySelector("input[name='archive']").value = "Unarchive";
@@ -1611,15 +1584,8 @@ function openModalObjectiveForm(objective=null) {
         modal.querySelector("input[name='delete']").style.display = "unset";
         modal.querySelector("input[name='completion']").style.display = "unset";
     } else {
-        modal.querySelectorAll("select[name='type'] option").forEach(option => {
-            if (option.value == "ON") {
-                option.selected = true;
-            } else {
-                option.removeAttribute("selected");
-            }
-        });
+        modal.querySelector("input[name='flexible']").removeAttribute("checked");
         modal.querySelector("input[name='period']").value = 1;
-        modal.querySelector("input[name='cooldown']").value = 0;
         modal.querySelector("input[name='add']").style.display = "unset";
         modal.querySelector("input[name='archive']").style.display = "none";
         modal.querySelector("input[name='save']").style.display = "none";

@@ -222,7 +222,9 @@ def compare_checklists(user, title: str, before: str | None, after: str | None):
         )
 
 
-def compare_objective_histories(user, name: str, before: str, after: str):
+def compare_objective_histories(user, name: str, before: str | None, after: str | None):
+    if before is None or after is None:
+        return
     history_before = json.loads(before)
     history_after = json.loads(after)
     for _ in range(len(history_after) - len(history_before)):
@@ -1119,21 +1121,18 @@ def api_add_objective(request):
     if request.method != "POST":
         raise BadRequest("Wrong method")
     objective_name = request.POST.get("name")
-    objective_type = request.POST.get("type")
     objective_period = request.POST.get("period")
-    objective_cooldown = request.POST.get("cooldown")
-    if objective_name is None or objective_type is None or objective_period is None or objective_cooldown is None:
+    if objective_name is None or objective_period is None:
         raise BadRequest("Missing fields")
     try:
         objective_period = float(objective_period)
-        objective_cooldown = float(objective_cooldown)
     except:
         raise BadRequest("Invalid values")
     models.Objective.objects.create(
         user=request.user,
         name=objective_name,
-        rules = '{"type": "%s", "period": %f, "cooldown": %f}' % (
-            objective_type, objective_period, objective_cooldown)
+        period=objective_period,
+        flexible=request.POST.get("flexible", "") == "on",
         )
     return JsonResponse({"success": True})
 
@@ -1147,23 +1146,21 @@ def api_edit_objective(request):
         return api_delete_objective(request)
     objective_id = request.POST.get("id")
     objective_name = request.POST.get("name")
-    objective_type = request.POST.get("type")
     objective_period = request.POST.get("period")
-    objective_cooldown = request.POST.get("cooldown")
-    if objective_id is None or objective_name is None or objective_type is None or objective_period is None or objective_cooldown is None:
+    objective_flexible = request.POST.get("flexible", "") == "on"
+    if objective_id is None or objective_name is None or objective_period is None:
         raise BadRequest("Missing fields")
     try:
         objective_id = int(objective_id)
         objective_period = float(objective_period)
-        objective_cooldown = float(objective_cooldown)
     except:
         raise BadRequest("Invalid values")
     if not models.Objective.objects.filter(id=objective_id, user=request.user).exists():
         raise Http404("Objective not found")
     objective = models.Objective.objects.get(id=objective_id, user=request.user)
     objective.name = objective_name
-    objective.rules = '{"type": "%s", "period": %f, "cooldown": %f}' % (
-        objective_type, objective_period, objective_cooldown)
+    objective.period = objective_period
+    objective.flexible = objective_flexible
     objective.save()
     return JsonResponse({"success": True})
 
