@@ -516,12 +516,24 @@
     border-radius: .2rem;
 }
 
+.objgraph-slot button:hover {
+    background: #fff;
+}
+
 .objgraph-slot button.early {
-    background: #8CCD94 !important;
+    background: #8CCD94;
+}
+
+.objgraph-slot button.early:hover {
+    background: rgb(195, 255, 202);
 }
 
 .objgraph-slot button.late {
-    background: #E69D73 !important;
+    background: #E69D73;
+}
+
+.objgraph-slot button.late:hover {
+    background: #ffc8a8;
 }
 
 .objgraph-name {
