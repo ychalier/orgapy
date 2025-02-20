@@ -27,7 +27,7 @@
         {% elif log.type == "OB" %}
         <i class="ri-focus-2-line" title="{{ log.get_type_display }}"></i>
         {% endif %}
-        <span class="secondary">{{ log.dt }}</span>
+        <span class="secondary" title="{{ log.dt | date:"Y-m-d H:i:s" }}">{{ log.dt | date:"M d" }}</span>
         <span class="oneline-truncate">{{ log.description }}</span>
     </div>
     {% endfor %}
