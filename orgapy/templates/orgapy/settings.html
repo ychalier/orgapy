@@ -1,0 +1,19 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Settings &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block main_content %}
+<header class="card">
+    <h1>Settings</h1>
+    <form action="{% url 'orgapy:settings' %}" method="post">
+        {% csrf_token %}
+        <input hidden type="text" name="ref" value="{{ request.GET.ref }}" />
+        <p>
+            <label for="input-objective-start-hours">Objective Start Hours</label>
+            <input id="input-objective-start-hours" type="number" name="objective_start_hours" value="{{ settings.objective_start_hours }}" min="0" max="23" step="1" />
+        </p>
+        <button>Save</button>
+    </form>
+</header>
+{% endblock main_content %}

@@ -274,6 +274,13 @@ def getenv(name):
     return {}
 
 
+def get_or_create_settings(user):
+    query = models.Settings.objects.filter(user=user)
+    if query.exists():
+        return query.get()
+    return models.Settings.objects.create(user=user)
+
+
 # ----------------------------------------------- #
 # VIEWS                                           #
 # ----------------------------------------------- #
@@ -293,6 +300,7 @@ def view_about(request):
 @permission_required("orgapy.view_project")
 def view_projects(request):
     return render(request, "orgapy/projects.html", {
+        "settings": get_or_create_settings(request.user),
         **getenv("projects"),
     })
 
@@ -824,6 +832,20 @@ def view_progress(request, year: str | None = None):
         "dt_filter": dt_filter,
         "dt_start": dt_start,
         "dt_end": dt_end,
+        **getenv("general"),
+    })
+
+
+@permission_required("orgapy.change_settings")
+def view_settings(request):
+    settings = get_or_create_settings(request.user)
+    if request.method == "POST":
+        settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
+        settings.save()
+        if "ref" in request.POST:
+            return redirect(request.POST["ref"])
+    return render(request, "orgapy/settings.html", {
+        "settings": settings,
         **getenv("general"),
     })
 

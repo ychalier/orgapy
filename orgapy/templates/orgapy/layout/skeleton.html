@@ -59,7 +59,12 @@
                         <ul class="menu">
                             {% block menu %}
                             <li class="menu-item"><a href="{% url 'orgapy:about' %}">About</a><li>
-                            {% if request.user.is_authenticated %}<li class="menu-item"><a href="{% url 'orgapy:progress' %}">Progress</a><li>{% endif %}
+                            {% if request.user.is_authenticated %}
+                            <li class="menu-item"><a href="{% url 'orgapy:progress' %}">Progress</a><li>
+                            {% if request.user.settings %}
+                            <li class="menu-item"><a href="{% url 'orgapy:settings' %}?ref={{ request.path }}">Settings</a><li>
+                            {% endif %}
+                            {% endif %}
                             {% endblock menu %}
                         </ul>
                     </div>

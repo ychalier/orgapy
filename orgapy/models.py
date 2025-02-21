@@ -18,6 +18,19 @@ def generate_nonce() -> str:
     return "".join(choices)
 
 
+class Settings(models.Model):
+    
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    objective_start_hours = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(23)])
+    
+    class Meta:
+
+        ordering = ["user"]
+    
+    def __str__(self):
+        return f"{ self.user }"
+
+
 class Category(models.Model):
     """Represent a general note category"""
 

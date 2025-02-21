@@ -33,7 +33,6 @@ function getYearStart() {
 }
 
 const DAYMS = 24 * 3600 * 1000;
-const OBJECTIVE_START_HOURS = 5;
 const YEAR_START = getYearStart();
 const YEAR_END = new Date(YEAR_START.getTime());
 YEAR_END.setFullYear(YEAR_START.getFullYear() + 1);
