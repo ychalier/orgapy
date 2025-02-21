@@ -362,14 +362,18 @@ class Feature {
     }
 
     toGeojson() {
-        return {
+        const o = {
             type: "Feature",
             geometry: {
                 type: this.geometry.type,
                 coordinates: this.geometry.coordinates
             },
-            properties: this.properties,
+            properties: {},
         }
+        for (let property in this.properties) {
+            o.properties[property] = this.properties[property];
+        }
+        return o;
     }
 
     setStyle(customStyle=null) {
@@ -470,6 +474,15 @@ class Feature {
                 self.layer.map.leafletMap.closePopup();
             });
         }
+        let buttonDuplicate = create(buttons, "button");
+        buttonDuplicate.innerHTML = `<i class="ri-file-copy-2-line"></i>`;
+        buttonDuplicate.title = "Duplicate";
+        buttonDuplicate.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const selfCopy = self.toGeojson();
+            selfCopy.properties.label = `${selfCopy.properties.label} (copy)`;
+            self.layer.addFeature(selfCopy);
+        });
         let buttonDelete = create(buttons, "button");
         buttonDelete.innerHTML = `<i class="ri-delete-bin-line"></i>`;
         buttonDelete.title = "Delete";
