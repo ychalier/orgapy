@@ -1013,10 +1013,12 @@ class Layer {
     }
 
     enableEdit() {
+        if (!this.visibilityCheckbox.checked) return;
         this.features.forEach(feature => feature.enableEdit());
     }
 
     disableEdit() {
+        if (!this.visibilityCheckbox.checked) return;
         this.features.forEach(feature => feature.disableEdit());
     }
 
