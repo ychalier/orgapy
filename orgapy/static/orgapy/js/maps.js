@@ -358,6 +358,7 @@ class Feature {
         setDefault(this.properties, "fillOpacity", DEFAULT_FILL_OPACITY);
         this.mapElement = null;
         this.panelElement = null;
+        this.editing = false;
     }
 
     toGeojson() {
@@ -445,6 +446,30 @@ class Feature {
             event.stopPropagation();
             self.inflatePopupEdit(container);
         });
+        if (!self.layer.map.readonly) {
+            let buttonToggleEdition = create(buttons, "button");
+            if (this.geometry.type == "Point") {
+                buttonToggleEdition.innerHTML = `<i class="ri-map-pin-line"></i>`;
+            } else if (this.geometry.type == "LineString") {
+                buttonToggleEdition.innerHTML = `<i class="ri-route-line"></i>`;
+            } else {
+                buttonToggleEdition.innerHTML = `<i class="ri-shape-line"></i>`;
+            }
+            if (this.editing) {
+                buttonToggleEdition.classList.add("active");
+            }
+            buttonToggleEdition.title = "Toggle edition";
+            buttonToggleEdition.addEventListener("click", (event) => {
+                event.stopPropagation();
+                if (self.editing) {
+                    self.disableEdit();
+                    self.onChange("edit-feature");
+                } else {
+                    self.enableEdit();
+                }
+                self.layer.map.leafletMap.closePopup();
+            });
+        }
         let buttonDelete = create(buttons, "button");
         buttonDelete.innerHTML = `<i class="ri-delete-bin-line"></i>`;
         buttonDelete.title = "Delete";
@@ -740,6 +765,7 @@ class Feature {
     }
 
     enableEdit() {
+        this.editing = true;
         if (this.mapElement instanceof L.FeatureGroup) {
             this.mapElement.eachLayer(l => l.enableEdit());
         } else {
@@ -748,6 +774,7 @@ class Feature {
     }
 
     disableEdit() {
+        this.editing = false;
         if (this.mapElement instanceof L.FeatureGroup) {
             this.mapElement.eachLayer(l => l.disableEdit());
         } else {

@@ -273,6 +273,11 @@ body.fullscreen {
     background: #303030;
 }
 
+.feature-popup button.active {
+    color: black;
+    background: #8ed2ff;
+}
+
 .feature-popup button:hover {
     background: #1b2931;
 }
