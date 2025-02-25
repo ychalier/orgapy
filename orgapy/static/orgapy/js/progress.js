@@ -4,15 +4,23 @@ function inflateProgressChart(chart, year, counter) {
     dateStart.setFullYear(year, 0, 1);
     const offset = (dateStart.getDay() + 6) % 7;
     const length = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 ? 366 : 365;
-    let column;
     let maxValue = Math.max(...Object.values(counter));
     if (maxValue == 0) maxValue = 1;
-    for (let i = 0; i < length + offset; i++) {
-        if (i % 7 == 0) {
-            column = create(chart, "div", "progress-week");
+    const table = create(create(chart, "table", "progress-table"), "tbody");
+    const rows = [];
+    const weekCount = Math.ceil((length + offset) / 7);
+    const cells = [];
+    for (let i = 0; i < 7; i++) {
+        rows.push(create(table, "tr"));
+    }
+    for (let j = 0; j < weekCount; j++) {
+        for (let i = 0; i < 7; i++) {
+            cells.push(create(rows[i], "td"));
         }
+    }
+    for (let i = offset; i < length + offset; i++) {
         const dt = new Date(dateStart);
-        dt.setDate(dt.getDate() + i);
+        dt.setDate(dt.getDate() + i - offset);
         const key = dtf(dt, "YYYY-mm-dd");
         const value = parseInt(key in counter ? counter[key] : "0");
         let shade;
@@ -21,7 +29,7 @@ function inflateProgressChart(chart, year, counter) {
         } else {
             shade = Math.ceil(4 * value / maxValue);
         }
-        const day = create(column, "div", `progress-day progress-day-${shade}`);
+        const day = create(cells[i], "div", `progress-day progress-day-${shade}`);
         day.title = `${key}: ${value}`;
         if (i < offset) {
             day.classList.add("progress-day-hidden");
