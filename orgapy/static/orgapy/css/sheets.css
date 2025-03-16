@@ -492,3 +492,11 @@ body.fullscreen header {
 .markdown .sheet {
     height: auto;
 }
+
+.text-gold {
+    color: #ffd700;
+}
+
+.text-dark {
+    color: #444444;
+}

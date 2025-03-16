@@ -17,6 +17,7 @@ const CTYPE_DATETIME = 7;
 const CTYPE_DATE = 8;
 const CTYPE_TIME = 9;
 const CTYPE_DURATION = 10;
+const CTYPE_STARS = 11;
 
 const HIGHLIGHT_ACCENT = 0;
 const HIGHLIGHT_SUCCESS = 1;
@@ -1295,6 +1296,39 @@ class ColumnTypeDuration extends ColumnType {
 }
 
 
+class ColumnTypeStars extends ColumnType {
+
+    static ALIGNEMENT = "acenter";
+    static ID = CTYPE_STARS;
+    static LABEL = "Stars";
+
+    formatHtml(value) {
+        return safeFormat(value, x => {
+            let html = `<span class="text-gold">`;
+            const y = parseInt(x);
+            for (let i = 0; i < y; i++) {
+                html += "★";
+            }
+            html += `</span><span class="text-dark">`;
+            for (let i = 0; i < 3 - y; i++) {
+                html += "☆";
+            }
+            html += `</span>`;
+            return html;
+        });
+    }
+
+    formatText(value) {
+        return safeFormat(value, x => x.toString());
+    }
+
+    parse(string) {
+        return safeParse(string, parseInt);
+    }
+
+}
+
+
 const COLUMN_TYPES = [
     ColumnTypeText,
     ColumnTypeBoolean,
@@ -1307,6 +1341,7 @@ const COLUMN_TYPES = [
     ColumnTypeDate,
     ColumnTypeTime,
     ColumnTypeDuration,
+    ColumnTypeStars,
 ];
 
 
