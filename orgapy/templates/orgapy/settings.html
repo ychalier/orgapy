@@ -5,7 +5,11 @@
 
 {% block main_content %}
 <header class="card">
+
     <h1>Settings</h1>
+
+    <h2>General</h2>
+
     <form action="{% url 'orgapy:settings' %}" method="post">
         {% csrf_token %}
         <input hidden type="text" name="ref" value="{{ request.GET.ref }}" />
@@ -15,5 +19,74 @@
         </p>
         <button>Save</button>
     </form>
+
+    <h2>Calendars</h2>
+
+    {% for calendar in calendars %}
+    <form action="{% url 'orgapy:calendar_form' %}" method="post" class="card-block">
+        <p>
+            <label>Name</label>
+            <input type="text" name="name" value="{{ calendar.calendar_name }}" />
+        </p>
+        {% csrf_token %}
+        <input type="hidden" name="id" value="{{ calendar.id }}" />
+        <p>
+            <label>URL</label>
+            <input type="url" name="url" value="{{ calendar.url }}" />
+        </p>
+        <p>
+            <label>Username</label>
+            <input type="text" name="username" value="{{ calendar.username }}" />
+        </p>
+        <p>
+            <label>Password</label>
+            <input type="password" name="password" value="{{ calendar.password }}" />
+        </p>
+        <p>
+            <label>Lookahead</label>
+            <input type="number" name="lookahead" value="{{ calendar.lookahead }}" min="0"/>
+        </p>
+        <p>
+            <label>Sync Period</label>
+            <input type="number" name="sync_period" value="{{ calendar.sync_period }}" min="0"/>
+        </p>
+        <div class="row">
+            <input type="submit" name="save" value="Save" />
+            <input class="button-delete submit-confirm" name="delete" type="submit" value="Delete" />
+        </div>
+    </form>
+    <br>
+    {% endfor %}
+
+    <form action="{% url 'orgapy:calendar_form' %}" method="post" class="card-block">
+        <p>
+            <label>Name</label>
+            <input type="text" name="name" placeholder="Work, Birthdays, …" />
+        </p>
+        {% csrf_token %}
+        <p>
+            <label>URL</label>
+            <input type="url" name="url" placeholder="https://example.org" />
+        </p>
+        <p>
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Username" />
+        </p>
+        <p>
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Password" />
+        </p>
+        <p>
+            <label>Lookahead</label>
+            <input type="number" name="lookahead" value="14" min="0" placeholder="14"/>
+        </p>
+        <p>
+            <label>Sync Period</label>
+            <input type="number" name="sync_period" value="86400" min="0" placeholder="86400" />
+        </p>
+        <button>Create</button>
+    </form>
+
+
 </header>
 {% endblock main_content %}

@@ -844,10 +844,46 @@ def view_settings(request):
         settings.save()
         if "ref" in request.POST:
             return redirect(request.POST["ref"])
+    calendars = models.Calendar.objects.filter(user=request.user).order_by("calendar_name")
     return render(request, "orgapy/settings.html", {
         "settings": settings,
+        "calendars": calendars,
         **getenv("general"),
     })
+
+
+@permission_required("orgapy.change_calendar")
+def view_calendar_form(request):
+    if not request.method == "POST":
+        raise BadRequest("Wrong method")
+    if "id" in request.POST:
+        query = models.Calendar.objects.filter(user=request.user, id=request.POST["id"])
+        if not query.exists():
+            raise Http404("Calendar not found")
+        calendar = query.get()
+        if "save" in request.POST:
+            calendar.url = request.POST["url"]
+            calendar.username = request.POST["username"]
+            calendar.password = request.POST["password"]
+            calendar.calendar_name = request.POST["name"]
+            calendar.lookahead = int(request.POST["lookahead"])
+            calendar.sync_period = int(request.POST["sync_period"])
+            calendar.save()
+        elif "delete" in request.POST:
+            calendar.delete()
+        else:
+            raise BadRequest("Wrong submit action")
+    else:
+        calendar = models.Calendar.objects.create(
+            user=request.user,
+            url=request.POST["url"],
+            username=request.POST["username"],
+            password=request.POST["password"],
+            calendar_name=request.POST["name"],
+            lookahead=int(request.POST["lookahead"]),
+            sync_period=int(request.POST["sync_period"]),
+        )
+    return redirect("orgapy:settings")
 
 
 # ----------------------------------------------- #

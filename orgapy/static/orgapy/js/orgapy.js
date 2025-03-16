@@ -327,5 +327,29 @@ window.addEventListener("load", () => {
                 window.location.href = link.href;
             }
         });
-    });    
+    });
+    document.querySelectorAll(".submit-confirm").forEach(input => {
+        input.addEventListener("click", (event) => {
+            event.preventDefault();
+            let message = input.getAttribute("message");
+            if (message == null) {
+                message = "This can not be undone. Please confirm your decision.";
+            }
+            if (confirm(message)) {
+                let node = input.parentElement;
+                while (node.tagName != "FORM") {
+                    node = node.parentElement;
+                }
+                const form = node;
+                if (input.hasAttribute("name")) {
+                    const hiddenInput = document.createElement("input");
+                    hiddenInput.type = "hidden";
+                    hiddenInput.name = input.name;
+                    hiddenInput.value = input.value;
+                    form.appendChild(hiddenInput);
+                }
+                form.submit();
+            }
+        });
+    });
 });

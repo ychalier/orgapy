@@ -117,6 +117,7 @@ button {
     transition: .2s ease-in-out;
 }
 
+input[type=submit]:hover,
 button:hover {
     background-color: #1b2931;
 }
@@ -214,6 +215,15 @@ blockquote p {
 .button-primary:hover {
     background-color: #6b9fc2 !important;
     border-color: #45667c !important;
+}
+
+.button-delete {
+    color: #f16581 !important;
+    border-color: #dc143c !important;
+}
+
+.button-delete:hover {
+    background-color: #311b20 !important;
 }
 
 .card-highlight .button-inline {
@@ -582,6 +592,25 @@ header.card h1 {
     padding: .4rem;
     border-radius: .4rem;
     margin: .4rem 0;
+}
+
+.card-block p {
+    margin: .4rem 0;
+}
+
+.card-block p:first-child {
+    margin-top: 0;
+}
+
+.card-block p:last-child {
+    margin-bottom: 0;
+}
+
+.card-block input,
+.card-block select,
+.card-block textarea,
+.card-block button {
+    background: #202020;
 }
 
 .card-block+.card-commands {

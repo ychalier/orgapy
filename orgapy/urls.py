@@ -47,5 +47,6 @@ urlpatterns = [
     path("progress", views.view_progress, name="progress"),
     path("progress/<year>", views.view_progress, name="progress_year"),
     path("settings", views.view_settings, name="settings"),
+    path("settings/calendar", views.view_calendar_form, name="calendar_form"),
     path("api", views.api, name="api"),
 ]
