@@ -221,7 +221,9 @@ class Project {
                         e2.preventDefault();
                         e2.stopPropagation();
                         input.value = input.value.replace(/@[\w0-9]*/, `@${result.id}`);
-                        callback();
+                        if (!self.isTemporary) {
+                            callback();
+                        }
                         return false;
                     });
                 }
@@ -864,6 +866,7 @@ class TemporaryProject extends Project {
             rank: null,
             note: null,
         });
+        this.isTemporary = true;
     }
 
     onTitleInputChange(input) {
