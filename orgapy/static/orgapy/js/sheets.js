@@ -563,6 +563,9 @@ function tidy(array, order) {
 
 
 function rowname(i) {
+    if (i == null) {
+        throw new Error("Line index is null");
+    }
     return `${i + 1}`;
 }
 
@@ -2476,6 +2479,18 @@ class Sheet {
         if (config != null) {
             this.highlights = config.highlights;
             this.shrunk = config.shrunk;
+            let configOrderingHasNull = false;
+            if (config.ordering != null) {
+                for (let i = 0; i < config.ordering.length; i++) {
+                    if (config.ordering[i] == null) {
+                        configOrderingHasNull = true;
+                        break;
+                    }
+                }
+            }
+            if (configOrderingHasNull) {
+                config.ordering = null;
+            }
             this.ordering = config.ordering;
             if (("column_widths" in config) && !("columnWidths" in config)) {
                 config.columnWidths = config["column_widths"];
