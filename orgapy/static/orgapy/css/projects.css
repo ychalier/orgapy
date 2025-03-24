@@ -245,6 +245,7 @@
     width: 100%;
     flex-direction: row;
     justify-content: flex-start;
+    align-items: baseline;
 }
 
 .project-checklist-item input[type="checkbox"] {
