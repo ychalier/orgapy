@@ -201,27 +201,17 @@
 {% endblock main_content %}
 
 {% block menu %}
-<li class="menu-item"><button id="tasks-add"><i class="ri-add-line"></i> Add Task</button></li>
+<li class="menu-item"><button id="tasks-add"><i class="ri-add-line"></i> Task</button></li>
+<li class="menu-item"><button id="btn-objective-create"><i class="ri-add-line"></i> Objective</button></li>
+<li class="menu-item"><button id="btn-project-create"><i class="ri-add-line"></i> Project</button></li>
+<li class="menu-item"><button id="events-add"><i class="ri-add-line"></i> Event</button></li>
 <li class="menu-item"><button id="tasks-explore"><i class="ri-search-line"></i> Explore Tasks</button></li>
-<hr class="menu-separator">
-<li class="menu-item"><button id="events-add"><i class="ri-add-line"></i> Add Event</button></li>
 <li class="menu-item"><button id="events-refresh"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
-<hr class="menu-separator">
-<li class="menu-item"><button id="btn-objective-create"><i class="ri-add-line"></i> Add Objective</button></li>
 <li class="menu-item">
-{% if not request.GET.archivedObjectives %}
-<a href="{% url 'orgapy:projects' %}?archivedObjectives=1{% if request.GET.archivedProjects %}&archivedProjects=1{% endif %}"><i class="ri-eye-line"></i> All Objectives</a>
+{% if not request.GET.archivedObjectives and not request.GET.archivedProjects %}
+<a href="{% url 'orgapy:projects' %}?archivedObjectives=1&archivedProjects=1"><i class="ri-eye-line"></i> View Archived</a>
 {% else %}
-<a href="{% url 'orgapy:projects' %}{% if request.GET.archivedProjects %}?archivedProjects=1{% endif %}"><i class="ri-eye-off-line"></i> Active Objectives</a>
-{% endif %}
-</li>
-<hr class="menu-separator">
-<li class="menu-item"><button id="btn-project-create"><i class="ri-add-line"></i> Add Project</button></li>
-<li class="menu-item">
-{% if not request.GET.archivedProjects %}
-<a href="{% url 'orgapy:projects' %}?archivedProjects=1{% if request.GET.archivedObjectives %}&archivedObjectives=1{% endif %}"><i class="ri-eye-line"></i> All Projects</a>
-{% else %}
-<a href="{% url 'orgapy:projects' %}{% if request.GET.archivedObjectives %}?archivedObjectives=1{% endif %}"><i class="ri-eye-off-line"></i> Active Projects</a>
+<a href="{% url 'orgapy:projects' %}"><i class="ri-eye-off-line"></i> Hide Archived</a>
 {% endif %}
 </li>
 <hr class="menu-separator">
