@@ -492,3 +492,7 @@ class ProgressLog(models.Model):
     def get_absolute_url(self):
         dfs = self.dt.strftime(r"%Y-%m-%d")
         return reverse("orgapy:progress") + f"?date={dfs}"
+    
+    @property
+    def dt_html(self) -> str:
+        return f"{self.dt.year}-{self.dt.month:02d}-{self.dt.day:02d}T{self.dt.hour:02d}:{self.dt.minute:02d}"

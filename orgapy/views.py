@@ -836,6 +836,57 @@ def view_progress(request, year: str | None = None):
     })
 
 
+@permission_required("orgapy.add_progress_log")
+def view_create_progress_log(request):
+    return render(request, "orgapy/create_progress_log.html", {
+        **getenv("general"),
+    })
+
+
+@permission_required("orgapy.change_progress_log")
+def view_edit_progress_log(request, lid):
+    log = find_object(models.ProgressLog, lid, request.user)
+    return render(request, "orgapy/edit_progress_log.html", {
+        "log": log,
+        **getenv("general"),
+    })
+
+
+@permission_required("orgapy.delete_progress_log")
+def view_delete_progress_log(request, lid):
+    log = find_object(models.ProgressLog, lid, request.user)
+    log.delete()
+    return redirect("orgapy:progress")
+
+
+@permission_required("orgapy.view_save_progress_log")
+def view_save_progress_log(request):
+    if request.method != "POST":
+        raise BadRequest
+    original_log = None
+    if ("id" in request.POST
+        and models.ProgressLog.objects.filter(id=request.POST["id"]).exists()):
+        original_log = models.ProgressLog.objects.get(id=request.POST["id"])
+    if original_log is not None and original_log.user != request.user:
+        raise PermissionDenied
+    dt = datetime.datetime.strptime(request.POST.get("dt"), f"%Y-%m-%dT%H:%M")
+    log_type = request.POST.get("type", models.ProgressLog.OTHER)
+    description = request.POST.get("description")
+    if original_log is None:
+        models.ProgressLog.objects.create(
+            user=request.user,
+            dt=dt,
+            type=log_type,
+            description=description
+        )
+    else:
+        original_log.dt = dt
+        original_log.type = log_type
+        original_log.description = description
+        original_log.save()    
+    return redirect("orgapy:progress")
+
+
 @permission_required("orgapy.change_settings")
 def view_settings(request):
     settings = get_or_create_settings(request.user)
