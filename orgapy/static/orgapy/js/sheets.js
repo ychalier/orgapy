@@ -1805,6 +1805,9 @@ class Sheet {
                     row.push(null);
                 }
                 this.values.splice(i, 0, row);
+                if (this.ordering != null) {
+                    this.ordering.splice(i, 0, this.values.length - 1);
+                }
             }
             this.inflate();
             this.onChange(true, false);
