@@ -892,6 +892,7 @@ def view_settings(request):
     settings = get_or_create_settings(request.user)
     if request.method == "POST":
         settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
+        settings.calendar_lookahead = int(request.POST.get("calendar_lookahead", 3))
         settings.save()
         if "ref" in request.POST:
             return redirect(request.POST["ref"])
@@ -917,7 +918,6 @@ def view_calendar_form(request):
             calendar.username = request.POST["username"]
             calendar.password = request.POST["password"]
             calendar.calendar_name = request.POST["name"]
-            calendar.lookahead = int(request.POST["lookahead"])
             calendar.sync_period = int(request.POST["sync_period"])
             calendar.save()
         elif "delete" in request.POST:
@@ -931,7 +931,6 @@ def view_calendar_form(request):
             username=request.POST["username"],
             password=request.POST["password"],
             calendar_name=request.POST["name"],
-            lookahead=int(request.POST["lookahead"]),
             sync_period=int(request.POST["sync_period"]),
         )
     return redirect("orgapy:settings")

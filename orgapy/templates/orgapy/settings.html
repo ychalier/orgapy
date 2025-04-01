@@ -17,6 +17,10 @@
             <label for="input-objective-start-hours">Objective Start Hours</label>
             <input id="input-objective-start-hours" type="number" name="objective_start_hours" value="{{ settings.objective_start_hours }}" min="0" max="23" step="1" />
         </p>
+        <p>
+            <label for="input-lookahead">Lookahead</label>
+            <input id="input-lookahead" type="number" name="calendar_lookahead" value="{{ settings.calendar_lookahead }}" min="0" />
+        </p>
         <button>Save</button>
     </form>
 
@@ -41,10 +45,6 @@
         <p>
             <label>Password</label>
             <input type="password" name="password" value="{{ calendar.password }}" />
-        </p>
-        <p>
-            <label>Lookahead</label>
-            <input type="number" name="lookahead" value="{{ calendar.lookahead }}" min="0"/>
         </p>
         <p>
             <label>Sync Period</label>
@@ -75,10 +75,6 @@
         <p>
             <label>Password</label>
             <input type="password" name="password" placeholder="Password" />
-        </p>
-        <p>
-            <label>Lookahead</label>
-            <input type="number" name="lookahead" value="14" min="0" placeholder="14"/>
         </p>
         <p>
             <label>Sync Period</label>

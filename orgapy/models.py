@@ -22,6 +22,7 @@ class Settings(models.Model):
     
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     objective_start_hours = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(23)])
+    calendar_lookahead = models.PositiveIntegerField(default=3)
     
     class Meta:
 
@@ -226,7 +227,6 @@ class Calendar(models.Model):
     username = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     calendar_name = models.CharField(max_length=255)
-    lookahead = models.PositiveIntegerField(default=14)
     last_sync = models.DateTimeField(blank=True, null=True)
     sync_period = models.PositiveIntegerField(default=86400)
     events = models.TextField(blank=True, null=True)
@@ -241,6 +241,7 @@ class Calendar(models.Model):
     def fetch_events(self):
         self.last_sync = timezone.now()
         events = []
+        lookahead = self.user.settings.calendar_lookahead
         with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
             principal = client.principal()
             for calendar in principal.calendars():
@@ -248,7 +249,7 @@ class Calendar(models.Model):
                     continue
                 events = calendar.search(
                     start=datetime.datetime.now().date(),
-                    end=datetime.datetime.now().date() + datetime.timedelta(days=self.lookahead),
+                    end=datetime.datetime.now().date() + datetime.timedelta(days=lookahead),
                     event=True,
                     expand=True)
         events_data = []
