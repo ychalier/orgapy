@@ -1540,23 +1540,26 @@ def api_complete_task(request):
         description=task.title
     )
     if task.recurring_mode != models.Task.ONCE:
-        due_date = None
+        delta = None
         if task.recurring_mode == models.Task.DAILY:
-            start_date = task.start_date + datetime.timedelta(days=task.recurring_period)
-            if task.due_date is not None:
-                due_date = task.due_date + datetime.timedelta(days=task.recurring_period)
+            delta = datetime.timedelta(days=task.recurring_period)
         elif task.recurring_mode == models.Task.WEEKLY:
-            start_date = task.start_date + datetime.timedelta(weeks=task.recurring_period)
-            if task.due_date is not None:
-                due_date = task.due_date + datetime.timedelta(weeks=task.recurring_period)
+            delta = datetime.timedelta(weeks=task.recurring_period)
         elif task.recurring_mode == models.Task.MONTHLY:
-            start_date = task.start_date + dateutil.relativedelta.relativedelta(months=task.recurring_period)
-            if task.due_date is not None:
-                due_date = task.due_date + dateutil.relativedelta.relativedelta(months=task.recurring_period)
+            delta = dateutil.relativedelta.relativedelta(months=task.recurring_period)
         elif task.recurring_mode == models.Task.YEARLY:
-            start_date = task.start_date + dateutil.relativedelta.relativedelta(years=task.recurring_period)
-            if task.due_date is not None:
-                due_date = task.due_date + dateutil.relativedelta.relativedelta(years=task.recurring_period)
+            delta = dateutil.relativedelta.relativedelta(years=task.recurring_period)
+        else:
+            raise BadRequest("Invalid recurring mode")
+        due_date = task.due_date
+        start_date = task.start_date
+        today = datetime.datetime.now().date()
+        while task.recurring_period: # avoid infinite loop if recurring period is zero
+            start_date += delta
+            if due_date is not None:
+                due_date += delta
+            if start_date >= today:
+                break
         models.Task.objects.create(
             user=request.user,
             title=task.title,
