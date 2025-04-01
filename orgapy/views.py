@@ -894,7 +894,7 @@ def view_settings(request):
         settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
         settings.calendar_lookahead = int(request.POST.get("calendar_lookahead", 3))
         settings.save()
-        if "ref" in request.POST:
+        if "ref" in request.POST and request.POST["ref"]:
             return redirect(request.POST["ref"])
     calendars = models.Calendar.objects.filter(user=request.user).order_by("calendar_name")
     return render(request, "orgapy/settings.html", {
