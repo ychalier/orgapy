@@ -1424,6 +1424,7 @@ class Sheet {
 
     constructor(sid, container, readonly=false) {
         this.sid = sid;
+        this.modification = null;
 
         // Config
         this.width = 4;
@@ -2680,7 +2681,8 @@ class Sheet {
         });
     }
 
-    setup(data=null, config=null) {
+    setup(data=null, config=null, modification=null) {
+        this.modification = modification;
         this.contextMenu.setup();
         this.initializeValues(data, config);
         this.bindToolbar();
@@ -2756,8 +2758,12 @@ class Sheet {
         let sheetExport = this.export();
         apiPost(
             "save-sheet",
-            {sid: this.sid, data: sheetExport.data, config: sheetExport.config},
-            () => {
+            {
+                sid: this.sid,
+                data: sheetExport.data,
+                config: sheetExport.config,
+                modification: this.modification,
+            }, () => {
                 toast("Saved!", 600);
                 if (this.toolbarButtonSave != null) {
                     this.toolbarButtonSave.setAttribute("disabled", true);
@@ -2785,7 +2791,7 @@ function initializeSheet(sheetSeed, readonly) {
             if (sheetData.config != null && sheetData.config.trim() != "") {
                 config = JSON.parse(sheetData.config);
             }
-            sheet.setup(data, config);
+            sheet.setup(data, config, sheetData.modification);
         });
 
 }

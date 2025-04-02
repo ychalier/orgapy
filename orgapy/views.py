@@ -1654,6 +1654,7 @@ def api_sheet(request):
             "title": sheet.title,
             "data": sheet.data,
             "config": sheet.config,
+            "modification": sheet.date_modification.timestamp(),
             "url": sheet.get_absolute_url(),
         })
     raise PermissionDenied
@@ -1664,7 +1665,10 @@ def api_save_sheet(request):
     sheet_id = request.POST.get("sid")
     sheet_data = request.POST.get("data")
     sheet_config = request.POST.get("config")
+    modification = float(request.POST.get("modification", 0))
     sheet = find_object(models.Sheet, int(sheet_id), request.user)
+    if sheet.date_modification.timestamp() > modification:
+        return JsonResponse({"success": False, "reason": "Sheet has newer modifications"})
     sheet.data = sheet_data
     sheet.config = sheet_config
     sheet.date_modification = timezone.now()
