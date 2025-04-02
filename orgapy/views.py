@@ -1703,6 +1703,7 @@ def api_map(request):
             "title": mmap.title,
             "geojson": mmap.geojson,
             "config": mmap.config,
+            "modification": mmap.date_modification.timestamp(),
             "url": mmap.get_absolute_url(),
         })
     raise PermissionDenied
@@ -1716,7 +1717,10 @@ def api_save_map(request):
         raise BadRequest("Missing title")
     map_geojson = request.POST.get("geojson")
     map_config = request.POST.get("config")
+    modification = float(request.POST.get("modification", 0))
     mmap = find_object(models.Map, int(map_id), request.user)
+    if mmap.date_modification.timestamp() > modification:
+        return JsonResponse({"success": False, "reason": "Map has newer modifications"})
     mmap.title = map_title
     mmap.geojson = map_geojson
     mmap.config = map_config

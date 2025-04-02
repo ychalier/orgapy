@@ -1142,6 +1142,7 @@ class Map {
         this.providerIndex = 0;
         this.tileLayer = null;
         this.buttonSave = null;
+        this.modification = null;
     }
 
     setTileLayer(providerIndex) {
@@ -1195,7 +1196,8 @@ class Map {
         this.setupLayerDragrank();
     }
 
-    setup(geojsonData, config) {
+    setup(geojsonData, config, modification) {
+        this.modification = modification;
         if (config != null) {
             if ("title" in config) this.title = config.title;
             if ("providerIndex" in config) this.providerIndex = config.providerIndex;
@@ -1391,7 +1393,8 @@ class Map {
                 mid: this.mid,
                 "title": mapExport.title,
                 "geojson": mapExport.geojson,
-                "config": mapExport.config
+                "config": mapExport.config,
+                "modification": this.modification
             }, () => {
                 toast("Saved!", 600);
                 if (self.buttonSave != null) {
@@ -1631,7 +1634,7 @@ function initializeMap(mapSeed, readonly) {
                 config = JSON.parse(mapData.config);
             }
             config.title = mapData.title;
-            map.setup(geojson, config);
+            map.setup(geojson, config, mapData.modification);
         });
 
 }
