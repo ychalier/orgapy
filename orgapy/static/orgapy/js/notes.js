@@ -187,7 +187,14 @@ function bindSaveNoteButtons() {
         mergeForms();
         const formdata = new FormData(primaryForm);
         fetch(primaryForm.action, {method: primaryForm.method, body: formdata}).then(res => {
-            toast("Saved!", 600);
+            if (res.status == 200) {
+                toast("Saved!", 600);
+                document.querySelector("input[name=modification]").value = new Date() / 1000;
+            } else {
+                res.text().then(resText => {
+                    toast(`An error occurred: ${res.status} ${resText}`, 600);
+                });
+            }
         });
     });
     document.querySelectorAll("input,textarea").forEach(input => {

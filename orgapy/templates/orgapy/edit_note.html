@@ -18,6 +18,7 @@
 <form id="form-note-edit-primary" action="{% url 'orgapy:save_note' %}" method="post">
     {% csrf_token %}
     {% if note %}<input type="hidden" name="id" value="{{note.id}}">{% endif %}
+    <input hidden type="text" name="modification" value="{% if note %}{{ note.date_modification.timestamp }}{% endif %}" />
     <input hidden type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
     <input hidden type="checkbox" name="public" {% if note.public %}checked{% endif %} />
     <header class="card">

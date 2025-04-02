@@ -73,12 +73,18 @@ def find_object(model, id_or_nonce, required_user=None):
     return note
 
 
+class ConflictError(Exception):
+    pass
+
+
 def save_note_core(request):
     """Edit note procedure: Note object"""
     original_note = None
     if ("id" in request.POST
             and models.Note.objects.filter(id=request.POST["id"]).exists()):
         original_note = models.Note.objects.get(id=request.POST["id"])
+        if original_note.date_modification.timestamp() > float(request.POST.get("modification", 0)):
+            raise ConflictError
     if original_note is not None and original_note.user != request.user:
         raise PermissionDenied
     title = request.POST.get("title", "").strip()
@@ -379,7 +385,10 @@ def view_create_note(request):
 @permission_required("orgapy.change_note")
 def view_save_note(request):
     if request.method == "POST":
-        note = save_note_core(request)
+        try:
+            note = save_note_core(request)
+        except ConflictError:
+            return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
         save_note_categories(request, note)
         return redirect("orgapy:note", nid=note.id)
     raise BadRequest
@@ -1642,6 +1651,7 @@ def api_edit_widgets(request):
                     widget_value = " "
                 note.content = text[:start] + widget_value + text[end:]
                 break
+    note.date_modification = timezone.now()
     note.save()
     return JsonResponse({"success": True})
 
