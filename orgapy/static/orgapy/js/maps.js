@@ -1395,8 +1395,9 @@ class Map {
                 "geojson": mapExport.geojson,
                 "config": mapExport.config,
                 "modification": this.modification
-            }, () => {
+            }, (data) => {
                 toast("Saved!", 600);
+                self.modification = data.modification;
                 if (self.buttonSave != null) {
                     self.buttonSave.setAttribute("disabled", true);
                 }

@@ -1683,7 +1683,10 @@ def api_save_sheet(request):
     sheet.config = sheet_config
     sheet.date_modification = timezone.now()
     sheet.save()
-    return JsonResponse({"success": True})
+    return JsonResponse({
+        "success": True,
+        "modification": sheet.date_modification.timestamp()
+    })
 
 
 @permission_required("orgapy.view_sheet")
@@ -1736,7 +1739,10 @@ def api_save_map(request):
     mmap.config = map_config
     mmap.date_modification = timezone.now()
     mmap.save()
-    return JsonResponse({"success": True})
+    return JsonResponse({
+        "success": True,
+        "modification": mmap.date_modification.timestamp()
+    })
 
 
 @permission_required("orgapy.view_map")

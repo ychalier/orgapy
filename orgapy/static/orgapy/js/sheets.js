@@ -2763,8 +2763,9 @@ class Sheet {
                 data: sheetExport.data,
                 config: sheetExport.config,
                 modification: this.modification,
-            }, () => {
+            }, (data) => {
                 toast("Saved!", 600);
+                this.modification = data.modification;
                 if (this.toolbarButtonSave != null) {
                     this.toolbarButtonSave.setAttribute("disabled", true);
                 }
