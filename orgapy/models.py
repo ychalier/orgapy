@@ -19,15 +19,15 @@ def generate_nonce() -> str:
 
 
 class Settings(models.Model):
-    
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     objective_start_hours = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(23)])
     calendar_lookahead = models.PositiveIntegerField(default=3)
-    
+
     class Meta:
 
         ordering = ["user"]
-    
+
     def __str__(self):
         return f"{ self.user }"
 
@@ -41,7 +41,7 @@ class Category(models.Model):
     class Meta:
 
         ordering = ["name"]
-    
+
     def __str__(self):
         return f"{ self.user } - { self.name }"
 
@@ -74,7 +74,7 @@ class Note(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:note", kwargs={"nid": self.id})
-    
+
     def _content_preprocess(self):
         return self.content
 
@@ -83,7 +83,7 @@ class Note(models.Model):
         if self.date_modification.date() == now.date():
             return self.date_modification.strftime("%H:%M")
         return self.date_modification.strftime("%Y-%m-%d")
-    
+
     @staticmethod
     def get_class():
         return "note"
@@ -104,7 +104,7 @@ class Objective(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     def to_dict(self):
         history_dict = None
         if self.history is not None:
@@ -175,18 +175,18 @@ class Quote(models.Model):
         if self.date_modification.date() == now.date():
             return self.date_modification.strftime("%H:%M")
         return self.date_modification.strftime("%Y-%m-%d")
-    
+
     def get_absolute_url(self):
         return reverse("orgapy:quote", kwargs={"qid": self.id})
-    
+
     @staticmethod
     def get_class():
         return "quote"
-    
+
     @property
     def reference_html(self) -> str:
         return re.sub(r"\*([^\*]*)\*", r"<i>\1</i>", self.reference)
-    
+
     @property
     def reference_nomarkup(self) -> str:
         return re.sub(r"\*", r"", self.reference)
@@ -215,7 +215,7 @@ class Project(models.Model):
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
-    
+
     def get_absolute_url(self):
         return reverse("orgapy:projects") + f"#project-{self.id}"
 
@@ -237,7 +237,7 @@ class Calendar(models.Model):
 
     def __str__(self):
         return f"{ self.user } - { self.id }. { self.calendar_name }"
-    
+
     def fetch_events(self):
         self.last_sync = timezone.now()
         events = []
@@ -273,7 +273,7 @@ class Calendar(models.Model):
         if force or self.last_sync is None or (now - self.last_sync).total_seconds() > self.sync_period:
             self.fetch_events()
         return json.loads(self.events) if self.events else []
-    
+
     def delete_event(self, href):
         success = False
         with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
@@ -288,7 +288,7 @@ class Calendar(models.Model):
                 success = True
                 break
         return success
-    
+
     def add_event(self, title, dtstart, dtend, location, allday):
         success = False
         with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
@@ -327,7 +327,7 @@ class SheetGroup(models.Model):
     class Meta:
 
         ordering = ["title"]
-    
+
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
 
@@ -363,13 +363,13 @@ class Sheet(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:sheet", kwargs={"sid": self.id})
-    
+
     def get_modification_date_display(self):
         now = datetime.datetime.now()
         if self.date_modification.date() == now.date():
             return self.date_modification.strftime("%H:%M")
         return self.date_modification.strftime("%Y-%m-%d")
-    
+
     @staticmethod
     def get_class():
         return "sheet"
@@ -401,32 +401,32 @@ class Map(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:map", kwargs={"mid": self.id})
-    
+
     @staticmethod
     def get_class():
         return "map"
 
 
 class ProgressCounter(models.Model):
-    
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     year = models.PositiveIntegerField()
     data = models.TextField(default="{}")
-    
+
     class Meta:
 
         ordering = ["user", "-year"]
         constraints = [
             models.UniqueConstraint(fields=["user", "year"], name="unique_user_year")
         ]
-    
+
     def __str__(self):
         return f"{ self.user } - { self.year }"
-    
+
     @property
     def json(self) -> str:
         return json.loads(self.data)
-    
+
     def increment(self, dt: datetime.date):
         key = dt.strftime(r"%Y-%m-%d")
         json_data = self.json
@@ -434,7 +434,7 @@ class ProgressCounter(models.Model):
         json_data[key] += 1
         self.data = json.dumps(json_data)
         self.save()
-    
+
     def decrement(self, dt: datetime.date):
         key = dt.strftime(r"%Y-%m-%d")
         json_data = self.json
@@ -447,9 +447,18 @@ class ProgressCounter(models.Model):
         self.data = json.dumps(json_data)
         self.save()
 
+    def recompute(self):
+        data = {}
+        for log in ProgressLog.objects.filter(dt__year=self.year):
+            key = log.dt.strftime(r"%Y-%m-%d")
+            data.setdefault(key, 0)
+            data[key] += 1
+        self.data = json.dumps(data)
+        self.save()
+
 
 class ProgressLog(models.Model):
-    
+
     OTHER = "OT"
     PROJECT_CHECKLIST_ITEM_CHECKED = "PR"
     TASK_COMPLETED = "TA"
@@ -460,19 +469,19 @@ class ProgressLog(models.Model):
         (TASK_COMPLETED, "Task completed"),
         (OBJECTIVE_COMPLETED, "Objective completed")
     ]
-    
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     dt = models.DateTimeField(auto_now_add=True, auto_now=False)
     type = models.CharField(max_length=2, choices=TYPE_CHOICES, default=OTHER)
     description = models.CharField(max_length=255, blank=True, null=True)
-    
+
     class Meta:
 
         ordering = ["-dt"]
-    
+
     def __str__(self):
         return f"{ self.user } [{ self.type }] { self.description }"
-    
+
     def save(self, *args, **kwargs):
         if self.id is None:
             now = datetime.datetime.now().date()
@@ -493,7 +502,7 @@ class ProgressLog(models.Model):
     def get_absolute_url(self):
         dfs = self.dt.strftime(r"%Y-%m-%d")
         return reverse("orgapy:progress") + f"?date={dfs}"
-    
+
     @property
     def dt_html(self) -> str:
         return f"{self.dt.year}-{self.dt.month:02d}-{self.dt.day:02d}T{self.dt.hour:02d}:{self.dt.minute:02d}"

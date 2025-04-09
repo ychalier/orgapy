@@ -50,6 +50,7 @@ urlpatterns = [
     path("progress/log/<lid>", views.view_edit_progress_log, name="edit_progress_log"),
     path("progress/log/<lid>/delete", views.view_delete_progress_log, name="delete_progress_log"),
     path("progress/<year>", views.view_progress, name="progress_year"),
+    path("progress/<year>/compute", views.view_progress_compute, name="progress_compute"),
     path("settings", views.view_settings, name="settings"),
     path("settings/calendar", views.view_calendar_form, name="calendar_form"),
     path("api", views.api, name="api"),

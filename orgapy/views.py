@@ -845,6 +845,20 @@ def view_progress(request, year: str | None = None):
     })
 
 
+@permission_required("orgapy.change_progress")
+def view_progress_compute(request, year: str | None = None):
+    if year is None:
+        year = datetime.datetime.now().year
+    else:
+        year = int(year)
+    counter_query = models.ProgressCounter.objects.filter(user=request.user, year=year)
+    if not counter_query.exists():
+        raise Http404("Progress counter does not exist")
+    counter = counter_query.get()
+    counter.recompute()
+    return redirect("orgapy:progress_year", year=counter.year)
+
+
 @permission_required("orgapy.add_progress_log")
 def view_create_progress_log(request):
     return render(request, "orgapy/create_progress_log.html", {
