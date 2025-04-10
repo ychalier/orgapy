@@ -18,6 +18,7 @@ const CTYPE_DATE = 8;
 const CTYPE_TIME = 9;
 const CTYPE_DURATION = 10;
 const CTYPE_STARS = 11;
+const CTYPE_MARKDOWN = 12;
 
 const HIGHLIGHT_ACCENT = 0;
 const HIGHLIGHT_SUCCESS = 1;
@@ -1062,6 +1063,15 @@ class ColumnTypeText extends ColumnType {
     static ALIGNEMENT = "aleft";
     static LABEL = "Text";
 
+}
+
+
+class ColumnTypeMarkdown extends ColumnType {
+
+    static ID = CTYPE_MARKDOWN;
+    static ALIGNEMENT = "aleft";
+    static LABEL = "Markdown";
+
     formatHtml(value) {
         return safeFormat(value, convertMarkdownToHtml);
     }
@@ -1345,6 +1355,7 @@ const COLUMN_TYPES = [
     ColumnTypeTime,
     ColumnTypeDuration,
     ColumnTypeStars,
+    ColumnTypeMarkdown,
 ];
 
 
