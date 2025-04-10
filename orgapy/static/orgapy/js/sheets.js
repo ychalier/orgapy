@@ -594,12 +594,12 @@ function colname(i) {
     return String.fromCharCode(...codes);
 }
 
-const MARKDOWN_PATTERN_BOLD = /\*\*([^\*]+)\*\*/;
-const MARKDOWN_PATTERN_ITALIC = /\*([^\*]+)\*/;
-const MARKDOWN_PATTERN_STRIKE = /~~([^~]+)~~/;
-const MARKDOWN_PATTERN_CODE = /`([^`]+)`/;
-const MARKDOWN_PATTERN_LINK = /\[([^\[\]]*)\]\(([^\(\)]*)\)/;
-const MARKDOWN_PATTERN_URL = /((?:https?:\/\/)?(?:[-a-zA-Z0-9éèàç@:%._\+~#=]{2,256}\.(?:[a-z]{2,10})|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b(?:[-a-zA-Z0-9éèàç@:%_\+.~#?&//=]*))/
+const MARKDOWN_PATTERN_BOLD = /\*\*([^\*]+)\*\*/g;
+const MARKDOWN_PATTERN_ITALIC = /\*([^\*]+)\*/g;
+const MARKDOWN_PATTERN_STRIKE = /~~([^~]+)~~/g;
+const MARKDOWN_PATTERN_CODE = /`([^`]+)`/g;
+const MARKDOWN_PATTERN_LINK = /\[([^\[\]]*)\]\(([^\(\)]*)\)/g;
+const MARKDOWN_PATTERN_URL = /((?:https?:\/\/)?(?:[-a-zA-Z0-9éèàç@:%._\+~#=]{2,256}\.(?:[a-z]{2,10})|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b(?:[-a-zA-Z0-9éèàç@:%_\+.~#?&//=]*))/g;
 
 
 function convertMarkdownToHtml(string) {
