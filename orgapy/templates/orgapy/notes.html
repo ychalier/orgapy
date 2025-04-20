@@ -61,4 +61,6 @@
 
 {% include 'orgapy/partials/pagination.html' with paginator=note_paginator %}
 
+<script>document.querySelectorAll(".show-on-parent-hover .dropdown").forEach(bindDropdown);</script>
+
 {% endblock main_content %}
