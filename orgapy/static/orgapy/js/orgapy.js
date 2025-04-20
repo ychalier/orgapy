@@ -256,11 +256,43 @@ function toast(message, duration) {
 
 function bindDropdown(dropdown) {
 
+    var isToggleFocused = false;
+    var isElementFocused = false;
+    var hideTimeout = null;
+
     const toggle = dropdown.querySelector(".dropdown-toggle");
-    const menu = dropdown.querySelector(".menu");    
+    const menu = dropdown.querySelector(".menu");
+
+    function hideDropdown() {
+        console.log("Hiding dropdown");
+        hideTimeout = setTimeout(() => {
+            dropdown.appendChild(menu);
+        }, 300);
+    }
+
+    menu.querySelectorAll("a, button").forEach(element => {
+        function onActiveIn() {
+            if (hideTimeout != null) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+            }
+            isElementFocused = true;
+        }
+        function onActiveOut() {
+            isElementFocused = false;
+            if (!isToggleFocused) {
+                hideDropdown();
+            }
+        }
+        element.addEventListener("mousedown", onActiveIn);
+        element.addEventListener("mouseup", onActiveOut);
+        element.addEventListener("touchstart", onActiveIn);
+        element.addEventListener("touchend", onActiveOut);
+    });
 
     toggle.addEventListener("focusin", () => {
-        const padding = 4;
+        isToggleFocused = true;
+        const padding = 14;
         menu.style.position = "absolute";
         menu.style.zIndex = 9999;
         const toggleBounds = toggle.getBoundingClientRect();
@@ -279,9 +311,10 @@ function bindDropdown(dropdown) {
     });
 
     toggle.addEventListener("focusout", (event) => {
-        setTimeout(() => {
-            dropdown.appendChild(menu);
-        }, 100);
+        isToggleFocused = false;
+        if (!isElementFocused) {
+            hideDropdown();
+        }
     });
 
 }
