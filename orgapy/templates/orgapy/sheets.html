@@ -17,7 +17,7 @@
 <div class="card card-oneline">
     {% for group in groups %}
     <div class="oneline oneline-striped">
-        <details>
+        <details class="fullwidth">
             <summary>
                 <a class="link-hidden" href="{{group.get_absolute_url}}">{{ group.title }}</a>
                 <span class="show-on-parent-hover">
@@ -25,11 +25,11 @@
                     <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="link-confirm button-inline" message="Please confirm deletion of '{{ group.title }}'" title="Delete"><i class="ri-delete-bin-line"></i></a>
                 </span>
             </summary>
-            <ul>
+            <div class="itemize">
                 {% for sheet in group.sheet_set.all %}
-                <li>{% include 'orgapy/partials/sheet_list_item.html' %}</li>
+                <div>{% include 'orgapy/partials/sheet_list_item.html' %}</div>
                 {% endfor %}
-            </ul>
+            </div>
         </details>
     </div>
     {% endfor %}

@@ -632,6 +632,7 @@ header.card h1 {
     border-bottom-right-radius: .4rem;
 }
 
+.itemize>div>*+*,
 .oneline>*+* {
     margin-left: .4rem;
 }
@@ -642,8 +643,11 @@ header.card h1 {
     text-overflow: ellipsis;
 }
 
+.itemize>div>*:not(.oneline-truncate),
 .oneline>*:not(.oneline-truncate) {
     flex-shrink: 0;
+    white-space: nowrap;
+    word-break: keep-all;
 }
 
 .oneline-striped {
@@ -657,6 +661,34 @@ header.card h1 {
 
 .oneline:hover {
     background: #304350;
+}
+
+/**
+  * Itemize
+  */
+
+.fullwidth {
+    width: 100%;
+}
+
+.itemize {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: .2rem;
+    padding: .4rem 0 .4rem 1rem;
+    overflow: hidden;
+}
+
+.itemize>div::before {
+    content: "•";
+    margin-right: .4rem;
+}
+
+.itemize>div {
+    display: flex;
+    width: 100%;
+    overflow: hidden;
 }
 
 /**
