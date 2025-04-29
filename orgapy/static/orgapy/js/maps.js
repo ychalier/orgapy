@@ -208,13 +208,6 @@ class PanelControl extends L.Control {
                 self.map.addLayer();
             });
 
-            const buttonHome = create(buttonsContainer, "button");
-            buttonHome.innerHTML = `<i class="ri-home-line"></i>`;
-            buttonHome.title = "Reset view";
-            buttonHome.addEventListener("click", (event) => {
-                event.stopPropagation();
-                self.map.fitViewToFeatures();
-            });
             const buttonMarker = create(buttonsContainer, "button");
             buttonMarker.innerHTML = `<i class="ri-map-pin-line"></i>`;
             buttonMarker.title = "Add marker";
@@ -246,6 +239,26 @@ class PanelControl extends L.Control {
                     buttonToggleEdition.querySelector("i").className = "ri-close-line";
                 } else {
                     buttonToggleEdition.querySelector("i").className = "ri-pencil-fill";
+                }
+            });
+
+            const buttonHome = create(buttonsContainer, "button");
+            buttonHome.innerHTML = `<i class="ri-home-line"></i>`;
+            buttonHome.title = "Reset view";
+            buttonHome.addEventListener("click", (event) => {
+                event.stopPropagation();
+                self.map.fitViewToFeatures();
+            });
+
+            const buttonUserPosition = create(buttonsContainer, "button");
+            buttonUserPosition.setAttribute("id", "button-user-position");
+            buttonUserPosition.setAttribute("disabled", true);
+            buttonUserPosition.innerHTML = `<i class="ri-focus-2-line"></i>`;
+            buttonUserPosition.title = "Go to current position";
+            buttonUserPosition.addEventListener("click", (event) => {
+                event.stopPropagation();
+                if (self.map.userPositionWidget != null) {
+                    self.map.leafletMap.panTo(self.map.userPositionWidget.getLatLng());
                 }
             });
 
@@ -1203,6 +1216,7 @@ class Map {
         if (this.userPositionWidget == null) {
             this.userPositionWidget = new L.Marker([position.coords.latitude, position.coords.longitude]);
             this.userPositionWidget.addTo(this.leafletMap);
+            document.getElementById("button-user-position").removeAttribute("disabled");
         }
         this.userPositionWidget.setLatLng(new L.LatLng(position.coords.latitude, position.coords.longitude));
     }
