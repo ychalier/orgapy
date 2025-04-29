@@ -6,6 +6,8 @@ const MINIMUM_COLUMN_WIDTH = MINIMUM_ROW_HEIGHT;
 const FIRST_COLUMN_WIDTH = 42;
 const HANDLE_SIZE = 5;
 
+const MAX_DIFFERENT_VALUES_FOR_FILTERS = 50;
+
 const CTYPE_TEXT = 0;
 const CTYPE_BOOLEAN = 1;
 const CTYPE_INTEGER = 2;
@@ -23,7 +25,6 @@ const CTYPE_MARKDOWN = 12;
 const HIGHLIGHT_ACCENT = 0;
 const HIGHLIGHT_SUCCESS = 1;
 const HIGHLIGHT_ERROR = 2;
-
 
 const SCRIPT_FUNCTION_PATTERN = /^(Round|Floor|Ceil|Sum|Mean|Count|Min|Max)\(/gi;
 const SCRIPT_OPERATOR_PATTERN = /^(\+|\*\*|\-|\*|\/|%)/gi;
@@ -1848,6 +1849,15 @@ class Sheet {
         }
     }
 
+    setFilterState(j, value, state) {
+        this.onChange(false, true);
+        if (state && !this.filters[j].has(value)) {
+            this.filters[j].add(value);
+        } else if (!state && this.filters[j].has(value)) {
+            this.filters[j].delete(value);
+        }
+    }
+
     openColumnContextMenu(x, y, j) {
         this.contextMenu.reset();
         var self = this;
@@ -1865,15 +1875,34 @@ class Sheet {
             }
         });
         let values = Array.from(this.getValueSet(j));
-        if (values.length < 20) {
+        if (values.length < MAX_DIFFERENT_VALUES_FOR_FILTERS) {
             let filter_menu = this.contextMenu.add_menu("Filter");
             values.sort();
             values.splice(0, 0, null);
-            values.forEach(value => {
-                let el = filter_menu.addItem(`<input type="checkbox" ${this.filters[j].has(value) ? "" : "checked"} /> ${value == null ? "(Empty)" : value}`, () => {
-                    el.querySelector("input").checked = !self.toggleFilter(j, value);
-                    self.updateFilters();
+            filter_menu.addItem(`Reset`, () => {
+                const valueEls = filter_menu.querySelectorAll(".context-menu-item");
+                values.forEach((value, i) => {
+                    valueEls[i + 2].querySelector("input").checked = true;
+                    self.setFilterState(j, value, false);
                 });
+                self.updateFilters();
+            });
+            filter_menu.addItem(`Uncheck All`, () => {
+                const valueEls = filter_menu.querySelectorAll(".context-menu-item");
+                values.forEach((value, i) => {
+                    valueEls[i + 2].querySelector("input").checked = false;
+                    self.setFilterState(j, value, true);
+                });
+                self.updateFilters();
+            });
+            values.forEach(value => {
+                let el = filter_menu.addItem(
+                    `<input type="checkbox" ${this.filters[j].has(value) ? "" : "checked"} /> ${value == null ? "(Empty)" : value}`,
+                    () => {
+                        el.querySelector("input").checked = !self.toggleFilter(j, value);
+                        self.updateFilters();
+                    }
+                );
             });
         }
         this.contextMenu.addItem("Resize", () => {
