@@ -1704,7 +1704,7 @@ class Sheet {
     setRowHeight(i, height) {
         this.rowHeights[i] = height;
         this.rowHeads[i].style.height = this.rowHeights[i] + "px";
-        let y = 0;
+        let y = 32 + DEFAULT_ROW_HEIGHT; // First is toolbar, second is sheet head
         for (let k = 0; k < this.height; k++) {
             if (!this.rowHandles[k].classList.contains("hidden")) {
                 y += this.rowHeights[k];
@@ -2033,7 +2033,7 @@ class Sheet {
 
     updateFilters() {
         this.filteredRows = new Set();
-        let y = 0;
+        let y = 32 + DEFAULT_ROW_HEIGHT;
         let rowTop = 0;
         for (let i = 0; i < this.height; i++) {
             let shouldBeDisplayed = true;
@@ -2045,15 +2045,15 @@ class Sheet {
             }
             if (shouldBeDisplayed) {
                 this.filteredRows.add(i);
-                y += this.rowHeights[i] - 1;
+                y += this.rowHeights[i];
                 this.rows[i].classList.remove("hidden");
                 this.rowHandles[i].classList.remove("hidden");
-                //this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
-                //this.rows[i].style.top = `${rowTop}px`;
+                this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
                 rowTop--;
             } else {
                 this.rows[i].classList.add("hidden");
                 this.rowHandles[i].classList.add("hidden");
+                this.rowHandles[i].style.top = 0;
             }
         }
         this.selection.setFilteredRanges();
@@ -2501,7 +2501,7 @@ class Sheet {
         }
         this.setRowNames();
 
-        let y = 0;
+        let y = 32 + DEFAULT_ROW_HEIGHT; // First is toolbar, second is sheet head
         this.rowHandles = [];
         for (let i = 0; i < this.height; i++) {
             this.rowHandles.push(create(tableBody, "span", "handle handle-row"));
