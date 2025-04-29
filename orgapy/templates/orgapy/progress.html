@@ -45,10 +45,12 @@
 </div>
 {% endif %}
 
-{% if counter %}
-<a class="button" href="{% url 'orgapy:progress_compute' year=counter.year %}"><i class="ri-bar-chart-2-line"></i> Recompute</a>
-{% endif %}
-<a class="button" href="{% url 'orgapy:create_progress_log' %}"><i class="ri-add-line"></i> Create Log</a>
+<p>
+    {% if counter %}
+    <a class="button" href="{% url 'orgapy:progress_compute' year=counter.year %}"><i class="ri-bar-chart-2-line"></i> Recompute</a>
+    {% endif %}
+    <a class="button" href="{% url 'orgapy:create_progress_log' %}"><i class="ri-add-line"></i> Create Log</a>
+</p>
 
 {% endblock main_content %}
 
