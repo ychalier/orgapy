@@ -187,7 +187,7 @@ class PanelControl extends L.Control {
         this.layersContainer = create(this.panelContainer, "div", "map-layers");
         this.layersContainer.addEventListener("wheel", (event) => {
             event.stopPropagation();
-        });        
+        });
 
         if (!this.map.readonly) {
 
@@ -207,7 +207,7 @@ class PanelControl extends L.Control {
             buttonAddLayer.addEventListener("click", () => {
                 self.map.addLayer();
             });
-            
+
             const buttonHome = create(buttonsContainer, "button");
             buttonHome.innerHTML = `<i class="ri-home-line"></i>`;
             buttonHome.title = "Reset view";
@@ -576,7 +576,7 @@ class Feature {
         buttonSave.addEventListener("click", (event) => {
             event.stopPropagation();
             self.properties = {};
-            for (let property in inputsValues) {    
+            for (let property in inputsValues) {
                 if (property in inputsLabels) {
                     self.properties[inputsLabels[property].value] = inputsValues[property].value;
                 } else {
@@ -685,7 +685,7 @@ class Feature {
         switch(this.geometry.type) {
             case "Point":
                 let latlng = this.mapElement.getLatLng();
-                this.geometry.coordinates = [latlng.lng, latlng.lat]; 
+                this.geometry.coordinates = [latlng.lng, latlng.lat];
                 break;
             case "LineString":
             case "Polygon":
@@ -695,14 +695,14 @@ class Feature {
                 this.geometry.coordinates = [];
                 this.mapElement.eachLayer(l => {
                     let llatlng = this.mapElement.getLatLng();
-                    this.geometry.coordinates.push([llatlng.lng, llatlng.lat]); 
+                    this.geometry.coordinates.push([llatlng.lng, llatlng.lat]);
                 });
                 break;
             case "MultiLineString":
             case "MultiPolygon":
                 this.geometry.coordinates = [];
                 this.mapElement.eachLayer(l => {
-                    this.geometry.coordinates.push(l.toGeoJSON().geometry.coordinates); 
+                    this.geometry.coordinates.push(l.toGeoJSON().geometry.coordinates);
                 });
                 break;
             default:
@@ -868,7 +868,7 @@ class Layer {
             });
         }
         this.container.innerHTML = "";
-        
+
         const summary = create(this.container, "summary");
         this.labelElement = create(summary, "span", "map-layer-title oneline-truncate");
         this.labelElement.textContent = this.label;
@@ -882,14 +882,14 @@ class Layer {
         this.visibilityCheckbox.type = "checkbox";
         this.visibilityCheckbox.checked = true;
         this.setVisibilityCheckboxColor();
-        
+
         this.visibilityCheckbox.addEventListener("dblclick", (event) => {
             event.stopPropagation();
         });
         this.visibilityCheckbox.addEventListener("input", () => {
             self.toggleVisibility();
         });
-        
+
         if (!this.map.readonly) {
             const buttonsDropdown = create(summary, "span", "dropdown");
             const moreButton = create(buttonsDropdown, "a", "button-inline dropdown-toggle");
@@ -944,7 +944,7 @@ class Layer {
             feature.inflate();
         });
         if (this.map.readonly) return;
-        
+
         dragRank(this.featuresContainer, ".map-feature", (ordering, permutation) => {
             dragRankReorder(self.features, permutation);
             self.onChange("feature-order");
@@ -952,7 +952,7 @@ class Layer {
             dragid: "feature",
             domReorder: true,
         });
-        
+
     }
 
     onChange(change) {
@@ -1038,7 +1038,7 @@ class Layer {
         if (mapElement instanceof L.Marker) {
             geojsonData.geometry.type = "Point";
             let latlng = mapElement.getLatLng();
-            geojsonData.geometry.coordinates = [latlng.lng, latlng.lat]; 
+            geojsonData.geometry.coordinates = [latlng.lng, latlng.lat];
         } else if (mapElement instanceof L.Polygon) {
             //NOTE: this should be placed before L.Polyline,
             //      since it's a superclass of L.Polygon
@@ -1134,6 +1134,7 @@ class Map {
         this.leafletMap = null;
         this.editable = true;
         this.layers = [];
+        this.userPositionWidget = null;
         this.panelControl = null;
         this.selectedLayer = null;
         this.layerIndexCounter = 0;
@@ -1196,6 +1197,16 @@ class Map {
         this.setupLayerDragrank();
     }
 
+    setUserPosition(position) {
+        //@see https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API/Using_the_Geolocation_API
+        //TODO: customize icon
+        if (this.userPositionWidget == null) {
+            this.userPositionWidget = new L.Marker([position.coords.latitude, position.coords.longitude]);
+            this.userPositionWidget.addTo(this.leafletMap);
+        }
+        this.userPositionWidget.setLatLng(new L.LatLng(position.coords.latitude, position.coords.longitude));
+    }
+
     setup(geojsonData, config, modification) {
         this.modification = modification;
         if (config != null) {
@@ -1213,11 +1224,18 @@ class Map {
         if (this.buttonSave != null) {
             this.buttonSave.disabled = true;
         }
+        if ("geolocation" in navigator) {
+            var self = this;
+            navigator.geolocation.getCurrentPosition((position) => {self.setUserPosition(position)});
+            navigator.geolocation.watchPosition((position) => {self.setUserPosition(position)});
+        } else {
+            console.log("Geolocation not available, skipping");
+        }
     }
 
     addLayer() {
         let i = 0;
-        let label = null; 
+        let label = null;
         while (true) {
             i++;
             label = `Untitled layer ${i}`;
@@ -1388,7 +1406,7 @@ class Map {
         if (this.readonly) return;
         let mapExport = this.export();
         var self = this;
-        apiPost("save-map", 
+        apiPost("save-map",
             {
                 mid: this.mid,
                 "title": mapExport.title,
@@ -1498,7 +1516,7 @@ class LayerStyleDialog extends Dialog {
         let strokeColorInput = create(pStrokeColor, "input", "feature-style-input");
         strokeColorInput.type = "color";
         strokeColorInput.value = orDefault(layer.mostCommonPropertyValue("strokeColor"), DEFAULT_STROKE_COLOR);
-        
+
         const pStrokeWidth = create(form, "p");
         create(pStrokeWidth, "span", ["feature-style-label"]).textContent = "Stroke width";
         let strokeWidthInput = create(pStrokeWidth, "input",  "feature-style-input");
