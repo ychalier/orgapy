@@ -11,8 +11,14 @@
 <script src="{% static 'orgapy/js/notes.js' %}"></script>
 {% endblock %}
 
-{% block menu %}{% include 'orgapy/partials/menu_notes.html' %}<hr class="menu-separator">{{ block.super }}{% endblock menu %}
+{% block menu %}
 
+<li class="menu-item"><button id="btn-save-note-exit-menu"><i class="ri-save-line"></i> Save note</button></li>
+<hr class="menu-separator">
+{% include 'orgapy/partials/menu_notes.html' %}
+<hr class="menu-separator">
+{{ block.super }}
+{% endblock menu %}
 {% block main_content %}
 
 <form id="form-note-edit-primary" action="{% url 'orgapy:save_note' %}" method="post">
