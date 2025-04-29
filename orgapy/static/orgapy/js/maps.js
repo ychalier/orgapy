@@ -1212,9 +1212,16 @@ class Map {
 
     setUserPosition(position) {
         //@see https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API/Using_the_Geolocation_API
-        //TODO: customize icon
         if (this.userPositionWidget == null) {
-            this.userPositionWidget = new L.Marker([position.coords.latitude, position.coords.longitude]);
+            const crosshairIcon = L.icon({
+                iconUrl: URL_IMAGE_CROSSHAIR,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+            });
+            this.userPositionWidget = new L.Marker(
+                [position.coords.latitude, position.coords.longitude],
+                {icon: crosshairIcon}
+            );
             this.userPositionWidget.addTo(this.leafletMap);
             document.getElementById("button-user-position").removeAttribute("disabled");
         }
