@@ -264,10 +264,10 @@ function bindDropdown(dropdown) {
     const toggle = dropdown.querySelector(".dropdown-toggle");
     const menu = dropdown.querySelector(".menu");
 
-    function hideDropdown() {
+    function hideDropdown(timeout=300) {
         hideTimeout = setTimeout(() => {
             dropdown.appendChild(menu);
-        }, 300);
+        }, timeout);
     }
 
     menu.querySelectorAll("a, button").forEach(element => {
@@ -280,7 +280,7 @@ function bindDropdown(dropdown) {
         }
         function onActiveOut() {
             isElementFocused = false;
-            if (!isToggleFocused && !isMenuHovered) {
+            if (!isToggleFocused && !isMenuHovered && hideTimeout == null) {
                 hideDropdown();
             }
         }
@@ -288,6 +288,11 @@ function bindDropdown(dropdown) {
         element.addEventListener("mouseup", onActiveOut);
         element.addEventListener("touchstart", onActiveIn);
         element.addEventListener("touchend", onActiveOut);
+        element.addEventListener("click", () => {
+            if (hideTimeout == null) {
+                hideDropdown(1);
+            }
+        });
     });
 
     menu.addEventListener("mouseenter", () => {
