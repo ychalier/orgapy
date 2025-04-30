@@ -945,15 +945,17 @@ class Selection {
     checkSheetScroll(moveUp=false) {
         let root = this.root();
         let i = root.i;
-        if (moveUp && i > 0) i--;
+        if (moveUp && i > 1) i -= 2;
         let cell = this.sheet.cells[i][root.j];
         cell.scrollIntoView({
             behavior: "auto",
             block: "nearest",
             inline: "nearest",
         });
-        if (moveUp && root.i == 0) {
-            this.sheet.table.parentNode.scrollTo(this.sheet.table.parentNode.scrollLeft, 0); /* TODO: fixed this */
+        if (moveUp && root.i < 2) {
+            let scrollTop = 0;
+            if (root.i == 1) scrollTop += 32; // Scroll to toolbar height
+            this.sheet.container.scrollTo(this.sheet.container.scrollLeft, scrollTop);
         }
     }
 
