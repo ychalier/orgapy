@@ -365,6 +365,10 @@
     text-align: right;
 }
 
+.aright input[type=number].sheet-cell-input {
+    text-align: center;
+}
+
 .aright .sheet-cell-content {
     float: right;
     left: unset;

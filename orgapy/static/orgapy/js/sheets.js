@@ -1040,6 +1040,8 @@ class ColumnType {
     static ID = null;
     static ALIGNEMENT = "aleft";
     static LABEL = null;
+    static INPUT_TAG = "textarea";
+    static INPUT_STEP = 1;
 
     constructor() {}
 
@@ -1098,6 +1100,8 @@ class ColumnTypeInteger extends ColumnType {
     static ID = CTYPE_INTEGER;
     static ALIGNEMENT = "aright";
     static LABEL = "Integer";
+    static INPUT_TAG = "input";
+    static INPUT_TYPE = "number";
 
     formatText(value) {
         return safeFormat(value, x => x.toString());
@@ -1153,6 +1157,9 @@ class ColumnTypePercentage extends ColumnTypeFloat {
     static ID = CTYPE_PERCENTAGE;
     static ALIGNEMENT = "aright";
     static LABEL = "Percentage";
+    static INPUT_TAG = "input";
+    static INPUT_TYPE = "number";
+    static INPUT_STEP = 0.0001;
 
     formatHtml(value) {
         return safeFormat(value, x => (x * 100).toFixed(2) + " %");
@@ -1166,6 +1173,9 @@ class ColumnTypeMonetary extends ColumnTypeFloat {
     static ID = CTYPE_MONETARY;
     static ALIGNEMENT = "aright";
     static LABEL = "Monetary";
+    static INPUT_TAG = "input";
+    static INPUT_TYPE = "number";
+    static INPUT_STEP = 0.01;
 
     formatHtml(value) {
         return safeFormat(value, x => x.toFixed(2) + " €");
@@ -1249,6 +1259,8 @@ class ColumnTypeTime extends ColumnType {
     static ID = CTYPE_TIME;
     static ALIGNEMENT = "aleft";
     static LABEL = "Time";
+    static INPUT_TAG = "input";
+    static INPUT_TYPE = "time";
 
     formatText(value) {
         return safeFormat(value, x => {
@@ -1315,6 +1327,10 @@ class ColumnTypeStars extends ColumnType {
     static ALIGNEMENT = "acenter";
     static ID = CTYPE_STARS;
     static LABEL = "Stars";
+    static INPUT_TAG = "input";
+    static INPUT_TYPE = "number";
+    static INPUT_MIN = 0;
+    static INPUT_MAX = 3;
 
     formatHtml(value) {
         return safeFormat(value, x => {
@@ -1551,7 +1567,20 @@ class Sheet {
         let root = this.selection.root();
         let cell = this.cells[root.i][root.j];
         let value = this.values[root.i][root.j];
-        let input = create(cell, "textarea", "sheet-cell-input");
+        const columnType = this.columnTypes[root.j].constructor;
+        let input = create(cell, columnType.INPUT_TAG, "sheet-cell-input");
+        if (columnType.INPUT_TAG == "input" && columnType.INPUT_TYPE != null) {
+            input.type = columnType.INPUT_TYPE;
+        }
+        if (columnType.INPUT_TAG == "input" &&columnType.INPUT_MIN != null) {
+            input.min = columnType.INPUT_MIN;
+        }
+        if (columnType.INPUT_TAG == "input" &&columnType.INPUT_MAX != null) {
+            input.max = columnType.INPUT_MAX;
+        }
+        if (columnType.INPUT_TAG == "input" && columnType.INPUT_STEP != null) {
+            input.step = columnType.INPUT_STEP;
+        }
         input.value = this.columnTypes[root.j].formatText(value);
         if (causedByClick) {
             setTimeout(() => {
