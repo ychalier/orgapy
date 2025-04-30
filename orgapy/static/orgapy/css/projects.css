@@ -347,10 +347,13 @@
 }
 
 .event-title {
-    margin-left: .2rem;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.event-time ~ .event-title {
+    margin-left: .2rem;
 }
 
 .event-over {
