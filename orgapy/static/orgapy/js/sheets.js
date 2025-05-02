@@ -1044,6 +1044,7 @@ class ColumnType {
     static LABEL = null;
     static INPUT_TAG = "textarea";
     static INPUT_STEP = 1;
+    static USES_DATALIST = false;
 
     constructor() {}
 
@@ -1067,6 +1068,9 @@ class ColumnTypeText extends ColumnType {
     static ID = CTYPE_TEXT;
     static ALIGNEMENT = "aleft";
     static LABEL = "Text";
+    static INPUT_TAG = "input";
+    static INPUT_TYPE = "text";
+    static USES_DATALIST = true;
 
 }
 
@@ -1583,6 +1587,9 @@ class Sheet {
         if (columnType.INPUT_TAG == "input" && columnType.INPUT_STEP != null) {
             input.step = columnType.INPUT_STEP;
         }
+        if (columnType.USES_DATALIST) {
+            input.setAttribute("list", `datalist-${root.j}`);
+        }
         input.value = this.columnTypes[root.j].formatText(value);
         if (causedByClick) {
             setTimeout(() => {
@@ -1670,6 +1677,7 @@ class Sheet {
         this.values[root.i][root.j] = value;
         remove(input);
         this.setCellContent(root.i, root.j);
+        this.updateDatalists();
         this.onChange(true, false);
     }
 
@@ -2475,6 +2483,27 @@ class Sheet {
         }
     }
 
+    updateDatalists() {
+        for (let j = 0; j < this.width; j++) {
+            let datalist = document.getElementById(`datalist-${j}`);
+            if (datalist == null) {
+                datalist = create(document.body, "datalist");
+                datalist.setAttribute("id", `datalist-${j}`);
+            } else {
+                datalist.innerHTML = "";
+            }
+            if (!this.columnTypes[j].constructor.USES_DATALIST) {
+                continue;
+            }
+            const values = this.getValueSet(j);
+            if (values.length < MAX_DIFFERENT_VALUES_FOR_FILTERS) {
+                for (const value of values) {
+                    create(datalist, "option").value = value;
+                }
+            }
+        }
+    }
+
     inflate() {
         if (this.shrunk) {
             this.container.classList.add("sheet-shrink");
@@ -2542,6 +2571,7 @@ class Sheet {
         }
 
         this.updateFilters();
+        this.updateDatalists();
 
         this.setCellsEventListeners();
     }
