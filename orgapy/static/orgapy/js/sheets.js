@@ -22,6 +22,7 @@ const CTYPE_DURATION = 10;
 const CTYPE_STARS = 11;
 const CTYPE_MARKDOWN = 12;
 
+const HIGHLIGHT_NONE = -1;
 const HIGHLIGHT_ACCENT = 0;
 const HIGHLIGHT_SUCCESS = 1;
 const HIGHLIGHT_ERROR = 2;
@@ -1469,7 +1470,7 @@ class Sheet {
         this.columnTypes = [];
         this.rowHeights = [];
         this.filters = [];
-        this.highlights = {};
+        this.highlights = [];
         this.readonly = readonly;
         this.ordering = null;
 
@@ -1648,15 +1649,18 @@ class Sheet {
 
     setCellContent(i, j) {
         this.cells[i][j].innerHTML = "";
-        let key = `${i},${j}`;
-        if (key in this.highlights) {
+        if (this.highlights[i][j] >= 0) {
             let highlight = create(this.cells[i][j], "span", "highlight");
-            if (this.highlights[key] == HIGHLIGHT_ACCENT) {
-                highlight.classList.add("highlight-accent");
-            } else if (this.highlights[key] == HIGHLIGHT_SUCCESS) {
-                highlight.classList.add("highlight-success");
-            } else if (this.highlights[key] == HIGHLIGHT_ERROR) {
-                highlight.classList.add("highlight-error");
+            switch(this.highlights[i][j]) {
+                case HIGHLIGHT_ACCENT:
+                    highlight.classList.add("highlight-accent");
+                    break;
+                case HIGHLIGHT_SUCCESS:
+                    highlight.classList.add("highlight-success");
+                    break;
+                case HIGHLIGHT_ERROR:
+                    highlight.classList.add("highlight-error");
+                    break;
             }
         }
         let wrapper = create(this.cells[i][j], "span", "sheet-cell-content");
@@ -1816,6 +1820,7 @@ class Sheet {
                 this.filters.splice(j, 0, new Set());
                 for (let i = 0; i < this.height; i++) {
                     this.values[i].splice(j, 0, null);
+                    this.highlights[i].splice(j, 0, HIGHLIGHT_NONE);
                 }
             }
             this.inflate();
@@ -1839,6 +1844,7 @@ class Sheet {
         this.filters.splice(j, 1);
         for (let i = 0; i < this.height; i++) {
             this.values[i].splice(j, 1);
+            this.highlights[i].splice(j, 1);
         }
         this.inflate();
         this.onChange(true, false);
@@ -1853,10 +1859,13 @@ class Sheet {
                 this.height++;
                 this.rowHeights.splice(i, 0, this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT);
                 let row = [];
+                let highlightsRow = [];
                 for (let j = 0; j < this.width; j++) {
                     row.push(null);
+                    highlightsRow.push(HIGHLIGHT_NONE);
                 }
                 this.values.splice(i, 0, row);
+                this.highlights.splice(i, 0, highlightsRow);
                 if (this.ordering != null) {
                     this.ordering.splice(i, 0, this.values.length - 1);
                 }
@@ -1873,6 +1882,7 @@ class Sheet {
         this.height--;
         this.rowHeights.splice(i, 1);
         this.values.splice(i, 1);
+        this.highlights.splice(i, 1);
         this.inflate();
         this.onChange(true, false);
     }
@@ -2060,6 +2070,7 @@ class Sheet {
         }
         this.values = tidy(this.values, order);
         this.rowHeights = tidy(this.rowHeights, order);
+        this.highlights = tidy(this.highlights, order);
         this.inflate();
         this.container.querySelectorAll(`.sheet-column-sort`).forEach(element => {
             element.classList.remove("ascending");
@@ -2421,9 +2432,8 @@ class Sheet {
                 } else if (event.altKey && (event.key == "²" || event.key == "&" || event.key == "é" || event.key == "\"") && !self.readonly) {
                     if (event.key == "²") {
                         self.selection.iterate((i, j) => {
-                            let key = `${i},${j}`;
-                            if (key in self.highlights) {
-                                delete self.highlights[key];
+                            if (self.highlights[i][j] >= 0) {
+                                self.highlights[i][j] = HIGHLIGHT_NONE;
                                 self.setCellContent(i, j);
                             }
                         });
@@ -2437,8 +2447,7 @@ class Sheet {
                             highlight = HIGHLIGHT_ERROR;
                         }
                         self.selection.iterate((i, j) => {
-                            let key = `${i},${j}`;
-                            self.highlights[key] = highlight;
+                            self.highlights[i][j] = highlight;
                             self.setCellContent(i, j);
                         });
                     }
@@ -2582,7 +2591,21 @@ class Sheet {
             this.width = data[0].length;
         }
         if (config != null) {
-            this.highlights = config.highlights;
+            if (config.highlights.constructor === Array) {
+                this.highlights = config.highlights;
+            } else {
+                // For legacy support
+                console.warn("Loading highlights in old format!");
+                this.highlights = [];
+                for (let i = 0; i < this.height; i++) {
+                    this.highlights.push([]);
+                    for (let j = 0; j < this.width; j++) {
+                        const key = `${i},${j}`;
+                        const value = key in config.highlights ? config.highlights[key] : HIGHLIGHT_NONE;
+                        this.highlights[i].push(value);
+                    }
+                }
+            }
             this.shrunk = config.shrunk;
             let configOrderingHasNull = false;
             if (config.ordering != null) {
@@ -2605,6 +2628,14 @@ class Sheet {
             }
             if (("row_heights" in config) && !("rowHeights" in config)) {
                 config.rowHeights = config["row_heights"];
+            }
+        } else {
+            this.highlights = [];
+            for (let i = 0; i < this.height; i++) {
+                this.highlights.push([]);
+                for (let j = 0; j < this.width; j++) {
+                    this.highlights[i].push(HIGHLIGHT_NONE);
+                }
             }
         }
 
