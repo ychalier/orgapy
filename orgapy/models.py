@@ -87,6 +87,14 @@ class Note(models.Model):
     @staticmethod
     def get_class():
         return "note"
+    
+    def date_creation_display(self):
+        now = datetime.datetime.now()
+        if now.date() == self.date_creation.date():
+            return "Today"
+        elif now.year == self.date_creation.year:
+            return self.date_creation.strftime("%m-%d")
+        return self.date_creation.strftime("%Y-%m-%d")
 
 
 class Objective(models.Model):

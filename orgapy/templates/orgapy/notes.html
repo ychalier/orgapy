@@ -3,6 +3,11 @@
 
 {% block title %}{% block subtitle %}Notes &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
+{% endblock %}
+
 {% block menu %}{% include 'orgapy/partials/menu_notes.html' %}<hr class="menu-separator">{{ block.super }}{% endblock menu %}
 
 {% block main_content %}
@@ -11,6 +16,7 @@
 <div class="card card-oneline">
     {% for note in notes %}
     <div class="oneline oneline-striped">
+        <span class="note-date-hint">{{ note.date_creation_display }}</span>
         <a class="oneline-truncate link-hidden" href="{% url 'orgapy:note' nid=note.id %}" title="{{ note.title }}">{{note.title}}</a>
         <span>
             {% if note.categories.all %}
