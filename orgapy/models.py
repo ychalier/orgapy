@@ -58,6 +58,7 @@ class Note(models.Model):
     public = models.BooleanField(default=False)
     categories = models.ManyToManyField("Category", blank=True)
     pinned = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
 
     class Meta:

@@ -161,7 +161,7 @@ function bindSaveNoteButtons() {
     const secondaryForm = document.getElementById("form-note-edit-secondary");
     
     function mergeForms() {        
-        ["pinned", "public"].forEach(name => {
+        ["pinned", "public", "hidden"].forEach(name => {
             const primaryInput = primaryForm.querySelector(`input[name=${name}]`);
             const secondaryInput = secondaryForm.querySelector(`input[name=${name}]`);
             if (secondaryInput.checked) {

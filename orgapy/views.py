@@ -91,13 +91,15 @@ def save_note_core(request):
     content = request.POST.get("content", "").strip()
     is_public = "public" in request.POST
     is_pinned = "pinned" in request.POST
+    is_hidden = "hidden" in request.POST
     if original_note is None:
         note = models.Note.objects.create(
             user=request.user,
             title=title,
             content=content,
             public=is_public,
-            pinned=is_pinned
+            pinned=is_pinned,
+            hidden=is_hidden
         )
     else:
         note = original_note
@@ -105,6 +107,7 @@ def save_note_core(request):
         note.content = content
         note.public = is_public
         note.pinned = is_pinned
+        note.hidden = is_hidden
         note.categories.clear()
     note.date_modification = timezone.now()
     note.save()
@@ -315,11 +318,11 @@ def view_search(request):
     page_size = 24
     query = request.GET.get("query", "")
     if query == "public":
-        objects = list(models.Note.objects.filter(user=request.user, public=True))\
+        objects = list(models.Note.objects.filter(user=request.user, public=True, hidden=False))\
             + list(models.Sheet.objects.filter(user=request.user, public=True))\
             + list(models.Map.objects.filter(user=request.user, public=True))
     else:
-        objects = list(models.Note.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(content__contains=query)))\
+        objects = list(models.Note.objects.filter(user=request.user, hidden=False).filter(Q(title__contains=query) | Q(content__contains=query)))\
             + list(models.Quote.objects.filter(user=request.user).filter(Q(reference__contains=query) | Q(content__contains=query)))\
             + list(models.Sheet.objects.filter(user=request.user, title__contains=query))\
             + list(models.Map.objects.filter(user=request.user, title__contains=query))
@@ -345,6 +348,11 @@ def view_notes(request):
     if len(query) > 0 and query[0] == "#":
         category = query[1:]
     base_objects = models.Note.objects.filter(user=request.user)
+    show_hidden = request.GET.get("hidden") == "1"
+    if show_hidden:
+        base_objects = base_objects.filter(hidden=True)
+    else:
+        base_objects = base_objects.filter(hidden=False)
     if "uncategorized" in request.GET:
         base_objects = base_objects.filter(categories__isnull=True)
     if len(category) > 0:
@@ -353,7 +361,7 @@ def view_notes(request):
         objects = base_objects.filter(Q(title__contains=query) | Q(content__contains=query))
     else:
         objects = base_objects
-    if len(objects) == 1 and models.Note.objects.count() > 1:
+    if len(objects) == 1 and models.Note.objects.count() > 1 and not show_hidden:
         return redirect("orgapy:note", nid=objects[0].id)
     paginator = Paginator(objects.order_by(
         "-pinned",
@@ -366,7 +374,7 @@ def view_notes(request):
         "notes": notes,
         "query": query,
         "category": category,
-        "note_paginator": pretty_paginator(notes, query=query),
+        "note_paginator": pretty_paginator(notes, query=query, hidden=int(show_hidden)),
         "categories": models.Category.objects.all().order_by("name"),
         **getenv("notes"),
     })
