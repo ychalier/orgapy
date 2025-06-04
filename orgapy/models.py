@@ -95,6 +95,14 @@ class Note(models.Model):
         elif now.year == self.date_creation.year:
             return self.date_creation.strftime("%m-%d")
         return self.date_creation.strftime("%Y-%m-%d")
+    
+    def date_modification_display(self):
+        now = datetime.datetime.now()
+        if now.date() == self.date_modification.date():
+            return "Today"
+        elif now.year == self.date_modification.year:
+            return self.date_modification.strftime("%m-%d")
+        return self.date_modification.strftime("%Y-%m-%d")
 
 
 class Objective(models.Model):

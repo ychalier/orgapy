@@ -16,7 +16,7 @@
 <div class="card card-oneline">
     {% for note in notes %}
     <div class="oneline oneline-striped">
-        <span class="note-date-hint">{{ note.date_creation_display }}</span>
+        <span class="note-date-hint">{{ note.date_modification_display }}</span>
         <a class="oneline-truncate link-hidden" href="{% url 'orgapy:note' nid=note.id %}" title="{{ note.title }}">{{note.title}}</a>
         <span>
             {% if note.categories.all %}
