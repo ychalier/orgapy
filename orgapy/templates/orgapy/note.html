@@ -5,6 +5,8 @@
 
 {% block head %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/dependencies/katex.min.css' %}" />
+<script src="{% static 'orgapy/dependencies/showdown-katex.min.js' %}"></script>
 <link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
 <script src="{% static 'orgapy/js/notes.js' %}"></script>
 {% endblock head %}
@@ -60,7 +62,7 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    markdownToHtml(".markdown", true);
+    markdownToHtml(".markdown", true, true);
     {% if not readonly %}bindWidgets({{ note.id }});{% endif %}
     createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
 </script>

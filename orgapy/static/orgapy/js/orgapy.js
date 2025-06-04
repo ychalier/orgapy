@@ -105,7 +105,21 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
     });
 }
 
-function markdownToHtmlFancy(element) {
+function markdownToHtmlFancy(element, useKatex=false) {
+    const extensions = [];
+    if (useKatex) {
+        extensions.push(
+            showdownKatex({
+                displayMode: true,
+                throwOnError: false,
+                errorColor: '#ff0000',
+                delimiters: [
+                    { left: "$$", right: "$$", display: false },
+                    { left: '~', right: '~', display: false, asciimath: true },
+                ],
+            })
+        )
+    }
     let converter = new showdown.Converter({
         omitExtraWLInCodeBlocks: true,
         customizedHeaderId: true,
@@ -120,6 +134,7 @@ function markdownToHtmlFancy(element) {
         emoji: true,
         moreStyling: true,
         extensions: [
+            ...extensions,
             {
                 type: "output",
                 regex: /<table>/g,
@@ -227,10 +242,10 @@ function markdownToHtmlBasic(element) {
     }
 }
 
-function markdownToHtml(selector, fancy=false) {
+function markdownToHtml(selector, fancy=false, useKatex=false) {
     document.querySelectorAll(selector).forEach(element => {
         if (fancy) {
-            markdownToHtmlFancy(element);
+            markdownToHtmlFancy(element, useKatex);
         } else {
             markdownToHtmlBasic(element);
         }

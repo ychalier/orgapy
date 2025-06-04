@@ -62,6 +62,7 @@ The app uses Django built-in authentication framework, meaning that users need a
 - [Leaflet](https://leafletjs.com/) - An open-source JavaScript library for mobile-friendly interactive maps.
 - [Remix Icon](https://remixicon.com/) - An open source icon library.
 - [Showdown](https://showdownjs.com/) - A JavaScript library for parsing Markdown.
+- [Showdown KaTeX](https://obedm503.github.io/showdown-katex/) - Showdown extension to render math.
 - [SimpleMDE](https://simplemde.com/) - A simple, embeddable, and beautiful JS markdown editor.
 
 ## Contributing
