@@ -565,6 +565,35 @@ def view_create_quote(request):
     })
 
 
+@permission_required("orgapy.change_quote")
+def view_save_quote(request):
+    if request.method != "POST":
+        raise BadRequest
+    qid = request.POST["id"]
+    q = models.Quote.objects.filter(user=request.user, id=int(qid))
+    if not q.exists():
+        raise Http404("Not Found")
+    reference = request.POST["reference"]
+    content = request.POST["content"]
+    quote = q.first()
+    quote.reference = reference
+    quote.content = content
+    quote.save()
+    return redirect("orgapy:quote", qid=quote.id)
+
+
+@permission_required("orgapy.change_quote")
+def view_edit_quote(request, qid):
+    q = models.Quote.objects.filter(user=request.user, id=int(qid))
+    if not q.exists():
+        raise Http404("Not Found")
+    quote = q.get()
+    return render(request, "orgapy/edit_quote.html", {
+        "quote": quote,
+        **getenv("quotes"),
+    })
+
+
 @permission_required("orgapy.view_sheet")
 def view_sheets(request):
     query = request.GET.get("query", "")
