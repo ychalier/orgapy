@@ -64,6 +64,8 @@ The app uses Django built-in authentication framework, meaning that users need a
 - [Showdown](https://showdownjs.com/) - A JavaScript library for parsing Markdown.
 - [Showdown KaTeX](https://obedm503.github.io/showdown-katex/) - Showdown extension to render math.
 - [SimpleMDE](https://simplemde.com/) - A simple, embeddable, and beautiful JS markdown editor.
+- [sql.js](https://github.com/sql-js/sql.js/) -  A JavaScript library to run SQLite on the web.
+- [zip.js](https://gildas-lormeau.github.io/zip.js/) -  A JavaScript library to zip and unzip files.
 
 ## Contributing
 

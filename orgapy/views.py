@@ -998,7 +998,31 @@ def view_calendar_form(request):
 
 @permission_required("orgapy.add_note")
 def view_notally(request):
+    created_notes = None
+    if request.method == "POST":
+        data = json.loads(request.POST.get("data", []))
+        notally_cat_query = models.Category.objects.filter(user=request.user, name="notally")
+        notally_cat = None
+        if notally_cat_query.exists():
+            notally_cat = notally_cat_query.get()
+        else:
+            notally_cat = models.Category.objects.create(user=request.user, name="notally")
+        created_notes = []
+        for note_data in data:
+            title = note_data["title"].strip()
+            if not title:
+                title = "Untitled Notally Note"
+            note = models.Note.objects.create(
+                user=request.user,
+                title=title,
+                content=note_data["content"],
+            )
+            note.date_creation = datetime.datetime.fromtimestamp(note_data["dateCreation"])
+            note.save()
+            note.categories.add(notally_cat)
+            created_notes.append(note)
     return render(request, "orgapy/notally.html", {
+        "notes": created_notes,
         **getenv("notes"),
     })
 

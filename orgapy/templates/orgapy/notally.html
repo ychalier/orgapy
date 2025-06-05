@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
 <script src="{% static 'orgapy/dependencies/zip.min.js' %}"></script>
 <script src="{% static 'orgapy/dependencies/sql-wasm.min.js' %}"></script>
+<script>
+    const STATIC_DEPENDENCIES_URL = "{% static 'orgapy/dependencies/' %}";
+</script>
+<script src="{% static 'orgapy/js/notally.js' %}"></script>
 {% endblock %}
 
 {% block menu %}
@@ -18,44 +22,44 @@
 
 {% block main_content %}
 
-<div>
-    <input type="file" id="input-db" />
+{% if notes %}
+Imported {{ notes|length }} note{{ notes|length|pluralize }}.
+
+<div class="card card-oneline">
+    {% for note in notes %}
+    {% include 'orgapy/partials/note_list_item.html' %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <h1>Import Notally Backup</h1>
+    <p>
+        In Notally, go to <i>Settings</i>, then <i>Export Backup</i>.
+        This create a ZIP archive you can upload here.
+        Behind the scene, the archive contains a SQLite database.
+    </p>
+    <h2>Select File</h2>
+    <input type="file" id="input-db" accept=".zip, application/zip, application/x-zip-compressed" />
+    <h2>Select Notes</h2>
+    <div id="selection">
+        –
+    </div>
+    <p>
+        <button id="button-import" disabled>Import</button>
+    </p>
 </div>
 
+<form id="form-import" method="post" action="{% url 'orgapy:notally' %}">
+    {% csrf_token %}
+    <input id="input-data" hidden name="data" value="" />
+</form>
 
 <script>
-    config = {
-      locateFile: filename => `{% static 'orgapy/dependencies/' %}${filename}`
-    }
-
-    initSqlJs(config).then(SQL => {
-        const inputDb = document.getElementById("input-db");
-        inputDb.addEventListener("change", async (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const blobReader = new zip.BlobReader(file);
-            const zipReader = new zip.ZipReader(blobReader);
-            const entries = await zipReader.getEntries();
-            if (entries.length === 0) {
-                console.error("No files found in ZIP archive");
-                return;
-            }
-            const firstEntry = entries[0];
-            const blob = await firstEntry.getData?.(new zip.BlobWriter());
-            const fileReader = new FileReader();
-            fileReader.onload = () => {
-                const Uints = new Uint8Array(fileReader.result);
-                db = new SQL.Database(Uints);
-                const stmt = db.prepare("SELECT * FROM BaseNote");
-                while(stmt.step()) {
-                    const row = stmt.getAsObject();
-                    console.log('Here is a row: ' + JSON.stringify(row));
-                }
-            }
-            fileReader.readAsArrayBuffer(blob);
-            await zipReader.close();
-        });
+    window.addEventListener("load", () => {
+        setupNotallyImportProcess();
     });
-  </script>
+</script>
+
+{% endif %}
 
 {% endblock main_content %}
