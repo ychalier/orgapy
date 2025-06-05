@@ -6,6 +6,7 @@
 {% block head %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
+<script src="{% static 'orgapy/dependencies/zip.min.js' %}"></script>
 <script src="{% static 'orgapy/dependencies/sql-wasm.min.js' %}"></script>
 {% endblock %}
 
@@ -29,12 +30,21 @@
 
     initSqlJs(config).then(SQL => {
         const inputDb = document.getElementById("input-db");
-        inputDb.addEventListener("change", handleFiles, false);
-        function handleFiles() {
-            const firstFile = this.files[0];
-            const r = new FileReader();
-            r.onload = function() {
-                const Uints = new Uint8Array(r.result);
+        inputDb.addEventListener("change", async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const blobReader = new zip.BlobReader(file);
+            const zipReader = new zip.ZipReader(blobReader);
+            const entries = await zipReader.getEntries();
+            if (entries.length === 0) {
+                console.error("No files found in ZIP archive");
+                return;
+            }
+            const firstEntry = entries[0];
+            const blob = await firstEntry.getData?.(new zip.BlobWriter());
+            const fileReader = new FileReader();
+            fileReader.onload = () => {
+                const Uints = new Uint8Array(fileReader.result);
                 db = new SQL.Database(Uints);
                 const stmt = db.prepare("SELECT * FROM BaseNote");
                 while(stmt.step()) {
@@ -42,8 +52,9 @@
                     console.log('Here is a row: ' + JSON.stringify(row));
                 }
             }
-            r.readAsArrayBuffer(firstFile);
-        }
+            fileReader.readAsArrayBuffer(blob);
+            await zipReader.close();
+        });
     });
   </script>
 
