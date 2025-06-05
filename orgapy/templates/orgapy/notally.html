@@ -1,0 +1,50 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Notally &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
+<script src="{% static 'orgapy/dependencies/sql-wasm.min.js' %}"></script>
+{% endblock %}
+
+{% block menu %}
+{% include 'orgapy/partials/menu_notes.html' %}
+<hr class="menu-separator">
+{{ block.super }}
+{% endblock menu %}
+
+{% block main_content %}
+
+<div>
+    <input type="file" id="input-db" />
+</div>
+
+
+<script>
+    config = {
+      locateFile: filename => `{% static 'orgapy/dependencies/' %}${filename}`
+    }
+
+    initSqlJs(config).then(SQL => {
+        const inputDb = document.getElementById("input-db");
+        inputDb.addEventListener("change", handleFiles, false);
+        function handleFiles() {
+            const firstFile = this.files[0];
+            const r = new FileReader();
+            r.onload = function() {
+                const Uints = new Uint8Array(r.result);
+                db = new SQL.Database(Uints);
+                const stmt = db.prepare("SELECT * FROM BaseNote");
+                while(stmt.step()) {
+                    const row = stmt.getAsObject();
+                    console.log('Here is a row: ' + JSON.stringify(row));
+                }
+            }
+            r.readAsArrayBuffer(firstFile);
+        }
+    });
+  </script>
+
+{% endblock main_content %}

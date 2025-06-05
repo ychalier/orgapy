@@ -10,6 +10,7 @@
 
 {% block menu %}
 <li class="menu-item"><a href="?hidden=1"><i class="ri-eye-line"></i> View Hidden</a></li>
+<li class="menu-item"><a href="{% url 'orgapy:notally' %}"><i class="ri-upload-line"></i> Notally</a></li>
 <hr class="menu-separator">
 {% include 'orgapy/partials/menu_notes.html' %}
 <hr class="menu-separator">

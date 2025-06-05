@@ -996,6 +996,13 @@ def view_calendar_form(request):
     return redirect("orgapy:settings")
 
 
+@permission_required("orgapy.add_note")
+def view_notally(request):
+    return render(request, "orgapy/notally.html", {
+        **getenv("notes"),
+    })
+
+
 # ----------------------------------------------- #
 # API                                             #
 # ----------------------------------------------- #

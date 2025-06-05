@@ -14,6 +14,7 @@ urlpatterns = [
     path("notes/categories", views.view_categories, name="categories"),
     path("notes/categories/<cid>/edit", views.view_edit_category, name="edit_category"),
     path("notes/categories/<cid>/delete", views.view_delete_category, name="delete_category"),
+    path("notes/notally", views.view_notally, name="notally"),
     path("notes/<nid>", views.view_note, name="note"),
     path("notes/<nid>/edit", views.view_edit_note, name="edit_note"),
     path("notes/<nid>/export", views.view_export_note, name="export_note"),
