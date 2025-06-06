@@ -50,17 +50,16 @@ const SLOT_STATE_COOLDOWN = 3;
 const SLOT_STATE_FUTURE = 4;
 const SLOT_STATE_FUTURE_COMPLETE = 5;
 
-const TASK_NO_DATE = 0;
-const TASK_TODAY = 1;
-const TASK_TOMORROW = 2;
-const TASK_THIS_WEEK = 3;
-const TASK_NEXT_WEEK = 4;
-const TASK_THIS_MONTH = 5;
-const TASK_NEXT_MONTH = 6;
-const TASK_LATER = 7;
+const TASK_TODAY = 0;
+const TASK_TOMORROW = 1;
+const TASK_THIS_WEEK = 2;
+const TASK_NEXT_WEEK = 3;
+const TASK_THIS_MONTH = 4;
+const TASK_NEXT_MONTH = 5;
+const TASK_LATER = 6;
+const TASK_NO_DATE = 7;
 
 const TASK_CATEGORY_LABELS = [
-    "No Date",
     "Today",
     "Tomorrow",
     "This Week",
@@ -68,6 +67,7 @@ const TASK_CATEGORY_LABELS = [
     "This Month",
     "Next Month",
     "Later",
+    "No Date",
 ];
 
 /** Projects ******************************************************************/
@@ -1214,7 +1214,7 @@ function inflateTasks() {
         }
     });
 
-    for (let category = 0; category < 7; category++) {
+    for (let category = 0; category <= 7; category++) {
         const tasksInCategory = tasks.filter(task => task.category == category);
         if (tasksInCategory.length == 0) continue;
         const details = create(container, "details");
