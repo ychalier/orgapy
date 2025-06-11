@@ -291,3 +291,165 @@ function bindWidgets(noteId) {
     });
 
 }
+
+function getCharPosition(span, charIndex) {
+    const range = document.createRange();
+    const textNode = span.firstChild;
+    if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
+        console.warn("Span does not contain a valid text node.");
+        return null;
+    }
+    range.setStart(textNode, charIndex);
+    range.setEnd(textNode, charIndex + 1);
+    const rects = range.getClientRects();
+    if (rects.length > 0) {
+        return rects[0];
+    } else {
+        return null;
+    }
+}
+
+/**
+ * @see https://codemirror.net/5/doc/manual.html
+ */
+var smdeDropdownState = null;
+var smdeSelectedResult = 0;
+var smdeResultCount = 0;
+function openSmdeDropdown(cmInstance, word) {
+    
+    // Close any previously opened dropdown
+    closeSmdeDropdown();
+    
+    // Create and position the dropdown itself
+    const dropdown = create(document.body, "div", "smde-dropdown");
+    const cursor = cmInstance.getCursor();
+    const line = cmInstance.getLine(cursor.line);
+    let iStart = cursor.ch;
+    while (iStart > 0 && line.charAt(iStart) != "@") iStart--;
+    const span = cmInstance.display.view[cursor.line].node.firstChild;
+    const wordStart = getCharPosition(span, iStart);
+    const verticalPadding = 4; // px
+    dropdown.style.top = (wordStart.bottom + verticalPadding) + "px";
+    dropdown.style.left = wordStart.left + "px";
+
+    // Parse current widget
+    const [match, objectType, objectId] = word.match(/@(\w+)\/(\d+)?/);
+    if (objectType != "note" && objectType != "sheet" && objectType != "map") {
+        console.error("Invalid objectif type", objectType);
+    }
+    const iEnd = iStart + match.length;
+
+    // Highlight text node
+    for (let i = iStart; i < iEnd; i++) {
+        const bounds = getCharPosition(span, i);
+        const highlight = create(document.body, "div", "smde-highlight");
+        highlight.style.top = bounds.top + "px";
+        highlight.style.left = bounds.left + "px";
+        highlight.style.width = bounds.width + "px";
+        highlight.style.height = bounds.height + "px";
+    }
+
+    function setObjectId(newId, origin) {
+        smdeDropdownState = origin;
+        const replaceFrom = {line: cursor.line, ch: iStart};
+        const replaceTo = {line: cursor.line, ch: iEnd};
+        cmInstance.replaceRange(`@${objectType}/${newId}`, replaceFrom, replaceTo, origin);
+    }
+
+    const searchbar = create(dropdown, "input", "smde-dropdown-searchbar");
+
+    // Set pinned value
+    if (objectId != undefined) {
+        const pinned = create(dropdown, "div", "smde-dropdown-pinned");
+        const pinnedSpan = create(pinned, "span");
+        const pinnedButton = create(pinned, "i", "ri-close-line");
+        fetch(URL_API + `?action=title&type=${objectType}&id=${objectId}`).then(res => res.text()).then(text => {
+            pinnedSpan.textContent = text;
+        });
+        pinnedButton.addEventListener("click", () => { setObjectId("", "interlink-reset") });
+    }
+
+    const results = create(dropdown, "div", "smde-dropdown-results");
+
+    // Bind searchbar
+    const apiAction = `${objectType}-suggestions`;
+    searchbar.addEventListener("input", () => {
+        const query = searchbar.value.trim();
+        fetch(URL_API + `?action=${apiAction}&q=${query}`).then(res => res.json()).then(data => {
+            results.innerHTML = "";
+            smdeResultCount = data.results.length;
+            smdeSelectedResult = -1;
+            for (const entry of data.results) {
+                const result = create(results, "div", "smde-dropdown-result")
+                result.textContent = entry.title;
+                result.setAttribute("object-id", entry.id);
+                result.addEventListener("click", () => { setObjectId(entry.id, "interlink-set"); });
+            }
+        });
+    });
+
+    function updateSelectedResult() {
+        results.querySelectorAll(".smde-dropdown-result").forEach((result, i) => {
+            if (i == smdeSelectedResult) {
+                result.classList.add("active");
+            } else {
+                result.classList.remove("active");
+            }
+        });
+    }
+
+    function unfocusSmdeDropdown() {
+        smdeDropdownState = "interlink-set";
+        cmInstance.setCursor({line: cursor.line, ch: iEnd});
+        cmInstance.focus();
+    }
+
+    searchbar.addEventListener("keydown", (event) => {
+        if (event.key == "ArrowDown" && smdeSelectedResult < smdeResultCount - 1) {
+            event.preventDefault();
+            smdeSelectedResult++;
+            updateSelectedResult();
+        } else if (event.key == "ArrowUp" && smdeSelectedResult > 0) {
+            event.preventDefault();
+            smdeSelectedResult--;
+            updateSelectedResult();
+        } else if (event.key == "Enter") {
+            event.preventDefault();
+            if (smdeSelectedResult != undefined && smdeSelectedResult >= 0 && smdeSelectedResult < results.children.length) {
+                setObjectId(results.children[smdeSelectedResult].getAttribute("object-id"), "interlink-set")
+            } else {
+                unfocusSmdeDropdown();
+            }
+        } else if (event.key == "Escape") {
+            unfocusSmdeDropdown();
+        }
+    });
+    
+    if (smdeDropdownState == "interlink-set") {
+        cmInstance.focus(); 
+    } else {
+        setTimeout(() => { searchbar.focus(); }, 100);
+    }
+
+    smdeDropdownState = null;
+
+}
+
+function closeSmdeDropdown() {
+    document.querySelectorAll("div.smde-dropdown, div.smde-highlight").forEach(remove);
+}
+
+function onCmCursorActivity(cmInstance) {
+    const cursor = cmInstance.getCursor();
+    const line = cmInstance.getLine(cursor.line);
+    let iStart = Math.max(0, cursor.ch - 1);
+    while (iStart > 0 && line.charAt(iStart) != " ") iStart--;
+    let iEnd = iStart + 1;
+    while (iEnd < line.length && line.charAt(iEnd) != " ") iEnd++;
+    const word = line.substring(iStart, iEnd).trim();
+    if (word.match(/@(note|map|sheet)\/(\d+)?/)) {
+        setTimeout(() => { openSmdeDropdown(cmInstance, word); }, 1);
+    } else {
+        closeSmdeDropdown();
+    }
+}

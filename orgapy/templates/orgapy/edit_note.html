@@ -91,6 +91,7 @@
                 codeSyntaxHighlighting: true,
             }
         });
+        simplemde.codemirror.on("cursorActivity", onCmCursorActivity);
         window.addEventListener("load", () => {
             simplemde.codemirror.refresh();
         });

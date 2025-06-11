@@ -218,3 +218,70 @@
     max-height: 3.6em;
     overflow: hidden;
 }
+
+/** SimpleMDE extensions **/
+
+.smde-dropdown {
+    position: absolute;
+    background: #6b9fc2;
+    outline: 1px solid black;
+    padding: .2rem;
+    border-radius: .2rem;
+    z-index: 1;
+    max-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.smde-dropdown:has(input:not(:focus)) {
+    opacity: .8;
+}
+
+.smde-dropdown-searchbar {
+    padding: .2rem;
+    border-radius: .2rem;
+    background: #507085;
+    border: none;
+}
+
+.smde-dropdown-pinned {
+    background: #ffffff80;
+    border-radius: .2rem;
+    padding: 0 .2rem;
+    color: black;
+    display: flex;   
+}
+
+.smde-dropdown-pinned span {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.smde-dropdown-results {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.smde-dropdown-result {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    cursor: default;
+    transition: none !important;
+    padding: 0 .2rem;
+}
+
+.smde-dropdown-result.active,
+.smde-dropdown-result:hover {
+    background: #00000040;
+    border-radius: .2rem;
+}
+
+.smde-highlight {
+    position: absolute;
+    background: #6b9fc260;
+    z-index: 1;
+}

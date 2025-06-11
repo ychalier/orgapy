@@ -1101,6 +1101,8 @@ def api(request):
             return api_suggestions(request)
         case "progress":
             return api_progress(request)
+        case "title":
+            return api_title(request)
         case _:
             raise BadRequest("Wrong action")
 
@@ -1670,6 +1672,26 @@ def api_note_title(request):
     query = models.Note.objects.filter(user=request.user, id=int(nid))
     if not query.exists():
         raise Http404("Not found")
+    return HttpResponse(query.get().title, content_type="text/plain")
+
+
+@permission_required("orgapy.view_note")
+def api_title(request):
+    object_type = request.GET.get("type")
+    object_id = request.GET.get("id")
+    if object_type is None or object_id is None:
+        raise BadRequest()
+    query = None
+    if object_type == "note":
+        query = models.Note.objects.filter(user=request.user, id=int(object_id))
+    elif object_type == "sheet":
+        query = models.Sheet.objects.filter(user=request.user, id=int(object_id))
+    elif object_type == "map":
+        query = models.Map.objects.filter(user=request.user, id=int(object_id))
+    else:
+        raise BadRequest()
+    if not query.exists():
+        raise Http404("Not Found")
     return HttpResponse(query.get().title, content_type="text/plain")
 
 
