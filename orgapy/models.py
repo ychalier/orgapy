@@ -74,14 +74,14 @@ class Note(models.Model):
     def save(self, *args, **kwargs):
         if self.nonce is None:
             self.nonce = generate_nonce()
+        super(Note, self).save(*args, **kwargs)
         objects = {"note": set(), "sheet": set(), "map": set()}
         pattern = re.compile(r"@(note|sheet|map)/(\d+)")
         for object_type, object_id in re.findall(pattern, self.content):
             objects[object_type].add(int(object_id))
-        self.note_refs.set(list(objects["note"]))
-        self.sheet_refs.set(list(objects["sheet"]))
-        self.map_refs.set(list(objects["map"]))
-        return super(Note, self).save(*args, **kwargs)
+        self.note_refs.set(Note.objects.filter(user=self.user, id__in=objects["note"]))
+        self.sheet_refs.set(Sheet.objects.filter(user=self.user, id__in=objects["sheet"]))
+        self.map_refs.set(Map.objects.filter(user=self.user, id__in=objects["map"]))
 
     def get_absolute_url(self):
         return reverse("orgapy:note", kwargs={"nid": self.id})
