@@ -83,6 +83,13 @@
     border-color: #555;
 }
 
+.sheet-toolbar a.reference {
+    position: relative;
+    line-height: normal;
+    height: fit-content;
+    top: .3em;
+}
+
 .sheet-head {
     position: sticky;
     top: 32px;

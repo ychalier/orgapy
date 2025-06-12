@@ -60,6 +60,9 @@ class Note(models.Model):
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
+    note_refs = models.ManyToManyField("Note", related_name="referenced_in")
+    sheet_refs = models.ManyToManyField("Sheet", related_name="referenced_in")
+    map_refs = models.ManyToManyField("Map", related_name="referenced_in")
 
     class Meta:
 
@@ -71,6 +74,13 @@ class Note(models.Model):
     def save(self, *args, **kwargs):
         if self.nonce is None:
             self.nonce = generate_nonce()
+        objects = {"note": set(), "sheet": set(), "map": set()}
+        pattern = re.compile(r"@(note|sheet|map)/(\d+)")
+        for object_type, object_id in re.findall(pattern, self.content):
+            objects[object_type].add(int(object_id))
+        self.note_refs.set(list(objects["note"]))
+        self.sheet_refs.set(list(objects["sheet"]))
+        self.map_refs.set(list(objects["map"]))
         return super(Note, self).save(*args, **kwargs)
 
     def get_absolute_url(self):

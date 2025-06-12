@@ -183,7 +183,7 @@ function markdownToHtmlFancy(element, useKatex=false) {
             {
                 type: "output",
                 regex: /(@note\/(\d+))/g,
-                replace: `<a class="note-reference" href="$2" ref-id="$2">$1</a>`
+                replace: `<a class="reference" href="$2" ref-id="$2">$1</a>`
             },
             {
                 type: "output",
@@ -221,7 +221,7 @@ function markdownToHtmlFancy(element, useKatex=false) {
     element.querySelectorAll("p").forEach(paragraph => {
         paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
     });
-    element.querySelectorAll(".note-reference").forEach(noteReference => {
+    element.querySelectorAll(".reference").forEach(noteReference => {
         fetch(URL_API + `?action=note-title&nid=${noteReference.getAttribute("ref-id")}`).then(res => res.text()).then(text => {
             noteReference.textContent = text;
         });

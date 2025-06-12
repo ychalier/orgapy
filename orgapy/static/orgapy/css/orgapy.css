@@ -611,6 +611,14 @@ header.card h1 {
 }
 
 /**
+ * Header
+ */
+
+.header-refs {
+    margin-top: .4rem;
+}
+
+/**
  * Oneline
  */
 
@@ -1069,12 +1077,12 @@ input:checked+.toggle-slider+.toggle-text {
     text-decoration: line-through;
 }
 
-a.note-reference {
+a.reference {
     background: hsl(204, 34%, 18%);
     padding: .1rem .3rem;
     border-radius: .2rem;
     text-decoration: none;
-    color: #8ed2ff;
+    color: #8ed2ff !important;
 }
 
 /**

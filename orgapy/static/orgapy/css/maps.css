@@ -133,6 +133,10 @@ body.fullscreen {
     outline: none;
 }
 
+.map-refs {
+    margin: .4rem 0;
+}
+
 .map-layers {
     display: flex;
     flex-direction: column;

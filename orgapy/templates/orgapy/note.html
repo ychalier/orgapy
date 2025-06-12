@@ -22,8 +22,8 @@
 {% block main_content %}
 
 <header class="card">
-    <h1 class="note-title">{{note.title}}</h1>
-    <div class="note-meta">
+    <h1 class="header-title">{{note.title}}</h1>
+    <div class="header-meta">
         {% if not readonly %}
         {% if note.categories.all %}
         {% for category in note.categories.all %}
@@ -39,6 +39,13 @@
         · <span title="Edited on {{ note.date_modification | date }}"><i class="ri-edit-circle-line"></i> {{ note.date_modification | date }}</span>
         {% endif %}
     </div>
+    {% if note.referenced_in %}
+    <div class="header-refs">
+        {% for ref in note.referenced_in.all %}
+        <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
 </header>
 
 <div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>

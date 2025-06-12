@@ -36,6 +36,11 @@
             </div>
         </span>
         {% endif %}
+        {% if not readonly and sheet.referenced_in %}
+            {% for ref in sheet.referenced_in.all %}
+            <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
+            {% endfor %}
+        {% endif %}
         {% if sheet.description %}
         <span class="markdown-inline">{{sheet.description | safe}}</span>
         {% endif %}

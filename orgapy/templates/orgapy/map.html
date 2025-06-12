@@ -21,6 +21,16 @@
 
 <div class="map-seed" map-id="{{map.id}}"></div>
 
+{% if not readonly and map.referenced_in %}
+<template id="template-refs">
+    <div class="map-refs">
+        {% for ref in map.referenced_in.all %}
+        <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
+        {% endfor %}
+    </div>
+</template>
+{% endif %}
+
 {% endblock %}
 
 {% block body_scripts %}

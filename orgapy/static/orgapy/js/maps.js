@@ -165,6 +165,12 @@ class PanelControl extends L.Control {
 
         this.inflateMapTitle();
 
+        const refsContainerTemplate = document.getElementById("template-refs");
+        if (refsContainerTemplate != null) {
+            const node = document.importNode(refsContainerTemplate.content, true);
+            this.panelContainer.appendChild(node);
+        }
+
         if (!this.map.readonly) {
             this.searchbarContainer = create(this.panelContainer, "div", "map-searchbar");
             let searchForm = create(this.searchbarContainer, "form", "form-inline");
