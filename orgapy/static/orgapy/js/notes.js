@@ -428,7 +428,7 @@ function openSmdeDropdown(cmInstance, word) {
     if (smdeDropdownState == "interlink-set") {
         cmInstance.focus(); 
     } else {
-        setTimeout(() => { searchbar.focus(); }, 100);
+        setTimeout(() => { searchbar.focus(); }, 50);
     }
 
     smdeDropdownState = null;
@@ -447,7 +447,7 @@ function onCmCursorActivity(cmInstance) {
     let iEnd = iStart + 1;
     while (iEnd < line.length && line.charAt(iEnd) != " ") iEnd++;
     const word = line.substring(iStart, iEnd).trim();
-    if (word.match(/@(note|map|sheet)\/(\d+)?/)) {
+    if (word.match(/^@(note|map|sheet)\/(\d+)?$/)) {
         setTimeout(() => { openSmdeDropdown(cmInstance, word); }, 1);
     } else {
         closeSmdeDropdown();
