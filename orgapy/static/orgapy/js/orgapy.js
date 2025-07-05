@@ -207,7 +207,13 @@ function markdownToHtmlFancy(element, useKatex=false) {
         paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
     });
     element.querySelectorAll(".reference").forEach(noteReference => {
-        fetch(URL_API + `?action=note-title&nid=${noteReference.getAttribute("ref-id")}`).then(res => res.text()).then(text => {
+        fetch(URL_API + `?action=note-title&nid=${noteReference.getAttribute("ref-id")}`).then(res => {
+            if (res.status == 404) {
+                return "<404 Not Found>";
+            } else {
+                return res.text();
+            }
+        }).then(text => {
             noteReference.textContent = text;
         });
     });

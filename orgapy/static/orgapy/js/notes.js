@@ -342,9 +342,8 @@ function openSmdeDropdown(cmInstance, word) {
     if (span == null) {
         throw new Error("Could not find span with target word");
     }
-    iStart -= maxLength - span.textContent.length;
-    const wordStart = getCharPosition(span, iStart);
-    console.log("Wordstart", wordStart);
+    const spanCharOffset = maxLength - span.textContent.length;
+    const wordStart = getCharPosition(span, iStart - spanCharOffset);
     const verticalPadding = 4; // px
     dropdown.style.top = (wordStart.bottom + verticalPadding) + "px";
     dropdown.style.left = wordStart.left + "px";
@@ -358,7 +357,7 @@ function openSmdeDropdown(cmInstance, word) {
 
     // Highlight text node
     for (let i = iStart; i < iEnd; i++) {
-        const bounds = getCharPosition(span, i);
+        const bounds = getCharPosition(span, i - spanCharOffset);
         const highlight = create(document.body, "div", "smde-highlight");
         highlight.style.top = bounds.top + "px";
         highlight.style.left = bounds.left + "px";
@@ -380,7 +379,13 @@ function openSmdeDropdown(cmInstance, word) {
         const pinned = create(dropdown, "div", "smde-dropdown-pinned");
         const pinnedSpan = create(pinned, "span");
         const pinnedButton = create(pinned, "i", "ri-close-line");
-        fetch(URL_API + `?action=title&type=${objectType}&id=${objectId}`).then(res => res.text()).then(text => {
+        fetch(URL_API + `?action=title&type=${objectType}&id=${objectId}`).then(res => {
+            if (res.status == 404) {
+                return "<404 Not Found>";
+            } else {
+                return res.text();
+            }
+        }).then(text => {
             pinnedSpan.textContent = text;
         });
         pinnedButton.addEventListener("click", () => { setObjectId("", "interlink-reset") });
