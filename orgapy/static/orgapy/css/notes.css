@@ -222,7 +222,7 @@
 /** SimpleMDE extensions **/
 
 .smde-dropdown {
-    position: absolute;
+    position: fixed;
     background: #6b9fc2;
     outline: 1px solid black;
     padding: .2rem;
@@ -281,7 +281,7 @@
 }
 
 .smde-highlight {
-    position: absolute;
+    position: fixed;
     background: #6b9fc260;
     z-index: 1;
 }
