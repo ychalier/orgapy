@@ -294,7 +294,7 @@ function bindWidgets(noteId) {
 
 function getCharPosition(span, charIndex) {
     const range = document.createRange();
-    const textNode = span.firstChild;
+    let textNode = span.firstChild;
     if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
         console.warn("Span does not contain a valid text node.");
         return null;
@@ -326,8 +326,25 @@ function openSmdeDropdown(cmInstance, word) {
     const line = cmInstance.getLine(cursor.line);
     let iStart = cursor.ch;
     while (iStart > 0 && line.charAt(iStart) != "@") iStart--;
-    const span = cmInstance.display.view[cursor.line].node.firstChild;
+    const lineNode = cmInstance.display.view[cursor.line].node;
+    let textLength = null;
+    let span = null;
+    let maxLength = null;
+    for (const candidateSpan of lineNode.querySelectorAll("span")) {
+        if (maxLength == null || candidateSpan.textContent.length > maxLength) {
+            maxLength = candidateSpan.textContent.length;
+        }
+        if (candidateSpan.textContent.includes(word) && (textLength == null || candidateSpan.textContent.length < textLength)) {
+            span = candidateSpan;
+            textLength = candidateSpan.textContent.length;
+        }
+    }
+    if (span == null) {
+        throw new Error("Could not find span with target word");
+    }
+    iStart -= maxLength - span.textContent.length;
     const wordStart = getCharPosition(span, iStart);
+    console.log("Wordstart", wordStart);
     const verticalPadding = 4; // px
     dropdown.style.top = (wordStart.bottom + verticalPadding) + "px";
     dropdown.style.left = wordStart.left + "px";
