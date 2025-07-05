@@ -142,8 +142,8 @@ function markdownToHtmlFancy(element, useKatex=false) {
             },
             {
                 type: "output",
-                regex: /<input type="checkbox" disabled +style="([a-z: 0-9\-\.;]+)"( *checked)?> *(.*?) *\n/g,
-                replace: `<input type="checkbox" style="$1"$2><span>$3</span>\n`
+                regex: /<input type="checkbox" disabled="" style="([a-z: 0-9\-\.;]+)"( checked="")?> ?/g,
+                replace: `<input type="checkbox" style="$1" class="widget widget-checkbox"$2>`,
             },
             {
                 type: "output",
@@ -172,16 +172,6 @@ function markdownToHtmlFancy(element, useKatex=false) {
             },
             {
                 type: "output",
-                regex: /style="margin: 0px 0\.35em 0\.25em \-1\.6em;/g,
-                replace: `style="margin: 0px 0.35em 0.25em -1em;`
-            },
-            {
-                type: "output",
-                regex: /input type="checkbox" disabled/g,
-                replace: `input type="checkbox" `
-            },
-            {
-                type: "output",
                 regex: /(@note\/(\d+))/g,
                 replace: `<a class="reference" href="$2" ref-id="$2">$1</a>`
             },
@@ -194,11 +184,6 @@ function markdownToHtmlFancy(element, useKatex=false) {
                 type: "output",
                 regex: /@map\/(\d+)/g,
                 replace: `<iframe src="../maps/$1?embed=1"></iframe><a href="../maps/$1"><small>Edit map</small></a>`
-            },
-            {
-                type: "output",
-                regex: /input type="checkbox"/g,
-                replace: `input type="checkbox" class="widget widget-checkbox"`
             },
             {
                 type: "output",

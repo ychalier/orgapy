@@ -1072,7 +1072,12 @@ input:checked+.toggle-slider+.toggle-text {
     height: 500px;
 }
 
-.markdown input[type=checkbox]:checked+* {
+.markdown input[type=checkbox] {
+    margin: 0px 0.35em 0.25em -1em;
+    vertical-align: middle;
+}
+
+.markdown li.task-list-item:has(input:checked) {
     color: #888;
     text-decoration: line-through;
 }
