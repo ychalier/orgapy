@@ -2426,9 +2426,11 @@ class Sheet {
                         }
                     }
                 } else if (event.key == "c" && event.ctrlKey) {
-                    event.preventDefault();
-                    let string = self.getSelectionAsTsv();
-                    navigator.clipboard.writeText(string);
+                    if (!self.editing) {
+                        event.preventDefault();
+                        let string = self.getSelectionAsTsv();
+                        navigator.clipboard.writeText(string);
+                    }
                 } else if (event.altKey && (event.key == "²" || event.key == "&" || event.key == "é" || event.key == "\"") && !self.readonly) {
                     if (event.key == "²") {
                         self.selection.iterate((i, j) => {
