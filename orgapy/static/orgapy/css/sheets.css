@@ -133,7 +133,7 @@
     background: var(--sheet-color-background);
     flex-grow: 0;
     flex-shrink: 0;
-    user-select: none;
+    /*user-select: none;*/ /* Removed as it blocked pasting events before first click (maybe a focus issue?) */
 }
 
 .sheet-cell-content {
