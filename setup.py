@@ -9,8 +9,8 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-orgapy',
-    version='4.6.1',
-    packages=find_packages(),
+    version='4.6.2',
+    packages=["orgapy"],
     include_package_data=True,
     license='GNU GPLv3',
     description='A personnal notebook webapp.',
