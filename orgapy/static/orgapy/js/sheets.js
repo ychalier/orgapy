@@ -944,20 +944,26 @@ class Selection {
     }
 
     checkSheetScroll(moveUp=false) {
-        let root = this.root();
-        let i = root.i;
-        if (moveUp && i > 1) i -= 2;
-        let cell = this.sheet.cells[i][root.j];
-        cell.scrollIntoView({
-            behavior: "auto",
-            block: "nearest",
-            inline: "nearest",
-        });
-        if (moveUp && root.i < 2) {
-            let scrollTop = 0;
-            if (root.i == 1) scrollTop += 32; // Scroll to toolbar height
-            this.sheet.container.scrollTo(this.sheet.container.scrollLeft, scrollTop);
+        const root = this.root();
+        const cell = this.sheet.cells[root.i][root.j];
+        const scrollTo = {left: this.sheet.container.scrollLeft, top: this.sheet.container.scrollTop};
+        const minimumLeft = FIRST_COLUMN_WIDTH;
+        const maximumLeft = Math.max(minimumLeft, this.sheet.container.offsetWidth - this.sheet.columnWidths[root.j]);
+        const currentLeft = cell.offsetLeft - this.sheet.container.scrollLeft;
+        if (currentLeft < minimumLeft) {
+            scrollTo.left += currentLeft - minimumLeft;
+        } else if (currentLeft > maximumLeft) {
+            scrollTo.left += currentLeft - maximumLeft;
         }
+        const minimumTop = this.sheet.toolbar.offsetHeight + DEFAULT_ROW_HEIGHT;
+        const maximumTop = Math.max(minimumTop, this.sheet.container.offsetHeight - this.sheet.rowHeights[root.i]);
+        const currentTop = cell.offsetTop - this.sheet.container.scrollTop;
+        if (currentTop < minimumTop) {
+            scrollTo.top += currentTop - minimumTop;
+        } else if (currentTop > maximumTop) {
+            scrollTo.top += currentTop - maximumTop;
+        }
+        this.sheet.container.scrollTo(scrollTo.left, scrollTo.top);
     }
 
     bounds() {
