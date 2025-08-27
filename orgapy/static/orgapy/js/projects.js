@@ -917,6 +917,10 @@ function saveProjectRanks(ordering) {
 function inflateProjects() {
     dragRankClear();
     let container = document.getElementById("projects");
+    if (container == null) {
+        console.log("Could not find projects container");
+        return;
+    }
     container.innerHTML = "";
     let projectIndices = [...Object.keys(projects)];
     projectIndices.sort((a, b) => projects[a].rank - projects[b].rank);
@@ -1196,6 +1200,10 @@ function openModalTaskForm(task=null) {
 
 function inflateTasks() {
     let container = document.getElementById("tasks");
+    if (container == null) {
+        console.log("Could not find tasks container");
+        return;
+    }
     container.innerHTML = "";
 
     if (tasks.length == 0) {
@@ -1545,6 +1553,10 @@ function resetObjgraphScroll() {
 
 function createObjgraph() {
     let container = document.getElementById("objgraph-wrapper");
+    if (container == null) {
+        console.log("Could not find objgraph container");
+        return;
+    }
     if (Object.keys(objectives).length == 0) {
         container.parentElement.classList.add("hidden");
     } else {

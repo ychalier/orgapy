@@ -17,6 +17,17 @@
 
 {% block main_content %}
 
+{% if settings.beach_mode %}
+<div class="card">
+    <h2>🏖️ Beach Mode On 🌞</h2>
+    <p>
+        Tasks, objectives and projects are hidden.
+    </p>
+    <p>
+        <span class="hint">Change this in <a href="{% url 'orgapy:settings' %}?ref={{ request.path }}">settings</a>.</span>
+    </p>
+</div>
+{% else %}
 <div class="card">
     <div id="tasks"></div>
 </div>
@@ -26,6 +37,7 @@
 </div>
 
 <div id="projects" class="projects"></div>
+{% endif %}
 
 <div class="card">
     <div id="events"></div>

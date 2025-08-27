@@ -160,6 +160,11 @@ blockquote p {
     color: #888;
 }
 
+.hint {
+    font-size: small;
+    color: #888;
+}
+
 .link-hidden {
     color: inherit;
     text-decoration: none;

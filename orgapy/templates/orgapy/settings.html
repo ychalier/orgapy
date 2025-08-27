@@ -21,6 +21,14 @@
             <label for="input-lookahead">Lookahead</label>
             <input id="input-lookahead" type="number" name="calendar_lookahead" value="{{ settings.calendar_lookahead }}" min="0" />
         </p>
+        <p>
+            <label class="toggle">
+                <input type="checkbox" name="beach_mode" {% if settings.beach_mode %}checked{% endif %} />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">🏖️ Beach Mode</span>
+            </label>
+            <span class="hint">Hide tasks, objectives and projects from homepage.</span>
+        </p>
         <button>Save</button>
     </form>
 

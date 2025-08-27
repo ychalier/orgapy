@@ -23,6 +23,7 @@ class Settings(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     objective_start_hours = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(23)])
     calendar_lookahead = models.PositiveIntegerField(default=3)
+    beach_mode = models.BooleanField(default=False)
 
     class Meta:
 

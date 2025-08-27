@@ -953,6 +953,7 @@ def view_settings(request):
     if request.method == "POST":
         settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
         settings.calendar_lookahead = int(request.POST.get("calendar_lookahead", 3))
+        settings.beach_mode = bool(request.POST.get("beach_mode", False))
         settings.save()
         if "ref" in request.POST and request.POST["ref"]:
             return redirect(request.POST["ref"])
