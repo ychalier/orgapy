@@ -1,0 +1,46 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Edit map &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block menu %}{% include 'orgapy/partials/menu_maps.html' %}<hr class="menu-separator">{{ block.super }}{% endblock %}
+
+{% block main_content %}
+
+<div class="card">
+    <h2>{% block form_title %}Edit map{% endblock %}</h2>
+    <form id="form-note-edit" action="{% url 'orgapy:save_map' %}" method="post">
+        {% csrf_token %}
+        {% if map %}<input type="hidden" name="id" value="{{map.id}}" />{% endif %}
+        <p>
+            <label for="input-title">Title</label>
+            <input id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ map.title }}{% endif %}" />
+        </p>
+        <p>
+            <label class="toggle">
+                <input type="checkbox" name="public" {% if map.public %}checked{% endif %} />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Public</span>
+            </label>
+        </p>
+        <p>
+            <label class="toggle">
+                <input type="checkbox" name="pinned" {% if map.pinned %}checked{% endif %} />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Pinned</span>
+            </label>
+        </p>
+        <p>
+            <label class="toggle">
+                <input type="checkbox" name="hidden" {% if map.hidden %}checked{% endif %} />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Hidden</span>
+            </label>
+        </p>
+        <div class="row">
+            <button>Save</button>
+        </div>
+    </form>
+</div>
+
+{% endblock main_content %}

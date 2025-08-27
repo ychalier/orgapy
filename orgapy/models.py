@@ -34,7 +34,7 @@ class Settings(models.Model):
 
 
 class Category(models.Model):
-    """Represent a general note category"""
+    """Represent a general category"""
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -89,12 +89,6 @@ class Note(models.Model):
 
     def _content_preprocess(self):
         return self.content
-
-    def get_modification_date_display(self):
-        now = datetime.datetime.now()
-        if self.date_modification.date() == now.date():
-            return self.date_modification.strftime("%H:%M")
-        return self.date_modification.strftime("%Y-%m-%d")
 
     @staticmethod
     def get_class():
@@ -198,10 +192,12 @@ class Quote(models.Model):
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.reference_nomarkup }"
 
-    def get_modification_date_display(self):
+    def date_modification_display(self):
         now = datetime.datetime.now()
-        if self.date_modification.date() == now.date():
-            return self.date_modification.strftime("%H:%M")
+        if now.date() == self.date_modification.date():
+            return "Today"
+        elif now.year == self.date_modification.year:
+            return self.date_modification.strftime("%m-%d")
         return self.date_modification.strftime("%Y-%m-%d")
 
     def get_absolute_url(self):
@@ -376,6 +372,9 @@ class Sheet(models.Model):
     public = models.BooleanField(default=False)
     group = models.ForeignKey("SheetGroup", on_delete=models.SET_NULL, null=True, blank=True)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
+    categories = models.ManyToManyField("Category", blank=True)
+    pinned = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False)
 
     class Meta:
 
@@ -392,10 +391,12 @@ class Sheet(models.Model):
     def get_absolute_url(self):
         return reverse("orgapy:sheet", kwargs={"sid": self.id})
 
-    def get_modification_date_display(self):
+    def date_modification_display(self):
         now = datetime.datetime.now()
-        if self.date_modification.date() == now.date():
-            return self.date_modification.strftime("%H:%M")
+        if now.date() == self.date_modification.date():
+            return "Today"
+        elif now.year == self.date_modification.year:
+            return self.date_modification.strftime("%m-%d")
         return self.date_modification.strftime("%Y-%m-%d")
 
     @staticmethod
@@ -414,6 +415,9 @@ class Map(models.Model):
     config = models.TextField(blank=True, null=True)
     public = models.BooleanField(default=False)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
+    categories = models.ManyToManyField("Category", blank=True)
+    pinned = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False)
 
     class Meta:
 
@@ -429,6 +433,14 @@ class Map(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:map", kwargs={"mid": self.id})
+    
+    def date_modification_display(self):
+        now = datetime.datetime.now()
+        if now.date() == self.date_modification.date():
+            return "Today"
+        elif now.year == self.date_modification.year:
+            return self.date_modification.strftime("%m-%d")
+        return self.date_modification.strftime("%Y-%m-%d")
 
     @staticmethod
     def get_class():

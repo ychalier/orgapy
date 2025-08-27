@@ -12,18 +12,6 @@
 }
 
 /**
- * Note table
- */
-
-.note-date-hint {
-    position: relative;
-    color: #888;
-    font-size: x-small;
-    text-transform: uppercase;
-    top: .3rem;
-}
-
-/**
  * Note form
  */
 

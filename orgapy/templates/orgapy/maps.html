@@ -1,27 +1,17 @@
-{% extends "orgapy/layout/skeleton.html" %}
-{% load static %}
+{% extends "orgapy/layout/objects.html" %}
 
 {% block title %}{% block subtitle %}Maps &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block menu %}{% include 'orgapy/partials/menu_maps.html' %}<hr class="menu-separator">{{ block.super }}{% endblock menu %}
+{% block menu %}
+{% include 'orgapy/partials/menu_maps.html' %}
+{{ block.super }}
+{% endblock menu %}
 
-{% block main_content %}
-
-{% if maps %}
-<div class="card card-oneline">
-    {% for map in maps %}
-    <div class="oneline oneline-striped">{% include 'orgapy/partials/map_list_item.html' %}</div>
-    {% endfor %}
-</div>
-{% else %}
+{% block empty %}
 <div class="card">
     <p>You have no map.</p>
     <div class="card-commands">
         <a class="button button-primary" href="{% url 'orgapy:create_map' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-map-2-line"></i> Create map</a>
     </div>
 </div>
-{% endif %}
-
-<script>document.querySelectorAll(".show-on-parent-hover .dropdown").forEach(bindDropdown);</script>
-
-{% endblock main_content %}
+{% endblock empty %}

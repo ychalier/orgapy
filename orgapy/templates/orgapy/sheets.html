@@ -1,70 +1,17 @@
-{% extends "orgapy/layout/skeleton.html" %}
-{% load static %}
+{% extends "orgapy/layout/objects.html" %}
 
 {% block title %}{% block subtitle %}Sheets &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block menu %}
 {% include 'orgapy/partials/menu_sheets.html' %}
-<li class="menu-item"><button onclick="showModal('modal-create-sheet-group')"><i class="ri-add-line"></i> Create sheet group</a></li>
-<hr class="menu-separator">
 {{ block.super }}
-{% endblock %}
+{% endblock menu %}
 
-{% block main_content %}
-
-{% if groups or standalone_sheets %}
-
-<div class="card card-oneline">
-    {% for group in groups %}
-    <div class="oneline oneline-striped">
-        <details class="fullwidth">
-            <summary>
-                <a class="link-hidden" href="{{group.get_absolute_url}}">{{ group.title }}</a>
-                <span class="show-on-parent-hover">
-                    <a href="{% url 'orgapy:edit_sheet_group' sid=group.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
-                    <a href="{% url 'orgapy:delete_sheet_group' sid=group.id %}" class="link-confirm button-inline" message="Please confirm deletion of '{{ group.title }}'" title="Delete"><i class="ri-delete-bin-line"></i></a>
-                </span>
-            </summary>
-            <div class="itemize">
-                {% for sheet in group.sheet_set.all %}
-                <div>{% include 'orgapy/partials/sheet_list_item.html' %}</div>
-                {% endfor %}
-            </div>
-        </details>
-    </div>
-    {% endfor %}
-    {% for sheet in standalone_sheets %}
-    <div class="oneline oneline-striped">{% include 'orgapy/partials/sheet_list_item.html' %}</div>
-    {% endfor %}
-</div>
-{% else %}
+{% block empty %}
 <div class="card">
     <p>You have no sheet.</p>
     <div class="card-commands">
         <a class="button button-primary" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-table-line"></i> Create sheet</a>
     </div>
 </div>
-{% endif %}
-
-<div id="modal-create-sheet-group" class="modal">
-    <span class="modal-overlay" onclick="closeModal('modal-create-sheet-group')"></span>
-    <div class="modal-container">
-        <form method="post" action="{% url 'orgapy:create_sheet_group' %}?next={{ request.path }}">
-            {% csrf_token %}
-            <div class="card">
-                <b>Create sheet group</b>
-                <p>
-                    <label for="input-sheet-group-title">Title</label>
-                    <input required type="text" name="title" placeholder="My Sheet Group" id="input-sheet-group-title" />
-                </p>
-                <div class="row">
-                    <button>Add</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>document.querySelectorAll(".show-on-parent-hover .dropdown").forEach(bindDropdown);</script>
-
-{% endblock main_content %}
+{% endblock empty %}

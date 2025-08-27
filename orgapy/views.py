@@ -167,24 +167,24 @@ def save_sheet_core(request):
     title = request.POST.get("title", "").strip()
     description = request.POST.get("content", "").strip()
     is_public = "public" in request.POST
-    group_id = request.POST.get("group", "")
-    group = None
-    if group_id != "":
-        group = models.SheetGroup.objects.get(user=request.user, id=int(group_id))
+    is_pinned = "pinned" in request.POST
+    is_hidden = "hidden" in request.POST
     if original_sheet is None:
         sheet = models.Sheet.objects.create(
             user=request.user,
             title=title,
             description=description,
             public=is_public,
-            group=group,
+            pinned=is_pinned,
+            hidden=is_hidden
         )
     else:
         sheet = original_sheet
         sheet.title = title
         sheet.description = description
         sheet.public = is_public
-        sheet.group = group
+        sheet.pinned = is_pinned
+        sheet.hidden = is_hidden
     sheet.date_modification = timezone.now()
     sheet.save()
     return sheet
@@ -199,16 +199,22 @@ def save_map_core(request):
         raise PermissionDenied
     title = request.POST.get("title", "").strip()
     is_public = "public" in request.POST
+    is_pinned = "pinned" in request.POST
+    is_hidden = "hidden" in request.POST
     if original_map is None:
         mmap = models.Map.objects.create(
             user=request.user,
             title=title,
             public=is_public,
+            pinned=is_pinned,
+            hidden=is_hidden,
         )
     else:
         mmap = original_map
         mmap.title = title
         mmap.public = is_public
+        mmap.pinned = is_pinned
+        mmap.hidden = is_hidden
     mmap.date_modification = timezone.now()
     mmap.save()
     return mmap
@@ -340,68 +346,6 @@ def view_search(request):
     })
 
 
-@permission_required("orgapy.view_note")
-def view_notes(request):
-    page_size = 24
-    query = request.GET.get("query", "")
-    category = request.GET.get("category", "")    
-    if len(query) > 0 and query[0] == "#":
-        category = query[1:]
-    base_objects = models.Note.objects.filter(user=request.user)
-    show_hidden = request.GET.get("hidden") == "1"
-    if show_hidden:
-        base_objects = base_objects.filter(hidden=True)
-    else:
-        base_objects = base_objects.filter(hidden=False)
-    if "uncategorized" in request.GET:
-        base_objects = base_objects.filter(categories__isnull=True)
-    if len(category) > 0:
-        objects = base_objects.filter(categories__name__exact=category)
-    elif len(query) > 0:
-        objects = base_objects.filter(Q(title__contains=query) | Q(content__contains=query))
-    else:
-        objects = base_objects
-    if len(objects) == 1 and models.Note.objects.count() > 1 and not show_hidden:
-        return redirect("orgapy:note", nid=objects[0].id)
-    paginator = Paginator(objects.order_by(
-        "-pinned",
-        "-date_modification",
-        "-date_access",
-    ), page_size)
-    page = request.GET.get("page")
-    notes = paginator.get_page(page)
-    return render(request, "orgapy/notes.html", {
-        "notes": notes,
-        "query": query,
-        "category": category,
-        "note_paginator": pretty_paginator(notes, query=query, hidden=int(show_hidden)),
-        "categories": models.Category.objects.all().order_by("name"),
-        **getenv("notes"),
-    })
-
-
-@permission_required("orgapy.add_note")
-def view_create_note(request):
-    categories = models.Category.objects.filter(user=request.user)
-    return render(request, "orgapy/create_note.html", {
-        "categories": categories,
-        "note_category_ids": {},
-        **getenv("notes"),
-    })
-
-
-@permission_required("orgapy.change_note")
-def view_save_note(request):
-    if request.method == "POST":
-        try:
-            note = save_note_core(request)
-        except ConflictError:
-            return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
-        save_note_categories(request, note)
-        return redirect("orgapy:note", nid=note.id)
-    raise BadRequest
-
-
 @permission_required("orgapy.view_category")
 def view_categories(request):
     return render(request, "orgapy/categories.html", {
@@ -437,6 +381,154 @@ def view_delete_category(request, cid):
         if category.user == request.user:
             category.delete()
     return redirect("orgapy:categories")
+
+
+def view_objects(
+        request,
+        object_class: type[models.Note] | type[models.Sheet] | type[models.Map],
+        template_name: str,
+        env_name: str,
+        page_size: int = 24):
+    query = request.GET.get("query", "")
+    category = request.GET.get("category", "")    
+    if len(query) > 0 and query[0] == "#":
+        category = query[1:]
+    base_objects = object_class.objects.filter(user=request.user)
+    show_hidden = request.GET.get("hidden") == "1"
+    if show_hidden:
+        base_objects = base_objects.filter(hidden=True)
+    else:
+        base_objects = base_objects.filter(hidden=False)
+    if "uncategorized" in request.GET:
+        base_objects = base_objects.filter(categories__isnull=True)
+    if len(category) > 0:
+        objects = base_objects.filter(categories__name__exact=category)
+    elif len(query) > 0:
+        if object_class == models.Note:
+            objects = base_objects.filter(Q(title__contains=query) | Q(content__contains=query))
+        else:
+            objects = base_objects.filter(title__contains=query)
+    else:
+        objects = base_objects
+    if len(objects) == 1 and object_class.objects.count() > 1 and not show_hidden:
+        return redirect(objects[0].get_absolute_url())
+    paginator = Paginator(objects.order_by(
+        "-pinned",
+        "-date_modification",
+        "-date_access",
+    ), page_size)
+    page = request.GET.get("page")
+    objects = paginator.get_page(page)
+    return render(request, template_name, {
+        "objects": objects,
+        "query": query,
+        "category": category,
+        "paginator": pretty_paginator(objects, query=query, hidden=int(show_hidden)),
+        "categories": models.Category.objects.filter(user=request.user).order_by("name"),
+        **getenv(env_name),
+    })
+
+
+@permission_required("orgapy.change_note")
+@permission_required("orgapy.change_sheet")
+@permission_required("orgapy.change_map")
+def view_edit(request, active, object_id):
+    if active == "notes":
+        return view_edit_note(request, object_id)
+    if active == "sheets":
+        return view_edit_sheet(request, object_id)
+    if active == "maps":
+        return view_edit_map(request, object_id)
+    raise BadRequest(f"Unknown environment '{active}'")
+
+
+@permission_required("orgapy.change_note")
+@permission_required("orgapy.change_sheet")
+@permission_required("orgapy.change_map")
+def view_toggle_pin(request, active, object_id):
+    if active == "notes":
+        return view_toggle_note_pin(request, object_id)
+    if active == "sheets":
+        return view_toggle_sheet_pin(request, object_id)
+    if active == "maps":
+        return view_toggle_map_pin(request, object_id)
+    raise BadRequest(f"Unknown environment '{active}'")
+
+
+@permission_required("orgapy.change_note")
+@permission_required("orgapy.change_sheet")
+@permission_required("orgapy.change_map")
+def view_toggle_public(request, active, object_id):
+    if active == "notes":
+        return view_toggle_note_public(request, object_id)
+    if active == "sheets":
+        return view_toggle_sheet_public(request, object_id)
+    if active == "maps":
+        return view_toggle_map_public(request, object_id)
+    raise BadRequest(f"Unknown environment '{active}'")
+
+
+@permission_required("orgapy.view_note")
+@permission_required("orgapy.view_sheet")
+@permission_required("orgapy.view_map")
+def view_export(request, active, object_id):
+    if active == "notes":
+        return view_export_note(request, object_id)
+    if active == "sheets":
+        return view_export_sheet(request, object_id)
+    if active == "maps":
+        return view_export_map(request, object_id)
+    raise BadRequest(f"Unknown environment '{active}'")
+
+
+@permission_required("orgapy.delete_note")
+@permission_required("orgapy.delete_sheet")
+@permission_required("orgapy.delete_map")
+def view_delete(request, active, object_id):
+    if active == "notes":
+        return view_delete_note(request, object_id)
+    if active == "sheets":
+        return view_delete_sheet(request, object_id)
+    if active == "maps":
+        return view_delete_map(request, object_id)
+    raise BadRequest(f"Unknown environment '{active}'")
+
+
+def view_share(request, active: str, nonce: str):
+    if active == "notes":
+        return view_note(request, nonce)
+    if active == "sheets":
+        return view_sheet(request, nonce)
+    if active == "maps":
+        return view_map(request, nonce)
+    raise BadRequest(f"Unknown environment '{active}'")
+
+
+@permission_required("orgapy.view_note")
+def view_notes(request):
+    return view_objects(request, models.Note, "orgapy/notes.html", "notes")
+
+
+@permission_required("orgapy.add_note")
+def view_create_note(request):
+    categories = models.Category.objects.filter(user=request.user)
+    return render(request, "orgapy/create_note.html", {
+        "categories": categories,
+        "note_category_ids": {},
+        **getenv("notes"),
+    })
+
+
+@permission_required("orgapy.change_note")
+def view_save_note(request):
+    if request.method == "POST":
+        try:
+            note = save_note_core(request)
+        except ConflictError:
+            return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
+        save_note_categories(request, note)
+        return redirect("orgapy:note", nid=note.id)
+    raise BadRequest
 
 
 def view_note(request, nid):
@@ -496,6 +588,26 @@ def view_toggle_note_pin(request, nid):
     if "next" in request.GET:
         return redirect(request.GET["next"])
     return redirect("orgapy:notes")
+
+
+@permission_required("orgapy.change_sheet")
+def view_toggle_sheet_pin(request, sid):
+    sheet = find_object(models.Sheet, sid, request.user)
+    sheet.pinned = not sheet.pinned
+    sheet.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:sheets")
+
+
+@permission_required("orgapy.change_map")
+def view_toggle_map_pin(request, mid):
+    mmap = find_object(models.Map, mid, request.user)
+    mmap.pinned = not mmap.pinned
+    mmap.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:maps")
 
 
 @permission_required("orgapy.change_note")
@@ -604,20 +716,7 @@ def view_edit_quote(request, qid):
 
 @permission_required("orgapy.view_sheet")
 def view_sheets(request):
-    query = request.GET.get("query", "")
-    groups = None
-    standalone_sheets = None
-    if query:
-        standalone_sheets = models.Sheet.objects.filter(user=request.user).filter(Q(title__contains=query) | Q(description__contains=query))
-    else:
-        groups = models.SheetGroup.objects.filter(user=request.user)
-        standalone_sheets = models.Sheet.objects.filter(user=request.user, group__isnull=True)
-    return render(request, "orgapy/sheets.html", {
-        "groups": groups,
-        "standalone_sheets": standalone_sheets,
-        "query": query,
-        **getenv("sheets"),
-    })
+    return view_objects(request, models.Sheet, "orgapy/sheets.html", "sheets")
 
 
 @permission_required("orgapy.add_sheet")
@@ -720,10 +819,8 @@ def view_sheet(request, sid):
 @permission_required("orgapy.change_sheet")
 def view_edit_sheet(request, sid):
     sheet = find_object(models.Sheet, sid)
-    sheet_groups = models.SheetGroup.objects.filter(user=request.user)
     return render(request, "orgapy/edit_sheet.html", {
         "sheet": sheet,
-        "sheet_groups": sheet_groups,
         **getenv("sheets"),
     })
 
@@ -757,21 +854,21 @@ def view_toggle_sheet_public(request, sid):
 
 @permission_required("orgapy.view_map")
 def view_maps(request):
-    query = request.GET.get("query", "")
-    if query:
-        maps = models.Map.objects.filter(user=request.user).filter(title__contains=query)
-    else:
-        maps = models.Map.objects.filter(user=request.user)
-    return render(request, "orgapy/maps.html", {
-        "maps": maps,
-        "query": query,
-        **getenv("maps"),
-    })
+    return view_objects(request, models.Map, "orgapy/maps.html", "maps")
 
 
 @permission_required("orgapy.add_map")
 def view_create_map(request):
     return render(request, "orgapy/create_map.html", {
+        **getenv("maps"),
+    })
+
+
+@permission_required("orgapy.change_map")
+def view_edit_map(request, mid):
+    mmap = find_object(models.Map, mid)
+    return render(request, "orgapy/edit_map.html", {
+        "map": mmap,
         **getenv("maps"),
     })
 

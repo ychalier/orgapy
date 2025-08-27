@@ -1,42 +1,18 @@
-{% extends "orgapy/layout/skeleton.html" %}
-{% load static %}
+{% extends "orgapy/layout/objects.html" %}
 
 {% block title %}{% block subtitle %}Notes &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block head %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
-{% endblock %}
-
 {% block menu %}
-<li class="menu-item"><a href="?hidden=1"><i class="ri-eye-line"></i> View Hidden</a></li>
-<li class="menu-item"><a href="{% url 'orgapy:notally' %}"><i class="ri-upload-line"></i> Notally</a></li>
-<hr class="menu-separator">
 {% include 'orgapy/partials/menu_notes.html' %}
-<hr class="menu-separator">
+<li class="menu-item"><a href="{% url 'orgapy:notally' %}"><i class="ri-upload-line"></i> Notally</a></li>
 {{ block.super }}
 {% endblock menu %}
 
-{% block main_content %}
-
-{% if notes %}
-<div class="card card-oneline">
-    {% for note in notes %}
-    {% include 'orgapy/partials/note_list_item.html' %}
-    {% endfor %}
-</div>
-
-{% else %}
+{% block empty %}
 <div class="card">
     <p>You have no note.</p>
     <div class="card-commands">
         <a class="button button-primary" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-sticky-note-line"></i> Create note</a>
     </div>
 </div>
-{% endif %}
-
-{% include 'orgapy/partials/pagination.html' with paginator=note_paginator %}
-
-<script>document.querySelectorAll(".show-on-parent-hover .dropdown").forEach(bindDropdown);</script>
-
-{% endblock main_content %}
+{% endblock empty %}
