@@ -17,6 +17,17 @@
 <div class="card card-oneline">
     {% for item in objects %}
     <div class="oneline oneline-striped">
+        {% if mixed %}
+        {% if item.active == "notes" %}
+        <i title="Note" class="ri-sticky-note-line object-icon"></i>
+        {% elif item.active == "quotes" %}
+        <i title="Quote" class="ri-double-quotes-l object-icon"></i>
+        {% elif item.active == "sheets" %}
+        <i title="Sheet" class="ri-table-line object-icon"></i>
+        {% elif item.active == "maps" %}
+        <i title="Map" class="ri-map-2-line object-icon"></i>
+        {% endif %}
+        {% endif %}
         <span class="item-date-hint">{{ item.date_modification_display }}</span>
         {% if item.hidden %}
         <span title="Hidden"><i class="ri-eye-line"></i></span>
@@ -62,7 +73,7 @@
 {% else %}
 {% block empty %}
 <div class="card">
-    <p>No object found.</p>
+    <p>Nothing found 😔</p>
 </div>
 {% endblock empty %}
 {% endif %}

@@ -18,6 +18,16 @@ def generate_nonce() -> str:
     return "".join(choices)
 
 
+def truncate(string: str, max_length: int = 20) -> str:
+    if len(string) <= max_length:
+        return string
+    return string[:max_length - 1] + "…"
+
+
+def ravel(string: str):
+    return string.replace("\n", " ")
+
+
 class Settings(models.Model):
 
     id = models.BigAutoField(primary_key=True)
@@ -50,6 +60,10 @@ class Category(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:category", kwargs={"name": self.name})
+    
+    @property
+    def count(self) -> int:
+        return self.notes.count() + self.sheets.count() + self.maps.count() # type: ignore
 
 
 class Note(models.Model):
@@ -204,7 +218,7 @@ class Quote(models.Model):
         return self.date_modification.strftime("%Y-%m-%d")
 
     def get_absolute_url(self):
-        return reverse("orgapy:quote", kwargs={"objet_id": self.id})
+        return reverse("orgapy:quote", kwargs={"object_id": self.id})
 
     @staticmethod
     def get_class():
@@ -217,6 +231,10 @@ class Quote(models.Model):
     @property
     def reference_nomarkup(self) -> str:
         return re.sub(r"\*", r"", self.reference)
+    
+    @property
+    def title(self) -> str:
+        return ravel(self.content)
 
 
 class Project(models.Model):

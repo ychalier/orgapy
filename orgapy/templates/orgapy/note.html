@@ -27,7 +27,7 @@
         {% if not readonly %}
         {% if note.categories.all %}
         {% for category in note.categories.all %}
-        <a href="{% url 'orgapy:notes' %}?query=%23{{category.name}}">#{{category.name}}</a>
+        <a href="{{ category.get_absolute_url }}">#{{ category.name }}</a>
         {% endfor %}
         {% else %}
         <a href="{% url 'orgapy:notes' %}?uncategorized=1">uncategorized</a>

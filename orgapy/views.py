@@ -222,7 +222,7 @@ def save_map_core(request: HttpRequest) -> Map:
         mmap.pinned = is_pinned
         mmap.hidden = is_hidden
     mmap.date_modification = timezone.now()
-    save_object_categories(request, map)
+    save_object_categories(request, mmap)
     mmap.save()
     return mmap
 
@@ -259,43 +259,29 @@ def compare_objective_histories(user: LoggedUser, name: str, before: str | None,
 
 def getenv(name: str) -> dict[str, str]:
     match name:
+        case "general":
+            return {}
         case "projects":
             return {
                 "active": "projects",
-                "search_url": reverse("orgapy:search"),
-                "suggestions_route": "suggestions",
-            }
-        case "general":
-            return {
-                "search_url": reverse("orgapy:search"),
-                "suggestions_route": "suggestions",
             }
         case "notes":
             return {
                 "active": "notes",
-                "search_url": reverse("orgapy:notes"),
-                "suggestions_route": "note-suggestions",
             }
         case "quotes":
             return {
                 "active": "quotes",
-                "search_url": reverse("orgapy:quotes_search"),
             }
         case "sheets":
             return {
                 "active": "sheets",
-                "search_url": reverse("orgapy:sheets"),
-                "suggestions_route": "sheet-suggestions",
             }
         case "maps":
             return {
                 "active": "maps",
-                "search_url": reverse("orgapy:maps"),
-                "suggestions_route": "map-suggestions",
             }
-        case "categories":
-            return {}
-    return {}
+    raise ValueError(f"Unknown env '{name}'")
 
 
 def get_or_create_settings(user: LoggedUser) -> Settings:
@@ -350,6 +336,7 @@ def view_search(request: HttpRequest) -> HttpResponse:
     page = request.GET.get("page")
     objects = paginator.get_page(page)
     return render(request, "orgapy/search.html", {
+        "mixed": True,
         "objects": objects,
         "query": query,
         "paginator": pretty_paginator(objects, query=query),
@@ -362,7 +349,7 @@ def view_categories(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/categories.html", {
         "categories": Category.objects.filter(user=request.user),
         "uncategorized": Note.objects.filter(user=request.user, categories__isnull=True).count(),
-        **getenv("categories"),
+        **getenv("general"),
     })
 
 
@@ -377,10 +364,11 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
     page = request.GET.get("page")
     objects = paginator.get_page(page)
     return render(request, "orgapy/category.html", {
+        "mixed": True,
         "objects": objects,
         "category": category,
         "paginator": pretty_paginator(objects),
-        **getenv("categories"),
+        **getenv("general"),
     })
 
 
@@ -399,7 +387,7 @@ def view_edit_category(request: HttpRequest, object_id: str) -> HttpResponse:
                     category.save()
             return render(request, "orgapy/edit_category.html", {
                 "category": category,
-                **getenv("categories"),
+                **getenv("general"),
             })
     return redirect("orgapy:categories")
 
@@ -1223,22 +1211,16 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_complete_task(request)
         case "note-title":
             return api_note_title(request)
-        case "note-suggestions":
-            return api_notes_suggestions(request)
         case "edit-widgets":
             return api_edit_widgets(request)
         case "sheet":
             return api_sheet(request)
         case "save-sheet":
             return api_save_sheet(request)
-        case "sheet-suggestions":
-            return api_sheet_suggestions(request)
         case "map":
             return api_map(request)
         case "save-map":
             return api_save_map(request)
-        case "map-suggestions":
-            return api_map_suggestions(request)
         case "suggestions":
             return api_suggestions(request)
         case "progress":
@@ -1354,11 +1336,13 @@ def api_edit_project(request: HttpRequest) -> HttpResponse:
     else:
         project.checklist = None
 
+    note = None
     if project_data["note"] is not None:
-        note = Note.objects.get(user=request.user, id=int(project_data["note"]))
-        project.note = note
-    else:
-        project.note = None
+        try:
+            note = Note.objects.get(user=request.user, id=int(project_data["note"]))
+        except Note.DoesNotExist:
+            pass
+    project.note = note # type: ignore
 
     project.save()
     return JsonResponse({
@@ -1858,25 +1842,6 @@ def api_title(request: HttpRequest) -> HttpResponse:
     return HttpResponse(query.get().title, content_type="text/plain")
 
 
-@permission_required("orgapy.view_note")
-def api_notes_suggestions(request: HttpRequest) -> HttpResponse:
-    query = request.GET.get("q", "").strip()
-    results = []
-    if len(query) >= 1:
-        results = Note.objects.filter(user=request.user, title__startswith=query)[:5]
-    data = {
-        "results": [
-            {
-                "id": result.id,
-                "title": result.title,
-                "url": result.get_absolute_url()
-            }
-            for result in results
-        ]
-    }
-    return JsonResponse(data)
-
-
 @permission_required("orgapy.change_note")
 def api_edit_widgets(request: HttpRequest) -> HttpResponse:
     object_id = request.POST.get("object_id")
@@ -1960,25 +1925,6 @@ def api_save_sheet(request: HttpRequest) -> HttpResponse:
     })
 
 
-@permission_required("orgapy.view_sheet")
-def api_sheet_suggestions(request: HttpRequest) -> HttpResponse:
-    query = request.GET.get("q", "").strip()
-    results = []
-    if len(query) >= 1:
-        results = Sheet.objects.filter(user=request.user, title__startswith=query)[:5]
-    data = {
-        "results": [
-            {
-                "id": result.id,
-                "title": result.title,
-                "url": result.get_absolute_url()
-            }
-            for result in results
-        ]
-    }
-    return JsonResponse(data)
-
-
 def api_map(request: HttpRequest) -> HttpResponse:
     map_id = request.GET.get("objectId")
     if map_id is None:
@@ -2018,25 +1964,6 @@ def api_save_map(request: HttpRequest) -> HttpResponse:
         "success": True,
         "modification": mmap.date_modification.timestamp()
     })
-
-
-@permission_required("orgapy.view_map")
-def api_map_suggestions(request: HttpRequest) -> HttpResponse:
-    query = request.GET.get("q", "").strip()
-    results = []
-    if len(query) >= 1:
-        results = Map.objects.filter(user=request.user, title__startswith=query)[:5]
-    data = {
-        "results": [
-            {
-                "id": result.id,
-                "title": result.title,
-                "url": result.get_absolute_url()
-            }
-            for result in results
-        ]
-    }
-    return JsonResponse(data)
 
 
 def api_suggestions(request: HttpRequest) -> HttpResponse:

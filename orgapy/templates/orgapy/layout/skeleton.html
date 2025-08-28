@@ -43,8 +43,7 @@
                     <a href="{% url 'orgapy:maps' %}" class="navbar-link {% if active == 'maps' %}active{% endif %}" title="Maps">{% if active == 'maps' %}Maps{% else %}<i class="ri-map-2-line"></i>{% endif %}</a>
                 </div>
                 <div class="navbar-right">
-                    {% if search_url %}
-                    <form id="searchbar" class="searchbar" action="{{ search_url }}" method="get">
+                    <form id="searchbar" class="searchbar" action="{% url 'orgapy:search' %}" method="get">
                         <div class="searchbar-container">         
                             <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search" value="{% if query %}{{query}}{% endif %}" />
                             <i class="searchbar-icon ri-close-line"></i>
@@ -53,7 +52,6 @@
                         <button class="searchbar-search"><i class="ri-search-line"></i></button>
                         <button class="searchbar-search-small"><i class="ri-search-line"></i></button>
                     </form>
-                    {% endif %}
                     <div id="menu-dropdown" class="dropdown">
                         <a class="navbar-link dropdown-toggle" tabindex="0"><i class="ri-menu-line"></i></a>
                         <ul class="menu">
@@ -85,8 +83,8 @@
     <script>
         bindDropdown(document.getElementById("menu-dropdown"));
         bindSearchbarClearIcon(document.getElementById("searchbar"));
-        {% if search_url %}bindSearchButton(document.getElementById("searchbar"), document.querySelector("#searchbar .searchbar-search-small"));{% endif %}
-        {% if suggestions_route %}bindSearchbarSuggestions(document.getElementById("searchbar"), "{{ suggestions_route }}");{% endif %}
+        bindSearchButton(document.getElementById("searchbar"), document.querySelector("#searchbar .searchbar-search-small"));
+        bindSearchbarSuggestions(document.getElementById("searchbar"), "suggestions");
     </script>
     {% endblock %}
 </body>
