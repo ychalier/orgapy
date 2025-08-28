@@ -10,6 +10,7 @@ from django.db.models.functions import Concat
 from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils.text import slugify
+from django.urls import reverse
 
 from ..models import Category, Note, Quote, Sheet, SheetGroup, Map, ProgressCounter, ProgressLog, Calendar
 from .utils import ConflictError, find_object, pretty_paginator, save_object_core, get_or_create_settings, view_objects
@@ -78,9 +79,18 @@ def view_categories(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_category")
 def view_category(request: HttpRequest, name: str) -> HttpResponse:
-    category = find_object(Category, "name", name, request.user)
-    # TODO: how about uncategorized?
-    objects = list(category.notes.filter(user=request.user)) + list(category.sheets.filter(user=request.user)) + list(category.maps.filter(user=request.user)) # type: ignore[attr-defined]
+    if name == "uncategorized":
+        objects = list(Note.objects.filter(user=request.user, categories__isnull=True))\
+            + list(Sheet.objects.filter(user=request.user, categories__isnull=True))\
+            + list(Map.objects.filter(user=request.user, categories__isnull=True))
+        category = {
+            "name": "uncategorized",
+            "get_absolute_url": reverse("orgapy:category", kwargs={"name": "uncategorized"}),
+            "count": len(objects)
+        }
+    else:
+        category = find_object(Category, "name", name, request.user)
+        objects = list(category.notes.filter(user=request.user)) + list(category.sheets.filter(user=request.user)) + list(category.maps.filter(user=request.user)) # type: ignore[attr-defined]
     objects.sort(key=lambda x: [x.pinned, x.date_modification, x.date_access], reverse=True)
     page_size = 24
     paginator = Paginator(objects, page_size)

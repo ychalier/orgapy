@@ -4,7 +4,7 @@ import urllib.parse
 from typing import TypeVar
 
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Page, Paginator
 from django.db.models import Q
 from django.http import HttpRequest, Http404, HttpResponse
@@ -154,6 +154,8 @@ def save_object_core(
             category = Category.objects.get(id=int_id, user=request.user)
         elif Category.objects.filter(name=name, user=request.user).exists():
             category = Category.objects.get(name=name, user=request.user)
+        elif name == "uncategorized":
+            raise BadRequest()
         else:
             category = Category.objects.create(name=name, user=request.user)
         obj.categories.add(category)

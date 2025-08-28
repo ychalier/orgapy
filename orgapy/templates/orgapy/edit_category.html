@@ -12,7 +12,7 @@
 </header>
 
 <div class="card">
-    <p>{{ category.note_set.count }} note{{ category.note_set.count | pluralize }} with this tag.</p>
+    <p>{{ category.count }} object(s) have this tag.</p>
     <form method="post" action="">
         {% csrf_token %}
         <p>

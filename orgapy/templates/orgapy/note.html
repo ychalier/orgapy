@@ -30,7 +30,7 @@
         <a href="{{ category.get_absolute_url }}">#{{ category.name }}</a>
         {% endfor %}
         {% else %}
-        <a href="{% url 'orgapy:notes' %}?uncategorized=1">uncategorized</a>
+        <a href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
         {% endif %}
         · 
         {% endif %}

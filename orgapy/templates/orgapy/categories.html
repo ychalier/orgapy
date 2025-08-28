@@ -20,7 +20,7 @@
     </div>
     {% endfor %}
     <div class="oneline oneline-striped">
-        <a class="oneline-truncate link-hidden" href="{% url 'orgapy:notes' %}?uncategorized=1">Uncategorized ({{ uncategorized }})</a>
+        <a class="oneline-truncate link-hidden" href="{% url 'orgapy:category' name='uncategorized' %}">Uncategorized ({{ uncategorized }})</a>
     </div>
 </div>
 

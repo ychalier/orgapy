@@ -39,7 +39,7 @@
             <a class="link-tenuous" href="{{ category.get_absolute_url }}">#{{category.name}}</a>
             {% endfor%}
             {% else %}
-            <a class="link-tenuous" href="?uncategorized=1">uncategorized</a>
+            <a class="link-tenuous" href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
             {% endif %}
         </span>
         {% if item.pinned %}
