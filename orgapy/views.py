@@ -21,6 +21,7 @@ from .models import Settings, Category, Note, Quote, Sheet, SheetGroup, Map, Pro
 
 
 UserObject = TypeVar("UserObject", Category, Note, Quote, Sheet, Map, ProgressLog)
+CategorizedObject = TypeVar("CategorizedObject", Note, Sheet, Map)
 LoggedUser = AbstractBaseUser
 
 
@@ -114,15 +115,15 @@ def save_note_core(request: HttpRequest) -> Note:
         note.public = is_public
         note.pinned = is_pinned
         note.hidden = is_hidden
-        note.categories.clear()
+        
     note.date_modification = timezone.now()
     note.save()
+    save_object_categories(request, note)
     return note
 
 
-def save_note_categories(request: HttpRequest, note: Note):
-    # NOTE: categories should have been cleared (note.categories.clear())
-    # by calling save_note_core
+def save_object_categories(request: HttpRequest, obj: CategorizedObject):
+    obj.categories.clear()
     name_list = request.POST.get("categories", "").split(";") + request.POST.get("extra", "").split(";")
     for dirty_name in name_list:
         name = dirty_name.lower().strip()
@@ -139,8 +140,7 @@ def save_note_categories(request: HttpRequest, note: Note):
             category = Category.objects.get(name=name, user=request.user)
         else:
             category = Category.objects.create(name=name, user=request.user)
-        note.categories.add(category)
-    note.save()
+        obj.categories.add(category)
 
 
 def add_quote(request: HttpRequest, reference: str, content: str) -> Quote:
@@ -191,6 +191,7 @@ def save_sheet_core(request: HttpRequest) -> Sheet:
         sheet.pinned = is_pinned
         sheet.hidden = is_hidden
     sheet.date_modification = timezone.now()
+    save_object_categories(request, sheet)
     sheet.save()
     return sheet
 
@@ -221,6 +222,7 @@ def save_map_core(request: HttpRequest) -> Map:
         mmap.pinned = is_pinned
         mmap.hidden = is_hidden
     mmap.date_modification = timezone.now()
+    save_object_categories(request, map)
     mmap.save()
     return mmap
 
@@ -556,7 +558,6 @@ def view_save_note(request: HttpRequest) -> HttpResponse:
             note = save_note_core(request)
         except ConflictError:
             return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
-        save_note_categories(request, note)
         return redirect("orgapy:note", object_id=note.id)
     raise BadRequest()
 
@@ -583,11 +584,11 @@ def view_note(request: HttpRequest, object_id: str) -> HttpResponse:
 def view_edit_note(request: HttpRequest, object_id: str) -> HttpResponse:
     note = find_object(Note, "id", object_id, request.user)
     categories = Category.objects.filter(user=request.user).order_by("name")
-    note_category_ids = [category.id for category in note.categories.all()]
+    selected_category_ids = [category.id for category in note.categories.all()]
     return render(request, "orgapy/edit_note.html", {
         "note": note,
         "categories": categories,
-        "note_category_ids": note_category_ids,
+        "selected_category_ids": selected_category_ids,
         **getenv("notes"),
     })
 
@@ -850,8 +851,12 @@ def view_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.change_sheet")
 def view_edit_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
     sheet = find_object(Sheet, "id", object_id, request.user)
+    categories = Category.objects.filter(user=request.user).order_by("name")
+    selected_category_ids = [category.id for category in sheet.categories.all()]
     return render(request, "orgapy/edit_sheet.html", {
         "sheet": sheet,
+        "categories": categories,
+        "selected_category_ids": selected_category_ids,
         **getenv("sheets"),
     })
 
@@ -898,8 +903,12 @@ def view_create_map(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.change_map")
 def view_edit_map(request: HttpRequest, object_id: str) -> HttpResponse:
     mmap = find_object(Map, "id", object_id, request.user)
+    categories = Category.objects.filter(user=request.user).order_by("name")
+    selected_category_ids = [category.id for category in mmap.categories.all()]
     return render(request, "orgapy/edit_map.html", {
         "map": mmap,
+        "categories": categories,
+        "selected_category_ids": selected_category_ids,
         **getenv("maps"),
     })
 

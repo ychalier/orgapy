@@ -16,6 +16,17 @@
             <label for="input-title">Title</label>
             <input id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ sheet.title }}{% endif %}" />
         </p>
+        <div>
+            <label for="categories-input-new">Categories</label>
+            <div id="categories-input">
+                <input id="categories-input-hidden" type="hidden" name="categories" value="{% for category in sheet.categories.all %}{% if not forloop.first %};{% endif %}{{ category.id }}{% endfor %}" />
+                <div id="categories-input-current"></div>
+                <div id="categories-suggestions">
+                    <input id="categories-input-new" type="text" placeholder="new category" />
+                    <div id="categories-suggestions-items"></div>
+                </div>
+            </div>
+        </div>
         <p>
             <label for="input-content">Description</label>
             <textarea id="input-content" rows="12" name="content" placeholder="Write content using Markdown">{{ sheet.description }}</textarea>
@@ -46,5 +57,12 @@
         </div>
     </form>
 </div>
-
 {% endblock main_content %}
+
+{% block body_scripts %}
+{{ block.super }}
+<script>
+    const CATEGORIES = [{% for category in categories %}{% if not forloop.first %}, {% endif %}{name: "{{ category.name }}", id: {{ category.id }}}{% endfor %}];
+    setupCategoryInput();
+</script>
+{% endblock body_scripts %}
