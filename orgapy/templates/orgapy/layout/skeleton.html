@@ -59,6 +59,7 @@
                             <li class="menu-item"><a href="{% url 'orgapy:about' %}"><i class="ri-information-line"></i> About</a><li>
                             {% if request.user.is_authenticated %}
                             <li class="menu-item"><a href="{% url 'orgapy:progress' %}"><i class="ri-bar-chart-2-line"></i> Progress</a><li>
+                            <li class="menu-item"><a href="{% url 'orgapy:categories' %}"><i class="ri-hashtag"></i> Categories</a></li>
                             {% if request.user.settings %}
                             <li class="menu-item"><a href="{% url 'orgapy:settings' %}?ref={{ request.path }}"><i class="ri-settings-2-line"></i> Settings</a><li>
                             {% endif %}
