@@ -1216,14 +1216,13 @@ a.reference {
  * Object list
  */
 
-.item-date-hint {
+.obj-date-hint {
     position: relative;
     color: #888;
     font-size: x-small;
     text-transform: uppercase;
     top: .3rem;
 }
-
 
 /**
  * Categories input

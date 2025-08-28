@@ -12,7 +12,7 @@ from django.shortcuts import redirect, render
 from django.utils.text import slugify
 from django.urls import reverse
 
-from ..models import Category, Note, Quote, Sheet, SheetGroup, Map, ProgressCounter, ProgressLog, Calendar
+from ..models import Category, Note, Quote, Sheet, Map, ProgressCounter, ProgressLog, Calendar
 from .utils import ConflictError, find_object, pretty_paginator, save_object_core, get_or_create_settings, view_objects
 
 
@@ -449,9 +449,7 @@ def view_sheets(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.add_sheet")
 def view_create_sheet(request: HttpRequest) -> HttpResponse:
-    sheet_groups = SheetGroup.objects.filter(user=request.user)
     return render(request, "orgapy/create_sheet.html", {
-        "sheet_groups": sheet_groups,
         "active": "sheets",
     })
 
@@ -462,64 +460,6 @@ def view_save_sheet(request: HttpRequest) -> HttpResponse:
         sheet = save_object_core(request, Sheet, ["description"])
         return redirect("orgapy:sheet", object_id=sheet.id)
     raise PermissionDenied()
-
-
-@permission_required("orgapy.add_sheetgroup")
-def view_create_sheet_group(request: HttpRequest) -> HttpResponse:
-    if "title" not in request.POST:
-        raise BadRequest()
-    title = request.POST.get("title")
-    SheetGroup.objects.create(user=request.user, title=title)
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:sheets")
-
-
-@permission_required("orgapy.change_sheetgroup")
-def view_save_sheet_group(request: HttpRequest) -> HttpResponse:
-    object_id = request.POST.get("id", "")
-    if not object_id:
-        raise BadRequest()
-    if not SheetGroup.objects.filter(user=request.user, id=int(object_id)).exists():
-        raise Http404()
-    group = SheetGroup.objects.filter(user=request.user, id=int(object_id)).get()
-    title = request.POST.get("title", "")
-    if not title:
-        raise BadRequest()
-    group.title = title
-    group.save()
-    return redirect("orgapy:sheet_group", object_id=group.id)
-
-
-@permission_required("orgapy.view_sheetgroup")
-def view_sheet_group(request: HttpRequest, object_id: str) -> HttpResponse:
-    if not SheetGroup.objects.filter(user=request.user, id=int(object_id)).exists():
-        raise Http404()
-    group = SheetGroup.objects.filter(user=request.user, id=int(object_id)).get()
-    return render(request, "orgapy/sheet_group.html", {
-        "group": group,
-        "active": "sheets",
-    })
-
-
-@permission_required("orgapy.change_sheetgroup")
-def view_edit_sheet_group(request: HttpRequest, object_id: str) -> HttpResponse:
-    if not SheetGroup.objects.filter(user=request.user, id=int(object_id)).exists():
-        raise Http404()
-    group = SheetGroup.objects.filter(user=request.user, id=int(object_id)).get()
-    return render(request, "orgapy/edit_sheet_group.html", {
-        "group": group,
-        "active": "sheets",
-    })
-
-
-@permission_required("orgapy.delete_sheetgroup")
-def view_delete_sheet_group(request: HttpRequest, object_id: str) -> HttpResponse:
-    if not SheetGroup.objects.filter(user=request.user, id=int(object_id)).exists():
-        raise Http404()
-    group = SheetGroup.objects.filter(user=request.user, id=int(object_id)).get()
-    group.delete()
-    return redirect("orgapy:sheets")
 
 
 def view_sheet(request: HttpRequest, object_id: str) -> HttpResponse:

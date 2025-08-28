@@ -360,9 +360,6 @@ class SheetGroup(models.Model):
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
 
-    def get_absolute_url(self):
-        return reverse("orgapy:sheet_group", kwargs={"object_id": self.id})
-
 
 class Sheet(models.Model):
 

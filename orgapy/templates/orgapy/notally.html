@@ -26,8 +26,8 @@
 Imported {{ notes|length }} note{{ notes|length|pluralize }}.
 
 <div class="card card-oneline">
-    {% for note in notes %}
-    {% include 'orgapy/partials/note_list_item.html' %}
+    {% for obj in notes %}
+    {% include 'orgapy/partials/object_list_item.html' %}
     {% endfor %}
 </div>
 {% else %}
