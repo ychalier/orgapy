@@ -1,5 +1,6 @@
 from django.urls import path
-from . import views
+from .views import base as views
+from .views.api import api
 
 app_name = "orgapy"
 
@@ -66,5 +67,5 @@ urlpatterns = [
     path("<active>/<object_id>/pin", views.view_toggle_pin, name="toggle_pin"),
     path("<active>/<object_id>/public", views.view_toggle_public, name="toggle_public"),
     path("<active>/<nonce>/share", views.view_share, name="share"),
-    path("api", views.api, name="api"),
+    path("api", api, name="api"),
 ]

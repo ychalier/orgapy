@@ -1,31 +1,15 @@
 import datetime
 import json
-import random
 import re
 
+import caldav
 from django.db import models
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-import caldav
-
-
-def generate_nonce() -> str:
-    tokens = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
-    choices = random.choices(tokens, k=12)
-    return "".join(choices)
-
-
-def truncate(string: str, max_length: int = 20) -> str:
-    if len(string) <= max_length:
-        return string
-    return string[:max_length - 1] + "…"
-
-
-def ravel(string: str):
-    return string.replace("\n", " ")
+from .utils import generate_nonce, ravel
 
 
 class Settings(models.Model):
@@ -60,7 +44,7 @@ class Category(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:category", kwargs={"name": self.name})
-    
+
     @property
     def count(self) -> int:
         return self.notes.count() + self.sheets.count() + self.maps.count() # type: ignore
@@ -110,10 +94,6 @@ class Note(models.Model):
 
     def _content_preprocess(self):
         return self.content
-
-    @staticmethod
-    def get_class():
-        return "note"
 
     def date_modification_display(self):
         now = datetime.datetime.now()
@@ -220,10 +200,6 @@ class Quote(models.Model):
     def get_absolute_url(self):
         return reverse("orgapy:quote", kwargs={"object_id": self.id})
 
-    @staticmethod
-    def get_class():
-        return "quote"
-
     @property
     def reference_html(self) -> str:
         return re.sub(r"\*([^\*]*)\*", r"<i>\1</i>", self.reference)
@@ -231,7 +207,7 @@ class Quote(models.Model):
     @property
     def reference_nomarkup(self) -> str:
         return re.sub(r"\*", r"", self.reference)
-    
+
     @property
     def title(self) -> str:
         return ravel(self.content)
@@ -430,10 +406,6 @@ class Sheet(models.Model):
             return self.date_modification.strftime("%m-%d")
         return self.date_modification.strftime("%Y-%m-%d")
 
-    @staticmethod
-    def get_class():
-        return "sheet"
-
 
 class Map(models.Model):
 
@@ -474,10 +446,6 @@ class Map(models.Model):
         elif now.year == self.date_modification.year:
             return self.date_modification.strftime("%m-%d")
         return self.date_modification.strftime("%Y-%m-%d")
-
-    @staticmethod
-    def get_class():
-        return "map"
 
 
 class ProgressCounter(models.Model):
