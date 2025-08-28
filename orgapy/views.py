@@ -286,6 +286,8 @@ def getenv(name):
                 "search_url": reverse("orgapy:maps"),
                 "suggestions_route": "map-suggestions",
             }
+        case "categories":
+            return {}
     return {}
 
 
@@ -351,7 +353,28 @@ def view_categories(request):
     return render(request, "orgapy/categories.html", {
         "categories": models.Category.objects.filter(user=request.user),
         "uncategorized": models.Note.objects.filter(user=request.user, categories__isnull=True).count(),
-        **getenv("notes"),
+        **getenv("categories"),
+    })
+
+
+@permission_required("orgapy.view_category")
+def view_category(request, name):
+    query = models.Category.objects.filter(user=request.user, name=name) # TODO: use find_object when refactored
+    if not query.exists():
+        raise Http404("Category not found")
+    category = query.get()
+    # TODO: how about uncategorized?
+    objects = list(category.note_set.filter(user=request.user)) + list(category.sheet_set.filter(user=request.user)) + list(category.map_set.filter(user=request.user))
+    objects.sort(key=lambda x: [x.pinned, x.date_modification, x.date_access], reverse=True)
+    page_size = 24
+    paginator = Paginator(objects, page_size)
+    page = request.GET.get("page")
+    objects = paginator.get_page(page)
+    return render(request, "orgapy/category.html", {
+        "objects": objects,
+        "category": category,
+        "paginator": pretty_paginator(objects),
+        **getenv("categories"),
     })
 
 
@@ -368,7 +391,7 @@ def view_edit_category(request, cid):
                     category.save()
             return render(request, "orgapy/edit_category.html", {
                 "category": category,
-                **getenv("notes"),
+                **getenv("categories"),
             })
     return redirect("orgapy:categories")
 

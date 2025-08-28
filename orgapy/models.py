@@ -45,7 +45,10 @@ class Category(models.Model):
 
     def __str__(self):
         return f"{ self.user } - { self.name }"
-
+    
+    def get_absolute_url(self):
+        return reverse("orgapy:category", kwargs={"name": self.name})
+    
 
 class Note(models.Model):
     """Represent a general note, ie. a title and a text"""
@@ -64,6 +67,7 @@ class Note(models.Model):
     note_refs = models.ManyToManyField("Note", related_name="referenced_in")
     sheet_refs = models.ManyToManyField("Sheet", related_name="referenced_in")
     map_refs = models.ManyToManyField("Map", related_name="referenced_in")
+    active = "notes"
 
     class Meta:
 
@@ -184,6 +188,7 @@ class Quote(models.Model):
     date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
     content = models.TextField()
     reference = models.CharField(max_length=255, default="", blank=True)
+    active = "quotes"
 
     class Meta:
 
@@ -375,6 +380,7 @@ class Sheet(models.Model):
     categories = models.ManyToManyField("Category", blank=True)
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
+    active = "sheets"
 
     class Meta:
 
@@ -418,6 +424,7 @@ class Map(models.Model):
     categories = models.ManyToManyField("Category", blank=True)
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
+    active = "maps"
 
     class Meta:
 

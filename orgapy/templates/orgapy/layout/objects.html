@@ -11,6 +11,8 @@
 
 {% block main_content %}
 
+{% block content_title %}{% endblock content_title %}
+
 {% if objects %}
 <div class="card card-oneline">
     {% for item in objects %}
@@ -23,34 +25,34 @@
         <span>
             {% if item.categories.all %}
             {% for category in item.categories.all %}
-            <a class="link-tenuous" href="?query=%23{{category.name}}">#{{category.name}}</a>
+            <a class="link-tenuous" href="{{ category.get_absolute_url }}">#{{category.name}}</a>
             {% endfor%}
             {% else %}
             <a class="link-tenuous" href="?uncategorized=1">uncategorized</a>
             {% endif %}
         </span>
         {% if item.pinned %}
-        <a class="button-inline" href="{% url 'orgapy:toggle_pin' active=active object_id=item.id %}?next={{ request.path }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>
+        <a class="button-inline" href="{% url 'orgapy:toggle_pin' active=item.active object_id=item.id %}?next={{ request.path }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>
         {% endif %}
         {% if item.public %}
-        <a class="button-inline" href="{% url 'orgapy:toggle_public' active=active object_id=item.id %}?next={{ request.path }}" title="Make private"><i class="ri-lock-line"></i></a>
+        <a class="button-inline" href="{% url 'orgapy:toggle_public' active=item.active object_id=item.id %}?next={{ request.path }}" title="Make private"><i class="ri-lock-line"></i></a>
         {% endif %}
         <span class="show-on-parent-hover">
-            <a href="{% url 'orgapy:edit' active=active object_id=item.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
+            <a href="{% url 'orgapy:edit' active=item.active object_id=item.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
             <div class="dropdown">
                 <a class="button-inline dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-fill"></i></a>
                 <ul class="menu">
                     {% if not item.pinned %}
-                    <li class="menu-item"><a href="{% url 'orgapy:toggle_pin' active=active object_id=item.id %}?next={{ request.path }}" title="Mark as favorite"><i class="ri-bookmark-fill"></i> Pin</a></li>
+                    <li class="menu-item"><a href="{% url 'orgapy:toggle_pin' active=item.active object_id=item.id %}?next={{ request.path }}" title="Mark as favorite"><i class="ri-bookmark-fill"></i> Pin</a></li>
                     {% endif %}
                     {% if not item.public %}
-                    <li class="menu-item"><a href="{% url 'orgapy:toggle_public' active=active object_id=item.id %}?next={{ request.path }}" title="Make public"><i class="ri-lock-unlock-line"></i> Publish</a></li>
+                    <li class="menu-item"><a href="{% url 'orgapy:toggle_public' active=item.active object_id=item.id %}?next={{ request.path }}" title="Make public"><i class="ri-lock-unlock-line"></i> Publish</a></li>
                     {% else %}
-                    <li class="menu-item"><a href="{% url 'orgapy:toggle_public' active=active object_id=item.id %}?next={{ request.path }}" title="Make private"><i class="ri-lock-line"></i> Make private</a></li>
-                    <li class="menu-item"><a href="{% url 'orgapy:share' active=active nonce=item.nonce %}"><i class="ri-share-line"></i> Share</a></li>
+                    <li class="menu-item"><a href="{% url 'orgapy:toggle_public' active=item.active object_id=item.id %}?next={{ request.path }}" title="Make private"><i class="ri-lock-line"></i> Make private</a></li>
+                    <li class="menu-item"><a href="{% url 'orgapy:share' active=item.active nonce=item.nonce %}"><i class="ri-share-line"></i> Share</a></li>
                     {% endif %}
-                    <li class="menu-item"><a href="{% url 'orgapy:export' active=active object_id=item.id %}" title="Download"><i class="ri-download-line"></i> Download</a></li>
-                    <li class="menu-item"><a href="{% url 'orgapy:delete' active=active object_id=item.id %}" class="link-confirm" message="Please confirm deletion of '{{ item.title }}'" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+                    <li class="menu-item"><a href="{% url 'orgapy:export' active=item.active object_id=item.id %}" title="Download"><i class="ri-download-line"></i> Download</a></li>
+                    <li class="menu-item"><a href="{% url 'orgapy:delete' active=item.active object_id=item.id %}" class="link-confirm" message="Please confirm deletion of '{{ item.title }}'" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
                 </ul>
             </div>
         </span>
@@ -58,7 +60,11 @@
     {% endfor %}
 </div>
 {% else %}
-    {% block empty %}{% endblock empty %}
+{% block empty %}
+<div class="card">
+    <p>No object found.</p>
+</div>
+{% endblock empty %}
 {% endif %}
 
 {% include 'orgapy/partials/pagination.html' %}
