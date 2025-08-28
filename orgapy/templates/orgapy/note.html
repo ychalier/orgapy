@@ -12,7 +12,7 @@
 {% endblock head %}
 
 {% block menu %}
-<li class="menu-item"><a href="{% url 'orgapy:edit_note' nid=note.id %}"><i class="ri-pencil-fill"></i> Edit note</a></li>
+<li class="menu-item"><a href="{% url 'orgapy:edit_note' object_id=note.id %}"><i class="ri-pencil-fill"></i> Edit note</a></li>
 <hr class="menu-separator">
 {% include 'orgapy/partials/menu_notes.html' %}
 <hr class="menu-separator">
@@ -55,12 +55,12 @@
 {% block right_column %}
 {% if not readonly %}
 <div class="action-buttons">
-    <a href="{% url 'orgapy:edit_note' nid=note.id %}" class="action-button" title="Edit"><i class="ri-pencil-fill"></i></a>
-    <a href="{% url 'orgapy:toggle_note_pin' nid=note.id %}?next={{ request.path }}" class="action-button {% if note.pinned %}active{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i></a>
-    <a href="{% url 'orgapy:toggle_note_public' nid=note.id %}?next={{ request.path }}" class="action-button {% if note.public %}active{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i></a>
-    {% if note.public %}<a href="{% url 'orgapy:note' nid=note.nonce %}" class="action-button" title="Share"><i class="ri-share-line"></i></a>{% endif %}
-    <a href="{% url 'orgapy:export_note' nid=note.id %}" class="action-button" title="Download as Markdown"><i class="ri-download-line"></i></a>
-    <a href="{% url 'orgapy:delete_note' nid=note.id %}" class="action-button link-confirm" message="Please confirm deletion of '{{ note.title }}'" title="Delete"><i class="ri-delete-bin-line"></i></a>
+    <a href="{% url 'orgapy:edit_note' object_id=note.id %}" class="action-button" title="Edit"><i class="ri-pencil-fill"></i></a>
+    <a href="{% url 'orgapy:toggle_note_pin' object_id=note.id %}?next={{ request.path }}" class="action-button {% if note.pinned %}active{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i></a>
+    <a href="{% url 'orgapy:toggle_note_public' object_id=note.id %}?next={{ request.path }}" class="action-button {% if note.public %}active{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i></a>
+    {% if note.public %}<a href="{% url 'orgapy:note' object_id=note.nonce %}" class="action-button" title="Share"><i class="ri-share-line"></i></a>{% endif %}
+    <a href="{% url 'orgapy:export_note' object_id=note.id %}" class="action-button" title="Download as Markdown"><i class="ri-download-line"></i></a>
+    <a href="{% url 'orgapy:delete_note' object_id=note.id %}" class="action-button link-confirm" message="Please confirm deletion of '{{ note.title }}'" title="Delete"><i class="ri-delete-bin-line"></i></a>
 </div>
 {% endif %}
 <div class="card" id="toc"></div>

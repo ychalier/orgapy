@@ -226,7 +226,7 @@ function bindWidgets(noteId) {
         }
         if (selectedUpdates.length > 0) {
             apiPost("edit-widgets", {
-                nid: noteId,
+                objectId: noteId,
                 updates: JSON.stringify(selectedUpdates)
             }, () => {
                 toast(`Saved widgets`, TOAST_SHORT);

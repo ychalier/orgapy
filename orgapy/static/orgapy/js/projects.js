@@ -91,7 +91,7 @@ function setNoteTitle(noteSpan, noteId) {
         noteSpan.textContent = noteTitles[noteId];
         noteSpan.title = noteTitles[noteId];
     } else {
-        fetch(URL_API + `?action=note-title&nid=${noteId}`).then(res => res.text()).then(title => {
+        fetch(URL_API + `?action=note-title&objectId=${noteId}`).then(res => res.text()).then(title => {
             noteTitles[noteId] = title;
             noteSpan.textContent = title;
             noteSpan.title = title;
@@ -244,7 +244,7 @@ class Project {
             let noteSpan = create(title, "a", "note-link");
             noteSpan.textContent = `@${this.note}`;
             setNoteTitle(noteSpan, this.note);
-            noteSpan.href = URL_ORGAPY_NOTE.replace("NID", this.note);
+            noteSpan.href = URL_ORGAPY_NOTE.replace("objectId", this.note);
         }
         title.addEventListener("click", (event) => {
             event.stopPropagation();

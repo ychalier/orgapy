@@ -1463,8 +1463,8 @@ class ContextMenu {
 
 class Sheet {
 
-    constructor(sid, container, readonly=false) {
-        this.sid = sid;
+    constructor(objectId, container, readonly=false) {
+        this.objectId = objectId;
         this.modification = null;
 
         // Config
@@ -2899,7 +2899,7 @@ class Sheet {
         apiPost(
             "save-sheet",
             {
-                sid: this.sid,
+                objectId: this.objectId,
                 data: sheetExport.data,
                 config: sheetExport.config,
                 modification: this.modification,
@@ -2918,7 +2918,7 @@ class Sheet {
 function initializeSheet(sheetSeed, readonly) {
     var sheet = null;
     let sheetId = sheetSeed.getAttribute("sheet-id");
-    fetch(URL_API + `?action=sheet&sid=${sheetId}`, {
+    fetch(URL_API + `?action=sheet&objectId=${sheetId}`, {
         method: "get",
         })
         .then(res => res.json())

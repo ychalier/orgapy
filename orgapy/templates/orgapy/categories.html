@@ -15,8 +15,8 @@
     {% for category in categories %}
     <div class="oneline oneline-striped">
         <a class="oneline-truncate link-hidden" href="{% url 'orgapy:notes' %}?query=%23{{ category.name }}">{{ category.name | capfirst }} ({{ category.note_set.count }})</a>
-        <a class="button-inline" href="{% url 'orgapy:edit_category' cid=category.id %}" title="Rename"><i class="ri-pencil-fill"></i></a>
-        <a class="button-inline link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' cid=category.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
+        <a class="button-inline" href="{% url 'orgapy:edit_category' object_id=category.id %}" title="Rename"><i class="ri-pencil-fill"></i></a>
+        <a class="button-inline link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' object_id=category.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
     </div>
     {% endfor %}
     <div class="oneline oneline-striped">

@@ -1144,8 +1144,8 @@ class Layer {
 
 class Map {
 
-    constructor(mid, container, readonly=false) {
-        this.mid = mid;
+    constructor(objectId, container, readonly=false) {
+        this.objectId = objectId;
         this.container = container;
         this.readonly = readonly;
         this.containerLeft = null;
@@ -1435,7 +1435,7 @@ class Map {
         var self = this;
         apiPost("save-map",
             {
-                mid: this.mid,
+                objectId: this.objectId,
                 "title": mapExport.title,
                 "geojson": mapExport.geojson,
                 "config": mapExport.config,
@@ -1665,7 +1665,7 @@ class MoveFeatureDialog extends Dialog {
 function initializeMap(mapSeed, readonly) {
     var map = null;
     let mapId = mapSeed.getAttribute("map-id");
-    fetch(URL_API + `?action=map&mid=${mapId}`, {
+    fetch(URL_API + `?action=map&objectId=${mapId}`, {
         method: "get",
         })
         .then(res => res.json())

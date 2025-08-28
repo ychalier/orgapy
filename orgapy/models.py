@@ -20,6 +20,7 @@ def generate_nonce() -> str:
 
 class Settings(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     objective_start_hours = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(23)])
     calendar_lookahead = models.PositiveIntegerField(default=3)
@@ -36,6 +37,7 @@ class Settings(models.Model):
 class Category(models.Model):
     """Represent a general category"""
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
 
@@ -45,14 +47,15 @@ class Category(models.Model):
 
     def __str__(self):
         return f"{ self.user } - { self.name }"
-    
+
     def get_absolute_url(self):
         return reverse("orgapy:category", kwargs={"name": self.name})
-    
+
 
 class Note(models.Model):
     """Represent a general note, ie. a title and a text"""
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -60,7 +63,7 @@ class Note(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
     public = models.BooleanField(default=False)
-    categories = models.ManyToManyField("Category", blank=True)
+    categories = models.ManyToManyField("Category", blank=True, related_name="notes")
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
@@ -89,7 +92,7 @@ class Note(models.Model):
         self.map_refs.set(Map.objects.filter(user=self.user, id__in=objects["map"]))
 
     def get_absolute_url(self):
-        return reverse("orgapy:note", kwargs={"nid": self.id})
+        return reverse("orgapy:note", kwargs={"object_id": self.id})
 
     def _content_preprocess(self):
         return self.content
@@ -97,15 +100,7 @@ class Note(models.Model):
     @staticmethod
     def get_class():
         return "note"
-    
-    def date_creation_display(self):
-        now = datetime.datetime.now()
-        if now.date() == self.date_creation.date():
-            return "Today"
-        elif now.year == self.date_creation.year:
-            return self.date_creation.strftime("%m-%d")
-        return self.date_creation.strftime("%Y-%m-%d")
-    
+
     def date_modification_display(self):
         now = datetime.datetime.now()
         if now.date() == self.date_modification.date():
@@ -117,6 +112,7 @@ class Note(models.Model):
 
 class Objective(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     history = models.TextField(blank=True, null=True)
@@ -163,6 +159,7 @@ class Task(models.Model):
         (YEARLY, "Yearly")
     ]
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     start_date = models.DateField()
@@ -183,6 +180,7 @@ class Task(models.Model):
 
 class Quote(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -206,7 +204,7 @@ class Quote(models.Model):
         return self.date_modification.strftime("%Y-%m-%d")
 
     def get_absolute_url(self):
-        return reverse("orgapy:quote", kwargs={"qid": self.id})
+        return reverse("orgapy:quote", kwargs={"objet_id": self.id})
 
     @staticmethod
     def get_class():
@@ -223,6 +221,7 @@ class Quote(models.Model):
 
 class Project(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=False, auto_now=True)
@@ -251,6 +250,7 @@ class Project(models.Model):
 
 class Calendar(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     url = models.URLField(max_length=255)
     username = models.CharField(max_length=255)
@@ -297,21 +297,26 @@ class Calendar(models.Model):
         self.events = json.dumps(events_data, default=str)
         self.save()
 
-    def get_events(self, force=False):
+    def get_events(self, force: bool = False):
         now = timezone.now()
         if force or self.last_sync is None or (now - self.last_sync).total_seconds() > self.sync_period:
             self.fetch_events()
         return json.loads(self.events) if self.events else []
 
-    def delete_event(self, href):
+    def delete_event(self, href: str):
         success = False
         with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
             principal = client.principal()
             for calendar in principal.calendars():
+                assert isinstance(calendar, caldav.Calendar)
                 if calendar.name != self.calendar_name:
                     continue
-                calendar.event_by_url(href).delete()
-                events_data = json.loads(self.events)
+                event = calendar.event_by_url(href)
+                if event is None:
+                    return False
+                if event is not None:
+                    event.delete()
+                events_data = [] if self.events is None else json.loads(self.events)
                 self.events = json.dumps(list(filter(lambda e: e["url"] != href, events_data)))
                 self.save()
                 success = True
@@ -333,7 +338,7 @@ class Calendar(models.Model):
                     dtend=dtend,
                     summary=title,
                     location=location)
-                events_data = json.loads(self.events)
+                events_data = [] if self.events is None else json.loads(self.events)
                 events_data.append({
                     "url": event.url,
                     "title": title,
@@ -350,6 +355,7 @@ class Calendar(models.Model):
 
 class SheetGroup(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
 
@@ -361,11 +367,12 @@ class SheetGroup(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
     def get_absolute_url(self):
-        return reverse("orgapy:sheet_group", kwargs={"sid": self.id})
+        return reverse("orgapy:sheet_group", kwargs={"object_id": self.id})
 
 
 class Sheet(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -377,7 +384,7 @@ class Sheet(models.Model):
     public = models.BooleanField(default=False)
     group = models.ForeignKey("SheetGroup", on_delete=models.SET_NULL, null=True, blank=True)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
-    categories = models.ManyToManyField("Category", blank=True)
+    categories = models.ManyToManyField("Category", blank=True, related_name="sheets")
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     active = "sheets"
@@ -395,7 +402,7 @@ class Sheet(models.Model):
         return super(Sheet, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("orgapy:sheet", kwargs={"sid": self.id})
+        return reverse("orgapy:sheet", kwargs={"object_id": self.id})
 
     def date_modification_display(self):
         now = datetime.datetime.now()
@@ -412,6 +419,7 @@ class Sheet(models.Model):
 
 class Map(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -421,7 +429,7 @@ class Map(models.Model):
     config = models.TextField(blank=True, null=True)
     public = models.BooleanField(default=False)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
-    categories = models.ManyToManyField("Category", blank=True)
+    categories = models.ManyToManyField("Category", blank=True, related_name="maps")
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     active = "maps"
@@ -439,8 +447,8 @@ class Map(models.Model):
         return super(Map, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("orgapy:map", kwargs={"mid": self.id})
-    
+        return reverse("orgapy:map", kwargs={"object_id": self.id})
+
     def date_modification_display(self):
         now = datetime.datetime.now()
         if now.date() == self.date_modification.date():
@@ -456,6 +464,7 @@ class Map(models.Model):
 
 class ProgressCounter(models.Model):
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     year = models.PositiveIntegerField()
     data = models.TextField(default="{}")
@@ -471,7 +480,7 @@ class ProgressCounter(models.Model):
         return f"{ self.user } - { self.year }"
 
     @property
-    def json(self) -> str:
+    def json(self) -> dict:
         return json.loads(self.data)
 
     def increment(self, dt: datetime.date):
@@ -517,6 +526,7 @@ class ProgressLog(models.Model):
         (OBJECTIVE_COMPLETED, "Objective completed")
     ]
 
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     dt = models.DateTimeField(auto_now_add=True, auto_now=False)
     type = models.CharField(max_length=2, choices=TYPE_CHOICES, default=OTHER)
