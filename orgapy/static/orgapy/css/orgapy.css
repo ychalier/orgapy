@@ -621,6 +621,10 @@ header.card h1 {
 
 .header-refs {
     margin-top: .4rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: .2rem;
 }
 
 /**
@@ -1085,6 +1089,13 @@ input:checked+.toggle-slider+.toggle-text {
 .markdown li.task-list-item:has(input:checked) {
     color: #888;
     text-decoration: line-through;
+}
+
+header .reference {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: max(200px, 33%);
 }
 
 a.reference {

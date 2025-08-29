@@ -263,10 +263,9 @@ function openSmdeDropdown(cmInstance, word) {
     const results = create(dropdown, "div", "smde-dropdown-results");
 
     // Bind searchbar
-    const apiAction = `${objectType}-suggestions`;
     searchbar.addEventListener("input", () => {
         const query = searchbar.value.trim();
-        fetch(URL_API + `?action=${apiAction}&q=${query}`).then(res => res.json()).then(data => {
+        fetch(URL_API + `?action=suggestions&q=${query}&t=${objectType}`).then(res => res.json()).then(data => {
             results.innerHTML = "";
             smdeResultCount = data.results.length;
             smdeSelectedResult = -1;

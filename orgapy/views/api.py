@@ -821,13 +821,14 @@ def api_save_map(request: HttpRequest) -> HttpResponse:
 
 def api_suggestions(request: HttpRequest) -> HttpResponse:
     query = request.GET.get("q", "").strip()
+    object_type = request.GET.get("t")
     results = []
     if len(query) >= 1:
-        if request.user.has_perm("orgapy.view_note"):
+        if (object_type is None or object_type == "note") and request.user.has_perm("orgapy.view_note"):
             results += Note.objects.filter(user=request.user, title__startswith=query)[:5]
-        if request.user.has_perm("orgapy.view_sheet"):
+        if (object_type is None or object_type == "sheet") and request.user.has_perm("orgapy.view_sheet"):
             results += Sheet.objects.filter(user=request.user, title__startswith=query)[:5]
-        if request.user.has_perm("orgapy.view_map"):
+        if (object_type is None or object_type == "map") and request.user.has_perm("orgapy.view_map"):
             results += Map.objects.filter(user=request.user, title__startswith=query)[:5]
     data = {
         "results": [
