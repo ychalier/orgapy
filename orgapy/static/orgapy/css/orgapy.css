@@ -1106,12 +1106,23 @@ header .reference {
     max-width: max(200px, 33%);
 }
 
+.label,
 a.reference {
     background: hsl(204, 34%, 18%);
     padding: .1rem .3rem;
     border-radius: .2rem;
     text-decoration: none;
     color: #8ed2ff !important;
+}
+
+.label-grey {
+    background: hsl(204, 0%, 18%);
+    color: hsl(204, 0%, 78%) !important;
+}
+
+.label-red {
+    background: hsl(0, 34%, 18%);
+    color: hsl(0, 100%, 78%) !important;
 }
 
 /**
@@ -1204,6 +1215,20 @@ a.reference {
     font-size: x-small;
     text-transform: uppercase;
     top: .3rem;
+}
+
+.categories {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
+.category {
+    background: #202020;
+    border: 1px solid black;
+    padding: .4rem;
+    border-radius: .4rem;
 }
 
 /**

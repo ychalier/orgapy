@@ -4,6 +4,9 @@
 
 {% block content_title %}
 <header class="card">
-    <h1>#{{ category.name }}</h1>
+    <h1>#{{ category.name }} <span class="show-on-parent-hover">
+        <a class="button-inline" href="{% url 'orgapy:edit_category' object_id=category.id %}" title="Rename"><i class="ri-pencil-fill"></i></a>
+        <a class="button-inline link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' object_id=category.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
+    </span></h1>
 </header>
 {% endblock content_title %}

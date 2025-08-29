@@ -11,17 +11,17 @@
     <h1>Categories</h1>
 </header>
 
-<div class="card card-oneline">
+<div class="card categories">
     {% for category in categories %}
-    <div class="oneline oneline-striped">
-        <a class="oneline-truncate link-hidden" href="{{ category.get_absolute_url }}">{{ category.name | capfirst }} ({{ category.count }})</a>
-        <a class="button-inline" href="{% url 'orgapy:edit_category' object_id=category.id %}" title="Rename"><i class="ri-pencil-fill"></i></a>
-        <a class="button-inline link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' object_id=category.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
+    <div class="category">
+        <span><a class="oneline-truncate link-hidden" href="{{ category.get_absolute_url }}">{{ category.name | capfirst }}</a> <span class="label {% if category.count == 0 %}label-red{% endif %}">{{ category.count }}</span></span>
     </div>
     {% endfor %}
-    <div class="oneline oneline-striped">
-        <a class="oneline-truncate link-hidden" href="{% url 'orgapy:category' name='uncategorized' %}">Uncategorized ({{ uncategorized }})</a>
+    <div class="category">
+        <span><a class="oneline-truncate link-hidden" href="{% url 'orgapy:category' name='uncategorized' %}">Uncategorized</a>  <span class="label {% if uncategorized == 0 %}label-grey{% endif %}">{{ uncategorized }}</span></span>
     </div>
 </div>
+
+<script>document.querySelectorAll(".show-on-parent-hover .dropdown").forEach(bindDropdown);</script>
 
 {% endblock main_content %}
