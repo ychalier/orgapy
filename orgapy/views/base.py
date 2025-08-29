@@ -43,6 +43,9 @@ def view_projects(request: HttpRequest) -> HttpResponse:
 # OBJECTS AND CATEGORIES #######################################################
 
 
+@permission_required("orgapy.view_note")
+@permission_required("orgapy.view_sheet")
+@permission_required("orgapy.view_map")
 def view_search(request: HttpRequest) -> HttpResponse:
     page_size = 24
     query = request.GET.get("query", "")
@@ -79,6 +82,8 @@ def view_categories(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_category")
 def view_category(request: HttpRequest, name: str) -> HttpResponse:
+    if name == "journal":
+        return render(request, "orgapy/specials/journal.html", {})
     if name == "uncategorized":
         objects = list(Note.objects.filter(user=request.user, categories__isnull=True))\
             + list(Sheet.objects.filter(user=request.user, categories__isnull=True))\
@@ -91,8 +96,6 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
     else:
         category = find_object(Category, "name", name, request.user)
         objects = list(category.notes.filter(user=request.user)) + list(category.sheets.filter(user=request.user)) + list(category.maps.filter(user=request.user)) # type: ignore[attr-defined]
-    if name == "journal":
-        return render(request, "orgapy/specials/journal.html", {"objects": objects})
     objects.sort(key=lambda x: [x.pinned, x.date_modification, x.date_access], reverse=True)
     page_size = 24
     paginator = Paginator(objects, page_size)

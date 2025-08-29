@@ -1,20 +1,6 @@
-const data = {};
-for (const obj of OBJECTS) {
-    const dt = new Date(obj.creation * 1000);
-    const year = dt.getFullYear();
-    if (!(year in data)) {
-        data[year] = {};
-    }
-    const key = dtf(dt, "YYYY-mm-dd");
-    if (!(key in data[year])) {
-        data[year][key] = [];
-    }
-    data[year][key].push(obj);
-}
-
+const months = ["jan.", "feb.", "mar.", "apr.", "may", "june", "july", "aug.", "sep.", "oct.", "nov.", "dec."];
 const container = document.getElementById("journal");
-const MONDAY = 1;
-const MONTHS = ["jan.", "feb.", "mar.", "apr.", "may", "june", "july", "aug.", "sep.", "oct.", "nov.", "dec."];
+let data;
 
 function inflateYear(year) {
     const yearData = year in data ? data[year] : [];
@@ -46,7 +32,7 @@ function inflateYear(year) {
     while (dt.getFullYear() == year) {
         if (dt.getDate() == 1) {
             monthRow = create(journalBody, "div", "journal-month");
-            create(monthRow, "div", "journal-month-name").textContent = MONTHS[dt.getMonth()];
+            create(monthRow, "div", "journal-month-name").textContent = months[dt.getMonth()];
         }
         const dayCell = create(monthRow, "div", "journal-day");
         const key = dtf(dt, "YYYY-mm-dd");
@@ -102,4 +88,19 @@ function inflateYear(year) {
     }
 }
 
-inflateYear((new Date()).getFullYear());
+fetchApi(URL_API + "?action=search&category=journal", "get", null, searchResults => {
+    data = {};
+    for (const obj of searchResults.objects) {
+        const dt = new Date(obj.dateCreation);
+        const year = dt.getFullYear();
+        if (!(year in data)) {
+            data[year] = {};
+        }
+        const key = dtf(dt, "YYYY-mm-dd");
+        if (!(key in data[year])) {
+            data[year][key] = [];
+        }
+        data[year][key].push(obj);
+    }
+    inflateYear((new Date()).getFullYear());
+});

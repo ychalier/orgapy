@@ -15,9 +15,6 @@
     <div id="journal"></div>
 </header>
 
-<script>
-    const OBJECTS = [{% for obj in objects %}{id: {{ obj.id }}, title: `{{obj.title|safe}}`, href: "{{obj.get_absolute_url}}", creation: {{obj.date_creation.timestamp}}},{% endfor %}];
-</script>
 <script src="{% static 'orgapy/js/journal.js' %}"></script>
 
 {% endblock main_content %}

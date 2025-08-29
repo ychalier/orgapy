@@ -80,12 +80,14 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_progress(request)
         case "title":
             return api_title(request)
+        case "search":
+            return api_search(request)
         case _:
             raise BadRequest()
 
 
 @permission_required("orgapy.view_project")
-def api_list_projects(request: HttpRequest) -> HttpResponse:
+def api_list_projects(request: HttpRequest) -> JsonResponse:
     show_archived = request.GET.get("archived", "0") == "1"
     projects = []
     for project in Project.objects.filter(user=request.user):
@@ -116,7 +118,7 @@ def api_list_projects(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.add_project")
-def api_create_project(request: HttpRequest) -> HttpResponse:
+def api_create_project(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     max_rank = Project.objects.filter(user=request.user).aggregate(Max("rank"))["rank__max"]
@@ -145,7 +147,7 @@ def api_create_project(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_project")
-def api_edit_project(request: HttpRequest) -> HttpResponse:
+def api_edit_project(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     project_id = request.POST.get("project_id")
@@ -205,7 +207,7 @@ def api_edit_project(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_project")
-def api_edit_project_ranks(request: HttpRequest) -> HttpResponse:
+def api_edit_project_ranks(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     ranks_data = request.POST.get("ranks")
@@ -229,7 +231,7 @@ def api_edit_project_ranks(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_project")
-def api_archive_project(request: HttpRequest) -> HttpResponse:
+def api_archive_project(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     project_id = request.POST.get("project_id")
@@ -251,7 +253,7 @@ def api_archive_project(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_project")
-def api_unarchive_project(request: HttpRequest) -> HttpResponse:
+def api_unarchive_project(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     project_id = request.POST.get("project_id")
@@ -273,7 +275,7 @@ def api_unarchive_project(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.delete_project")
-def api_delete_project(request: HttpRequest) -> HttpResponse:
+def api_delete_project(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     project_id = request.POST.get("project_id")
@@ -291,7 +293,7 @@ def api_delete_project(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.view_objective")
-def api_list_objectives(request: HttpRequest) -> HttpResponse:
+def api_list_objectives(request: HttpRequest) -> JsonResponse:
     show_archived = request.GET.get("archived", "0") == "1"
     objectives = []
     for objective in Objective.objects.filter(user=request.user):
@@ -302,7 +304,7 @@ def api_list_objectives(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.add_objective")
-def api_add_objective(request: HttpRequest) -> HttpResponse:
+def api_add_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     objective_name = request.POST.get("name")
@@ -323,7 +325,7 @@ def api_add_objective(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_objective")
-def api_edit_objective(request: HttpRequest) -> HttpResponse:
+def api_edit_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     print(request.POST)
@@ -351,7 +353,7 @@ def api_edit_objective(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_objective")
-def api_archive_objective(request: HttpRequest) -> HttpResponse:
+def api_archive_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     objective_id = request.POST.get("objective_id")
@@ -370,7 +372,7 @@ def api_archive_objective(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_objective")
-def api_unarchive_objective(request: HttpRequest) -> HttpResponse:
+def api_unarchive_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     objective_id = request.POST.get("objective_id")
@@ -389,7 +391,7 @@ def api_unarchive_objective(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.delete_objective")
-def api_delete_objective(request: HttpRequest) -> HttpResponse:
+def api_delete_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     objective_id = request.POST.get("id")
@@ -406,7 +408,7 @@ def api_delete_objective(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_objective")
-def api_edit_objective_history(request: HttpRequest) -> HttpResponse:
+def api_edit_objective_history(request: HttpRequest) -> JsonResponse:
     """Objective history must be a JSON string
     """
     if request.method != "POST":
@@ -432,7 +434,7 @@ def api_edit_objective_history(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.view_calendar")
-def api_list_calendars(request: HttpRequest) -> HttpResponse:
+def api_list_calendars(request: HttpRequest) -> JsonResponse:
     events = []
     calendars = []
     calendar = None
@@ -453,7 +455,7 @@ def api_list_calendars(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_calendar")
-def api_delete_calendar(request: HttpRequest) -> HttpResponse:
+def api_delete_calendar(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     href = request.POST.get("href")
@@ -468,7 +470,7 @@ def api_delete_calendar(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_calendar")
-def api_add_event(request: HttpRequest) -> HttpResponse:
+def api_add_event(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     calendarid = request.POST.get("calendarid")
@@ -496,7 +498,7 @@ def api_add_event(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.view_task")
-def api_list_tasks(request: HttpRequest) -> HttpResponse:
+def api_list_tasks(request: HttpRequest) -> JsonResponse:
     tasks = []
     limit = int(request.GET.get("limit", 5))
     max_start_date = timezone.now() + datetime.timedelta(days=limit)
@@ -514,7 +516,7 @@ def api_list_tasks(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.edit_task")
-def api_edit_task(request: HttpRequest) -> HttpResponse:
+def api_edit_task(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     task_id = request.POST.get("id")
@@ -556,7 +558,7 @@ def api_edit_task(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.add_task")
-def api_add_task(request: HttpRequest) -> HttpResponse:
+def api_add_task(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     task_title = request.POST.get("title")
@@ -593,7 +595,7 @@ def api_add_task(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.delete_task")
-def api_delete_task(request: HttpRequest) -> HttpResponse:
+def api_delete_task(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     task_id = request.POST.get("id")
@@ -610,7 +612,7 @@ def api_delete_task(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.edit_task")
-def api_complete_task(request: HttpRequest) -> HttpResponse:
+def api_complete_task(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest()
     task_id = request.POST.get("id")
@@ -696,7 +698,7 @@ def api_title(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_note")
-def api_edit_widgets(request: HttpRequest) -> HttpResponse:
+def api_edit_widgets(request: HttpRequest) -> JsonResponse:
     object_id = request.POST.get("object_id")
     updates = json.loads(request.POST.get("updates", "[]"))
     if object_id is None:
@@ -741,7 +743,7 @@ def api_edit_widgets(request: HttpRequest) -> HttpResponse:
     return JsonResponse({"success": True})
 
 
-def api_sheet(request: HttpRequest) -> HttpResponse:
+def api_sheet(request: HttpRequest) -> JsonResponse:
     sheet_id = request.GET.get("objectId")
     if sheet_id is None:
         raise BadRequest()
@@ -758,7 +760,7 @@ def api_sheet(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_sheet")
-def api_save_sheet(request: HttpRequest) -> HttpResponse:
+def api_save_sheet(request: HttpRequest) -> JsonResponse:
     sheet_id = request.POST.get("object_id")
     if sheet_id is None:
         raise BadRequest()
@@ -778,7 +780,7 @@ def api_save_sheet(request: HttpRequest) -> HttpResponse:
     })
 
 
-def api_map(request: HttpRequest) -> HttpResponse:
+def api_map(request: HttpRequest) -> JsonResponse:
     map_id = request.GET.get("objectId")
     if map_id is None:
         raise BadRequest()
@@ -795,7 +797,7 @@ def api_map(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_map")
-def api_save_map(request: HttpRequest) -> HttpResponse:
+def api_save_map(request: HttpRequest) -> JsonResponse:
     map_id = request.POST.get("object_id")
     if map_id is None:
         raise BadRequest()
@@ -819,7 +821,10 @@ def api_save_map(request: HttpRequest) -> HttpResponse:
     })
 
 
-def api_suggestions(request: HttpRequest) -> HttpResponse:
+@permission_required("orgapy.view_note")
+@permission_required("orgapy.view_sheet")
+@permission_required("orgapy.view_map")
+def api_suggestions(request: HttpRequest) -> JsonResponse:
     query = request.GET.get("q", "").strip()
     object_type = request.GET.get("t")
     results = []
@@ -852,3 +857,39 @@ def api_progress(request: HttpRequest) -> HttpResponse:
     except ProgressCounter.DoesNotExist:
         raise Http404()
     return HttpResponse(counter.data, content_type="application/json")
+
+
+@permission_required("orgapy.view_note")
+@permission_required("orgapy.view_sheet")
+@permission_required("orgapy.view_map")
+def api_search(request: HttpRequest) -> JsonResponse:
+    search_type = request.GET.get("type")
+    if search_type is None:
+        models = [Note, Sheet, Map]
+    elif search_type == "notes":
+        models = [Note]
+    elif search_type == "sheets":
+        models = [Sheet]
+    elif search_type == "maps":
+        models = [Map]
+    else:
+        raise BadRequest()
+    search_query = request.GET.get("query")
+    search_category = request.GET.get("category")
+    objects = []
+    for model in models:
+        query = model.objects.filter(user=request.user)
+        if search_query is not None:
+            query = query.filter(title__contains=search_query)
+        if search_category is not None:
+            query = query.filter(categories__name__exact=search_category)
+        for obj in query:
+            objects.append({
+                "id": obj.id,
+                "dateCreation": int(1000 * obj.date_creation.timestamp()),
+                "dateModification": int(1000 * obj.date_modification.timestamp()),
+                "title": obj.title,
+                "href": obj.get_absolute_url(),
+                "active": obj.active,
+            })
+    return JsonResponse({"objects": objects, "success": True})
