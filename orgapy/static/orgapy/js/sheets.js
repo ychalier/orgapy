@@ -2133,13 +2133,23 @@ class Sheet {
                 this.cells[i][j].addEventListener("dblclick", () => {
                     if (!self.editing && !self.readonly) self.startEditing(true);
                 });
-                this.cells[i][j].addEventListener("mousemove", () => {
-                    if (self.selecting) {
-                        self.updateSelection(i, j);
-                    }
-                });
             }
         }
+        this.container.addEventListener("mousemove", (event) => {
+            if (self.selecting) {
+                let element = document.elementFromPoint(event.clientX, event.clientY);
+                if (element) {
+                    if (element.classList.contains("sheet-cell-content")) {
+                        element = element.parentElement;
+                    }
+                    if (element.classList.contains("sheet-cell")) {
+                        const i = parseInt(element.getAttribute("i"));
+                        const j = parseInt(element.getAttribute("j"));
+                        self.updateSelection(i, j);
+                    }
+                }
+            }
+        });
         for (let j = 0; j < this.width; j++) {
             let handle = this.columnHandles[j];
             handle.addEventListener("mousedown", (event) => {
@@ -2184,11 +2194,6 @@ class Sheet {
                     self.openRowContextMenu(event.clientX, event.clientY, i);
                 }
             });
-            this.rowHeads[i].addEventListener("mousemove", () => {
-                if (self.selecting) {
-                    self.updateSelection(i, 0);
-                }
-            });
         }
         let cellTopLeft = this.container.querySelector(".sheet-row-head .sheet-cell:first-child");
         cellTopLeft.addEventListener("click", () => {
@@ -2215,11 +2220,6 @@ class Sheet {
                 }
                 if (!self.readonly) {
                     self.openColumnContextMenu(event.clientX, event.clientY, j);
-                }
-            });
-            this.columnHeads[j].addEventListener("mousemove", () => {
-                if (self.selecting) {
-                    self.updateSelection(0, j);
                 }
             });
             let cellSort = this.columnHeads[j].querySelector(".sheet-column-sort");
@@ -2543,7 +2543,10 @@ class Sheet {
         cellTopLeft.style.height = (this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT) + "px";
         this.columnHeads = [];
         for (let j = 0; j < this.width; j++) {
-            this.columnHeads.push(create(rowHead, "div", "sheet-cell"));
+            const columnHeadCell = create(rowHead, "div", "sheet-cell");
+            columnHeadCell.setAttribute("i", 0);
+            columnHeadCell.setAttribute("j", j);
+            this.columnHeads.push(columnHeadCell);
             this.columnHeads[j].style.width = this.columnWidths[j] + "px";
             let shelf = create(this.columnHeads[j], "div", "sheet-cell-shelf");
             let cellSort = create(shelf, "span", "sheet-cell-shelf-item sheet-column-sort");
@@ -2566,11 +2569,16 @@ class Sheet {
         this.rowHeads = [];
         for (let i = 0; i < this.height; i++) {
             this.rows.push(create(tableBody, "div", "sheet-row"));
-            this.rowHeads.push(create(this.rows[i], "div", "sheet-cell sheet-cell-head"));
+            const rowHeadCell = create(this.rows[i], "div", "sheet-cell sheet-cell-head");
+            rowHeadCell.setAttribute("i", i);
+            rowHeadCell.setAttribute("j", 0);
+            this.rowHeads.push(rowHeadCell);
             this.rowHeads[i].style.height = this.rowHeights[i] + "px";
             this.cells.push([]);
             for (let j = 0; j < this.width; j++) {
                 const cell = create(this.rows[i], "div", `sheet-cell ${this.columnTypes[j].constructor.ALIGNEMENT}`);
+                cell.setAttribute("i", i);
+                cell.setAttribute("j", j);
                 this.cells[i].push(cell);
                 cell.style.width = this.columnWidths[j] + "px";
                 this.setCellContent(i, j);
