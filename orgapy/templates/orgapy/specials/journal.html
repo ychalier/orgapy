@@ -1,0 +1,23 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}Journal &mid; {{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/journal.css' %}" />
+{% endblock head %}
+
+{% block main_content %}
+
+<header class="card">
+    <h1>Journal</h1>
+    <div id="journal"></div>
+</header>
+
+<script>
+    const OBJECTS = [{% for obj in objects %}{id: {{ obj.id }}, title: `{{obj.title|safe}}`, href: "{{obj.get_absolute_url}}", creation: {{obj.date_creation.timestamp}}},{% endfor %}];
+</script>
+<script src="{% static 'orgapy/js/journal.js' %}"></script>
+
+{% endblock main_content %}

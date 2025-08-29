@@ -91,6 +91,8 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
     else:
         category = find_object(Category, "name", name, request.user)
         objects = list(category.notes.filter(user=request.user)) + list(category.sheets.filter(user=request.user)) + list(category.maps.filter(user=request.user)) # type: ignore[attr-defined]
+    if name == "journal":
+        return render(request, "orgapy/specials/journal.html", {"objects": objects})
     objects.sort(key=lambda x: [x.pinned, x.date_modification, x.date_access], reverse=True)
     page_size = 24
     paginator = Paginator(objects, page_size)
