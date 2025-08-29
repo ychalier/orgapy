@@ -1,0 +1,16 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}Quotes &mid; {{ block.super }}{% endblock title %}
+
+{% block main_content %}
+
+<header class="card">
+    <h1>Quotes</h1>
+</header>
+
+<div id="quotes" class="card"></div>
+
+<script src="{% static 'orgapy/js/specials/quote.js' %}"></script>
+
+{% endblock main_content %}

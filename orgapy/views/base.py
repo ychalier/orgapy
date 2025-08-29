@@ -80,8 +80,8 @@ def view_categories(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_category")
 def view_category(request: HttpRequest, name: str) -> HttpResponse:
-    if name == "journal":
-        return render(request, "orgapy/specials/journal.html", {})
+    if name in ["journal", "quote"]:
+        return render(request, f"orgapy/specials/{name}.html", {})
     if name == "uncategorized":
         objects = list(Note.objects.filter(user=request.user, categories__isnull=True))\
             + list(Sheet.objects.filter(user=request.user, categories__isnull=True))\
