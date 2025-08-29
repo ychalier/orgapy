@@ -44,7 +44,7 @@
                 <li class="menu-item"><a href="{% url 'orgapy:share' active=obj.active nonce=obj.nonce %}"><i class="ri-share-line"></i> Share</a></li>
                 {% endif %}
                 <li class="menu-item"><a href="{% url 'orgapy:export' active=obj.active object_id=obj.id %}" title="Download"><i class="ri-download-line"></i> Download</a></li>
-                <li class="menu-item"><a href="{% url 'orgapy:delete' active=obj.active object_id=obj.id %}" class="link-confirm" message="Please confirm deletion of '{{ obj.title }}'" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+                <li class="menu-item"><a href="{% url 'orgapy:delete' active=obj.active object_id=obj.id %}?next={{ request.path }}" class="link-confirm" message="Please confirm deletion of '{{ obj.title }}'" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
             </ul>
         </div>
     </span>

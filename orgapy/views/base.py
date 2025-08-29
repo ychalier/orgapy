@@ -277,6 +277,8 @@ def view_delete_note(request: HttpRequest, object_id: str) -> HttpResponse:
     """View to delete a note"""
     note = find_object(Note, "id", object_id, request.user)
     note.delete()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
     return redirect("orgapy:notes")
 
 
@@ -395,6 +397,8 @@ def view_export_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 def view_delete_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
     sheet = find_object(Sheet, "id", object_id, request.user)
     sheet.delete()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
     return redirect("orgapy:sheets")
 
 
@@ -482,6 +486,8 @@ def view_export_map(request: HttpRequest, object_id: str) -> HttpResponse:
 def view_delete_map(request: HttpRequest, object_id: str) -> HttpResponse:
     mmap = find_object(Map, "id", object_id, request.user)
     mmap.delete()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
     return redirect("orgapy:maps")
 
 
