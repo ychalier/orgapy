@@ -216,3 +216,16 @@ def view_objects(
         "categories": Category.objects.filter(user=request.user).order_by("name"),
         "active": env_name
     })
+
+
+def toggle_object_attribute(request: HttpRequest, active: str, object_id: str, attrname: str) -> HttpResponse:
+    try:
+        model = {"notes": Note, "sheets": Sheet, "maps": Map}[active]
+    except KeyError:
+        raise BadRequest()
+    obj: Note | Sheet | Map = find_object(model, "id", object_id, request.user)
+    setattr(obj, attrname, not getattr(obj, attrname, False))
+    obj.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect(obj.get_absolute_url())

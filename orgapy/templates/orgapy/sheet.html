@@ -16,11 +16,8 @@
         <a class="link-hidden" href="{% url 'orgapy:sheets' %}"><i class="ri-table-line"></i></a>
         <span class="sheet-title oneline-truncate">{{sheet.title}}</span>
         {% if not readonly %}
-        {% if sheet.group %}
-        <a class="oneline-truncate" href="{{sheet.group.get_absolute_url}}">[{{sheet.group.title}}]</a>
-        {% endif %}
         <span class="sheet-toolbar-buttons">
-            <a class="button-inline" href="{% url 'orgapy:edit_sheet' object_id=sheet.id %}" title="Edit"><i class="ri-pencil-fill"></i></a>
+            <a class="button-inline" href="{% url 'orgapy:edit_sheet' object_id=sheet.id %}?next={{ request.path }}" title="Edit"><i class="ri-pencil-fill"></i></a>
             <button title="Save" class="sheet-button-save"><i class="ri-save-line"></i></button>
             <div class="dropdown">
                 <a class="button-inline dropdown-toggle" title="More" tabindex="0"><i class="ri-more-fill"></i></a>
@@ -40,6 +37,15 @@
             {% for ref in sheet.referenced_in.all %}
             <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
             {% endfor %}
+        {% endif %}
+        {% if not readonly%}
+            {% if sheet.categories.all %}
+                {% for category in sheet.categories.all %}
+                <a class="link-tenuous" href="{{ category.get_absolute_url }}">#{{category.name}}</a>
+                {% endfor%}
+            {% else %}
+                <a class="link-tenuous" href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
+            {% endif %}
         {% endif %}
         {% if sheet.description %}
         <span class="markdown-inline">{{sheet.description | safe}}</span>

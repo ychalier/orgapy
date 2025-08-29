@@ -13,7 +13,7 @@ from django.utils.text import slugify
 from django.urls import reverse
 
 from ..models import Category, Note, Quote, Sheet, Map, ProgressCounter, ProgressLog, Calendar
-from .utils import ConflictError, find_object, pretty_paginator, save_object_core, get_or_create_settings, view_objects
+from .utils import ConflictError, find_object, pretty_paginator, save_object_core, get_or_create_settings, view_objects, toggle_object_attribute
 
 
 # GENERAL ######################################################################
@@ -150,26 +150,14 @@ def view_edit(request: HttpRequest, active: str, object_id: str) -> HttpResponse
 @permission_required("orgapy.change_sheet")
 @permission_required("orgapy.change_map")
 def view_toggle_pin(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    if active == "notes":
-        return view_toggle_note_pin(request, object_id)
-    if active == "sheets":
-        return view_toggle_sheet_pin(request, object_id)
-    if active == "maps":
-        return view_toggle_map_pin(request, object_id)
-    raise BadRequest(f"Unknown environment '{active}'")
+    return toggle_object_attribute(request, active, object_id, "pinned")
 
 
 @permission_required("orgapy.change_note")
 @permission_required("orgapy.change_sheet")
 @permission_required("orgapy.change_map")
 def view_toggle_public(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    if active == "notes":
-        return view_toggle_note_public(request, object_id)
-    if active == "sheets":
-        return view_toggle_sheet_public(request, object_id)
-    if active == "maps":
-        return view_toggle_map_public(request, object_id)
-    raise BadRequest(f"Unknown environment '{active}'")
+    return toggle_object_attribute(request, active, object_id, "public")
 
 
 @permission_required("orgapy.view_note")
@@ -288,22 +276,12 @@ def view_delete_note(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.change_note")
 def view_toggle_note_pin(request: HttpRequest, object_id: str) -> HttpResponse:
-    note = find_object(Note, "id", object_id, request.user)
-    note.pinned = not note.pinned
-    note.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:notes")
+    return view_toggle_pin(request, "notes", object_id)
 
 
 @permission_required("orgapy.change_note")
 def view_toggle_note_public(request: HttpRequest, object_id: str) -> HttpResponse:
-    note = find_object(Note, "id", object_id, request.user)
-    note.public = not note.public
-    note.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:notes")
+    return view_toggle_public(request, "notes", object_id)
 
 
 @permission_required("orgapy.add_note")
@@ -458,8 +436,10 @@ def view_create_sheet(request: HttpRequest) -> HttpResponse:
 def view_save_sheet(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         sheet = save_object_core(request, Sheet, ["description"])
+        if "next" in request.POST:
+            return redirect(request.POST["next"])
         return redirect("orgapy:sheet", object_id=sheet.id)
-    raise PermissionDenied()
+    raise BadRequest()
 
 
 def view_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
@@ -516,22 +496,12 @@ def view_delete_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.change_sheet")
 def view_toggle_sheet_pin(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_object(Sheet, "id", object_id, request.user)
-    sheet.pinned = not sheet.pinned
-    sheet.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:sheets")
+    return view_toggle_pin(request, "sheets", object_id)
 
 
 @permission_required("orgapy.change_sheet")
 def view_toggle_sheet_public(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_object(Sheet, "id", object_id, request.user)
-    sheet.public = not sheet.public
-    sheet.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:sheets")
+    return view_toggle_public(request, "sheets", object_id)
 
 
 # MAPS #########################################################################
@@ -566,8 +536,10 @@ def view_edit_map(request: HttpRequest, object_id: str) -> HttpResponse:
 def view_save_map(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         mmap = save_object_core(request, Map)
+        if "next" in request.POST:
+            return redirect(request.POST["next"])
         return redirect("orgapy:map", object_id=mmap.id)
-    raise PermissionDenied()
+    raise BadRequest()
 
 
 def view_map(request: HttpRequest, object_id: str) -> HttpResponse:
@@ -611,22 +583,12 @@ def view_delete_map(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.change_map")
 def view_toggle_map_pin(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_object(Map, "id", object_id, request.user)
-    mmap.pinned = not mmap.pinned
-    mmap.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:maps")
+    return view_toggle_pin(request, "maps", object_id)
 
 
 @permission_required("orgapy.change_map")
 def view_toggle_map_public(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_object(Map, "id", object_id, request.user)
-    mmap.public = not mmap.public
-    mmap.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:maps")
+    return view_toggle_public(request, "maps", object_id)
 
 
 # PROGRESS #####################################################################
