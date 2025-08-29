@@ -43,7 +43,6 @@ You'll need Python 3, and a [Django](https://www.djangoproject.com/) project.
 - Track current tasks
 - Track regular habits
 - Integrate events from a CalDAV server
-- Store quotes
 - Edit spreadsheets (stored as TSV)
 - Edit maps (stored as GeoJSON)
 

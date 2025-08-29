@@ -5,14 +5,13 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Paginator
-from django.db.models import Q, TextField
-from django.db.models.functions import Concat
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils.text import slugify
 from django.urls import reverse
 
-from ..models import Category, Note, Quote, Sheet, Map, ProgressCounter, ProgressLog, Calendar
+from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar
 from .utils import ConflictError, find_object, pretty_paginator, save_object_core, get_or_create_settings, view_objects, toggle_object_attribute
 
 
@@ -55,7 +54,6 @@ def view_search(request: HttpRequest) -> HttpResponse:
             + list(Map.objects.filter(user=request.user, public=True))
     else:
         objects = list(Note.objects.filter(user=request.user, hidden=False).filter(Q(title__contains=query) | Q(content__contains=query)))\
-            + list(Quote.objects.filter(user=request.user).filter(Q(reference__contains=query) | Q(content__contains=query)))\
             + list(Sheet.objects.filter(user=request.user, title__contains=query))\
             + list(Map.objects.filter(user=request.user, title__contains=query))
     if len(objects) == 1:
@@ -317,108 +315,6 @@ def view_notally(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/notally.html", {
         "notes": created_notes,
         "active": "notes",
-    })
-
-
-# QUOTES #######################################################################
-
-
-@permission_required("orgapy.view_quote")
-def view_quotes(request: HttpRequest) -> HttpResponse:
-    recent_quotes = Quote.objects.filter(user=request.user).order_by("-date_creation")[:3]
-    random_quotes = Quote.objects.filter(user=request.user).exclude(id__in=[q.id for q in recent_quotes]).order_by("?")[:3]
-    return render(request, "orgapy/quotes.html", {
-        "recent_quotes": recent_quotes,
-        "random_quotes": random_quotes,
-        "active": "quotes",
-    })
-
-
-@permission_required("orgapy.view_quote")
-def view_quotes_search(request: HttpRequest) -> HttpResponse:
-    page_size = 10
-    query = request.GET.get("query", "")
-    objects = Quote.objects.filter(user=request.user)
-    if len(query) > 0:
-        filters = None
-        for token in query.split(" "):
-            if filters is None:
-                filters = Q(search_text__contains=token)
-            else:
-                filters &= Q(search_text__contains=token)
-        objects = objects.annotate(search_text=Concat("reference", "content", output_field=TextField())).filter(filters)
-    paginator = Paginator(objects.order_by(
-        "-date_creation",
-    ), page_size)
-    page = request.GET.get("page")
-    quotes = paginator.get_page(page)
-    return render(request, "orgapy/quotes_search.html", {
-        "quotes": quotes,
-        "query": query,
-        "quote_paginator": pretty_paginator(quotes, query=query),
-        "active": "quotes",
-    })
-
-
-@permission_required("orgapy.view_quote")
-def view_quote(request: HttpRequest, object_id: str) -> HttpResponse:
-    q = Quote.objects.filter(user=request.user, id=int(object_id))
-    if not q.exists():
-        raise Http404()
-    quote = q.get()
-    return render(request, "orgapy/quotes_search.html", {
-        "quotes": [quote],
-        "active": "quotes",
-    })
-
-
-@permission_required("orgapy.add_quote")
-def view_create_quote(request: HttpRequest) -> HttpResponse:
-    if request.method == "POST":
-        quote = Quote.objects.create(
-            user=request.user,
-            content=request.POST.get("content", "").strip(),
-            reference=request.POST.get("reference", "").strip()
-        )
-        if "form_quote" in request.POST:
-            return redirect("orgapy:quotes_search")
-    prefill_reference = None
-    q = Quote.objects.order_by("-date_creation")
-    if q.exists():
-        prefill_reference = q[0].reference
-    return render(request, "orgapy/create_quote.html", {
-        "prefill_reference": prefill_reference,
-        "active": "quotes",
-    })
-
-
-@permission_required("orgapy.change_quote")
-def view_save_quote(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    object_id = request.POST["id"]
-    query = Quote.objects.filter(user=request.user, id=int(object_id))
-    try:
-        quote = query.get()
-    except Quote.DoesNotExist:
-        raise Http404()
-    reference = request.POST["reference"]
-    content = request.POST["content"]
-    quote.reference = reference
-    quote.content = content
-    quote.save()
-    return redirect("orgapy:quote", object_id=quote.id)
-
-
-@permission_required("orgapy.change_quote")
-def view_edit_quote(request: HttpRequest, object_id: str) -> HttpResponse:
-    q = Quote.objects.filter(user=request.user, id=int(object_id))
-    if not q.exists():
-        raise Http404()
-    quote = q.get()
-    return render(request, "orgapy/edit_quote.html", {
-        "quote": quote,
-        "active": "quotes",
     })
 
 

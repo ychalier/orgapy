@@ -1187,43 +1187,6 @@ a.reference {
 }
 
 /**
- * Quotes
- */
-
-.quote-content {
-    text-align: justify;
-}
-
-.quote-content.markdown * {
-    font-size: inherit;
-    line-height: 1.1;
-    font-family: "Times New Roman", serif;
-}
-
-.quote-content.markdown p {
-    margin: 0 0 .6rem 0;
-}
-
-.quote-content.markdown ul {
-    padding: 0;
-    list-style-type: none;
-}
-
-.quote-content.markdown li:before {
-    content: "—";
-    padding-right: .4rem;
-}
-
-.quote-reference {
-    font-size: small;
-    color: #888;
-}
-
-.card-block.quote {
-    padding: .8rem;
-}
-
-/**
  * Object list
  */
 

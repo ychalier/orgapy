@@ -11,10 +11,10 @@ from django.http import HttpRequest, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..models import Settings, Category, Note, Quote, Sheet, Map, ProgressLog
+from ..models import Settings, Category, Note, Sheet, Map, ProgressLog
 
 
-UserObject = TypeVar("UserObject", Category, Note, Quote, Sheet, Map, ProgressLog)
+UserObject = TypeVar("UserObject", Category, Note, Sheet, Map, ProgressLog)
 CategorizedObject = TypeVar("CategorizedObject", Note, Sheet, Map)
 LoggedUser = AbstractBaseUser
 
