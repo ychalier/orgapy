@@ -52,13 +52,16 @@ def view_search(request: HttpRequest) -> HttpResponse:
         objects = list(Note.objects.filter(user=request.user, public=True, hidden=False))\
             + list(Sheet.objects.filter(user=request.user, public=True))\
             + list(Map.objects.filter(user=request.user, public=True))
+    elif query.startswith("#"):
+        category_name = query[1:]
+        return redirect("orgapy:category", name=category_name)
     else:
         objects = list(Note.objects.filter(user=request.user, hidden=False).filter(Q(title__contains=query) | Q(content__contains=query)))\
             + list(Sheet.objects.filter(user=request.user, title__contains=query))\
             + list(Map.objects.filter(user=request.user, title__contains=query))
     if len(objects) == 1:
         return redirect(objects[0].get_absolute_url())
-    objects.sort(key=lambda o: o.date_creation, reverse=True)
+    objects.sort(key=lambda o: [o.pinned, o.date_modification, o.date_access], reverse=True)
     paginator = Paginator(objects, page_size)
     page = request.GET.get("page")
     objects = paginator.get_page(page)

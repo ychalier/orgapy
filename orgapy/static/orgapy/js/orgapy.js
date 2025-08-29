@@ -91,7 +91,7 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
         const container = searchbar.querySelector(".searchbar-suggestions");
         input.addEventListener("input", () => {
             const query = input.value.trim();
-            fetch(URL_API + `?action=${apiAction}&q=${query}`).then(res => res.json()).then(data => {
+            fetch(URL_API + `?action=${apiAction}&q=${encodeURIComponent(query)}`).then(res => res.json()).then(data => {
                 container.innerHTML = "";
                 for (const entry of data.results) {
                     const element = document.createElement("a");

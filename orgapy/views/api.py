@@ -10,7 +10,7 @@ from django.db.models import Max
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 
-from ..models import Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective
+from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective
 from ..utils import parse_dt, parse_date
 from .utils import find_object, compare_checklists, compare_objective_histories
 
@@ -829,12 +829,15 @@ def api_suggestions(request: HttpRequest) -> JsonResponse:
     object_type = request.GET.get("t")
     results = []
     if len(query) >= 1:
-        if (object_type is None or object_type == "note") and request.user.has_perm("orgapy.view_note"):
-            results += Note.objects.filter(user=request.user, title__startswith=query)[:5]
-        if (object_type is None or object_type == "sheet") and request.user.has_perm("orgapy.view_sheet"):
-            results += Sheet.objects.filter(user=request.user, title__startswith=query)[:5]
-        if (object_type is None or object_type == "map") and request.user.has_perm("orgapy.view_map"):
-            results += Map.objects.filter(user=request.user, title__startswith=query)[:5]
+        if query.startswith("#"):
+            results += Category.objects.filter(user=request.user, name__startswith=query[1:])[:5]
+        else:
+            if (object_type is None or object_type == "note") and request.user.has_perm("orgapy.view_note"):
+                results += Note.objects.filter(user=request.user, title__startswith=query)[:5]
+            if (object_type is None or object_type == "sheet") and request.user.has_perm("orgapy.view_sheet"):
+                results += Sheet.objects.filter(user=request.user, title__startswith=query)[:5]
+            if (object_type is None or object_type == "map") and request.user.has_perm("orgapy.view_map"):
+                results += Map.objects.filter(user=request.user, title__startswith=query)[:5]
     data = {
         "results": [
             {

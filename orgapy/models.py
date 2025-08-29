@@ -48,6 +48,10 @@ class Category(models.Model):
     @property
     def count(self) -> int:
         return self.notes.count() + self.sheets.count() + self.maps.count() # type: ignore
+    
+    @property
+    def title(self) -> str:
+        return "#" + self.name
 
 
 class Note(models.Model):
