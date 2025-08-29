@@ -92,6 +92,9 @@
             }
         });
         simplemde.codemirror.on("cursorActivity", onCmCursorActivity);
+        simplemde.codemirror.on("change", () => {
+            document.getElementById("btn-save-note-continue").classList.remove("disabled");
+        });
         window.addEventListener("load", () => {
             simplemde.codemirror.refresh();
         });
