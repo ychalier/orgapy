@@ -1,5 +1,5 @@
 import os
-from setuptools import find_packages, setup
+from setuptools import setup
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
     README = readme.read()
@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-orgapy',
-    version='4.6.2',
+    version='4.7.0',
     packages=["orgapy"],
     include_package_data=True,
     license='GNU GPLv3',
