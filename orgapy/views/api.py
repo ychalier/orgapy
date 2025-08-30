@@ -699,7 +699,7 @@ def api_title(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.change_note")
 def api_edit_widgets(request: HttpRequest) -> JsonResponse:
-    object_id = request.POST.get("object_id")
+    object_id = request.POST.get("objectId")
     updates = json.loads(request.POST.get("updates", "[]"))
     if object_id is None:
         raise BadRequest()
@@ -761,7 +761,7 @@ def api_sheet(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.change_sheet")
 def api_save_sheet(request: HttpRequest) -> JsonResponse:
-    sheet_id = request.POST.get("object_id")
+    sheet_id = request.POST.get("objectId")
     if sheet_id is None:
         raise BadRequest()
     sheet_data = request.POST.get("data")
@@ -798,7 +798,7 @@ def api_map(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.change_map")
 def api_save_map(request: HttpRequest) -> JsonResponse:
-    map_id = request.POST.get("object_id")
+    map_id = request.POST.get("objectId")
     if map_id is None:
         raise BadRequest()
     map_title = request.POST.get("title")

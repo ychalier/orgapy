@@ -257,16 +257,23 @@ def view_documents_mixed(request: HttpRequest, template_name: str, category: Cat
         base_notes = category.notes.all() # type: ignore
         base_sheets = category.sheets.all() # type: ignore
         base_maps = category.maps.all() # type: ignore
+        category_arg = category
     elif category == "uncategorized":
         base_notes = Note.objects.filter(categories__isnull=True)
         base_sheets = Sheet.objects.filter(categories__isnull=True)
         base_maps = Map.objects.filter(categories__isnull=True)
+        category_arg = {
+            "name": "uncategorized",
+            "id": -1
+        }
+    else:
+        category_arg = category
     notes, attrs = select_documents(request, Note, base_notes)
     sheets, _ = select_documents(request, Sheet, base_sheets)
     maps, _ = select_documents(request, Map, base_maps)
     documents = list(notes) + list(sheets) + list(maps)
     documents.sort(key=lambda document: (document.pinned, document.date_modification, document.date_access), reverse=True)
-    return render_documents(request, documents, template_name, attrs, category=category)
+    return render_documents(request, documents, template_name, attrs, category=category_arg)
 
 
 def toggle_object_attribute(request: HttpRequest, active: str, object_id: str, attrname: str) -> HttpResponse:
