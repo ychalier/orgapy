@@ -89,11 +89,13 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
     window.addEventListener("load", () => {
         const input = searchbar.querySelector(".searchbar-input");
         const container = searchbar.querySelector(".searchbar-suggestions");
+        var results;
         input.addEventListener("input", () => {
             const query = input.value.trim();
             fetch(URL_API + `?action=${apiAction}&q=${encodeURIComponent(query)}`).then(res => res.json()).then(data => {
+                results = data.results;
                 container.innerHTML = "";
-                for (const entry of data.results) {
+                for (const entry of results) {
                     const element = document.createElement("a");
                     element.className = "searchbar-suggestion";
                     container.appendChild(element);
@@ -101,6 +103,14 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
                     element.innerHTML = `<mark>${ entry.title.slice(0, query.length) }</mark>${ entry.title.slice(query.length) }`;
                 }
             });
+        });
+        input.addEventListener("keydown", (event) => {
+            if (event.key == "Enter") {
+                if (results.length == 1) {
+                    event.preventDefault();
+                    window.location.href = results[0].url;
+                }
+            }
         });
     });
 }
