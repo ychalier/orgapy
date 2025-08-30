@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
 <script>
     const URL_ADMIN_PROJECT_CHANGE = "{% url 'admin:orgapy_project_changelist' %}";
-    const URL_ORGAPY_NOTE = "{% url 'orgapy:note' object_id='object_id' %}";
+    const URL_ORGAPY_NOTE = "{% url 'orgapy:note' object_id='objectId' %}";
     const OBJECTIVE_START_HOURS = {{ settings.objective_start_hours }};
 </script>
 <script src="{% static 'orgapy/js/dragrank.js' %}"></script>
