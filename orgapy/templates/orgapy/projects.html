@@ -24,7 +24,7 @@
         Tasks, objectives and projects are hidden.
     </p>
     <p>
-        <span class="hint">Change this in <a href="{% url 'orgapy:settings' %}?ref={{ request.path }}">settings</a>.</span>
+        <span class="hint">Change this in <a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}">settings</a>.</span>
     </p>
 </div>
 {% else %}
@@ -217,6 +217,7 @@
 <li class="menu-item"><button id="btn-objective-create"><i class="ri-add-line"></i> Objective</button></li>
 <li class="menu-item"><button id="btn-project-create"><i class="ri-add-line"></i> Project</button></li>
 <li class="menu-item"><button id="events-add"><i class="ri-add-line"></i> Event</button></li>
+<hr class="menu-separator">
 <li class="menu-item"><button id="tasks-explore"><i class="ri-search-line"></i> Explore Tasks</button></li>
 <li class="menu-item"><button id="events-refresh"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
 <li class="menu-item">

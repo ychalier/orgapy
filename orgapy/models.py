@@ -48,42 +48,56 @@ class Category(models.Model):
     @property
     def count(self) -> int:
         return self.notes.count() + self.sheets.count() + self.maps.count() # type: ignore
-    
+
     @property
     def title(self) -> str:
         return "#" + self.name
 
 
-class Note(models.Model):
-    """Represent a general note, ie. a title and a text"""
-
+class Document(models.Model):
+    
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_access = models.DateTimeField(auto_now_add=True, auto_now=False)
     title = models.CharField(max_length=255)
-    content = models.TextField()
     public = models.BooleanField(default=False)
-    categories = models.ManyToManyField("Category", blank=True, related_name="notes")
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
-    note_refs = models.ManyToManyField("Note", related_name="referenced_in")
-    sheet_refs = models.ManyToManyField("Sheet", related_name="referenced_in")
-    map_refs = models.ManyToManyField("Map", related_name="referenced_in")
-    active = "notes"
 
     class Meta:
-
+        abstract = True
         ordering = ["-date_modification"]
-
+    
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
 
     def save(self, *args, **kwargs):
         if self.nonce is None:
             self.nonce = generate_nonce()
+        super(Document, self).save(*args, **kwargs)
+
+    def date_modification_display(self):
+        now = datetime.datetime.now()
+        if now.date() == self.date_modification.date():
+            return "Today"
+        elif now.year == self.date_modification.year:
+            return self.date_modification.strftime("%m-%d")
+        return self.date_modification.strftime("%Y-%m-%d")
+
+
+class Note(Document):
+    
+    content = models.TextField()
+    note_refs = models.ManyToManyField("Note", related_name="referenced_in")
+    sheet_refs = models.ManyToManyField("Sheet", related_name="referenced_in")
+    map_refs = models.ManyToManyField("Map", related_name="referenced_in")
+    categories = models.ManyToManyField("Category", blank=True, related_name="notes")
+    active = "notes"
+
+    def save(self, *args, **kwargs):
         super(Note, self).save(*args, **kwargs)
         objects = {"note": set(), "sheet": set(), "map": set()}
         pattern = re.compile(r"@(note|sheet|map)/(\d+)")
@@ -96,16 +110,43 @@ class Note(models.Model):
     def get_absolute_url(self):
         return reverse("orgapy:note", kwargs={"object_id": self.id})
 
-    def _content_preprocess(self):
-        return self.content
 
-    def date_modification_display(self):
-        now = datetime.datetime.now()
-        if now.date() == self.date_modification.date():
-            return "Today"
-        elif now.year == self.date_modification.year:
-            return self.date_modification.strftime("%m-%d")
-        return self.date_modification.strftime("%Y-%m-%d")
+class SheetGroup(models.Model):
+
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+
+    class Meta:
+
+        ordering = ["title"]
+
+    def __str__(self):
+        return f"{ self.user} - { self.id }. { self.title }"
+
+
+class Sheet(Document):
+
+    description = models.TextField(blank=True, null=True)
+    data = models.TextField(blank=True, null=True)
+    config = models.TextField(blank=True, null=True)
+    group = models.ForeignKey("SheetGroup", on_delete=models.SET_NULL, null=True, blank=True)
+    categories = models.ManyToManyField("Category", blank=True, related_name="sheets")
+    active = "sheets"
+
+    def get_absolute_url(self):
+        return reverse("orgapy:sheet", kwargs={"object_id": self.id})
+
+
+class Map(Document):
+
+    geojson = models.TextField(blank=True, null=True)
+    config = models.TextField(blank=True, null=True)
+    categories = models.ManyToManyField("Category", blank=True, related_name="maps")
+    active = "maps"
+
+    def get_absolute_url(self):
+        return reverse("orgapy:map", kwargs={"object_id": self.id})
 
 
 class Objective(models.Model):
@@ -349,104 +390,6 @@ class Calendar(models.Model):
                 success = True
                 break
         return success
-
-
-class SheetGroup(models.Model):
-
-    id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-
-    class Meta:
-
-        ordering = ["title"]
-
-    def __str__(self):
-        return f"{ self.user} - { self.id }. { self.title }"
-
-
-class Sheet(models.Model):
-
-    id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_access = models.DateTimeField(auto_now_add=True, auto_now=False)
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    data = models.TextField(blank=True, null=True)
-    config = models.TextField(blank=True, null=True)
-    public = models.BooleanField(default=False)
-    group = models.ForeignKey("SheetGroup", on_delete=models.SET_NULL, null=True, blank=True)
-    nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
-    categories = models.ManyToManyField("Category", blank=True, related_name="sheets")
-    pinned = models.BooleanField(default=False)
-    hidden = models.BooleanField(default=False)
-    active = "sheets"
-
-    class Meta:
-
-        ordering = ["title"]
-
-    def __str__(self):
-        return f"{ self.user} - { self.id }. { self.title }"
-
-    def save(self, *args, **kwargs):
-        if self.nonce is None:
-            self.nonce = generate_nonce()
-        return super(Sheet, self).save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse("orgapy:sheet", kwargs={"object_id": self.id})
-
-    def date_modification_display(self):
-        now = datetime.datetime.now()
-        if now.date() == self.date_modification.date():
-            return "Today"
-        elif now.year == self.date_modification.year:
-            return self.date_modification.strftime("%m-%d")
-        return self.date_modification.strftime("%Y-%m-%d")
-
-
-class Map(models.Model):
-
-    id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_access = models.DateTimeField(auto_now_add=True, auto_now=False)
-    title = models.CharField(max_length=255)
-    geojson = models.TextField(blank=True, null=True)
-    config = models.TextField(blank=True, null=True)
-    public = models.BooleanField(default=False)
-    nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
-    categories = models.ManyToManyField("Category", blank=True, related_name="maps")
-    pinned = models.BooleanField(default=False)
-    hidden = models.BooleanField(default=False)
-    active = "maps"
-
-    class Meta:
-
-        ordering = ["title"]
-
-    def __str__(self):
-        return f"{ self.user} - { self.id }. { self.title }"
-
-    def save(self, *args, **kwargs):
-        if self.nonce is None:
-            self.nonce = generate_nonce()
-        return super(Map, self).save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse("orgapy:map", kwargs={"object_id": self.id})
-
-    def date_modification_display(self):
-        now = datetime.datetime.now()
-        if now.date() == self.date_modification.date():
-            return "Today"
-        elif now.year == self.date_modification.year:
-            return self.date_modification.strftime("%m-%d")
-        return self.date_modification.strftime("%Y-%m-%d")
 
 
 class ProgressCounter(models.Model):

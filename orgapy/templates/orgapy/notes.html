@@ -5,6 +5,7 @@
 {% block menu %}
 {% include 'orgapy/partials/menu_notes.html' %}
 <li class="menu-item"><a href="{% url 'orgapy:notally' %}"><i class="ri-upload-line"></i> Notally</a></li>
+<hr class="menu-separator">
 {{ block.super }}
 {% endblock menu %}
 

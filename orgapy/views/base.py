@@ -5,14 +5,12 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils.text import slugify
-from django.urls import reverse
 
 from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar
-from .utils import ConflictError, find_object, pretty_paginator, save_object_core, get_or_create_settings, view_objects, toggle_object_attribute
+from .utils import ConflictError, find_user_object, pretty_paginator, save_document_core, get_or_create_settings, toggle_object_attribute, view_documents_single, view_documents_mixed
 
 
 # GENERAL ######################################################################
@@ -46,31 +44,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_sheet")
 @permission_required("orgapy.view_map")
 def view_search(request: HttpRequest) -> HttpResponse:
-    page_size = 24
-    query = request.GET.get("query", "")
-    if query == "public":
-        objects = list(Note.objects.filter(user=request.user, public=True, hidden=False))\
-            + list(Sheet.objects.filter(user=request.user, public=True))\
-            + list(Map.objects.filter(user=request.user, public=True))
-    elif query.startswith("#"):
-        category_name = query[1:]
-        return redirect("orgapy:category", name=category_name)
-    else:
-        objects = list(Note.objects.filter(user=request.user, hidden=False).filter(Q(title__contains=query) | Q(content__contains=query)))\
-            + list(Sheet.objects.filter(user=request.user, title__contains=query))\
-            + list(Map.objects.filter(user=request.user, title__contains=query))
-    if len(objects) == 1:
-        return redirect(objects[0].get_absolute_url())
-    objects.sort(key=lambda o: [o.pinned, o.date_modification, o.date_access], reverse=True)
-    paginator = Paginator(objects, page_size)
-    page = request.GET.get("page")
-    objects = paginator.get_page(page)
-    return render(request, "orgapy/search.html", {
-        "mixed": True,
-        "objects": objects,
-        "query": query,
-        "paginator": pretty_paginator(objects, query=query),
-    })
+    return view_documents_mixed(request, "orgapy/search.html")
 
 
 @permission_required("orgapy.view_category")
@@ -85,29 +59,10 @@ def view_categories(request: HttpRequest) -> HttpResponse:
 def view_category(request: HttpRequest, name: str) -> HttpResponse:
     if name in ["journal", "quote"]:
         return render(request, f"orgapy/specials/{name}.html", {})
-    if name == "uncategorized":
-        objects = list(Note.objects.filter(user=request.user, categories__isnull=True))\
-            + list(Sheet.objects.filter(user=request.user, categories__isnull=True))\
-            + list(Map.objects.filter(user=request.user, categories__isnull=True))
-        category = {
-            "name": "uncategorized",
-            "get_absolute_url": reverse("orgapy:category", kwargs={"name": "uncategorized"}),
-            "count": len(objects)
-        }
-    else:
-        category = find_object(Category, "name", name, request.user)
-        objects = list(category.notes.filter(user=request.user)) + list(category.sheets.filter(user=request.user)) + list(category.maps.filter(user=request.user)) # type: ignore[attr-defined]
-    objects.sort(key=lambda x: [x.pinned, x.date_modification, x.date_access], reverse=True)
-    page_size = 24
-    paginator = Paginator(objects, page_size)
-    page = request.GET.get("page")
-    objects = paginator.get_page(page)
-    return render(request, "orgapy/category.html", {
-        "mixed": True,
-        "objects": objects,
-        "category": category,
-        "paginator": pretty_paginator(objects),
-    })
+    category = "uncategorized"
+    if name != "uncategorized":
+        category = find_user_object(Category, "name", name, request.user)
+    return view_documents_mixed(request, "orgapy/category.html", category)
 
 
 @permission_required("orgapy.change_category")
@@ -207,7 +162,7 @@ def view_share(request: HttpRequest, active: str, nonce: str) -> HttpResponse:
 
 @permission_required("orgapy.view_note")
 def view_notes(request: HttpRequest) -> HttpResponse:
-    return view_objects(request, Note, "orgapy/notes.html", "notes")
+    return view_documents_single(request, Note, "orgapy/notes.html", "notes")
 
 
 @permission_required("orgapy.add_note")
@@ -224,7 +179,7 @@ def view_create_note(request: HttpRequest) -> HttpResponse:
 def view_save_note(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         try:
-            note = save_object_core(request, Note, ["content"])
+            note = save_document_core(request, Note, ["content"])
         except ConflictError:
             return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
         return redirect("orgapy:note", object_id=note.id)
@@ -232,7 +187,7 @@ def view_save_note(request: HttpRequest) -> HttpResponse:
 
 
 def view_note(request: HttpRequest, object_id: str) -> HttpResponse:
-    note = find_object(Note, ["id", "nonce"], object_id)
+    note = find_user_object(Note, ["id", "nonce"], object_id)
     has_permission = False
     readonly = True
     if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
@@ -251,7 +206,7 @@ def view_note(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.change_note")
 def view_edit_note(request: HttpRequest, object_id: str) -> HttpResponse:
-    note = find_object(Note, "id", object_id, request.user)
+    note = find_user_object(Note, "id", object_id, request.user)
     categories = Category.objects.filter(user=request.user).order_by("name")
     selected_category_ids = [category.id for category in note.categories.all()]
     return render(request, "orgapy/edit_note.html", {
@@ -265,7 +220,7 @@ def view_edit_note(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.view_note")
 def view_export_note(request: HttpRequest, object_id: str) -> HttpResponse:
     """View to export a note's content as Markdown"""
-    note = find_object(Note, "id", object_id, request.user)
+    note = find_user_object(Note, "id", object_id, request.user)
     markdown = note.title + "\n\n" + note.content
     response = HttpResponse(content=markdown, content_type="text/markdown")
     response["Content-Disposition"] = "inline; filename=\"{}.md\"".format(slugify(note.title))
@@ -275,7 +230,7 @@ def view_export_note(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.delete_note")
 def view_delete_note(request: HttpRequest, object_id: str) -> HttpResponse:
     """View to delete a note"""
-    note = find_object(Note, "id", object_id, request.user)
+    note = find_user_object(Note, "id", object_id, request.user)
     note.delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
@@ -328,7 +283,7 @@ def view_notally(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_sheet")
 def view_sheets(request: HttpRequest) -> HttpResponse:
-    return view_objects(request, Sheet, "orgapy/sheets.html", "sheets")
+    return view_documents_single(request, Sheet, "orgapy/sheets.html", "sheets")
 
 
 @permission_required("orgapy.add_sheet")
@@ -341,7 +296,7 @@ def view_create_sheet(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.change_sheet")
 def view_save_sheet(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
-        sheet = save_object_core(request, Sheet, ["description"])
+        sheet = save_document_core(request, Sheet, ["description"])
         if "next" in request.POST:
             return redirect(request.POST["next"])
         return redirect("orgapy:sheet", object_id=sheet.id)
@@ -349,7 +304,7 @@ def view_save_sheet(request: HttpRequest) -> HttpResponse:
 
 
 def view_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_object(Sheet, ["id", "nonce"], object_id)
+    sheet = find_user_object(Sheet, ["id", "nonce"], object_id)
     has_permission = False
     read_only = False
     if request.GET.get("embed"):
@@ -372,7 +327,7 @@ def view_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.change_sheet")
 def view_edit_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_object(Sheet, "id", object_id, request.user)
+    sheet = find_user_object(Sheet, "id", object_id, request.user)
     categories = Category.objects.filter(user=request.user).order_by("name")
     selected_category_ids = [category.id for category in sheet.categories.all()]
     return render(request, "orgapy/edit_sheet.html", {
@@ -385,7 +340,7 @@ def view_edit_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.view_sheet")
 def view_export_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_object(Sheet, ["id", "nonce"], object_id)
+    sheet = find_user_object(Sheet, ["id", "nonce"], object_id)
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
         response = HttpResponse(sheet.data, content_type="text/tab-separated-values")
         response['Content-Disposition'] = f'attachment; filename="{sheet.title}.tsv"'
@@ -395,7 +350,7 @@ def view_export_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.delete_sheet")
 def view_delete_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_object(Sheet, "id", object_id, request.user)
+    sheet = find_user_object(Sheet, "id", object_id, request.user)
     sheet.delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
@@ -417,7 +372,7 @@ def view_toggle_sheet_public(request: HttpRequest, object_id: str) -> HttpRespon
 
 @permission_required("orgapy.view_map")
 def view_maps(request: HttpRequest) -> HttpResponse:
-    return view_objects(request, Map, "orgapy/maps.html", "maps")
+    return view_documents_single(request, Map, "orgapy/maps.html", "maps")
 
 
 @permission_required("orgapy.add_map")
@@ -429,7 +384,7 @@ def view_create_map(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.change_map")
 def view_edit_map(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_object(Map, "id", object_id, request.user)
+    mmap = find_user_object(Map, "id", object_id, request.user)
     categories = Category.objects.filter(user=request.user).order_by("name")
     selected_category_ids = [category.id for category in mmap.categories.all()]
     return render(request, "orgapy/edit_map.html", {
@@ -443,7 +398,7 @@ def view_edit_map(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.change_map")
 def view_save_map(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
-        mmap = save_object_core(request, Map)
+        mmap = save_document_core(request, Map)
         if "next" in request.POST:
             return redirect(request.POST["next"])
         return redirect("orgapy:map", object_id=mmap.id)
@@ -451,7 +406,7 @@ def view_save_map(request: HttpRequest) -> HttpResponse:
 
 
 def view_map(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_object(Map, ["id", "nonce"], object_id)
+    mmap = find_user_object(Map, ["id", "nonce"], object_id)
     has_permission = False
     read_only = True
     if not request.GET.get("embed"):
@@ -474,7 +429,7 @@ def view_map(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.view_map")
 def view_export_map(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_object(Map, ["id", "nonce"], object_id)
+    mmap = find_user_object(Map, ["id", "nonce"], object_id)
     if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map") or mmap.public:
         response = HttpResponse(mmap.geojson, content_type="application/geo+json")
         response['Content-Disposition'] = f'attachment; filename="{mmap.title}.geojson"'
@@ -484,7 +439,7 @@ def view_export_map(request: HttpRequest, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.delete_map")
 def view_delete_map(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_object(Map, "id", object_id, request.user)
+    mmap = find_user_object(Map, "id", object_id, request.user)
     mmap.delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
@@ -572,7 +527,7 @@ def view_create_progress_log(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.change_progress_log")
 def view_edit_progress_log(request: HttpRequest, object_id: str) -> HttpResponse:
-    log = find_object(ProgressLog, "id", object_id, request.user)
+    log = find_user_object(ProgressLog, "id", object_id, request.user)
     return render(request, "orgapy/edit_progress_log.html", {
         "log": log,
     })
@@ -580,7 +535,7 @@ def view_edit_progress_log(request: HttpRequest, object_id: str) -> HttpResponse
 
 @permission_required("orgapy.delete_progress_log")
 def view_delete_progress_log(request: HttpRequest, object_id: str) -> HttpResponse:
-    log = find_object(ProgressLog, "id", object_id, request.user)
+    log = find_user_object(ProgressLog, "id", object_id, request.user)
     log.delete()
     return redirect("orgapy:progress")
 

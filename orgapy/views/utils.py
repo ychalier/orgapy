@@ -1,21 +1,21 @@
 import json
 import re
 import urllib.parse
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Page, Paginator
-from django.db.models import Q
+from django.db.models import QuerySet, Q
 from django.http import HttpRequest, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..models import Settings, Category, Note, Sheet, Map, ProgressLog
+from ..models import Settings, Category, Note, Sheet, Map, ProgressLog, Document
 
 
 UserObject = TypeVar("UserObject", Category, Note, Sheet, Map, ProgressLog)
-CategorizedObject = TypeVar("CategorizedObject", Note, Sheet, Map)
+DocumentT = TypeVar("DocumentT", Note, Sheet, Map)
 LoggedUser = AbstractBaseUser
 
 
@@ -50,7 +50,7 @@ def pretty_paginator(page: Page, show_around: int = 2, **attrs) -> dict:
     return paginator
 
 
-def find_object(
+def find_user_object(
         model: type[UserObject],
         key: str | list[str],
         value: int | str,
@@ -104,10 +104,10 @@ class ConflictError(Exception):
     pass
 
 
-def save_object_core(
+def save_document_core(
         request: HttpRequest,
-        model: type[CategorizedObject],
-        specific_fields: list[str] = []) -> CategorizedObject:
+        model: type[DocumentT],
+        specific_fields: list[str] = []) -> DocumentT:
     original = None
     if "id" in request.POST and model.objects.filter(id=request.POST["id"]).exists():
         original = model.objects.get(id=request.POST["id"])
@@ -171,51 +171,102 @@ def get_or_create_settings(user: LoggedUser) -> Settings:
     return Settings.objects.create(user=user)
 
 
-def view_objects(
+def select_documents(
         request: HttpRequest,
-        model: type[UserObject],
-        template_name: str,
-        env_name: str,
-        page_size: int = 24
-        ) -> HttpResponse:
+        model: type[DocumentT],
+        base: QuerySet[DocumentT] | None = None,
+        ) -> tuple[QuerySet[DocumentT], dict]:
+    if base is None:
+        documents = model.objects.filter(user=request.user)
+    else:
+        documents = base.filter(user=request.user)
+    attrs = {}
     query = request.GET.get("query", "")
-    category = request.GET.get("category", "")
-    if len(query) > 0 and query[0] == "#":
-        category = query[1:]
-    base_objects = model.objects.filter(user=request.user)
-    show_hidden = request.GET.get("hidden") == "1"
-    if show_hidden:
-        base_objects = base_objects.filter(hidden=True)
-    else:
-        base_objects = base_objects.filter(hidden=False)
-    if "uncategorized" in request.GET:
-        base_objects = base_objects.filter(categories__isnull=True)
-    if len(category) > 0:
-        objects = base_objects.filter(categories__name__exact=category)
-    elif len(query) > 0:
-        if model == Note:
-            objects = base_objects.filter(Q(title__contains=query) | Q(content__contains=query))
-        else:
-            objects = base_objects.filter(title__contains=query)
-    else:
-        objects = base_objects
-    if len(objects) == 1 and model.objects.count() > 1 and not show_hidden:
-        return redirect(objects[0].get_absolute_url())
-    paginator = Paginator(objects.order_by(
-        "-pinned",
-        "-date_modification",
-        "-date_access",
-    ), page_size)
+    attrs["query"] = query
+    hidden_is_set = False
+    for boolattr in ["hidden", "public", "pinned"]:
+        if boolattr in request.GET:
+            if boolattr == "hidden":
+                hidden_is_set = True
+            documents = documents.filter(**{boolattr: bool(int(request.GET[boolattr]))})
+            attrs[boolattr] = request.GET[boolattr]
+        elif boolattr == query:
+            if boolattr == "hidden":
+                hidden_is_set = True
+            query = query.replace(boolattr, "")
+            documents = documents.filter(**{boolattr: True})
+    if not hidden_is_set:
+        documents = documents.exclude(hidden=True)
+    if query:
+        category_pattern = re.compile(r"#([a-zA-Z0-9]+)")
+        spaces_pattern = re.compile(r" +")
+        for name in category_pattern.findall(query):
+            if name == "uncategorized":
+                documents = documents.filter(categories__isnull=True)
+            else:
+                documents = documents.filter(categories__name__exact=name)
+        query = spaces_pattern.sub(" ", category_pattern.sub("", query)).strip()
+        if query:
+            if model == Note:
+                documents = documents.filter(Q(title__icontains=query) | Q(content__icontains=query))
+            elif model == Sheet:
+                documents = documents.filter(Q(title__icontains=query) | Q(data__icontains=query))
+            else:
+                documents = documents.filter(title__icontains=query)
+    return documents, attrs
+
+
+def render_documents(
+        request: HttpRequest,
+        documents: QuerySet[DocumentT] | list[Note | Sheet | Map],
+        template_name: str,
+        attrs: dict,
+        page_size: int = 24,
+        **kwargs):
+    mixed = isinstance(documents, list)
+    paginator = Paginator(documents, page_size)
     page = request.GET.get("page")
     objects = paginator.get_page(page)
     return render(request, template_name, {
+        "mixed": mixed,
         "objects": objects,
-        "query": query,
-        "category": category,
-        "paginator": pretty_paginator(objects, query=query, hidden=int(show_hidden)),
-        "categories": Category.objects.filter(user=request.user).order_by("name"),
-        "active": env_name
+        "query": attrs.get("query", ""),
+        "paginator": pretty_paginator(objects, **attrs),
+        **kwargs
     })
+
+
+def view_documents_single(
+        request: HttpRequest,
+        model: type[DocumentT],
+        template_name: str,
+        active: str,
+        ) -> HttpResponse:
+    documents, attrs = select_documents(request, model)
+    documents = documents.order_by(
+        "-pinned",
+        "-date_modification",
+        "-date_access",
+    )
+    return render_documents(request, documents, template_name, attrs, active=active)
+
+
+def view_documents_mixed(request: HttpRequest, template_name: str, category: Category | Literal["uncategorized"] | None = None) -> HttpResponse:
+    base_notes = base_sheets = base_maps = None
+    if isinstance(category, Category):
+        base_notes = category.notes.all() # type: ignore
+        base_sheets = category.sheets.all() # type: ignore
+        base_maps = category.maps.all() # type: ignore
+    elif category == "uncategorized":
+        base_notes = Note.objects.filter(categories__isnull=True)
+        base_sheets = Sheet.objects.filter(categories__isnull=True)
+        base_maps = Map.objects.filter(categories__isnull=True)
+    notes, attrs = select_documents(request, Note, base_notes)
+    sheets, _ = select_documents(request, Sheet, base_sheets)
+    maps, _ = select_documents(request, Map, base_maps)
+    documents = list(notes) + list(sheets) + list(maps)
+    documents.sort(key=lambda document: (document.pinned, document.date_modification, document.date_access), reverse=True)
+    return render_documents(request, documents, template_name, attrs, category=category)
 
 
 def toggle_object_attribute(request: HttpRequest, active: str, object_id: str, attrname: str) -> HttpResponse:
@@ -223,7 +274,7 @@ def toggle_object_attribute(request: HttpRequest, active: str, object_id: str, a
         model = {"notes": Note, "sheets": Sheet, "maps": Map}[active]
     except KeyError:
         raise BadRequest()
-    obj: Note | Sheet | Map = find_object(model, "id", object_id, request.user)
+    obj: Note | Sheet | Map = find_user_object(model, "id", object_id, request.user)
     setattr(obj, attrname, not getattr(obj, attrname, False))
     obj.save()
     if "next" in request.GET:

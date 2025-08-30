@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective
 from ..utils import parse_dt, parse_date
-from .utils import find_object, compare_checklists, compare_objective_histories
+from .utils import find_user_object, compare_checklists, compare_objective_histories
 
 
 def api(request: HttpRequest) -> HttpResponse:
@@ -747,7 +747,7 @@ def api_sheet(request: HttpRequest) -> JsonResponse:
     sheet_id = request.GET.get("objectId")
     if sheet_id is None:
         raise BadRequest()
-    sheet = find_object(Sheet, ["id", "nonce"], sheet_id)
+    sheet = find_user_object(Sheet, ["id", "nonce"], sheet_id)
     if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
         return JsonResponse({
             "title": sheet.title,
@@ -767,7 +767,7 @@ def api_save_sheet(request: HttpRequest) -> JsonResponse:
     sheet_data = request.POST.get("data")
     sheet_config = request.POST.get("config")
     modification = float(request.POST.get("modification", 0))
-    sheet = find_object(Sheet, "id", sheet_id, request.user)
+    sheet = find_user_object(Sheet, "id", sheet_id, request.user)
     if sheet.date_modification.timestamp() > modification:
         return JsonResponse({"success": False, "reason": "Sheet has newer modifications"})
     sheet.data = sheet_data
@@ -784,7 +784,7 @@ def api_map(request: HttpRequest) -> JsonResponse:
     map_id = request.GET.get("objectId")
     if map_id is None:
         raise BadRequest()
-    mmap = find_object(Map, ["id", "nonce"], map_id)
+    mmap = find_user_object(Map, ["id", "nonce"], map_id)
     if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map") or mmap.public:
         return JsonResponse({
             "title": mmap.title,
@@ -807,7 +807,7 @@ def api_save_map(request: HttpRequest) -> JsonResponse:
     map_geojson = request.POST.get("geojson")
     map_config = request.POST.get("config")
     modification = float(request.POST.get("modification", 0))
-    mmap = find_object(Map, "id", map_id, request.user)
+    mmap = find_user_object(Map, "id", map_id, request.user)
     if mmap.date_modification.timestamp() > modification:
         return JsonResponse({"success": False, "reason": "Map has newer modifications"})
     mmap.title = map_title
