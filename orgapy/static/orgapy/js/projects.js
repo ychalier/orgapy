@@ -211,7 +211,7 @@ class Project {
                 this.container.querySelectorAll(".note-suggestions").forEach(remove);
                 return;
             }
-            fetch(URL_API + `?action=note-suggestions&q=${query}`).then(res => res.json()).then(data => {
+            fetch(URL_API + `?action=suggestions&t=note&q=${query}`).then(res => res.json()).then(data => {
                 this.container.querySelectorAll(".note-suggestions").forEach(remove);
                 const suggestions = create(this.container, "div", "note-suggestions");
                 for (const result of data.results.slice(0, 3)) {
