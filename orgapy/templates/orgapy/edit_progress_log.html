@@ -35,7 +35,7 @@
         </p>
         <button>Save</button>
         {% if log %}
-        <a href="{% url 'orgapy:delete_progress_log' lid=log.id %}" class="button link-confirm button-delete" title="Delete">Delete</a>
+        <a href="{% url 'orgapy:delete_progress_log' object_id=log.id %}" class="button link-confirm button-delete" title="Delete">Delete</a>
         {% endif %}
     </header>
 </form>

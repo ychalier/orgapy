@@ -30,8 +30,8 @@
         <span class="secondary" title="{{ log.dt | date:"Y-m-d H:i:s" }}">{{ log.dt | date:"M d" }}</span>
         <span class="oneline-truncate">{{ log.description }}</span>
         <span class="show-on-parent-hover">
-            <a href="{% url 'orgapy:edit_progress_log' lid=log.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
-            <a href="{% url 'orgapy:delete_progress_log' lid=log.id %}" class="button-inline link-confirm" title="Delete"><i class="ri-delete-bin-line"></i></a>
+            <a href="{% url 'orgapy:edit_progress_log' object_id=log.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
+            <a href="{% url 'orgapy:delete_progress_log' object_id=log.id %}" class="button-inline link-confirm" title="Delete"><i class="ri-delete-bin-line"></i></a>
         </span>
     </div>
     {% endfor %}
