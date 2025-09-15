@@ -18,8 +18,13 @@
             <input id="input-objective-start-hours" type="number" name="objective_start_hours" value="{{ settings.objective_start_hours }}" min="0" max="23" step="1" />
         </p>
         <p>
-            <label for="input-lookahead">Lookahead</label>
+            <label for="input-lookahead">Calendar Lookahead (in days)</label>
             <input id="input-lookahead" type="number" name="calendar_lookahead" value="{{ settings.calendar_lookahead }}" min="0" />
+        </p>
+        <p>
+            <label for="input-trash-period">Trash Period (in days)</label>
+            <input id="input-trash-period" type="number" name="trash_period" value="{{ settings.trash_period }}" min="0" />
+            <span class="hint">Documents in trash for longer than this value will be destroyed.</span>
         </p>
         <p>
             <label class="toggle">

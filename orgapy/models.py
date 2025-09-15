@@ -19,6 +19,7 @@ class Settings(models.Model):
     objective_start_hours = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(23)])
     calendar_lookahead = models.PositiveIntegerField(default=3)
     beach_mode = models.BooleanField(default=False)
+    trash_period = models.PositiveIntegerField(default=30)
 
     class Meta:
 
