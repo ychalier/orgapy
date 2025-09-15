@@ -13,7 +13,11 @@
     {% if obj.hidden %}
     <span title="Hidden"><i class="ri-eye-line"></i></span>
     {% endif %}
+    {% if obj.deleted %}
+    <span class="oneline-truncate" title="{{ obj.title }}">{{ obj.title }}</span>
+    {% else %}
     <a class="oneline-truncate link-hidden" href="{{ obj.get_absolute_url }}" title="{{ obj.title }}">{{ obj.title }}</a>
+    {% endif %}
     <span>
         {% if obj.categories.all %}
         {% for category in obj.categories.all %}
@@ -23,6 +27,10 @@
         <a class="link-tenuous" href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
         {% endif %}
     </span>
+    {% if obj.deleted %}
+    <a href="{% url 'orgapy:restore' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}">Restore</a>
+    <a class="link-confirm" href="{% url 'orgapy:destroy' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}">Destroy</a>
+    {% else %}
     {% if obj.pinned %}
     <a class="button-inline" href="{% url 'orgapy:toggle_pin' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>
     {% endif %}
@@ -48,4 +56,5 @@
             </ul>
         </div>
     </span>
+    {% endif %}
 </div>

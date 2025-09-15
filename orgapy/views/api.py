@@ -833,11 +833,11 @@ def api_suggestions(request: HttpRequest) -> JsonResponse:
             results += Category.objects.filter(user=request.user, name__startswith=query[1:])[:5]
         else:
             if (object_type is None or object_type == "note") and request.user.has_perm("orgapy.view_note"):
-                results += Note.objects.filter(user=request.user, title__startswith=query)[:5]
+                results += Note.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
             if (object_type is None or object_type == "sheet") and request.user.has_perm("orgapy.view_sheet"):
-                results += Sheet.objects.filter(user=request.user, title__startswith=query)[:5]
+                results += Sheet.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
             if (object_type is None or object_type == "map") and request.user.has_perm("orgapy.view_map"):
-                results += Map.objects.filter(user=request.user, title__startswith=query)[:5]
+                results += Map.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
     data = {
         "results": [
             {
@@ -881,7 +881,7 @@ def api_search(request: HttpRequest) -> JsonResponse:
     search_category = request.GET.get("category")
     objects = []
     for model in models:
-        query = model.objects.filter(user=request.user)
+        query = model.objects.filter(user=request.user, deleted=False, hidden=False)
         if search_query is not None:
             query = query.filter(title__contains=search_query)
         if search_category is not None:
