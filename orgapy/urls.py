@@ -65,5 +65,7 @@ urlpatterns = [
     path("<active>/<object_id>/destroy", views.view_destroy, name="destroy"),
     path("<active>/<nonce>/share", views.view_share, name="share"),
     path("trash", views.view_trash, name="trash"),
+    path("trash/restore", views.view_restore_all, name="restore_all"),
+    path("trash/destroy", views.view_destroy_all, name="destroy_all"),
     path("api", api, name="api"),
 ]

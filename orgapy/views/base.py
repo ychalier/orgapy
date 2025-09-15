@@ -197,6 +197,26 @@ def view_trash(request: HttpRequest) -> HttpResponse:
     return view_documents_mixed(request, "orgapy/trash.html", None, deleted=True)
 
 
+@permission_required("orgapy.delete_note")
+@permission_required("orgapy.delete_sheet")
+@permission_required("orgapy.delete_map")
+def view_restore_all(request: HttpRequest) -> HttpResponse:
+    Note.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
+    Sheet.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
+    Map.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
+    return redirect(f"orgapy:trash")
+
+
+@permission_required("orgapy.delete_note")
+@permission_required("orgapy.delete_sheet")
+@permission_required("orgapy.delete_map")
+def view_destroy_all(request: HttpRequest) -> HttpResponse:
+    Note.objects.filter(user=request.user, deleted=True).delete()
+    Sheet.objects.filter(user=request.user, deleted=True).delete()
+    Map.objects.filter(user=request.user, deleted=True).delete()
+    return redirect(f"orgapy:trash")
+
+
 # NOTES ########################################################################
 
 

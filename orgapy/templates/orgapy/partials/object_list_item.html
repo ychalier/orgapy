@@ -28,8 +28,8 @@
         {% endif %}
     </span>
     {% if obj.deleted %}
-    <a href="{% url 'orgapy:restore' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}">Restore</a>
-    <a class="link-confirm" href="{% url 'orgapy:destroy' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}">Destroy</a>
+    <a class="button-inline link-confirm" message="Please confirm restoration of '{{ obj.title }}'" href="{% url 'orgapy:restore' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Restore"><i class="ri-arrow-left-up-box-line"></i></a>
+    <a class="button-inline link-confirm" message="Please confirm DESTRUCTION of '{{ obj.title }}'" href="{% url 'orgapy:destroy' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Destroy"><i class="ri-file-shred-line"></i></a>
     {% else %}
     {% if obj.pinned %}
     <a class="button-inline" href="{% url 'orgapy:toggle_pin' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>
