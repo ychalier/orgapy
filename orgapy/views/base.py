@@ -49,9 +49,12 @@ def view_search(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_category")
 def view_categories(request: HttpRequest) -> HttpResponse:
+    uncategorized = Note.objects.filter(user=request.user, categories__isnull=True).count()\
+        + Sheet.objects.filter(user=request.user, categories__isnull=True).count()\
+        + Map.objects.filter(user=request.user, categories__isnull=True).count()
     return render(request, "orgapy/categories.html", {
         "categories": Category.objects.filter(user=request.user),
-        "uncategorized": Note.objects.filter(user=request.user, categories__isnull=True).count(), # TODO: wut??
+        "uncategorized": uncategorized,
     })
 
 
