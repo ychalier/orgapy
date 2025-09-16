@@ -212,12 +212,16 @@
 
 {% endblock main_content %}
 
-{% block menu %}
-<li class="menu-item"><button id="tasks-add"><i class="ri-add-line"></i> Task</button></li>
-<li class="menu-item"><button id="btn-objective-create"><i class="ri-add-line"></i> Objective</button></li>
-<li class="menu-item"><button id="btn-project-create"><i class="ri-add-line"></i> Project</button></li>
-<li class="menu-item"><button id="events-add"><i class="ri-add-line"></i> Event</button></li>
+{% block menu_create %}
+<li class="menu-item"><button id="tasks-add"><i class="ri-checkbox-circle-line"></i> Task</button></li>
+<li class="menu-item"><button id="btn-objective-create"><i class="ri-focus-2-line"></i> Objective</button></li>
+<li class="menu-item"><button id="btn-project-create"><i class="ri-briefcase-line"></i> Project</button></li>
+<li class="menu-item"><button id="events-add"><i class="ri-calendar-line"></i> Event</button></li>
 <hr class="menu-separator">
+{{ block.super }}
+{% endblock menu_create %}
+
+{% block menu %}
 <li class="menu-item"><button id="tasks-explore"><i class="ri-search-line"></i> Explore Tasks</button></li>
 <li class="menu-item"><button id="events-refresh"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
 <li class="menu-item">

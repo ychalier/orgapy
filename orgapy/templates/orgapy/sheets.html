@@ -2,12 +2,6 @@
 
 {% block title %}{% block subtitle %}Sheets &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block menu %}
-{% include 'orgapy/partials/menu_sheets.html' %}
-<hr class="menu-separator">
-{{ block.super }}
-{% endblock menu %}
-
 {% block empty %}
 <div class="card">
     <p>You have no sheet.</p>
