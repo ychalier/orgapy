@@ -66,6 +66,11 @@ The app uses Django built-in authentication framework, meaning that users need a
 - [sql.js](https://github.com/sql-js/sql.js/) -  A JavaScript library to run SQLite on the web.
 - [zip.js](https://gildas-lormeau.github.io/zip.js/) -  A JavaScript library to zip and unzip files.
 
+**Artworks:**
+
+- [*Agenda.jpg* by M.Minderhoud](https://commons.wikimedia.org/wiki/File:Agenda.jpg), originally published under CC-BY-SA 4.0, edited with the [halftone palette](https://chalier.fr/halftone-palette/)
+- [*Written with a feather.jpg* by Star61](https://commons.wikimedia.org/wiki/File:Written_with_a_feather.jpg), originally published under CC-BY-SA 4.0, edited with the [halftone palette](https://chalier.fr/halftone-palette/)
+
 ## Contributing
 
 Contributions are welcomed. Push your branch and create a pull request detailling your changes.

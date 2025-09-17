@@ -30,6 +30,7 @@
 
 <body class="{% block body_class %}{% endblock %}">
     {% block body %}
+    {% block artworks %}{% endblock artworks %}
     <div id="columns">
         <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
         <main id="column-main" {% if readonly %}class="readonly"{% endif %}>

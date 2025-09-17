@@ -9,8 +9,12 @@
     <h1>Quotes</h1>
 </header>
 
-<div id="quotes" class="card"></div>
+<div id="quotes" class="card card-fake-transparent"></div>
 
 <script src="{% static 'orgapy/js/specials/quote.js' %}"></script>
 
 {% endblock main_content %}
+
+{% block artworks %}
+<img class="artwork" src="{% static 'orgapy/artworks/quote.png' %}" />
+{% endblock artworks %}
