@@ -44,7 +44,7 @@
                 <div class="navbar-right">
                     <form id="searchbar" class="searchbar" action="{% url 'orgapy:search' %}" method="get">
                         <div class="searchbar-container">         
-                            <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search" value="{% if query %}{{query}}{% endif %}" />
+                            <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search" tabindex="1" value="{% if query %}{{query}}{% endif %}" />
                             <i class="searchbar-icon ri-close-line"></i>
                             <div class="searchbar-suggestions"></div>
                         </div>
@@ -58,7 +58,7 @@
                             {% if request.user.is_authenticated %}
                             <li class="menu-item">
                                 <div class="dropdown">
-                                    <div class="dropdown-toggle" tabindex="1"><i class="ri-add-line"></i> Create</div>
+                                    <div class="dropdown-toggle" tabindex="0"><i class="ri-add-line"></i> Create</div>
                                     <ul class="menu">
                                         {% block menu_create %}
                                         <li class="menu-item"><a href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-sticky-note-line"></i> Note</a></li>

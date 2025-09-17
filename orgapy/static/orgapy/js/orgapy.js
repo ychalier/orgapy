@@ -89,26 +89,65 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
     window.addEventListener("load", () => {
         const input = searchbar.querySelector(".searchbar-input");
         const container = searchbar.querySelector(".searchbar-suggestions");
+        var selected = null;
         var results;
+        var elements = [];
         input.addEventListener("input", () => {
             const query = input.value.trim();
             fetch(URL_API + `?action=${apiAction}&q=${encodeURIComponent(query)}`).then(res => res.json()).then(data => {
                 results = data.results;
                 container.innerHTML = "";
-                for (const entry of results) {
+                selected = null;
+                elements = [];
+                for (const [i, entry] of results.entries()) {
                     const element = document.createElement("a");
+                    elements.push(element);
                     element.className = "searchbar-suggestion";
                     container.appendChild(element);
                     element.href = entry.url;               
                     element.innerHTML = `<mark>${ entry.title.slice(0, query.length) }</mark>${ entry.title.slice(query.length) }`;
+                    element.addEventListener("mouseenter", () => {
+                        selected = i;
+                        element.classList.add("hovered");
+                    });
+                    element.addEventListener("mouseleave", () => {
+                        selected = null;
+                        element.classList.remove("hovered");
+                    });
                 }
             });
         });
         input.addEventListener("keydown", (event) => {
             if (event.key == "Enter") {
-                if (results.length == 1) {
+                if (selected != null) {
                     event.preventDefault();
-                    window.location.href = results[0].url;
+                    window.location.href = results[selected].url;
+                }
+            } else if (event.key == "ArrowDown" && results.length > 0) {
+                event.preventDefault();
+                if (selected == null) {
+                    selected = 0;
+                } else {
+                    selected = Math.min(selected + 1, results.length - 1);
+                }
+                container.querySelectorAll(".hovered").forEach(element => {
+                    element.classList.remove("hovered");
+                });
+                elements[selected].classList.add("hovered");
+            } else if (event.key == "ArrowUp" && results.length > 0) {
+                event.preventDefault();
+                if (selected == null) {
+                    selected = results.length - 1;
+                } else if (selected == 0) {
+                    selected = null;
+                } else {
+                    selected = Math.max(0, selected - 1);
+                }
+                container.querySelectorAll(".hovered").forEach(element => {
+                    element.classList.remove("hovered");
+                });
+                if (selected != null) {
+                    elements[selected].classList.add("hovered");
                 }
             }
         });

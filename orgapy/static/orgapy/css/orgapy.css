@@ -845,6 +845,7 @@ input:checked+.toggle-slider+.toggle-text {
     border-right: 1px solid black;
 }
 
+.searchbar-suggestion.hovered,
 .searchbar-suggestion:hover {
     background: #555;
 }
