@@ -1,6 +1,7 @@
 const months = ["jan.", "feb.", "mar.", "apr.", "may", "june", "july", "aug.", "sep.", "oct.", "nov.", "dec."];
 const container = document.getElementById("journal");
 let data;
+let minYear, maxYear;
 
 function inflateYear(year) {
     const yearData = year in data ? data[year] : [];
@@ -9,16 +10,20 @@ function inflateYear(year) {
     const prevButton = create(journalHeader, "button", "journal-button");
     prevButton.textContent = "‹";
     prevButton.title = year - 1;
-    prevButton.addEventListener("click", () => {
-        inflateYear(year - 1);
-    });
+    if (year == minYear) {
+        prevButton.setAttribute("disabled", "1");
+    } else {
+        prevButton.addEventListener("click", () => {inflateYear(year - 1);});
+    }
     create(journalHeader, "span").textContent = year;
     const nextButton = create(journalHeader, "button", "journal-button");
     nextButton.textContent = "›";
     nextButton.title = year + 1;
-    nextButton.addEventListener("click", () => {
-        inflateYear(year + 1);
-    });
+    if (year == maxYear) {
+        nextButton.setAttribute("disabled", "1");
+    } else {
+        nextButton.addEventListener("click", () => {inflateYear(year + 1);});
+    }
     const journalBody = create(container, "div", "journal-body");
     const firstRow = create(journalBody, "div", "journal-month");
     for (let i = 0; i <= 31; i++) {
@@ -93,6 +98,8 @@ fetchApi(URL_API + "?action=search&category=journal", "get", null, searchResults
     for (const obj of searchResults.objects) {
         const dt = new Date(obj.dateCreation);
         const year = dt.getFullYear();
+        if (minYear == undefined || year < minYear) minYear = year;
+        if (maxYear == undefined || year > maxYear) maxYear = year;
         if (!(year in data)) {
             data[year] = {};
         }

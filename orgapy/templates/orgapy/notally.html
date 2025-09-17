@@ -14,12 +14,6 @@
 <script src="{% static 'orgapy/js/notally.js' %}"></script>
 {% endblock %}
 
-{% block menu %}
-{% include 'orgapy/partials/menu_notes.html' %}
-<hr class="menu-separator">
-{{ block.super }}
-{% endblock menu %}
-
 {% block main_content %}
 
 {% if notes %}

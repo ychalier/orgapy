@@ -49,9 +49,12 @@ def view_search(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_category")
 def view_categories(request: HttpRequest) -> HttpResponse:
+    uncategorized = Note.objects.filter(user=request.user, categories__isnull=True).count()\
+        + Sheet.objects.filter(user=request.user, categories__isnull=True).count()\
+        + Map.objects.filter(user=request.user, categories__isnull=True).count()
     return render(request, "orgapy/categories.html", {
         "categories": Category.objects.filter(user=request.user),
-        "uncategorized": Note.objects.filter(user=request.user, categories__isnull=True).count(),
+        "uncategorized": uncategorized,
     })
 
 
@@ -157,6 +160,63 @@ def view_share(request: HttpRequest, active: str, nonce: str) -> HttpResponse:
     raise BadRequest(f"Unknown environment '{active}'")
 
 
+@permission_required("orgapy.delete_note")
+@permission_required("orgapy.delete_sheet")
+@permission_required("orgapy.delete_map")
+def view_restore(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
+    try:
+        model = {"notes": Note, "sheets": Sheet, "maps": Map}[active]
+    except KeyError:
+        raise BadRequest()
+    obj: Note | Sheet | Map = find_user_object(model, "id", object_id, request.user, allow_deleted=True)
+    obj.restore()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect(obj.get_absolute_url())
+
+
+@permission_required("orgapy.delete_note")
+@permission_required("orgapy.delete_sheet")
+@permission_required("orgapy.delete_map")
+def view_destroy(request: HttpRequest, active: str, object_id: str) -> HttpResponse:    
+    try:
+        model = {"notes": Note, "sheets": Sheet, "maps": Map}[active]
+    except KeyError:
+        raise BadRequest()
+    obj: Note | Sheet | Map = find_user_object(model, "id", object_id, request.user, allow_deleted=True)
+    obj.delete()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect(f"orgapy:{active}")
+
+
+@permission_required("orgapy.delete_note")
+@permission_required("orgapy.delete_sheet")
+@permission_required("orgapy.delete_map")
+def view_trash(request: HttpRequest) -> HttpResponse:
+    return view_documents_mixed(request, "orgapy/trash.html", None, deleted=True)
+
+
+@permission_required("orgapy.delete_note")
+@permission_required("orgapy.delete_sheet")
+@permission_required("orgapy.delete_map")
+def view_restore_all(request: HttpRequest) -> HttpResponse:
+    Note.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
+    Sheet.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
+    Map.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
+    return redirect(f"orgapy:trash")
+
+
+@permission_required("orgapy.delete_note")
+@permission_required("orgapy.delete_sheet")
+@permission_required("orgapy.delete_map")
+def view_destroy_all(request: HttpRequest) -> HttpResponse:
+    Note.objects.filter(user=request.user, deleted=True).delete()
+    Sheet.objects.filter(user=request.user, deleted=True).delete()
+    Map.objects.filter(user=request.user, deleted=True).delete()
+    return redirect(f"orgapy:trash")
+
+
 # NOTES ########################################################################
 
 
@@ -231,7 +291,7 @@ def view_export_note(request: HttpRequest, object_id: str) -> HttpResponse:
 def view_delete_note(request: HttpRequest, object_id: str) -> HttpResponse:
     """View to delete a note"""
     note = find_user_object(Note, "id", object_id, request.user)
-    note.delete()
+    note.soft_delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
     return redirect("orgapy:notes")
@@ -245,6 +305,16 @@ def view_toggle_note_pin(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.change_note")
 def view_toggle_note_public(request: HttpRequest, object_id: str) -> HttpResponse:
     return view_toggle_public(request, "notes", object_id)
+
+
+@permission_required("orgapy.delete_note")
+def view_restore_note(request, object_id: str) -> HttpResponse:
+    return view_restore(request, "notes", object_id)
+
+
+@permission_required("orgapy.delete_note")
+def view_destroy_note(request, object_id: str) -> HttpResponse:
+    return view_destroy(request, "notes", object_id)
 
 
 @permission_required("orgapy.add_note")
@@ -351,7 +421,7 @@ def view_export_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.delete_sheet")
 def view_delete_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
     sheet = find_user_object(Sheet, "id", object_id, request.user)
-    sheet.delete()
+    sheet.soft_delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
     return redirect("orgapy:sheets")
@@ -365,6 +435,16 @@ def view_toggle_sheet_pin(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.change_sheet")
 def view_toggle_sheet_public(request: HttpRequest, object_id: str) -> HttpResponse:
     return view_toggle_public(request, "sheets", object_id)
+
+
+@permission_required("orgapy.delete_sheet")
+def view_restore_sheet(request, object_id: str) -> HttpResponse:
+    return view_restore(request, "sheets", object_id)
+
+
+@permission_required("orgapy.delete_sheet")
+def view_destroy_sheet(request, object_id: str) -> HttpResponse:
+    return view_destroy(request, "sheets", object_id)
 
 
 # MAPS #########################################################################
@@ -440,7 +520,7 @@ def view_export_map(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.delete_map")
 def view_delete_map(request: HttpRequest, object_id: str) -> HttpResponse:
     mmap = find_user_object(Map, "id", object_id, request.user)
-    mmap.delete()
+    mmap.soft_delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
     return redirect("orgapy:maps")
@@ -454,6 +534,16 @@ def view_toggle_map_pin(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.change_map")
 def view_toggle_map_public(request: HttpRequest, object_id: str) -> HttpResponse:
     return view_toggle_public(request, "maps", object_id)
+
+
+@permission_required("orgapy.delete_map")
+def view_restore_map(request, object_id: str) -> HttpResponse:
+    return view_restore(request, "maps", object_id)
+
+
+@permission_required("orgapy.delete_map")
+def view_destroy_map(request, object_id: str) -> HttpResponse:
+    return view_destroy(request, "maps", object_id)
 
 
 # PROGRESS #####################################################################
@@ -582,6 +672,7 @@ def view_settings(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
         settings.calendar_lookahead = int(request.POST.get("calendar_lookahead", 3))
+        settings.trash_period = int(request.POST.get("trash_period", 30))
         settings.beach_mode = bool(request.POST.get("beach_mode", False))
         settings.save()
         if "ref" in request.POST and request.POST["ref"]:

@@ -1,0 +1,16 @@
+{% extends "orgapy/layout/objects.html" %}
+
+{% block title %}{% block subtitle %}Trash &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block content_title %}
+<header class="card">
+    <h1>Trash ({{ objects.paginator.count }})</h1>
+    <p>
+        <a class="button link-confirm" message="Are you sure you want to restore all ({{ objects.paginator.count }}) documents?" href="{% url 'orgapy:restore_all' %}"><i class="ri-arrow-left-up-box-line"></i> Restore All</a>
+        <a class="button button-delete link-confirm" message="Are you sure you want to DESTROY all ({{ objects.paginator.count }}) documents?" href="{% url 'orgapy:destroy_all' %}"><i class="ri-file-shred-line"></i> Destroy All</a>
+    </p>
+    <p class="hint">
+        Documents in trash for longer than <a href="{% url 'orgapy:settings' %}?next={{ request.get_full_path | urlencode }}">{{ request.user.settings.trash_period }} days</a> will be destroyed.
+    </p>
+</header>
+{% endblock content_title %}

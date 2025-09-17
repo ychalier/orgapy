@@ -19,6 +19,7 @@ class Settings(models.Model):
     objective_start_hours = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(23)])
     calendar_lookahead = models.PositiveIntegerField(default=3)
     beach_mode = models.BooleanField(default=False)
+    trash_period = models.PositiveIntegerField(default=30)
 
     class Meta:
 
@@ -66,6 +67,8 @@ class Document(models.Model):
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
+    deleted = models.BooleanField(default=False)
+    date_deletion = models.DateTimeField(auto_now_add=False, auto_now=False, blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -86,6 +89,16 @@ class Document(models.Model):
         elif now.year == self.date_modification.year:
             return self.date_modification.strftime("%m-%d")
         return self.date_modification.strftime("%Y-%m-%d")
+    
+    def soft_delete(self):
+        self.deleted = True
+        self.date_deletion = timezone.now()
+        self.save()
+    
+    def restore(self):
+        self.deleted = False
+        self.date_deletion = None
+        self.save()
 
 
 class Note(Document):

@@ -54,7 +54,8 @@ def find_user_object(
         model: type[UserObject],
         key: str | list[str],
         value: int | str,
-        required_user: LoggedUser | AnonymousUser | None = None
+        required_user: LoggedUser | AnonymousUser | None = None,
+        allow_deleted: bool = False,
         ) -> UserObject:
     fields = [key] if isinstance(key, str) else key
     nodes = Q(**{fields[0]: value})
@@ -67,6 +68,8 @@ def find_user_object(
         raise Http404()
     if required_user is not None and getattr(obj, "user", None) != required_user:
         raise PermissionDenied()
+    if not allow_deleted and getattr(obj, "deleted", False):
+        raise Http404()
     return obj
 
 
@@ -175,6 +178,7 @@ def select_documents(
         request: HttpRequest,
         model: type[DocumentT],
         base: QuerySet[DocumentT] | None = None,
+        **boolattrs: bool,
         ) -> tuple[QuerySet[DocumentT], dict]:
     if base is None:
         documents = model.objects.filter(user=request.user)
@@ -184,12 +188,21 @@ def select_documents(
     query = request.GET.get("query", "")
     attrs["query"] = query
     hidden_is_set = False
-    for boolattr in ["hidden", "public", "pinned"]:
-        if boolattr in request.GET:
+    deleted_is_set = False
+    for boolattr in ["hidden", "public", "pinned", "deleted"]:
+        if boolattr in request.GET or boolattr in boolattrs:
             if boolattr == "hidden":
                 hidden_is_set = True
-            documents = documents.filter(**{boolattr: bool(int(request.GET[boolattr]))})
-            attrs[boolattr] = request.GET[boolattr]
+            elif boolattr == "deleted":
+                deleted_is_set = True
+            if boolattr in request.GET:
+                filter_value = bool(int(request.GET[boolattr]))
+                query_value = request.GET[boolattr]
+            else:
+                filter_value = boolattrs[boolattr]
+                query_value = str(int(boolattrs[boolattr]))
+            documents = documents.filter(**{boolattr: filter_value})
+            attrs[boolattr] = query_value
         elif boolattr == query:
             if boolattr == "hidden":
                 hidden_is_set = True
@@ -197,6 +210,8 @@ def select_documents(
             documents = documents.filter(**{boolattr: True})
     if not hidden_is_set:
         documents = documents.exclude(hidden=True)
+    if not deleted_is_set:
+        documents = documents.exclude(deleted=True)
     if query:
         category_pattern = re.compile(r"#([a-zA-Z0-9]+)")
         spaces_pattern = re.compile(r" +")
@@ -251,7 +266,7 @@ def view_documents_single(
     return render_documents(request, documents, template_name, attrs, active=active)
 
 
-def view_documents_mixed(request: HttpRequest, template_name: str, category: Category | Literal["uncategorized"] | None = None) -> HttpResponse:
+def view_documents_mixed(request: HttpRequest, template_name: str, category: Category | Literal["uncategorized"] | None = None, **boolargs: bool) -> HttpResponse:
     base_notes = base_sheets = base_maps = None
     if isinstance(category, Category):
         base_notes = category.notes.all() # type: ignore
@@ -268,9 +283,9 @@ def view_documents_mixed(request: HttpRequest, template_name: str, category: Cat
         }
     else:
         category_arg = category
-    notes, attrs = select_documents(request, Note, base_notes)
-    sheets, _ = select_documents(request, Sheet, base_sheets)
-    maps, _ = select_documents(request, Map, base_maps)
+    notes, attrs = select_documents(request, Note, base_notes, **boolargs)
+    sheets, _ = select_documents(request, Sheet, base_sheets, **boolargs)
+    maps, _ = select_documents(request, Map, base_maps, **boolargs)
     documents = list(notes) + list(sheets) + list(maps)
     documents.sort(key=lambda document: (document.pinned, document.date_modification, document.date_access), reverse=True)
     return render_documents(request, documents, template_name, attrs, category=category_arg)

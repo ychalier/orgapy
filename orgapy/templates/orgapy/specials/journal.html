@@ -10,7 +10,7 @@
 
 {% block main_content %}
 
-<header class="card">
+<header class="card card-fake-transparent">
     <h1>Journal</h1>
     <div id="journal"></div>
 </header>
@@ -18,3 +18,7 @@
 <script src="{% static 'orgapy/js/specials/journal.js' %}"></script>
 
 {% endblock main_content %}
+
+{% block artworks %}
+<img class="artwork" src="{% static 'orgapy/artworks/journal.png' %}" />
+{% endblock artworks %}

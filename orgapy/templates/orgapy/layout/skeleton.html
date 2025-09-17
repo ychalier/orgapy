@@ -30,6 +30,7 @@
 
 <body class="{% block body_class %}{% endblock %}">
     {% block body %}
+    {% block artworks %}{% endblock artworks %}
     <div id="columns">
         <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
         <main id="column-main" {% if readonly %}class="readonly"{% endif %}>
@@ -44,7 +45,7 @@
                 <div class="navbar-right">
                     <form id="searchbar" class="searchbar" action="{% url 'orgapy:search' %}" method="get">
                         <div class="searchbar-container">         
-                            <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search" value="{% if query %}{{query}}{% endif %}" />
+                            <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search" tabindex="1" value="{% if query %}{{query}}{% endif %}" />
                             <i class="searchbar-icon ri-close-line"></i>
                             <div class="searchbar-suggestions"></div>
                         </div>
@@ -55,13 +56,27 @@
                         <a class="navbar-link dropdown-toggle" tabindex="0"><i class="ri-menu-line"></i></a>
                         <ul class="menu">
                             {% block menu %}
-                            <li class="menu-item"><a href="{% url 'orgapy:about' %}"><i class="ri-information-line"></i> About</a><li>
                             {% if request.user.is_authenticated %}
-                            <li class="menu-item"><a href="{% url 'orgapy:progress' %}"><i class="ri-bar-chart-2-line"></i> Progress</a><li>
+                            <li class="menu-item">
+                                <div class="dropdown">
+                                    <div class="dropdown-toggle" tabindex="0"><i class="ri-add-line"></i> Create</div>
+                                    <ul class="menu">
+                                        {% block menu_create %}
+                                        <li class="menu-item"><a href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-sticky-note-line"></i> Note</a></li>
+                                        <li class="menu-item"><a href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-table-line"></i> Sheet</a></li>
+                                        <li class="menu-item"><a href="{% url 'orgapy:create_map' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-map-2-line"></i> Map</a></li>
+                                        {% endblock menu_create %}
+                                    </ul>
+                                </div>
+                            </li>
                             <li class="menu-item"><a href="{% url 'orgapy:categories' %}"><i class="ri-hashtag"></i> Categories</a></li>
+                            <li class="menu-item"><a href="{% url 'orgapy:trash' %}"><i class="ri-delete-bin-line"></i> Trash</a></li>
+                            <hr class="menu-separator">
+                            <li class="menu-item"><a href="{% url 'orgapy:progress' %}"><i class="ri-bar-chart-2-line"></i> Progress</a></li>
                             {% if request.user.settings %}
-                            <li class="menu-item"><a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}"><i class="ri-settings-2-line"></i> Settings</a><li>
+                            <li class="menu-item"><a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}"><i class="ri-settings-2-line"></i> Settings</a></li>
                             {% endif %}
+                            <li class="menu-item"><a href="{% url 'orgapy:about' %}"><i class="ri-information-line"></i> About</a></li>
                             {% endif %}
                             {% endblock menu %}
                         </ul>
