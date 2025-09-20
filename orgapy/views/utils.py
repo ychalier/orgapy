@@ -62,6 +62,8 @@ def find_user_object(
     for field in fields[1:]:
         nodes |= Q(**{field: value})
     query = model.objects.filter(nodes)
+    if required_user is not None:
+        query = query.filter(user=required_user)
     try:
         obj = query.get()
     except model.DoesNotExist:
