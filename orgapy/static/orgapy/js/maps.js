@@ -1335,6 +1335,7 @@ class Map {
 
     addGeojsonFromData(geojsonData, replace=false) {
         this.getSelectedLayer().addFeatures(geojsonData, replace);
+        this.onChange("layer-feature");
     }
 
     selectLayer(layerIndex) {
