@@ -468,39 +468,37 @@ class Feature {
             cellValue.textContent = this.properties[property];
         }
         if (this.layer.map.readonly) return;
-        let buttons = create(wrapper, "div", "feature-buttons");
-        let buttonEdit = create(buttons, "button");
+        const buttons = create(wrapper, "div", "feature-buttons");
+        const buttonEdit = create(buttons, "button");
         buttonEdit.innerHTML = `<i class="ri-pencil-fill"></i>`;
         buttonEdit.title = "Edit";
         buttonEdit.addEventListener("click", (event) => {
             event.stopPropagation();
             self.inflatePopupEdit(container);
         });
-        if (!self.layer.map.readonly) {
-            let buttonToggleEdition = create(buttons, "button");
-            if (this.geometry.type == "Point") {
-                buttonToggleEdition.innerHTML = `<i class="ri-map-pin-line"></i>`;
-            } else if (this.geometry.type == "LineString") {
-                buttonToggleEdition.innerHTML = `<i class="ri-route-line"></i>`;
-            } else {
-                buttonToggleEdition.innerHTML = `<i class="ri-shape-line"></i>`;
-            }
-            if (this.editing) {
-                buttonToggleEdition.classList.add("active");
-            }
-            buttonToggleEdition.title = "Toggle edition";
-            buttonToggleEdition.addEventListener("click", (event) => {
-                event.stopPropagation();
-                if (self.editing) {
-                    self.disableEdit();
-                    self.onChange("edit-feature");
-                } else {
-                    self.enableEdit();
-                }
-                self.layer.map.leafletMap.closePopup();
-            });
+        const buttonToggleEdition = create(buttons, "button");
+        if (this.geometry.type == "Point") {
+            buttonToggleEdition.innerHTML = `<i class="ri-map-pin-line"></i>`;
+        } else if (this.geometry.type == "LineString") {
+            buttonToggleEdition.innerHTML = `<i class="ri-route-line"></i>`;
+        } else {
+            buttonToggleEdition.innerHTML = `<i class="ri-shape-line"></i>`;
         }
-        let buttonDuplicate = create(buttons, "button");
+        if (this.editing) {
+            buttonToggleEdition.classList.add("active");
+        }
+        buttonToggleEdition.title = "Toggle edition";
+        buttonToggleEdition.addEventListener("click", (event) => {
+            event.stopPropagation();
+            if (self.editing) {
+                self.disableEdit();
+                self.onChange("edit-feature");
+            } else {
+                self.enableEdit();
+            }
+            self.layer.map.leafletMap.closePopup();
+        });
+        const buttonDuplicate = create(buttons, "button");
         buttonDuplicate.innerHTML = `<i class="ri-file-copy-2-line"></i>`;
         buttonDuplicate.title = "Duplicate";
         buttonDuplicate.addEventListener("click", (event) => {
@@ -509,7 +507,14 @@ class Feature {
             selfCopy.properties.label = `${selfCopy.properties.label} (copy)`;
             self.layer.addFeature(selfCopy);
         });
-        let buttonDelete = create(buttons, "button");
+        const buttonMove = create(buttons, "button");
+        buttonMove.innerHTML = `<i class="ri-arrow-right-line"></i>`;
+        buttonMove.title = "Move";
+        buttonMove.addEventListener("click", (event) => {
+            event.stopPropagation();
+            new MoveFeatureDialog(self.layer.map, self.layer.index, self.index).open();
+        });
+        const buttonDelete = create(buttons, "button");
         buttonDelete.innerHTML = `<i class="ri-delete-bin-line"></i>`;
         buttonDelete.title = "Delete";
         buttonDelete.addEventListener("click", (event) => {
@@ -976,6 +981,15 @@ class Layer {
         });
         if (this.map.readonly) return;
 
+        this.setupFeatureDragrank();
+        
+
+    }
+
+    setupFeatureDragrank() {
+        if (this.readonly) return;
+        var self = this;
+        dragRankClear("feature");
         dragRank(this.featuresContainer, ".map-feature", (ordering, permutation) => {
             dragRankReorder(self.features, permutation);
             self.onChange("feature-order");
@@ -983,7 +997,6 @@ class Layer {
             dragid: "feature",
             domReorder: true,
         });
-
     }
 
     onChange(change) {
@@ -1044,6 +1057,8 @@ class Layer {
         let i = this.getArrayFeatureIndex(featureIndex);
         this.features[i].delete();
         this.features.splice(i, 1);
+        this.counterLabel.textContent = `(${this.features.length})`;
+        this.setupFeatureDragrank();
         this.onChange("delete-feature");
     }
 
