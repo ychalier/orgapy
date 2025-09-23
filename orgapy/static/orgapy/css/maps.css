@@ -211,6 +211,11 @@ body.fullscreen {
     color: white;
 }
 
+.map-layer-count {
+    margin-left: .2rem;
+    font-size: small;
+}
+
 .map-layer > details > summary {
     color:hsl(0, 0%, 50%)
 }

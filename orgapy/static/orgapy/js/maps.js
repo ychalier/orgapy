@@ -835,6 +835,7 @@ class Layer {
         this.container = null;
         this.visibilityCheckbox = null;
         this.labelElement = null;
+        this.counterLabel = null;
         this.featuresContainer = null;
         this.selected = false;
         this.featureIndexCounter = 0;
@@ -904,6 +905,9 @@ class Layer {
             event.stopImmediatePropagation();
             self.container.open = !self.container.open;
         });
+
+        this.counterLabel = create(summary, "span", "map-layer-count");
+        this.counterLabel.textContent = `(${this.features.length})`;
 
         this.visibilityCheckbox = create(summary, "input");
         this.visibilityCheckbox.type = "checkbox";
