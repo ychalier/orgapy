@@ -19,7 +19,10 @@
 
 {% block main_content %}
 
-<div class="map-seed" map-id="{{map.id}}"></div>
+<div class="map-layout" map-id="{{map.id}}">
+    <div class="map-dashboard"></div>
+    <div class="map-seed"></div>
+</div>
 
 {% if not readonly and map.referenced_in %}
 <template id="template-refs">

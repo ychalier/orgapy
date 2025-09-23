@@ -8,7 +8,7 @@ const PROVIDERS = [
         }
     },
     {
-        label: "Open Topo MAp",
+        label: "Open Topo Map",
         tiles: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
         options: {
             maxZoom: 17,
@@ -110,31 +110,41 @@ function getHueRotation(color, baseColor="#2981ca") {
 }
 
 
-class PanelControl extends L.Control {
+class Dashboard {
 
-    constructor(map) {
-        super({position: "topleft"});
+    constructor(map, container) {
         this.map = map;
-        this.mapTitleContainer = null;
+        this.headerContainer = null;
         this.mapTitle = null;
-        this.panelContainer = null;
+        this.container = container;
         this.layersContainer = null;
         this.searchbarContainer = null;
     }
 
-    inflateMapTitle() {
+    inflateHeader() {
         var self = this;
-        if (this.mapTitle == null) {
-            this.mapTitle = create(this.mapTitleContainer, "div", "map-title");
+
+        if (this.headerContainer == null) {
+            this.headerContainer = create(this.container, "div");
         } else {
-            let foo = create(null, "div", "map-title");
-            this.mapTitle.replaceWith(foo);
-            this.mapTitle = foo;
+            this.headerContainer.innerHTML = "";
         }
+
+        const mapTitleContainer = create(this.headerContainer, "div", "map-title-container");
+        const mapsButton = create(mapTitleContainer, "a", "link-hidden");
+        mapsButton.href = "../maps";
+        create(mapsButton, "i", "ri-map-2-line");
+        this.mapTitle = create(mapTitleContainer, "div", "map-title");
         this.mapTitle.textContent = this.map.title;
         this.mapTitle.addEventListener("click", () => {
             self.inflateMapTitleEdit();
         });
+
+        const refsContainerTemplate = document.getElementById("template-refs");
+        if (refsContainerTemplate != null) {
+            const node = document.importNode(refsContainerTemplate.content, true);
+            this.headerContainer.appendChild(node);
+        }
     }
 
     inflateMapTitleEdit() {
@@ -150,146 +160,137 @@ class PanelControl extends L.Control {
             let newTitle = input.value.trim();
             if (newTitle != "") {
                 self.map.setTitle(newTitle);
-                self.inflateMapTitle();
+                self.inflateHeader();
             }
         });
     }
 
-    inflatePanel(map) {
+    inflateSearchBar(container) {
+        this.searchbarContainer = create(container, "div", "map-searchbar");
+        let searchForm = create(this.searchbarContainer, "form", "form-inline");
+        let searchInput = create(searchForm, "input");
+        searchInput.type = "text";
+        searchInput.placeholder = "Search";
+        let searchButton = create(searchForm, "button");
+        searchButton.innerHTML = `<i class="ri-search-line"></i>`;
+        searchButton.title = "Search";
+        var self = this;
+        searchForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            let query = searchInput.value.trim();
+            if (query != "") {
+                self.search(query);
+            }
+        });
+    }
+
+    inflateButtons(container) {
+        const buttonsContainer = create(container, "div", "map-toolbar");
         var self = this;
 
-        this.mapTitleContainer = create(this.panelContainer, "div", "map-title-container");
-        const mapsButton = create(this.mapTitleContainer, "a", "link-hidden");
-        mapsButton.href = "../maps";
-        create(mapsButton, "i", "ri-map-2-line");
-
-        this.inflateMapTitle();
-
-        const refsContainerTemplate = document.getElementById("template-refs");
-        if (refsContainerTemplate != null) {
-            const node = document.importNode(refsContainerTemplate.content, true);
-            this.panelContainer.appendChild(node);
-        }
-
-        if (!this.map.readonly) {
-            this.searchbarContainer = create(this.panelContainer, "div", "map-searchbar");
-            let searchForm = create(this.searchbarContainer, "form", "form-inline");
-            let searchInput = create(searchForm, "input");
-            searchInput.type = "text";
-            searchInput.placeholder = "Search";
-            let searchButton = create(searchForm, "button");
-            searchButton.innerHTML = `<i class="ri-search-line"></i>`;
-            searchButton.title = "Search";
-            var self = this;
-            searchForm.addEventListener("submit", (event) => {
-                event.preventDefault();
-                let query = searchInput.value.trim();
-                if (query != "") {
-                    self.search(query);
-                }
-            });
-        }
-
-        this.layersContainer = create(this.panelContainer, "div", "map-layers");
-        this.layersContainer.addEventListener("wheel", (event) => {
+        this.map.buttonSave = create(buttonsContainer, "button");
+        this.map.buttonSave.innerHTML = `<i class="ri-save-line"></i>`;
+        this.map.buttonSave.setAttribute("disabled", true);
+        this.map.buttonSave.addEventListener("click", (event) => {
             event.stopPropagation();
+            self.map.saveData();
         });
 
-        if (!this.map.readonly) {
+        const buttonAddLayer = create(buttonsContainer, "button");
+        buttonAddLayer.innerHTML = `<i class="ri-add-line"></i>`;
+        buttonAddLayer.title = "Add layer";
+        buttonAddLayer.addEventListener("click", () => {
+            self.map.addLayer();
+        });
 
-            const buttonsContainer = create(this.panelContainer, "div", "map-toolbar");
+        const buttonMarker = create(buttonsContainer, "button");
+        buttonMarker.innerHTML = `<i class="ri-map-pin-line"></i>`;
+        buttonMarker.title = "Add marker";
+        buttonMarker.addEventListener("click", (event) => {
+            event.stopPropagation();
+            self.map.startMarker();
+        });
+        const buttonPolyline = create(buttonsContainer, "button");
+        buttonPolyline.innerHTML = `<i class="ri-route-line"></i>`;
+        buttonPolyline.title = "Add polyline";
+        buttonPolyline.addEventListener("click", (event) => {
+            event.stopPropagation();
+            self.map.startPolyline();
+        });
+        const buttonPolygon = create(buttonsContainer, "button");
+        buttonPolygon.innerHTML = `<i class="ri-shape-line"></i>`;
+        buttonPolygon.title = "Add polygon";
+        buttonPolygon.addEventListener("click", (event) => {
+            event.stopPropagation();
+            self.map.startPolygon();
+        });
+        const buttonToggleEdition = create(buttonsContainer, "button");
+        buttonToggleEdition.innerHTML = `<i class="ri-pencil-fill"></i>`;
+        buttonToggleEdition.title = "Toggle edition";
+        buttonToggleEdition.addEventListener("click", (event) => {
+            event.stopPropagation();
+            self.map.toggleEdition();
+            if (self.map.editing) {
+                buttonToggleEdition.querySelector("i").className = "ri-close-line";
+            } else {
+                buttonToggleEdition.querySelector("i").className = "ri-pencil-fill";
+            }
+        });
 
-            this.map.buttonSave = create(buttonsContainer, "button");
-            this.map.buttonSave.innerHTML = `<i class="ri-save-line"></i>`;
-            this.map.buttonSave.setAttribute("disabled", true);
-            this.map.buttonSave.addEventListener("click", (event) => {
-                event.stopPropagation();
-                self.map.saveData();
-            });
+        const buttonHome = create(buttonsContainer, "button");
+        buttonHome.innerHTML = `<i class="ri-home-line"></i>`;
+        buttonHome.title = "Reset view";
+        buttonHome.addEventListener("click", (event) => {
+            event.stopPropagation();
+            self.map.fitViewToFeatures();
+        });
 
-            const buttonAddLayer = create(buttonsContainer, "button");
-            buttonAddLayer.innerHTML = `<i class="ri-add-line"></i>`;
-            buttonAddLayer.title = "Add layer";
-            buttonAddLayer.addEventListener("click", () => {
-                self.map.addLayer();
-            });
+        const buttonUserPosition = create(buttonsContainer, "button");
+        buttonUserPosition.setAttribute("id", "button-user-position");
+        buttonUserPosition.setAttribute("disabled", true);
+        buttonUserPosition.innerHTML = `<i class="ri-focus-2-line"></i>`;
+        buttonUserPosition.title = "Go to current position";
+        buttonUserPosition.addEventListener("click", (event) => {
+            event.stopPropagation();
+            if (self.map.userPositionWidget != null) {
+                self.map.leafletMap.panTo(self.map.userPositionWidget.getLatLng());
+            }
+        });
+    }
 
-            const buttonMarker = create(buttonsContainer, "button");
-            buttonMarker.innerHTML = `<i class="ri-map-pin-line"></i>`;
-            buttonMarker.title = "Add marker";
-            buttonMarker.addEventListener("click", (event) => {
-                event.stopPropagation();
-                self.map.startMarker();
-            });
-            const buttonPolyline = create(buttonsContainer, "button");
-            buttonPolyline.innerHTML = `<i class="ri-route-line"></i>`;
-            buttonPolyline.title = "Add polyline";
-            buttonPolyline.addEventListener("click", (event) => {
-                event.stopPropagation();
-                self.map.startPolyline();
-            });
-            const buttonPolygon = create(buttonsContainer, "button");
-            buttonPolygon.innerHTML = `<i class="ri-shape-line"></i>`;
-            buttonPolygon.title = "Add polygon";
-            buttonPolygon.addEventListener("click", (event) => {
-                event.stopPropagation();
-                self.map.startPolygon();
-            });
-            const buttonToggleEdition = create(buttonsContainer, "button");
-            buttonToggleEdition.innerHTML = `<i class="ri-pencil-fill"></i>`;
-            buttonToggleEdition.title = "Toggle edition";
-            buttonToggleEdition.addEventListener("click", (event) => {
-                event.stopPropagation();
-                self.map.toggleEdition();
-                if (self.map.editing) {
-                    buttonToggleEdition.querySelector("i").className = "ri-close-line";
-                } else {
-                    buttonToggleEdition.querySelector("i").className = "ri-pencil-fill";
-                }
-            });
+    inflateControls() {
+        if (this.map.readonly) return;
+        const controlsContainer = create(this.container, "div", "map-dashboard-controls");
+        this.inflateSearchBar(controlsContainer);
+        this.inflateProvider(controlsContainer);
+        this.inflateButtons(controlsContainer);
+    }
 
-            const buttonHome = create(buttonsContainer, "button");
-            buttonHome.innerHTML = `<i class="ri-home-line"></i>`;
-            buttonHome.title = "Reset view";
-            buttonHome.addEventListener("click", (event) => {
-                event.stopPropagation();
-                self.map.fitViewToFeatures();
+    inflateProvider(container) {
+        var self = this;
+        const selectBaseMap = create(container, "select", "map-provider-select");
+        selectBaseMap.setAttribute("id", "select-base-map");
+        PROVIDERS.forEach((provider, i) => {
+            let option = create(selectBaseMap, "option");
+            option.value = i;
+            option.textContent = provider.label;
+        });
+        selectBaseMap.addEventListener("input", () => {
+            let providerIndex = null;
+            selectBaseMap.querySelectorAll("option").forEach(option => {
+                if (option.selected) providerIndex = parseInt(option.value);
             });
+            self.map.setTileLayer(providerIndex);
+        });
+    }
 
-            const buttonUserPosition = create(buttonsContainer, "button");
-            buttonUserPosition.setAttribute("id", "button-user-position");
-            buttonUserPosition.setAttribute("disabled", true);
-            buttonUserPosition.innerHTML = `<i class="ri-focus-2-line"></i>`;
-            buttonUserPosition.title = "Go to current position";
-            buttonUserPosition.addEventListener("click", (event) => {
-                event.stopPropagation();
-                if (self.map.userPositionWidget != null) {
-                    self.map.leafletMap.panTo(self.map.userPositionWidget.getLatLng());
-                }
-            });
-
-            const selectBaseMap = create(this.panelContainer, "select", "map-provider-select");
-            selectBaseMap.setAttribute("id", "select-base-map");
-            PROVIDERS.forEach((provider, i) => {
-                let option = create(selectBaseMap, "option");
-                option.value = i;
-                option.textContent = provider.label;
-            });
-            selectBaseMap.addEventListener("input", () => {
-                let providerIndex = null;
-                selectBaseMap.querySelectorAll("option").forEach(option => {
-                    if (option.selected) providerIndex = parseInt(option.value);
-                });
-                self.map.setTileLayer(providerIndex);
-            });
-
-        }
-
-        let currentCoordinatesLabel = create(this.panelContainer, "div", "map-coordinates");
+    inflateCoordinates(container) {
+        var self = this;
+        let currentCoordinatesLabel = create(container, "div", "map-coordinates");
         currentCoordinatesLabel.style.cursor = "pointer";
         currentCoordinatesLabel.title = "Click to copy";
         function setCurrentCoordinatesLabelText(event) {
-            let point = event ? event.latlng : map.getCenter();
+            let point = event ? event.latlng : self.map.leafletMap.getCenter();
             currentCoordinatesLabel.textContent = `${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
         }
         currentCoordinatesLabel.addEventListener("click", (event) => {
@@ -299,16 +300,22 @@ class PanelControl extends L.Control {
             toast("Coordinates copied to clipboard!", TOAST_SHORT);
         });
         setCurrentCoordinatesLabelText();
-        map.addEventListener("mousemove", setCurrentCoordinatesLabelText);
-
+        this.map.leafletMap.addEventListener("mousemove", setCurrentCoordinatesLabelText);
     }
 
-    onAdd(map) {
-        let container = create(null, "div", "map-control");
-        this.panelContainer = create(container, "div", "map-panel card");
-        container.addEventListener("dblclick", stopPropagation);
-        this.inflatePanel(map);
-        return container;
+    inflateFooter() {
+        const footer = create(this.container);
+        this.inflateCoordinates(footer);
+    }
+
+    inflate() {
+        this.inflateHeader();
+        this.inflateControls();
+        this.layersContainer = create(this.container, "div", "map-layers");
+        this.layersContainer.addEventListener("wheel", (event) => {
+            event.stopPropagation();
+        });
+        this.inflateFooter();
     }
 
     searchNominatim(query) {
@@ -748,7 +755,8 @@ class Feature {
             remove(this.panelElement);
         }
         this.panelElement = create(this.layer.featuresContainer, "li", "map-feature");
-        this.panelElement.innerHTML = this.properties.label;
+        const hasLabel = this.properties.label != undefined && this.properties.label != "";
+        create(this.panelElement, "span", "map-feature-label").innerHTML = hasLabel ? this.properties.label : "<i>&lt;null&gt;</i>";
         let moveButton = create(this.panelElement, "button");
         moveButton.innerHTML = `<i class="ri-arrow-right-line"></i>`;
         moveButton.title = "Move to another layer";
@@ -881,7 +889,7 @@ class Layer {
     inflate() {
         var self = this;
         if (this.container == null) {
-            this.container = create(this.map.panelControl.layersContainer, "details", "map-layer");
+            this.container = create(this.map.dashboard.layersContainer, "details", "map-layer");
             this.container.addEventListener("click", () => {
                 self.map.selectLayer(self.index);
             });
@@ -1144,17 +1152,16 @@ class Layer {
 
 class Map {
 
-    constructor(objectId, container, readonly=false) {
+    constructor(objectId, mapLayout, readonly=false) {
         this.objectId = objectId;
-        this.container = container;
+        this.dashboardContainer = mapLayout.querySelector(".map-dashboard");
+        this.container = mapLayout.querySelector(".map-seed");
         this.readonly = readonly;
-        this.containerLeft = null;
-        this.containerRight = null;
         this.leafletMap = null;
         this.editable = true;
         this.layers = [];
         this.userPositionWidget = null;
-        this.panelControl = null;
+        this.dashboard = null;
         this.selectedLayer = null;
         this.layerIndexCounter = 0;
         this.editing = false;
@@ -1191,8 +1198,8 @@ class Map {
         });
         this.loadTileLayer();
         L.control.zoom({position: "bottomright"}).addTo(this.leafletMap);
-        this.panelControl = new PanelControl(this);
-        this.panelControl.addTo(this.leafletMap);
+        this.dashboard = new Dashboard(this, this.dashboardContainer);
+        this.dashboard.inflate();
     }
 
     fitViewToFeatures() {
@@ -1288,7 +1295,7 @@ class Map {
         if (this.readonly) return;
         var self = this;
         dragRankClear("layer");
-        dragRank(this.panelControl.layersContainer, ".map-layer", (ordering, permutation) => {
+        dragRank(this.dashboard.layersContainer, ".map-layer", (ordering, permutation) => {
             dragRankReorder(self.layers, permutation);
             self.onChange("layer-order");
         }, {
@@ -1662,15 +1669,15 @@ class MoveFeatureDialog extends Dialog {
 }
 
 
-function initializeMap(mapSeed, readonly) {
+function initializeMap(mapLayout, readonly) {
     var map = null;
-    let mapId = mapSeed.getAttribute("map-id");
+    let mapId = mapLayout.getAttribute("map-id");
     fetch(URL_API + `?action=map&objectId=${mapId}`, {
         method: "get",
         })
         .then(res => res.json())
         .then(mapData => {
-            map = new Map(mapId, mapSeed, readonly);
+            map = new Map(mapId, mapLayout, readonly);
             let geojson = null;
             if (mapData.geojson != null && mapData.geojson.trim() != "") {
                 geojson = JSON.parse(mapData.geojson);
@@ -1687,7 +1694,7 @@ function initializeMap(mapSeed, readonly) {
 
 
 function initializeMaps(readonly) {
-    document.querySelectorAll(".map-seed").forEach(mapSeed => {
-        initializeMap(mapSeed, readonly);
+    document.querySelectorAll(".map-layout").forEach(mapLayout => {
+        initializeMap(mapLayout, readonly);
     });
 }
