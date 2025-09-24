@@ -329,6 +329,9 @@ function bindDropdown(dropdown) {
     const toggle = dropdown.querySelector(".dropdown-toggle");
     const menu = dropdown.querySelector(".menu");
 
+    console.log("Toggle:", toggle);
+    console.log("Menu:", menu);
+
     function hideDropdown(timeout=300) {
         hideTimeout = setTimeout(() => {
             dropdown.appendChild(menu);
@@ -384,7 +387,7 @@ function bindDropdown(dropdown) {
         const menuBounds = menu.getBoundingClientRect();
         const fitsUnder = toggleBounds.bottom + padding + menuBounds.height <= window.innerHeight;
         const baseLeft = toggleBounds.left;
-        const maxLeft = window.innerWidth - padding - menuBounds.width;
+        const maxLeft = screen.width - padding - menuBounds.width;
         const left = Math.max(padding, Math.min(baseLeft, maxLeft));
         menu.style.left = left + "px";
         if (fitsUnder) {
