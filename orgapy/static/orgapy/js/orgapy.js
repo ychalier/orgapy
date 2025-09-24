@@ -567,6 +567,50 @@ function setupCategoryInput() {
     updateCategories();
 }
 
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+function askUserToSubscribeToNotifications(serviceWorkerUrl, publicKeyBase64) {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+        navigator.serviceWorker.register(serviceWorkerUrl).then(function(registration) {
+            console.log("Service Worker registered with scope:", registration.scope);
+            Notification.requestPermission().then(async function(permission) {
+                if (permission === "granted") {
+                    console.log("User accepted notifications");
+                    let subscription = await registration.pushManager.getSubscription();
+                    if (!subscription) {
+                        registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(publicKeyBase64)
+                        }).then(function(subscription) {
+                            const body = JSON.stringify(subscription);
+                            apiPost("save-subscription", {"subscription": body}, null);
+                        });
+                    } else {
+                        console.log("Existing subscription found:", subscription);
+                    }
+                } else {
+                    console.log("User rejected notifications");
+                }
+            });
+        });
+    } else {
+        console.error("Could not ask user for notifications, not supported");
+    }
+}
+
 window.addEventListener("load", () => {
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {

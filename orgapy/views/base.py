@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
@@ -33,6 +34,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
         raise PermissionDenied()
     return render(request, "orgapy/projects.html", {
         "settings": get_or_create_settings(request.user),
+        "VAPID_PUBLIC_KEY": settings.VAPID_PUBLIC_KEY,
         "active": "projects",
     })
 

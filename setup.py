@@ -29,6 +29,7 @@ setup(
     install_requires=[
         "Django",
         "caldav",
-        "python-dateutil"
+        "python-dateutil",
+        "pywebpush"
     ],
 )

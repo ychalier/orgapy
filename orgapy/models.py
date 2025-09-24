@@ -26,7 +26,7 @@ class Settings(models.Model):
         ordering = ["user"]
 
     def __str__(self):
-        return f"{ self.user }"
+        return f"Settings(user={self.user})"
 
 
 class Category(models.Model):
@@ -56,7 +56,7 @@ class Category(models.Model):
 
 
 class Document(models.Model):
-    
+
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -73,7 +73,7 @@ class Document(models.Model):
     class Meta:
         abstract = True
         ordering = ["-date_modification"]
-    
+
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
 
@@ -89,12 +89,12 @@ class Document(models.Model):
         elif now.year == self.date_modification.year:
             return self.date_modification.strftime("%m-%d")
         return self.date_modification.strftime("%Y-%m-%d")
-    
+
     def soft_delete(self):
         self.deleted = True
         self.date_deletion = timezone.now()
         self.save()
-    
+
     def restore(self):
         self.deleted = False
         self.date_deletion = None
@@ -102,7 +102,7 @@ class Document(models.Model):
 
 
 class Note(Document):
-    
+
     content = models.TextField()
     note_refs = models.ManyToManyField("Note", related_name="referenced_in")
     sheet_refs = models.ManyToManyField("Sheet", related_name="referenced_in")
@@ -506,3 +506,18 @@ class ProgressLog(models.Model):
     @property
     def dt_html(self) -> str:
         return f"{self.dt.year}-{self.dt.month:02d}-{self.dt.day:02d}T{self.dt.hour:02d}:{self.dt.minute:02d}"
+
+
+class PushSubscription(models.Model):
+    
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    subscription = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+
+        ordering = ["user"]
+
+    def __str__(self):
+        return f"PushSubscription(user={self.user})"

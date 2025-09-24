@@ -10,7 +10,7 @@ from django.db.models import Max
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 
-from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective
+from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective, PushSubscription
 from ..utils import parse_dt, parse_date
 from .utils import find_user_object, compare_checklists, compare_objective_histories
 
@@ -82,6 +82,8 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_title(request)
         case "search":
             return api_search(request)
+        case "save-subscription":
+            return api_save_subscription(request)
         case _:
             raise BadRequest()
 
@@ -896,3 +898,13 @@ def api_search(request: HttpRequest) -> JsonResponse:
                 "active": obj.active,
             })
     return JsonResponse({"objects": objects, "success": True})
+
+
+@permission_required("orgapy.create_push_subscription")
+def api_save_subscription(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        raise BadRequest()
+    PushSubscription.objects.create(
+        user=request.user,
+        subscription=request.POST.get("subscription", ""))
+    return JsonResponse({"success": True})
