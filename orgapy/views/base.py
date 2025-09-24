@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils.text import slugify
 
-from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar
+from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, PushSubscription
 from .utils import ConflictError, find_user_object, pretty_paginator, save_document_core, get_or_create_settings, toggle_object_attribute, view_documents_single, view_documents_mixed
 
 
@@ -149,6 +149,8 @@ def view_delete(request: HttpRequest, active: str, object_id: str) -> HttpRespon
         return view_delete_sheet(request, object_id)
     if active == "maps":
         return view_delete_map(request, object_id)
+    elif active == "subscription":
+        return view_delete_subscription(request, object_id)
     raise BadRequest(f"Unknown environment '{active}'")
 
 
@@ -683,6 +685,7 @@ def view_settings(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/settings.html", {
         "settings": settings,
         "calendars": calendars,
+        "subscriptions": PushSubscription.objects.filter(user=request.user)
     })
 
 
@@ -715,4 +718,11 @@ def view_calendar_form(request: HttpRequest) -> HttpResponse:
             calendar_name=request.POST["name"],
             sync_period=int(request.POST["sync_period"]),
         )
+    return redirect("orgapy:settings")
+
+
+@permission_required("orgapy.delete_push_subscription")
+def view_delete_subscription(request: HttpRequest, object_id: str) -> HttpResponse:
+    sub = find_user_object(PushSubscription, "id", object_id, request.user)
+    sub.delete()
     return redirect("orgapy:settings")
