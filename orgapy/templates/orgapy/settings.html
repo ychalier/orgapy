@@ -39,6 +39,8 @@
 
     <h2>Notification Subscriptions</h2>
 
+    <button class="button-primary" id="subscribe-button">Subscribe</button>
+
     {% if subscriptions %}
     <ul>
     {% for sub in subscriptions %}
@@ -110,3 +112,14 @@
 
 </header>
 {% endblock main_content %}
+
+{% block body_scripts %}
+{{ body.super }}
+{% if request.user.is_authenticated %}
+<script>
+    document.getElementById("subscribe-button").addEventListener("click", () => {
+        askUserToSubscribeToNotifications("{% static 'orgapy/js/service-worker.js' %}", "{{ VAPID_PUBLIC_KEY }}");
+    });
+</script>
+{% endif %}
+{% endblock body_scripts %}

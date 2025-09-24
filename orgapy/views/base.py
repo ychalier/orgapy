@@ -34,7 +34,6 @@ def view_projects(request: HttpRequest) -> HttpResponse:
         raise PermissionDenied()
     return render(request, "orgapy/projects.html", {
         "settings": get_or_create_settings(request.user),
-        "VAPID_PUBLIC_KEY": settings.VAPID_PUBLIC_KEY,
         "active": "projects",
     })
 
@@ -672,20 +671,21 @@ def view_save_progress_log(request: HttpRequest) -> HttpResponse:
 def view_settings(request: HttpRequest) -> HttpResponse:
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
-    settings = get_or_create_settings(request.user)
+    user_settings = get_or_create_settings(request.user)
     if request.method == "POST":
-        settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
-        settings.calendar_lookahead = int(request.POST.get("calendar_lookahead", 3))
-        settings.trash_period = int(request.POST.get("trash_period", 30))
-        settings.beach_mode = bool(request.POST.get("beach_mode", False))
-        settings.save()
+        user_settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
+        user_settings.calendar_lookahead = int(request.POST.get("calendar_lookahead", 3))
+        user_settings.trash_period = int(request.POST.get("trash_period", 30))
+        user_settings.beach_mode = bool(request.POST.get("beach_mode", False))
+        user_settings.save()
         if "ref" in request.POST and request.POST["ref"]:
             return redirect(request.POST["ref"])
     calendars = Calendar.objects.filter(user=request.user).order_by("calendar_name")
     return render(request, "orgapy/settings.html", {
-        "settings": settings,
+        "settings": user_settings,
         "calendars": calendars,
-        "subscriptions": PushSubscription.objects.filter(user=request.user)
+        "subscriptions": PushSubscription.objects.filter(user=request.user),
+        "VAPID_PUBLIC_KEY": settings.VAPID_PUBLIC_KEY,
     })
 
 
