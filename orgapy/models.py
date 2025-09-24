@@ -349,7 +349,7 @@ class Calendar(models.Model):
         self.events = json.dumps(events_data, default=str)
         self.save()
 
-    def get_events(self, force: bool = False):
+    def get_events(self, force: bool = False) -> list[dict]:
         now = timezone.now()
         if force or self.last_sync is None or (now - self.last_sync).total_seconds() > self.sync_period:
             self.fetch_events()

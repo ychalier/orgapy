@@ -1,7 +1,9 @@
+import datetime
 import json
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.utils import timezone
 from pywebpush import WebPushException, webpush
 
 from orgapy import models
@@ -15,22 +17,38 @@ class Command(BaseCommand):
         parser.add_argument("-d", "--dry-run", action="store_true", help="Print notifications instead of actually sending them")
 
     def handle(self, *args, **kwargs):
+        today = timezone.now().date()
         for user_settings in models.Settings.objects.all():
             user = user_settings.user
-            payload = {
-                "title": "Orgapy",
-                "body": "This is a test notification!"
-            }
-            for sub in models.PushSubscription.objects.filter(user=user):
-                try:
-                    if kwargs["dry_run"]:
-                        print(sub, payload)
-                    else:
-                        webpush(
-                            subscription_info=json.loads(sub.subscription),
-                            data=json.dumps(payload),
-                            vapid_private_key=settings.VAPID_PRIVATE_KEY,
-                            vapid_claims={"sub": settings.VAPID_SUB},
-                        )
-                except WebPushException as err:
-                    self.stdout.write(self.style.ERROR(f"PUSH failed: {err}"))
+            messages = []
+            for project in models.Project.objects.filter(user=user):
+                if project.limit_date == today:
+                    messages.append(f"Project: {project.title}")
+            for task in models.Task.objects.filter(user=user):
+                if task.start_date == today or task.due_date == today:
+                    messages.append(f"Task: {task.title}")
+            for calendar in models.Calendar.objects.filter(user=user):
+                for event in calendar.get_events(force=True):
+                    event_start = datetime.datetime.strptime(event["dtstart"][:10], "%Y-%m-%d").date()
+                    if event_start == today:
+                        messages.append(f"Event: {event['title']}")
+            if not messages:
+                continue
+            for message in messages:
+                payload = {
+                    "title": "Orgapy",
+                    "body": message
+                }
+                for sub in models.PushSubscription.objects.filter(user=user):
+                    try:
+                        if kwargs["dry_run"]:
+                            print(sub, message)
+                        else:
+                            webpush(
+                                subscription_info=json.loads(sub.subscription),
+                                data=json.dumps(payload),
+                                vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                                vapid_claims={"sub": settings.VAPID_SUB},
+                            )
+                    except WebPushException as err:
+                        self.stdout.write(self.style.ERROR(f"PUSH failed: {err}"))
