@@ -36,8 +36,8 @@ class Command(BaseCommand):
                 continue
             for message in messages:
                 payload = {
-                    "title": "Orgapy",
-                    "body": message
+                    "title": message,
+                    "body": "Orgapy"
                 }
                 for sub in models.PushSubscription.objects.filter(user=user):
                     try:
