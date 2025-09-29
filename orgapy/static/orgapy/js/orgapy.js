@@ -590,10 +590,9 @@ function bindEditable(editable) {
         editable.innerHTML = "";
         editableText = create(editable, "span", "editable-text");
         editableText.textContent = value;
+        editableText.addEventListener("click", onEditableTextClick);
     }
-    const defaultValue = editable.textContent;
-    rebuildEditable(defaultValue);
-    editable.addEventListener("click", () => {
+    function onEditableTextClick() {
         const currentValue = editable.textContent;
         const input = document.createElement("input");
         input.className = "editable-input input-slim";
@@ -619,7 +618,9 @@ function bindEditable(editable) {
                 submitInput();
             }
         });
-    });
+    }
+    const defaultValue = editable.textContent;
+    rebuildEditable(defaultValue);
 }
 
 function askUserToSubscribeToNotifications(serviceWorkerUrl, publicKeyBase64) {
@@ -629,18 +630,15 @@ function askUserToSubscribeToNotifications(serviceWorkerUrl, publicKeyBase64) {
             Notification.requestPermission().then(async function(permission) {
                 if (permission === "granted") {
                     console.log("User accepted notifications");
-                    let subscription = await registration.pushManager.getSubscription();
-                    if (!subscription) {
-                        registration.pushManager.subscribe({
-                            userVisibleOnly: true,
-                            applicationServerKey: urlBase64ToUint8Array(publicKeyBase64)
-                        }).then(function(subscription) {
-                            const body = JSON.stringify(subscription);
-                            apiPost("save-subscription", {"subscription": body}, null);
+                    registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(publicKeyBase64)
+                    }).then(function(subscription) {
+                        const body = JSON.stringify(subscription);
+                        apiPost("save-subscription", {"subscription": body}, () => {
+                            window.location.reload();
                         });
-                    } else {
-                        console.log("Existing subscription found:", subscription);
-                    }
+                    });
                 } else {
                     console.log("User rejected notifications");
                 }
