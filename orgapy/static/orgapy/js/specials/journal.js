@@ -93,21 +93,23 @@ function inflateYear(year) {
     }
 }
 
-fetchApi(URL_API + "?action=search&category=journal", "get", null, searchResults => {
-    data = {};
-    for (const obj of searchResults.objects) {
-        const dt = new Date(obj.dateCreation);
-        const year = dt.getFullYear();
-        if (minYear == undefined || year < minYear) minYear = year;
-        if (maxYear == undefined || year > maxYear) maxYear = year;
-        if (!(year in data)) {
-            data[year] = {};
+function fetchJournalData(category) {
+    fetchApi(URL_API + `?action=search&category=${category}`, "get", null, searchResults => {
+        data = {};
+        for (const obj of searchResults.objects) {
+            const dt = new Date(obj.dateCreation);
+            const year = dt.getFullYear();
+            if (minYear == undefined || year < minYear) minYear = year;
+            if (maxYear == undefined || year > maxYear) maxYear = year;
+            if (!(year in data)) {
+                data[year] = {};
+            }
+            const key = dtf(dt, "YYYY-mm-dd");
+            if (!(key in data[year])) {
+                data[year][key] = [];
+            }
+            data[year][key].push(obj);
         }
-        const key = dtf(dt, "YYYY-mm-dd");
-        if (!(key in data[year])) {
-            data[year][key] = [];
-        }
-        data[year][key].push(obj);
-    }
-    inflateYear((new Date()).getFullYear());
-});
+        inflateYear((new Date()).getFullYear());
+    });
+}

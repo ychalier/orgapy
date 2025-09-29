@@ -61,7 +61,9 @@ def view_categories(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_category")
 def view_category(request: HttpRequest, name: str) -> HttpResponse:
-    if name in ["journal", "quote"]:
+    if name in ["journal", "org"]:
+        return render(request, f"orgapy/specials/journal.html", {"category": name})
+    if name in ["quote"]:
         return render(request, f"orgapy/specials/{name}.html", {})
     category = "uncategorized"
     if name != "uncategorized":

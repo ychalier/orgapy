@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}Journal &mid; {{ block.super }}{% endblock title %}
+{% block title %}{{ category | title }} &mid; {{ block.super }}{% endblock title %}
 
 {% block head %}
 {{ block.super }}
@@ -11,11 +11,12 @@
 {% block main_content %}
 
 <header class="card card-fake-transparent">
-    <h1>Journal</h1>
+    <h1>{{ category | title }}</h1>
     <div id="journal"></div>
 </header>
 
 <script src="{% static 'orgapy/js/specials/journal.js' %}"></script>
+<script>fetchJournalData("{{ category }}");</script>
 
 {% endblock main_content %}
 
