@@ -20,7 +20,7 @@ class Command(BaseCommand):
         today = timezone.now().date()
         for user_settings in models.Settings.objects.all():
             user = user_settings.user
-            messages = []
+            messages = ["Test Notification"]
             for project in models.Project.objects.filter(user=user):
                 if project.limit_date == today:
                     messages.append(f"Project: {project.title}")
