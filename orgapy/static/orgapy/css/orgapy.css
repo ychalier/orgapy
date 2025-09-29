@@ -200,45 +200,6 @@ blockquote ul li::marker {
     height: fit-content;
 }
 
-.button-block {
-    display: block;
-    margin: .4rem 0;
-}
-
-.button-inline {
-    text-decoration: none;
-    border-radius: 50%;
-    cursor: pointer;
-    color: #6b9fc2;
-    transition: .2s ease-in-out;
-}
-
-.button-inline:active,
-.button-inline:focus,
-.button-inline:hover {
-    color: #8ed2ff;
-}
-
-.button-primary {
-    background-color: #8ed2ff !important;
-    color: black !important;
-    border-color: #6b9fc2 !important;
-}
-
-.button-primary:hover {
-    background-color: #6b9fc2 !important;
-    border-color: #45667c !important;
-}
-
-.button-delete {
-    color: #f16581 !important;
-    border-color: #dc143c !important;
-}
-
-.button-delete:hover {
-    background-color: #311b20 !important;
-}
-
 .card-highlight .button-inline {
     color: #2e4453;
 }
@@ -309,6 +270,50 @@ img.artwork {
 .button:active,
 .button:focus {
     outline: 1px solid #8ed2ff;
+}
+
+.button-block {
+    display: block;
+    margin: .4rem 0;
+}
+
+.button-inline {
+    text-decoration: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #6b9fc2;
+    transition: .2s ease-in-out;
+}
+
+.button-inline:active,
+.button-inline:focus,
+.button-inline:hover {
+    color: #8ed2ff;
+}
+
+.button-primary {
+    background-color: #8ed2ff !important;
+    color: black !important;
+    border-color: #6b9fc2 !important;
+}
+
+.button-primary:hover {
+    background-color: #6b9fc2 !important;
+    border-color: #45667c !important;
+}
+
+.button-delete {
+    color: #f16581 !important;
+    border-color: #dc143c !important;
+}
+
+.button-delete:hover {
+    background-color: #311b20 !important;
+}
+
+.input-slim,
+.button-slim {
+    padding: .1rem .2rem;
 }
 
 /**
@@ -1337,4 +1342,10 @@ a.reference {
 
 #categories-suggestions-items div:hover {
     background: #404040;
+}
+
+/** EDITABLE INPUT ************************************************************/
+
+.editable-input {
+    width: fit-content;
 }

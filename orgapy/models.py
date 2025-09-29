@@ -514,10 +514,11 @@ class PushSubscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subscription = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
 
         ordering = ["user"]
 
     def __str__(self):
-        return f"PushSubscription(user={self.user})"
+        return f"PushSubscription(user={self.user}, name={self.name})"

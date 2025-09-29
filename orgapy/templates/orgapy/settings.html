@@ -44,7 +44,7 @@
     {% if subscriptions %}
     <ul>
     {% for sub in subscriptions %}
-        <li>Created on {{ sub.created_at }} <a class="button button-delete link-confirm" href="{% url 'orgapy:delete_subscription' sub.id %}" message="Please confirm you want to delete this push subscription. You also have to unsubscribe from your browser!">Delete</a></li>
+        <li><span class="editable" action="rename-subscription" object_id="{{ sub.id }}">{% if sub.name %}{{ sub.name }}{% else %}<i>Unamed</i>{% endif %}</span> ({{ sub.created_at }}) <a class="button button-slim button-delete link-confirm" href="{% url 'orgapy:delete_subscription' sub.id %}" message="Please confirm you want to delete this push subscription. You also have to unsubscribe from your browser!">Delete</a></li>
     {% endfor %}
     </ul>
     {% else %}

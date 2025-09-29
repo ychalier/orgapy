@@ -582,6 +582,46 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
+function bindEditable(editable) {
+    const objectId = editable.getAttribute("object_id");
+    const apiAction = editable.getAttribute("action");
+    var editableText;
+    function rebuildEditable(value) {
+        editable.innerHTML = "";
+        editableText = create(editable, "span", "editable-text");
+        editableText.textContent = value;
+    }
+    const defaultValue = editable.textContent;
+    rebuildEditable(defaultValue);
+    editable.addEventListener("click", () => {
+        const currentValue = editable.textContent;
+        const input = document.createElement("input");
+        input.className = "editable-input input-slim";
+        input.size = Math.floor(currentValue.length * 1.1);
+        input.value = currentValue;
+        if (editableText == undefined) throw new Error();
+        editableText.replaceWith(input);
+        input.focus();
+        function submitInput() {
+            let newValue = input.value.trim();
+            if (newValue == "") {
+                rebuildEditable(currentValue);
+            } else {
+                apiPost(apiAction, {id: objectId, value: newValue}, () => {
+                    rebuildEditable(newValue);
+                    toast("Renamed subscription", TOAST_SHORT);
+                });
+            }
+        }
+        input.addEventListener("focusout", submitInput);
+        input.addEventListener("keydown", (event) => {
+            if (event.key == "Enter") {
+                submitInput();
+            }
+        });
+    });
+}
+
 function askUserToSubscribeToNotifications(serviceWorkerUrl, publicKeyBase64) {
     if ("serviceWorker" in navigator && "PushManager" in window) {
         navigator.serviceWorker.register(serviceWorkerUrl).then(function(registration) {
@@ -648,4 +688,5 @@ window.addEventListener("load", () => {
             }
         });
     });
+    document.querySelectorAll(".editable").forEach(bindEditable);
 });
