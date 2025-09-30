@@ -20,7 +20,7 @@ class Command(BaseCommand):
         today = timezone.now().date()
         for user_settings in models.Settings.objects.all():
             user = user_settings.user
-            messages = ["Test Notification"]
+            messages = []
             for project in models.Project.objects.filter(user=user):
                 if project.limit_date == today:
                     messages.append(f"Project: {project.title}")
@@ -34,6 +34,9 @@ class Command(BaseCommand):
                         messages.append(f"Event: {event['title']}")
             if not messages:
                 continue
+            if kwargs["dry_run"]:
+                print("\n".join(messages))
+                continue
             for message in messages:
                 payload = {
                     "title": message,
@@ -41,14 +44,11 @@ class Command(BaseCommand):
                 }
                 for sub in models.PushSubscription.objects.filter(user=user):
                     try:
-                        if kwargs["dry_run"]:
-                            print(sub, message)
-                        else:
-                            webpush(
-                                subscription_info=json.loads(sub.subscription),
-                                data=json.dumps(payload),
-                                vapid_private_key=settings.VAPID_PRIVATE_KEY,
-                                vapid_claims={"sub": settings.VAPID_SUB},
-                            )
+                        webpush(
+                            subscription_info=json.loads(sub.subscription),
+                            data=json.dumps(payload),
+                            vapid_private_key=settings.VAPID_PRIVATE_KEY,
+                            vapid_claims={"sub": settings.VAPID_SUB},
+                        )
                     except WebPushException as err:
                         self.stdout.write(self.style.ERROR(f"PUSH failed: {err}"))
