@@ -24,7 +24,7 @@ class Command(BaseCommand):
             for project in models.Project.objects.filter(user=user):
                 if project.limit_date == today:
                     messages.append(f"Project: {project.title}")
-            for task in models.Task.objects.filter(user=user):
+            for task in models.Task.objects.filter(user=user, completed=False):
                 if task.start_date == today or task.due_date == today:
                     messages.append(f"Task: {task.title}")
             for calendar in models.Calendar.objects.filter(user=user):
