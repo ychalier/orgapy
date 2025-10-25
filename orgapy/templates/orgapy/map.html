@@ -19,7 +19,7 @@
 
 {% block main_content %}
 
-<div class="map-layout" map-id="{{map.id}}">
+<div class="map-layout{% if request.GET.embed == '1' %} embedded{% endif %}" map-id="{{map.id}}">
     <div class="map-dashboard"></div>
     <div class="map-seed"></div>
 </div>

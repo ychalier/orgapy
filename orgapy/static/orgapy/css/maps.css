@@ -31,6 +31,16 @@ body.fullscreen {
     overflow: hidden;
 }
 
+.map-layout.embedded .map-dashboard {
+    position: absolute;
+    top: .2rem;
+    left: .2rem;
+    z-index: 401;
+    max-width: 25%;
+    border-radius: .4rem;
+    max-height: 80%;
+}
+
 .map-dashboard button,
 .map-dashboard input,
 .map-dashboard select {
@@ -136,6 +146,10 @@ body.fullscreen {
 .map-coordinates {
     color: #888;
     text-align: center;
+}
+
+.map-layout.embedded .map-coordinates {
+    font-size: small;
 }
 
 /* Panel */
