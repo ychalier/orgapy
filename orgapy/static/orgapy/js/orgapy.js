@@ -17,6 +17,10 @@ function pad2(x) {
     return x.toString().padStart(2, "0");
 }
 
+function zip(a, b) {
+    return Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
+}
+
 function dtf(dt, format) {
     return format
         .replace("YYYY", dt.getFullYear())
@@ -255,16 +259,15 @@ function markdownToHtmlFancy(element, useKatex=false) {
     element.querySelectorAll("p").forEach(paragraph => {
         paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
     });
-    element.querySelectorAll(".reference").forEach(noteReference => {
-        fetch(URL_API + `?action=note-title&objectId=${noteReference.getAttribute("ref-id")}`).then(res => {
-            if (res.status == 404) {
-                return "<404 Not Found>";
-            } else {
-                return res.text();
-            }
-        }).then(text => {
-            noteReference.textContent = text;
-        });
+    const noteReferences = element.querySelectorAll(".reference");
+    const noteReferenceIds = [];
+    for (const noteReference of noteReferences) {
+        noteReferenceIds.push(noteReference.getAttribute("ref-id"));
+    }
+    fetch(URL_API + `?action=note-title&objectIds=${noteReferenceIds.join(",")}`).then(res => res.json()).then(data => {
+        for (const [noteReference, noteTitle] of zip(noteReferences, data.titles)) {
+            noteReference.textContent = noteTitle == null ? "<404 Not Found>" : noteTitle;
+        }
     });
     window.addEventListener("load", () => {
         hljs.highlightAll();

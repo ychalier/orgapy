@@ -673,12 +673,22 @@ def api_complete_task(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.view_note")
 def api_note_title(request: HttpRequest) -> HttpResponse:
     object_id = request.GET.get("objectId")
-    if object_id is None:
-        raise BadRequest()
-    query = Note.objects.filter(user=request.user, id=int(object_id))
-    if not query.exists():
-        raise Http404()
-    return HttpResponse(query.get().title, content_type="text/plain")
+    object_ids = request.GET.get("objectIds")        
+    if object_id is not None:
+        query = Note.objects.filter(user=request.user, id=int(object_id))
+        if not query.exists():
+            raise Http404()    
+        return HttpResponse(query.get().title, content_type="text/plain")
+    if object_ids is not None:
+        titles: list[str | None] = []
+        for object_id in object_ids.split(","):
+            query = Note.objects.filter(user=request.user, id=int(object_id))
+            if query.exists():
+                titles.append(query.get().title)
+            else:
+                titles.append(None)
+        return JsonResponse({"success": True, "titles": titles})
+    raise BadRequest()
 
 
 @permission_required("orgapy.view_note")
