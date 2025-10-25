@@ -329,9 +329,6 @@ function bindDropdown(dropdown) {
     const toggle = dropdown.querySelector(".dropdown-toggle");
     const menu = dropdown.querySelector(".menu");
 
-    console.log("Toggle:", toggle);
-    console.log("Menu:", menu);
-
     function hideDropdown(timeout=300) {
         hideTimeout = setTimeout(() => {
             dropdown.appendChild(menu);
@@ -413,9 +410,7 @@ function bindGotoPaginatorButton(buttonSelector, currentPage, maxPage, attrStrin
         const page = prompt(`Go to page (1-${maxPage}):`, currentPage.toString());
         if (page) {
             const pageNumber = Math.max(1, Math.min(maxPage, parseInt(page)));
-            console.log(pageNumber);
             const baseUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
-            console.log(baseUrl);
             const newUrl = baseUrl + `?page=${pageNumber}${attrString}`;
             window.location.href = newUrl;
         }
