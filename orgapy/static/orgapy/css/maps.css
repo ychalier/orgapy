@@ -390,6 +390,10 @@ body.fullscreen {
         overflow: auto;
     }
 
+    .map-layout.embedded .map-dashboard {
+        max-width: 50%;
+    }
+
     .map-layers {
         flex-shrink: 0;
         flex-basis: content;
