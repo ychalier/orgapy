@@ -49,7 +49,7 @@
     color: #f0f0f0;
     border: 1px solid black;
     border-radius: .4rem;
-    margin: .8rem 0;
+    margin: .8rem 0 10rem 0;
 }
 
 .CodeMirror-cursor {
@@ -98,6 +98,9 @@
 }
 
 @media (max-width: 800px) {
+    .CodeMirror {
+        margin: .8rem 0;
+    }
     #save-note-buttons {
         display: flex;
         gap: 1rem;
