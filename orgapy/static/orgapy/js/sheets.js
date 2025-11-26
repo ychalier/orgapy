@@ -21,6 +21,7 @@ const CTYPE_TIME = 9;
 const CTYPE_DURATION = 10;
 const CTYPE_STARS = 11;
 const CTYPE_MARKDOWN = 12;
+const CTYPE_STATUS = 13;
 
 const HIGHLIGHT_NONE = -1;
 const HIGHLIGHT_ACCENT = 0;
@@ -1052,6 +1053,7 @@ class ColumnType {
     static INPUT_TAG = "textarea";
     static INPUT_STEP = 1;
     static USES_DATALIST = false;
+    static CLICK_TO_LOOP = false;
 
     constructor() {}
 
@@ -1372,6 +1374,41 @@ class ColumnTypeStars extends ColumnType {
 }
 
 
+class ColumnTypeStatus extends ColumnType {
+
+    static ALIGNEMENT = "acenter";
+    static ID = CTYPE_STATUS;
+    static LABEL = "Status";
+    static INPUT_TAG = "input";
+    static INPUT_TYPE = "number";
+    static INPUT_MIN = -1;
+    static INPUT_MAX = 1;
+    static CLICK_TO_LOOP = true;
+
+    formatHtml(value) {
+        return safeFormat(value, x => {
+            if (x == "-1") {
+                return "❌";
+            } else if (x == "0") {
+                return "⏺️";
+            } else if (x == "1") {
+                return "✅";
+            }
+            return x.toString();
+        });
+    }
+
+    formatText(value) {
+        return safeFormat(value, x => x.toString());
+    }
+
+    parse(string) {
+        return safeParse(string, parseInt);
+    }
+
+}
+
+
 const COLUMN_TYPES = [
     ColumnTypeText,
     ColumnTypeBoolean,
@@ -1386,6 +1423,7 @@ const COLUMN_TYPES = [
     ColumnTypeDuration,
     ColumnTypeStars,
     ColumnTypeMarkdown,
+    ColumnTypeStatus,
 ];
 
 
@@ -1581,6 +1619,18 @@ class Sheet {
         let cell = this.cells[root.i][root.j];
         let value = this.values[root.i][root.j];
         const columnType = this.columnTypes[root.j].constructor;
+        if (causedByClick && columnType.CLICK_TO_LOOP) {
+            value++;
+            if (value > columnType.INPUT_MAX) {
+                value = columnType.INPUT_MIN;
+            }
+            this.editing = false;
+            this.values[root.i][root.j] = value;
+            this.setCellContent(root.i, root.j);
+            this.updateDatalists();
+            this.onChange(true, false);
+            return;
+        }
         let input = create(cell, columnType.INPUT_TAG, "sheet-cell-input");
         if (columnType.INPUT_TAG == "input" && columnType.INPUT_TYPE != null) {
             input.type = columnType.INPUT_TYPE;
