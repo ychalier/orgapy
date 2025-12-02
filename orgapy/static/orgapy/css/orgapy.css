@@ -1131,6 +1131,10 @@ input:checked+.toggle-slider+.toggle-text {
     text-decoration: line-through;
 }
 
+.markdown mark {
+    padding: 0 .1rem;
+}
+
 header .reference {
     white-space: nowrap;
     text-overflow: ellipsis;

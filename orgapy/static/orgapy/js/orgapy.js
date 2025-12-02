@@ -189,6 +189,11 @@ function markdownToHtmlFancy(element, useKatex=false) {
         extensions: [
             ...extensions,
             {
+                type: "lang",
+                regex: /==([^=\n]+)==/g,
+                replace: "<mark>$1</mark>",
+            },
+            {
                 type: "output",
                 regex: /<table>/g,
                 replace: `<div class="table-wrapper"><table class="table">`,
