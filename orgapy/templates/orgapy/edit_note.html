@@ -90,7 +90,8 @@
         });
         simplemde.codemirror.on("cursorActivity", onCmCursorActivity);
         simplemde.codemirror.on("change", () => {
-            document.getElementById("btn-save-note-continue").classList.remove("disabled");
+            const btnSaveNoteContinue = document.getElementById("btn-save-note-continue");
+            if (btnSaveNoteContinue != null) btnSaveNoteContinue.classList.remove("disabled");
         });
         window.addEventListener("load", () => {
             simplemde.codemirror.refresh();
