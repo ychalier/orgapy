@@ -681,12 +681,16 @@ def api_note_title(request: HttpRequest) -> HttpResponse:
         return HttpResponse(query.get().title, content_type="text/plain")
     if object_ids is not None:
         titles: list[str | None] = []
-        for object_id in object_ids.split(","):
-            query = Note.objects.filter(user=request.user, id=int(object_id))
-            if query.exists():
-                titles.append(query.get().title)
-            else:
-                titles.append(None)
+        if object_ids:
+            for object_id in object_ids.split(","):
+                try:
+                    query = Note.objects.filter(user=request.user, id=int(object_id))
+                    if query.exists():
+                        titles.append(query.get().title)
+                    else:
+                        titles.append(None)
+                except ValueError:
+                    titles.append(None)
         return JsonResponse({"success": True, "titles": titles})
     raise BadRequest()
 

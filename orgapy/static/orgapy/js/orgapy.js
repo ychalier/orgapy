@@ -264,11 +264,13 @@ function markdownToHtmlFancy(element, useKatex=false) {
     for (const noteReference of noteReferences) {
         noteReferenceIds.push(noteReference.getAttribute("ref-id"));
     }
-    fetch(URL_API + `?action=note-title&objectIds=${noteReferenceIds.join(",")}`).then(res => res.json()).then(data => {
-        for (const [noteReference, noteTitle] of zip(noteReferences, data.titles)) {
-            noteReference.textContent = noteTitle == null ? "<404 Not Found>" : noteTitle;
-        }
-    });
+    if (noteReferenceIds.length > 0) {
+        fetch(URL_API + `?action=note-title&objectIds=${noteReferenceIds.join(",")}`).then(res => res.json()).then(data => {
+            for (const [noteReference, noteTitle] of zip(noteReferences, data.titles)) {
+                noteReference.textContent = noteTitle == null ? "<404 Not Found>" : noteTitle;
+            }
+        });
+    }
     window.addEventListener("load", () => {
         hljs.highlightAll();
     });
