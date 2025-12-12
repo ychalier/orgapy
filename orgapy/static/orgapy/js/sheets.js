@@ -2141,6 +2141,7 @@ class Sheet {
         this.filteredRows = new Set();
         let y = 32 + DEFAULT_ROW_HEIGHT;
         let rowTop = 0;
+        let previousRowWasFiltered = false;
         for (let i = 0; i < this.height; i++) {
             let shouldBeDisplayed = true;
             for (let j = 0; j < this.width; j++) {
@@ -2152,14 +2153,24 @@ class Sheet {
             if (shouldBeDisplayed) {
                 this.filteredRows.add(i);
                 y += this.rowHeights[i];
+                if (previousRowWasFiltered) y += 3;
                 this.rows[i].classList.remove("hidden");
                 this.rowHandles[i].classList.remove("hidden");
                 this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
                 rowTop--;
+                previousRowWasFiltered = false;
             } else {
                 this.rows[i].classList.add("hidden");
                 this.rowHandles[i].classList.add("hidden");
                 this.rowHandles[i].style.top = 0;
+                previousRowWasFiltered = true;
+            }
+        }
+        for (let j = 0; j < this.width; j++) {
+            if (this.filters[j].size == 0) {
+                this.columnHeads[j].classList.remove("filtered");
+            } else {
+                this.columnHeads[j].classList.add("filtered");
             }
         }
         this.selection.setFilteredRanges();

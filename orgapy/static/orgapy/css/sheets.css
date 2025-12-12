@@ -5,6 +5,9 @@
     --sheet-color-head-hover-background: hsl(0, 0%, 0%);
     --sheet-color-selected-background: #103a57;
     --sheet-color-selected-border: #8ed2ff;
+    --sheet-color-filtered-text: #53dcd7;
+    --sheet-color-filtered-background: #122f31;
+    --sheet-color-filtered-border: #122f31;
 }
 
 .sheet {
@@ -119,6 +122,10 @@
 
 .sheet-row.hidden {
     display: none;
+}
+
+.sheet-row.hidden + .sheet-row:not(.hidden) {
+    border-top: 3px solid var(--sheet-color-filtered-border);
 }
 
 .sheet-cell {
@@ -334,6 +341,14 @@
     text-overflow: ellipsis;
     color: white;
     user-select: none;
+}
+
+.sheet-cell.filtered .sheet-column-name {
+    color: var(--sheet-color-filtered-text);
+}
+
+.sheet-cell.filtered {
+    background-color: var(--sheet-color-filtered-background);
 }
 
 .sheet-column-name-input {
