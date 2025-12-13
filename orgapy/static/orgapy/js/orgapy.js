@@ -231,16 +231,26 @@ function markdownToHtmlFancy(element, useKatex=false) {
             {
                 type: "output",
                 regex: /(@note\/(\d+))/g,
-                replace: `<a class="reference" href="$2" ref-id="$2">$1</a>`
+                replace: `<a class="reference" ref-type="note" ref-id="$2"><i class="ri-sticky-note-line" title="Note"></i><span>$1</span></a>`
             },
             {
                 type: "output",
-                regex: /@sheet\/(\d+)/g,
+                regex: /(@sheet\/(\d+))/g,
+                replace: `<a class="reference" ref-type="sheet" ref-id="$2"><i class="ri-table-line" title="Sheet"></i><span>$1</span></a>`
+            },
+            {
+                type: "output",
+                regex: /(@map\/(\d+))/g,
+                replace: `<a class="reference" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i><span>$1</span></a>`
+            },
+            {
+                type: "output",
+                regex: /@embedsheet\/(\d+)/g,
                 replace: `<iframe src="../sheets/$1?embed=1"></iframe><a href="../sheets/$1"><small>Edit sheet</small></a>`
             },
             {
                 type: "output",
-                regex: /@map\/(\d+)/g,
+                regex: /@embedmap\/(\d+)/g,
                 replace: `<iframe src="../maps/$1?embed=1"></iframe><a href="../maps/$1"><small>Edit map</small></a>`
             },
             {
@@ -264,15 +274,41 @@ function markdownToHtmlFancy(element, useKatex=false) {
     element.querySelectorAll("p").forEach(paragraph => {
         paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
     });
-    const noteReferences = element.querySelectorAll(".reference");
-    const noteReferenceIds = [];
-    for (const noteReference of noteReferences) {
-        noteReferenceIds.push(noteReference.getAttribute("ref-id"));
+    const refArgs = [];
+    const refEls = element.querySelectorAll(".reference");
+    const refIndex = {"note": {}, "sheet": {}, "map": {}};
+    for (const refEl of refEls) {
+        const refId = refEl.getAttribute("ref-id");
+        const refType = refEl.getAttribute("ref-type");
+        if (refId == null || refId == "" || refType == null || refType == "") {
+            console.warn("Invalid reference:", refType, refId);
+            continue;
+        }
+        refArgs.push(`${refType}=${refId}`);
+        if (!(refId in refIndex[refType])) {
+            refIndex[refType][refId] = [];
+        }
+        refIndex[refType][refId].push(refEl);
     }
-    if (noteReferenceIds.length > 0) {
-        fetch(URL_API + `?action=note-title&objectIds=${noteReferenceIds.join(",")}`).then(res => res.json()).then(data => {
-            for (const [noteReference, noteTitle] of zip(noteReferences, data.titles)) {
-                noteReference.textContent = noteTitle == null ? "<404 Not Found>" : noteTitle;
+    if (refArgs.length > 0) {
+        fetch(URL_API + `?action=reference&${refArgs.join("&")}`).then(res => res.json()).then(data => {
+            for (const result of data.results) {
+                if (!(result.type in refIndex) || !(result.id in refIndex[result.type])) {
+                    console.warn("Unbound reference result", result.type, result.id);
+                    continue;
+                }
+                for (const refEl of refIndex[result.type][result.id]) {
+                    if (result.error == null) {
+                        refEl.querySelector("span").textContent = result.title;
+                        refEl.setAttribute("href", result.href);
+                    } else {
+                        const refId = refEl.getAttribute("ref-id");
+                        const refType = refEl.getAttribute("ref-type");
+                        refEl.querySelector("span").textContent = `${result.error}`;
+                        refEl.setAttribute("title", `@${refType}/${refId}`);
+                        refEl.classList.add("error");
+                    }
+                }
             }
         });
     }

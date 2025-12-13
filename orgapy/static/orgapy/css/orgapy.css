@@ -1161,6 +1161,15 @@ a.reference {
     color: hsl(0, 100%, 78%) !important;
 }
 
+.reference i {
+    margin-right: .2rem;
+}
+
+.reference.error {
+    background: hsl(0, 35%, 18%);
+    color: #ff8e8e !important;
+}
+
 /**
  * Snackbar
  */

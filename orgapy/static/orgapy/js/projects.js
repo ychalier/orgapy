@@ -91,7 +91,8 @@ function setNoteTitle(noteSpan, noteId) {
         noteSpan.textContent = noteTitles[noteId];
         noteSpan.title = noteTitles[noteId];
     } else {
-        fetch(URL_API + `?action=note-title&objectId=${noteId}`).then(res => res.text()).then(title => {
+        fetch(URL_API + `?action=reference&note=${noteId}`).then(res => res.json()).then(data => {
+            const title = data.results[0].title;
             noteTitles[noteId] = title;
             noteSpan.textContent = title;
             noteSpan.title = title;

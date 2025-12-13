@@ -62,8 +62,8 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_delete_task(request)
         case "complete-task":
             return api_complete_task(request)
-        case "note-title":
-            return api_note_title(request)
+        case "reference":
+            return api_reference(request)
         case "edit-widgets":
             return api_edit_widgets(request)
         case "sheet":
@@ -78,8 +78,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_suggestions(request)
         case "progress":
             return api_progress(request)
-        case "title":
-            return api_title(request)
         case "search":
             return api_search(request)
         case "save-subscription":
@@ -671,48 +669,28 @@ def api_complete_task(request: HttpRequest) -> JsonResponse:
 
 
 @permission_required("orgapy.view_note")
-def api_note_title(request: HttpRequest) -> HttpResponse:
-    object_id = request.GET.get("objectId")
-    object_ids = request.GET.get("objectIds")        
-    if object_id is not None:
-        query = Note.objects.filter(user=request.user, id=int(object_id))
-        if not query.exists():
-            raise Http404()    
-        return HttpResponse(query.get().title, content_type="text/plain")
-    if object_ids is not None:
-        titles: list[str | None] = []
-        if object_ids:
-            for object_id in object_ids.split(","):
-                try:
-                    query = Note.objects.filter(user=request.user, id=int(object_id))
-                    if query.exists():
-                        titles.append(query.get().title)
-                    else:
-                        titles.append(None)
-                except ValueError:
-                    titles.append(None)
-        return JsonResponse({"success": True, "titles": titles})
-    raise BadRequest()
-
-
-@permission_required("orgapy.view_note")
-def api_title(request: HttpRequest) -> HttpResponse:
-    object_type = request.GET.get("type")
-    object_id = request.GET.get("id")
-    if object_type is None or object_id is None:
-        raise BadRequest()
-    query = None
-    if object_type == "note":
-        query = Note.objects.filter(user=request.user, id=int(object_id))
-    elif object_type == "sheet":
-        query = Sheet.objects.filter(user=request.user, id=int(object_id))
-    elif object_type == "map":
-        query = Map.objects.filter(user=request.user, id=int(object_id))
-    else:
-        raise BadRequest()
-    if not query.exists():
-        raise Http404()
-    return HttpResponse(query.get().title, content_type="text/plain")
+@permission_required("orgapy.view_sheet")
+@permission_required("orgapy.view_map")
+def api_reference(request: HttpRequest) -> HttpResponse:
+    note_ids = request.GET.getlist("note")
+    sheet_ids = request.GET.getlist("sheet")
+    map_ids = request.GET.getlist("map")
+    results = []
+    for model, object_ids, object_type in ((Note, note_ids, "note"), (Sheet, sheet_ids, "sheet"), (Map, map_ids, "map")):
+        for object_id in object_ids:
+            result = {"type": object_type, "id": object_id, "title": None, "href": None, "error": None}
+            try:
+                obj = model.objects.get(user=request.user, id=int(object_id))
+                result["title"] = obj.title
+                result["href"] = obj.get_absolute_url()
+            except ValueError:
+                result["error"] = "Invalid ID"
+            except model.DoesNotExist:
+                result["error"] = "Not Found"
+            except Exception:
+                result["error"] = "Other"
+            results.append(result)
+    return JsonResponse({"success": True, "results": results})
 
 
 @permission_required("orgapy.change_note")

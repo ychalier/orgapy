@@ -218,9 +218,16 @@ function openSmdeDropdown(cmInstance, word) {
     dropdown.style.left = wordStart.left + "px";
 
     // Parse current widget
-    const [match, objectType, objectId] = word.match(/@(\w+)\/(\d+)?/);
-    if (objectType != "note" && objectType != "sheet" && objectType != "map") {
-        console.error("Invalid objectif type", objectType);
+    const [match, objectTypeKey, objectId] = word.match(/@(\w+)\/(\d+)?/);
+    const objectType = {
+        note: "note",
+        sheet: "sheet",
+        map: "map",
+        embedsheet: "sheet",
+        embedmap: "map"
+    }[objectTypeKey];
+    if (objectType == null || objectType == undefined) {
+        console.error("Invalid type key", objectTypeKey);
     }
     const iEnd = iStart + match.length;
 
@@ -238,7 +245,7 @@ function openSmdeDropdown(cmInstance, word) {
         smdeDropdownState = origin;
         const replaceFrom = {line: cursor.line, ch: iStart};
         const replaceTo = {line: cursor.line, ch: iEnd};
-        cmInstance.replaceRange(`@${objectType}/${newId}`, replaceFrom, replaceTo, origin);
+        cmInstance.replaceRange(`@${objectTypeKey}/${newId}`, replaceFrom, replaceTo, origin);
     }
 
     const searchbar = create(dropdown, "input", "smde-dropdown-searchbar");
@@ -248,14 +255,13 @@ function openSmdeDropdown(cmInstance, word) {
         const pinned = create(dropdown, "div", "smde-dropdown-pinned");
         const pinnedSpan = create(pinned, "span");
         const pinnedButton = create(pinned, "i", "ri-close-line");
-        fetch(URL_API + `?action=title&type=${objectType}&id=${objectId}`).then(res => {
-            if (res.status == 404) {
-                return "<404 Not Found>";
+        fetch(URL_API + `?action=reference&${objectType}=${objectId}`).then(res => res.json()).then(data => {
+            const result = data.results[0];
+            if (result.error == null) {
+                pinnedSpan.textContent = result.title;
             } else {
-                return res.text();
+                pinnedSpan.textContent = result.error;
             }
-        }).then(text => {
-            pinnedSpan.textContent = text;
         });
         pinnedButton.addEventListener("click", () => { setObjectId("", "interlink-reset") });
     }
@@ -337,7 +343,7 @@ function onCmCursorActivity(cmInstance) {
     let iEnd = iStart + 1;
     while (iEnd < line.length && line.charAt(iEnd) != " ") iEnd++;
     const word = line.substring(iStart, iEnd).trim();
-    if (word.match(/^@(note|map|sheet)\/(\d+)?$/)) {
+    if (word.match(/^@(note|sheet|map|embedsheet|embedmap)\/(\d+)?$/)) {
         setTimeout(() => { openSmdeDropdown(cmInstance, word); }, 1);
     } else {
         closeSmdeDropdown();
