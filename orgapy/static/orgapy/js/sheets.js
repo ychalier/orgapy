@@ -2498,6 +2498,19 @@ class Sheet {
                         let string = self.getSelectionAsTsv();
                         navigator.clipboard.writeText(string);
                     }
+                } else if (event.key == "x" && event.ctrlKey) {
+                    if (!self.editing) {
+                        event.preventDefault();
+                        let string = self.getSelectionAsTsv();
+                        navigator.clipboard.writeText(string);
+                        if (!self.readonly) {
+                            self.selection.iterate((i, j) => {
+                                self.values[i][j] = null;
+                                self.setCellContent(i, j);
+                            });
+                            self.onChange(true, false);
+                        }
+                    }
                 } else if (event.altKey && (event.key == "²" || event.key == "&" || event.key == "é" || event.key == "\"") && !self.readonly) {
                     if (event.key == "²") {
                         self.selection.iterate((i, j) => {
