@@ -48,6 +48,7 @@
 <p>
     {% if counter %}
     <a class="button" href="{% url 'orgapy:progress_compute' year=counter.year %}"><i class="ri-bar-chart-2-line"></i> Recompute</a>
+    <a class="button" href="{% url 'orgapy:progress_export' year=counter.year %}"><i class="ri-download-line"></i> Export</a>
     {% endif %}
     <a class="button" href="{% url 'orgapy:create_progress_log' %}"><i class="ri-add-line"></i> Create Log</a>
 </p>

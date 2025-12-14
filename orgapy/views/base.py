@@ -615,6 +615,19 @@ def view_progress_compute(request: HttpRequest, year: int | str | None = None) -
     return redirect("orgapy:progress_year", year=counter.year)
 
 
+@permission_required("orgapy.view_progress")
+def view_progress_export(request: HttpRequest, year: int | str | None = None) -> HttpResponse:
+    if year is None:
+        year = datetime.datetime.now().year
+    else:
+        year = int(year)
+    try:
+        counter = ProgressCounter.objects.get(user=request.user, year=year)
+    except ProgressCounter.DoesNotExist:
+        raise Http404()
+    return HttpResponse(counter.data, content_type="application/json")
+
+
 @permission_required("orgapy.add_progress_log")
 def view_create_progress_log(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/create_progress_log.html", {})
