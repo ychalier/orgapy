@@ -621,11 +621,15 @@ def view_progress_export(request: HttpRequest, year: int | str | None = None) ->
         year = datetime.datetime.now().year
     else:
         year = int(year)
-    try:
-        counter = ProgressCounter.objects.get(user=request.user, year=year)
-    except ProgressCounter.DoesNotExist:
-        raise Http404()
-    return HttpResponse(counter.data, content_type="application/json")
+    lines = ["id\ttype\tdt\tdescription"]
+    for log in ProgressLog.objects.filter(user=request.user, dt__year=year):
+        lines.append("\t".join([
+            str(log.id),
+            log.type,
+            log.dt.isoformat(),
+            str(log.description)
+        ]))
+    return HttpResponse("\n".join(lines), content_type="text/tab-separated-values")
 
 
 @permission_required("orgapy.add_progress_log")

@@ -448,7 +448,7 @@ class ProgressCounter(models.Model):
 
     def recompute(self):
         data = {}
-        for log in ProgressLog.objects.filter(dt__year=self.year):
+        for log in ProgressLog.objects.filter(user=self.user, dt__year=self.year):
             key = log.dt.strftime(r"%Y-%m-%d")
             data.setdefault(key, 0)
             data[key] += 1
