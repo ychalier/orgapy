@@ -95,22 +95,11 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
     for project in Project.objects.filter(user=request.user):
         if project.archived and not show_archived:
             continue
-        progress = None
-        if project.progress_min is not None and project.progress_max is not None and project.progress_current is not None:
-            progress = {
-                "min": project.progress_min,
-                "max": project.progress_max,
-                "current": project.progress_current,
-            }
         projects.append({
             "id": project.id,
             "creation": project.date_creation.timestamp(),
             "modification": project.date_modification.timestamp(),
             "title": project.title,
-            "category": project.category,
-            "limitDate": project.limit_date,
-            "progress": progress,
-            "description": project.description if project.description else None,
             "checklist": project.checklist if project.checklist else None,
             "rank": project.rank,
             "note": None if project.note is None else project.note.id,
@@ -128,20 +117,15 @@ def api_create_project(request: HttpRequest) -> JsonResponse:
         max_rank = 1
     project = Project.objects.create(
         user=request.user,
-        title="New Project",
-        category="general",
         rank=int(max_rank) + 1
     )
+    # TODO: handle title & note
     return JsonResponse({"success": True, "project": {
         "id": project.id,
-        "title": project.title,
-        "category": project.category,
-        "limitDate": None,
-        "progress": None,
-        "description": None,
-        "checklist": None,
         "creation": project.date_creation.timestamp(),
         "modification": project.date_modification.timestamp(),
+        "title": project.title,
+        "checklist": None,
         "rank": project.rank,
         "note": None,
         "archived": False,
@@ -167,27 +151,10 @@ def api_edit_project(request: HttpRequest) -> JsonResponse:
     if project.date_modification.timestamp() > project_data["modification"]:
         return JsonResponse({"success": False, "reason": "Project has newer modifications"})
     project.title = project_data["title"]
-    project.category = project_data["category"]
     project.rank = float(project_data["rank"])
-    if project_data["limitDate"] is not None:
-        project.limit_date = datetime.datetime.strptime(project_data["limitDate"], "%Y-%m-%d").date()
-    else:
-        project.limit_date = None
-    if project_data["progress"] is not None:
-        project.progress_min = project_data["progress"]["min"]
-        project.progress_max = project_data["progress"]["max"]
-        project.progress_current = project_data["progress"]["current"]
-    else:
-        project.progress_min = None
-        project.progress_max = None
-        project.progress_current = None
-    if project_data["description"] is not None:
-        project.description = project_data["description"]
-    else:
-        project.description = None
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
-    compare_checklists(request.user, project.title, project.checklist, project_data["checklist"])
+    compare_checklists(request.user, project.reference, project.checklist, project_data["checklist"])
     if project_data["checklist"] is not None:
         project.checklist = project_data["checklist"]
     else:

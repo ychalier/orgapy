@@ -79,7 +79,7 @@ def get_checked_items(checklist: str) -> list[str]:
     return re.findall(r"\[x\] (.*)", checklist)
 
 
-def compare_checklists(user: LoggedUser, title: str, before: str | None, after: str | None):
+def compare_checklists(user: LoggedUser, reference: str, before: str | None, after: str | None):
     if before is None or after is None:
         return
     checked_before = set(get_checked_items(before))
@@ -88,7 +88,7 @@ def compare_checklists(user: LoggedUser, title: str, before: str | None, after: 
         ProgressLog.objects.create(
             user=user,
             type=ProgressLog.PROJECT_CHECKLIST_ITEM_CHECKED,
-            description=f"{title} - {item}"
+            description=f"{reference} - {item}"
         )
 
 

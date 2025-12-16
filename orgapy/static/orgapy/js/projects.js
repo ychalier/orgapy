@@ -109,10 +109,6 @@ class Project {
         this.creation = data.creation;
         this.modification = data.modification;
         this.title = data.title;
-        this.category = data.category;
-        this.limitDate = data.limitDate;
-        this.progress = data.progress;
-        this.description = data.description;
         this.checklist = data.checklist;
         this.rank = data.rank;
         this.note = data.note;
@@ -122,30 +118,6 @@ class Project {
         this.expanded = false;
         this.container = null;
         this.previousProjectData = this.toJsonString();
-    }
-
-    getLimitDateDisplay() {
-        if (this.limitDate == null) return null;
-        let d1 = new Date();
-        let d2 = new Date(this.limitDate);
-        if (d1.getFullYear() == d2.getFullYear()) {
-            return d2.toLocaleString(d2.locales, {day: "numeric", month: "short"});
-        } else {
-            return d2.toLocaleString(d2.locales, {day: "numeric", month: "short", year: "numeric"});
-        }
-    }
-
-    isLimitDateSoon() {
-        let d1 = new Date();
-        let d2 = new Date(this.limitDate);
-        return d1.getFullYear() == d2.getFullYear() && d1.getMonth() == d2.getMonth() && d1.getDate() == d2.getDate();
-    }
-
-    isLimitDateOverdue() {
-        let d1 = new Date();
-        let d2 = new Date(this.limitDate);
-        d1.setHours(d2.getHours(), d2.getMinutes(), d2.getSeconds(), d2.getMilliseconds());
-        return d1 > d2;
     }
 
     splitChecklist() {
@@ -254,60 +226,6 @@ class Project {
         });
     }
 
-    inflateCategory(corner) {
-        var self = this;
-        let category = create(corner, "div", "project-category");
-        category.textContent = this.category;
-        category.addEventListener("click", (event) => {
-            event.stopPropagation();
-            let input = create(null, "input", "project-category-input");
-            input.value = self.category;
-            input.placeholder = "Category";
-            input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
-            function callback() {
-                self.category = input.value.trim();
-                self.update();
-            }
-            input.addEventListener("focusout", callback);
-            input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
-            category.replaceWith(input);
-            input.focus();
-            return false;
-        });
-    }
-
-    inflateLimitDateInput(element) {
-        var self = this;
-        let input = create(null, "input", "project-limitdate-input");
-        input.type = "date";
-        input.value = this.limitDate;
-        function callback() {
-            self.limitDate = input.value == "" ? null : input.value;
-            self.update();
-        }
-        input.addEventListener("focusout", callback);
-        input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
-        element.replaceWith(input);
-        input.focus();
-        input.showPicker();
-    }
-
-    inflateLimitDate(summary) {
-        var self = this;
-        let limitDate = create(summary, "div", "project-limitdate");
-        if (this.isLimitDateSoon()) {
-            limitDate.classList.add("project-limitdate-soon");
-        } else if (this.isLimitDateOverdue()) {
-            limitDate.classList.add("project-limitdate-overdue");
-        }
-        limitDate.innerHTML = `<i class="ri-time-line"></i> ${this.getLimitDateDisplay()}`;
-        limitDate.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.inflateLimitDateInput(limitDate);
-            return false;
-        });
-    }
-
     inflateChecklistSummary(summary) {
         var self = this;
         let total = 0;
@@ -331,10 +249,6 @@ class Project {
         }
     }
 
-    inflateDescriptionSummary(summary) {
-        create(summary, "i", "ri-sticky-note-line");
-    }
-
     inflateHeader() {
         var self = this;
         let header = this.container.querySelector(".project-header");
@@ -349,16 +263,9 @@ class Project {
         }
         header.className = "project-header";
         this.inflateTitle(header);
-        let corner = create(header, "div", "project-corner");
-        this.inflateCategory(corner);
-        if (this.limitDate == null && this.description == null && this.checklist == null) return;
-        let summary = create(header, "div", "project-summary");
-        if (this.description != null || this.checklist != null) {
-            summary.classList.add("cursor-pointer");
-        }
-        if (this.limitDate != null) this.inflateLimitDate(summary);
+        if (this.checklist == null) return;
+        let summary = create(header, "div", "project-summary cursor-pointer");
         if (this.checklist != null) this.inflateChecklistSummary(summary);
-        if (this.description != null) this.inflateDescriptionSummary(summary);
         summary.addEventListener("click", (event) => {
             self.toggleExpanded();
         });
@@ -373,45 +280,6 @@ class Project {
             if (body) {
                 body.classList.remove("glimpse");
             }
-        });
-    }
-
-    inflateDescriptionTextarea(element) {
-        var self = this;
-        let textarea = create(null, "textarea", "project-description-textarea");
-        textarea.value = "";
-        if (this.description != null) {
-            textarea.value = this.description;
-        }
-        textarea.placeholder = "Description (Markdown)";
-        function callback() {
-            self.container.classList.remove("editing");
-            self.description = textarea.value.trim();
-            if (self.description == "") {
-                self.description = null;
-            }
-            self.update();
-        }
-        textarea.addEventListener("keydown", (event) => {
-            if (event.ctrlKey && event.key == "Enter") {
-                callback();
-            }
-        });
-        textarea.addEventListener("focusout", callback);
-        element.replaceWith(textarea);
-        textarea.focus();
-        this.updateExpansion();
-    }
-
-    inflateDescription(body) {
-        var self = this;
-        let description = create(body, "div", "project-description");
-        description.innerHTML = converter.makeHtml(this.description);
-        description.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.container.classList.add("editing");
-            self.inflateDescriptionTextarea(description);
-            return false;
         });
     }
 
@@ -560,48 +428,9 @@ class Project {
             body.innerHTML = "";
         }
         body.className = "project-body";
-        if (this.description != null) this.inflateDescription(body);
         if (this.checklist != null) this.inflateChecklist(body);
         this.updateExpansion();
         return body;
-    }
-
-    inflateProgress() {
-        var self = this;
-        this.container.classList.add("has_progress");
-        let wrapper = create(this.container, "div", "project-progress-wrapper");
-        let progress = create(wrapper, "progress", "project-progress");
-        progress.min = this.progress.min;
-        progress.max = this.progress.max;
-        progress.value = this.progress.current;
-        wrapper.title = `${progress.value}/${progress.max}`;
-        let buttonSub = create(wrapper, "div", "project-progress-sub");
-        buttonSub.textContent = "−";
-        buttonSub.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.progress.current = Math.max(self.progress.min, self.progress.current - 1);
-            self.update();
-            return false;
-        });
-        let buttonAdd = create(wrapper, "div", "project-progress-add");
-        buttonAdd.textContent = "+";
-        buttonAdd.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.progress.current = Math.min(self.progress.max, self.progress.current + 1);
-            self.update();
-            return false;
-        });
-        progress.addEventListener("dblclick", (event) => {
-            let userValue = prompt("Current value:", self.progress.current);
-            if (userValue != null && userValue != "") {
-                try {
-                    self.progress.current = parseFloat(userValue);
-                    self.update();
-                } catch {
-
-                }
-            }
-        });
     }
 
     inflate() {
@@ -616,40 +445,10 @@ class Project {
         } else {
             this.expanded = false;
         }
-        if (this.progress != null) this.inflateProgress();
     }
 
     inflateContextMenuItems(menu) {
         var self = this;
-        if (this.limitDate == null) {
-            addContextMenuOption(menu, `<i class="ri-time-line"></i> Add limit date`, () => {
-                let now = new Date();
-                self.limitDate = dtf(now, "YYYY-mm-dd");
-                self.inflateHeader();
-                let limitDateElement = self.container.querySelector(".project-limitdate");
-                self.inflateLimitDateInput(limitDateElement);
-            });
-        } else {
-            addContextMenuOption(menu, `<i class="ri-time-line"></i> Remove limit date`, () => {
-                self.limitDate = null;
-                self.update();
-            })
-        }
-
-        if (this.description == null) {
-            addContextMenuOption(menu, `<i class="ri-sticky-note-line"></i> Add description`, () => {
-                self.expanded = true;
-                self.description = "";
-                self.inflateBody();
-                let descriptionElement = self.container.querySelector(".project-description");
-                self.inflateDescriptionTextarea(descriptionElement);
-            });
-        } else {
-            addContextMenuOption(menu, `<i class="ri-sticky-note-line"></i> Remove description`, () => {
-                self.description = null;
-                self.update();
-            })
-        }
 
         if (this.checklist == null) {
             addContextMenuOption(menu, `<i class="ri-checkbox-circle-line"></i> Add checklist`, () => {
@@ -666,18 +465,6 @@ class Project {
             });
             addContextMenuOption(menu, `<i class="ri-checkbox-circle-line"></i> Remove checklist`, () => {
                 self.checklist = null;
-                self.update();
-            });
-        }
-
-        if (this.progress == null) {
-            addContextMenuOption(menu, `<i class="ri-progress-5-line"></i> Add progress`, () => {
-                self.progress = {min: 0, max: parseInt(prompt("Number of steps", 10)), current: 0};
-                self.update();
-            });
-        } else {
-            addContextMenuOption(menu, `<i class="ri-progress-5-line"></i> Remove progress`, () => {
-                self.progress = null;
                 self.update();
             });
         }
@@ -766,17 +553,7 @@ class Project {
         let rows = [];
         rows.push(`# ${this.title}\n`);
         rows.push(`Category: ${this.category}`);
-        if (this.limitDate != null) {
-            rows.push(`Limit date: ${new Date(this.limitDate).toLocaleDateString()}`);
-        }
-        if (this.progress != null) {
-            rows.push(`Progress: ${this.progress.current}/${this.progress.max}`);
-        }
         rows.push("");
-        if (this.description != null) {
-            rows.push("## Description" + "\n");
-            rows.push(this.description + "\n");
-        }
         if (this.checklist != null) {
             rows.push("## Checklist" + "\n");
             this.checklistItems.forEach(item => {
@@ -790,10 +567,6 @@ class Project {
         return {
             title: this.title,
             modification: this.modification,
-            category: this.category,
-            limitDate: this.limitDate,
-            progress: this.progress,
-            description: this.description,
             checklist: this.checklist,
             rank: this.rank,
             note: this.note,
@@ -859,10 +632,6 @@ class TemporaryProject extends Project {
             creation: new Date(),
             modification: new Date(),
             title: "",
-            category: "general",
-            limitDate: null,
-            progress: null,
-            description: null,
             checklist: null,
             rank: null,
             note: null,

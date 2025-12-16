@@ -277,13 +277,13 @@ class Project(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=False, auto_now=True)
-    title = models.CharField(max_length=255)
-    category = models.CharField(max_length=255, default="general")
-    limit_date = models.DateField(blank=True, null=True)
-    progress_min = models.PositiveIntegerField(blank=True, null=True)
-    progress_max = models.PositiveIntegerField(blank=True, null=True)
-    progress_current = models.PositiveIntegerField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True, null=True)
+    category = models.CharField(max_length=255, default="general")        # Deprecated
+    limit_date = models.DateField(blank=True, null=True)                  # Deprecated
+    progress_min = models.PositiveIntegerField(blank=True, null=True)     # Deprecated
+    progress_max = models.PositiveIntegerField(blank=True, null=True)     # Deprecated
+    progress_current = models.PositiveIntegerField(blank=True, null=True) # Deprecated
+    description = models.TextField(blank=True, null=True)                 # Deprecated
     checklist = models.TextField(blank=True, null=True)
     rank = models.FloatField()
     note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True)
@@ -298,6 +298,16 @@ class Project(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:projects") + f"#project-{self.id}"
+    
+    @property
+    def reference(self) -> str:
+        if self.note is None and self.title is not None:
+            return self.title
+        if self.note is not None and self.title is None:
+            return self.note.title
+        if self.note is not None and self.title is not None:
+            return f"{self.note.title} - {self.title}"
+        return "Untitled"
 
 
 class Calendar(models.Model):
