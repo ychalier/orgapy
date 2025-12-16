@@ -269,6 +269,21 @@ def view_note(request: HttpRequest, object_id: str) -> HttpResponse:
     })
 
 
+def view_note_standalone(request: HttpRequest, object_id: str) -> HttpResponse:
+    note = find_user_object(Note, ["id", "nonce"], object_id)
+    has_permission = False
+    if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
+        has_permission = True
+    elif note.public and isinstance(object_id, str) and len(object_id) == 12:
+        has_permission = True
+    if not has_permission:
+        raise PermissionDenied()
+    return render(request, "orgapy/note_standalone.html", {
+        "note": note,
+        "readonly": True,
+    })
+
+
 @permission_required("orgapy.change_note")
 def view_edit_note(request: HttpRequest, object_id: str) -> HttpResponse:
     note = find_user_object(Note, "id", object_id, request.user)

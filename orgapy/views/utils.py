@@ -58,6 +58,12 @@ def find_user_object(
         allow_deleted: bool = False,
         ) -> UserObject:
     fields = [key] if isinstance(key, str) else key
+    try:
+        int(value)
+    except ValueError:
+        fields.remove("id")
+    if not fields:
+        raise BadRequest()
     nodes = Q(**{fields[0]: value})
     for field in fields[1:]:
         nodes |= Q(**{field: value})

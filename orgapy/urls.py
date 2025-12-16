@@ -25,6 +25,7 @@ urlpatterns = [
     path("notes/<object_id>/public", views.view_toggle_note_public, name="toggle_note_public"),
     path("notes/<object_id>/restore", views.view_restore_note, name="restore_note"),
     path("notes/<object_id>/destroy", views.view_destroy_note, name="destroy_note"),
+    path("notes/<object_id>/standalone", views.view_note_standalone, name="note_standalone"),
     path("sheets", views.view_sheets, name="sheets"),
     path("sheets/create", views.view_create_sheet, name="create_sheet"),
     path("sheets/save", views.view_save_sheet, name="save_sheet"),
