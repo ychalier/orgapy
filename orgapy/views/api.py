@@ -102,7 +102,11 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
             "title": project.title,
             "checklist": project.checklist if project.checklist else None,
             "rank": project.rank,
-            "note": None if project.note is None else project.note.id,
+            "note": None if project.note is None else {
+                "id": project.note.id,
+                "title": project.note.title,
+                "url": project.note.get_absolute_url(),
+            },
             "archived": project.archived,
         })
     return JsonResponse({"projects": projects})
@@ -163,7 +167,7 @@ def api_edit_project(request: HttpRequest) -> JsonResponse:
     note = None
     if project_data["note"] is not None:
         try:
-            note = Note.objects.get(user=request.user, id=int(project_data["note"]))
+            note = Note.objects.get(user=request.user, id=int(project_data["note"]["id"]))
         except Note.DoesNotExist:
             pass
     project.note = note # type: ignore

@@ -13,7 +13,6 @@ var converter = new showdown.Converter({
     extensions: []
 });
 
-var noteTitles = {};
 var projects = {};
 
 /** Projects ******************************************************************/
@@ -30,22 +29,6 @@ function addContextMenuOption(menu, label, callback) {
     option.classList.add("menu-item");
     create(option, "span").innerHTML = label;
     option.addEventListener("click", callback);
-}
-
-function setNoteTitle(noteSpan, noteId) {
-    if (noteId in noteTitles) {
-        noteSpan.textContent = noteTitles[noteId];
-        noteSpan.title = noteTitles[noteId];
-    } else {
-        fetch(URL_API + `?action=reference&note=${noteId}`).then(res => res.json()).then(data => {
-            const title = data.results[0].title;
-            noteTitles[noteId] = title;
-            noteSpan.textContent = title;
-            noteSpan.title = title;
-        }).catch(err => {
-            noteSpan.textContent = "Error";
-        });
-    }
 }
 
 class Project {
@@ -98,101 +81,22 @@ class Project {
     onTitleInputChange(input) {
         this.container.classList.remove("editing");
         let titleString = input.value.trim();
-        let match = titleString.match(/^(.+?)(?:@(\d+))? *$/);
-        this.title = match[1].trim();
-        if (match[2] == undefined) {
-            this.note = null;
-        } else {
-            this.note = parseInt(match[2]);
-        }
+        this.title = titleString.trim();
         this.update();
     }
 
     inflateTitleInput(title) {
-        var self = this;
         this.container.classList.add("editing");
         let input = create(null, "input", "project-title-input");
-        input.value = self.title + (self.note == null ? "" : ` @${self.note}`);
-        input.placeholder = "Title";
+        input.value = this.title == null ? "" : this.title;
+        input.placeholder = "Project's title";
         input.addEventListener("click", (e) => {e.stopPropagation(); return false;});
-        function callback() {
-            self.onTitleInputChange(input);
-        }
-        input.addEventListener("input", (e) => {
-            if (input.value.length == 0) return;
-            const match = input.value.match(/@([\w0-9]*)/);
-            if (match == null) {
-                this.container.querySelectorAll(".note-suggestions").forEach(remove);
-                return;
-            }
-            const query = match[1];
-            if (query.trim() == "") {
-                this.container.querySelectorAll(".note-suggestions").forEach(remove);
-                return;
-            }
-            fetch(URL_API + `?action=suggestions&t=note&q=${query}`).then(res => res.json()).then(data => {
-                this.container.querySelectorAll(".note-suggestions").forEach(remove);
-                const suggestions = create(this.container, "div", "note-suggestions");
-                for (const result of data.results.slice(0, 3)) {
-                    const note = create(suggestions, "div", "note-suggestion");
-                    note.textContent = result.title;
-                    note.addEventListener("click", (e2) => {
-                        e2.preventDefault();
-                        e2.stopPropagation();
-                        input.value = input.value.replace(/@[\w0-9]*/, `@${result.id}`);
-                        if (!self.isTemporary) {
-                            callback();
-                        }
-                        return false;
-                    });
-                }
-            });
-        });
+        var self = this;
+        const callback = () => {self.onTitleInputChange(input);};
         input.addEventListener("focusout", () => {setTimeout(callback, 100);});
         input.addEventListener("keydown", (e) => { if (e.key == "Enter") { callback(); } });
         title.replaceWith(input);
         input.focus();
-    }
-
-    inflateTitle(header) {
-        var self = this;
-        let title = create(header, "div", "project-title");
-        let titleSpan = create(title, "span");
-        titleSpan.innerHTML = converter.makeHtml(this.title).slice(3, -4);
-        if (this.note != null) {
-            let noteSpan = create(title, "a", "note-link");
-            noteSpan.textContent = `@${this.note}`;
-            setNoteTitle(noteSpan, this.note);
-            noteSpan.href = URL_ORGAPY_NOTE.replace("objectId", this.note);
-        }
-        title.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.inflateTitleInput(title);
-            return false;
-        });
-    }
-
-    inflateChecklistSummary(summary) {
-        var self = this;
-        let total = 0;
-        let completed = 0;
-        this.checklistItems.forEach(item => {
-            total++;
-            if (item.state) completed++;
-        });
-        let checklistSummary = create(summary, "div", "project-checklist-summary");
-        if (completed == total) {
-            checklistSummary.classList.add("project-checklist-summary-done");
-        }
-        checklistSummary.innerHTML = `<i class="ri-checkbox-circle-line"></i> ${completed}/${total}`;
-        if (completed > 0) {
-            let checklistClear = create(checklistSummary, "i", "ri-close-line show-on-parent-hover");
-            checklistClear.title = "Clear completed items";
-            checklistClear.addEventListener("click", (event) => {
-                event.stopPropagation();
-                self.clearChecklist();
-            });
-        }
     }
 
     inflateHeader() {
@@ -208,24 +112,43 @@ class Project {
             header.innerHTML = "";
         }
         header.className = "project-header";
-        this.inflateTitle(header);
-        if (this.checklist == null) return;
-        let summary = create(header, "div", "project-summary cursor-pointer");
-        if (this.checklist != null) this.inflateChecklistSummary(summary);
-        summary.addEventListener("click", (event) => {
-            self.toggleExpanded();
+
+        const badge = create(header, "span", "project-badge");
+        let total = 0;
+        let completed = 0;
+        this.checklistItems.forEach(item => {
+            total++;
+            if (item.state) completed++;
         });
-        summary.addEventListener("mouseenter", (event) => {
-            let body = self.container.querySelector(".project-body");
-            if (body && !self.expanded) {
-                body.classList.add("glimpse");
-            }
+        if (total == 0) {
+            badge.classList.add("empty");
+        } else if (completed == total) {
+            badge.classList.add("done");
+        }
+        badge.innerHTML = `<i class="ri-checkbox-circle-line"></i> ${completed}/${total}`;
+        
+        if (this.note != null) {
+            const noteSpan = create(header, "span", "project-note");
+            noteSpan.textContent = this.note.title;
+            //TODO:
+            //onhover: show embedded view, in iframe, with the note content
+            //onclick: change note
+        }
+        const title = create(header, "span", "project-title");
+        title.textContent = this.title == null ? "Untitled" : this.title;
+        title.addEventListener("click", (event) => {
+            event.stopPropagation();
+            self.inflateTitleInput(title);
+            return false;
         });
-        summary.addEventListener("mouseleave", (event) => {
-            let body = self.container.querySelector(".project-body");
-            if (body) {
-                body.classList.remove("glimpse");
-            }
+        
+        header.addEventListener("click", (event) => { self.toggleExpanded(); });
+        header.addEventListener("mouseenter", (event) => {
+            self.container.querySelector(".project-body").classList.add("glimpse");
+        });
+        header.addEventListener("mouseleave", (event) => {
+            self.container.querySelector(".project-body").classList.remove("glimpse");
+            
         });
     }
 
@@ -240,9 +163,7 @@ class Project {
             let value = input.value.trim();
             if (value == "") {
                 self.checklistItems.splice(entryIndex, 1);
-                if (self.checklistItems.length == 0) {
-                    self.onEmptyChecklist();
-                } else {
+                if (self.checklistItems.length != 0) {
                     self.concatChecklist();
                 }
             } else {
@@ -334,7 +255,6 @@ class Project {
 
     expand() {
         let body = this.container.querySelector(".project-body");
-        if (!body) return;
         body.classList.remove("glimpse");
         let height = 0;
         this.container.querySelectorAll(".project-body > *").forEach(child => {
@@ -348,7 +268,6 @@ class Project {
 
     contract() {
         let body = this.container.querySelector(".project-body");
-        if (!body) return;
         body.classList.remove("glimpse");
         body.style.height = 0;
     }
@@ -374,7 +293,7 @@ class Project {
             body.innerHTML = "";
         }
         body.className = "project-body";
-        if (this.checklist != null) this.inflateChecklist(body);
+        this.inflateChecklist(body);
         this.updateExpansion();
         return body;
     }
@@ -386,11 +305,7 @@ class Project {
             this.container.classList.add("archived");
         }
         this.inflateHeader();
-        if (this.description != null || this.checklist != null) {
-            this.inflateBody();
-        } else {
-            this.expanded = false;
-        }
+        this.inflateBody();
     }
 
     inflateContextMenuItems(menu) {
@@ -497,8 +412,7 @@ class Project {
 
     toMarkdown() {
         let rows = [];
-        rows.push(`# ${this.title}\n`);
-        rows.push(`Category: ${this.category}`);
+        rows.push(`# ${this.title}\n`); // TODO: add note title
         rows.push("");
         if (this.checklist != null) {
             rows.push("## Checklist" + "\n");
@@ -539,7 +453,7 @@ class Project {
                 self.modification = data.modification;
                 toast("Saved!", 600);
                 if (refreshList) {
-                    fetchProjectsAndInflate();
+                    fetchProjects();
                 }
             });
     }
@@ -549,20 +463,13 @@ class Project {
         this.inflate();
     }
 
-    onEmptyChecklist() {
-        this.checklist = null;
-        this.checklistItems = []; 
-    }
-
     clearChecklist() {
         for (let i = this.checklistItems.length - 1; i >= 0; i--) {
             if (this.checklistItems[i].state) {
                 this.checklistItems.splice(i, 1);
             }
         }
-        if (this.checklistItems.length == 0) {
-            this.onEmptyChecklist();
-        } else {
+        if (this.checklistItems.length != 0) {
             this.concatChecklist();
         }
         this.update();
@@ -650,7 +557,7 @@ function inflateProjects() {
     });
 }
 
-function fetchProjectsAndInflate() {
+function fetchProjects() {
     const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
     fetch(URL_API + `?action=list-projects${showArchived ? "&archived=1" : ""}`).then(res => res.json()).then(data => {
         projects = {};
@@ -661,20 +568,18 @@ function fetchProjectsAndInflate() {
     });
 }
 
+function onButtonProjectCreate() {
+    let container = document.getElementById("projects");
+    let tempProject = new TemporaryProject();
+    let tempProjectElement = tempProject.create();
+    container.appendChild(tempProjectElement);
+    setTimeout(() => {
+        tempProjectElement.querySelector("input").focus();
+    }, 1);
+}
+
 window.addEventListener("load", () => {
-
     window.addEventListener("click", clearContextMenus);
-
-    document.getElementById("btn-project-create").addEventListener("click", () => {
-        let container = document.getElementById("projects");
-        let tempProject = new TemporaryProject();
-        let tempProjectElement = tempProject.create();
-        container.appendChild(tempProjectElement);
-        setTimeout(() => {
-            tempProjectElement.querySelector("input").focus();
-        }, 1);
-    });
-    
-    fetchProjectsAndInflate();
-
+    document.getElementById("btn-project-create").addEventListener("click", onButtonProjectCreate);
+    fetchProjects();
 });
