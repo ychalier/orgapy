@@ -40,8 +40,12 @@
 
 .project-note {
     flex-shrink: 0;
-    color: #8ed2ff;
+    color: white;
     cursor: pointer;
+}
+
+.project-note + .project-title {
+    color: #888;
 }
 
 .project-badge {
@@ -98,17 +102,17 @@
     background: none;
     border: none;
     padding: 0;
-    font-family: "Fira Code", monospace;
+    width: 100%;
     color: inherit;
+    border-radius: 0;
 }
 
-.project-title-input {
-    color: #f0f0f0;
-    width: 100%;
+.project-note + .project-title-input {
+    color: #888;
 }
 
 .project-checklist-item-input {
-    width: 100%;
+    font-family: "Fira Code", monospace;
 }
 
 .project-title-input:focus,

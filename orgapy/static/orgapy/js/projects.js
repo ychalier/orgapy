@@ -24,10 +24,10 @@ function clearContextMenus() {
     }
 }
 
-function addContextMenuOption(menu, label, callback) {
+function addContextMenuOption(menu, iconClass, label, callback) {
     let option = menu.appendChild(document.createElement("li"));
     option.classList.add("menu-item");
-    create(option, "span").innerHTML = label;
+    create(option, "span").innerHTML = `<i class="${iconClass}></i> ${label}`;
     option.addEventListener("click", callback);
 }
 
@@ -105,22 +105,28 @@ class Project {
         dialog.setAttribute("closedby", "any");
         const dialogHeader = create(dialog, "div", "dialog-header");
         const noteTitle = create(dialogHeader, "b");
-        noteTitle.textContent = this.note.title;
+        if (this.note != null) noteTitle.textContent = this.note.title;
         const noteLink = create(dialogHeader, "a", "action-button");
         noteLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i>`;
-        noteLink.href = this.note.url;
+        if (this.note != null) noteLink.href = this.note.url;
         const noteIframe = create(dialog, "iframe", "dialog-body");
-        noteIframe.src = this.note.url + "/standalone";
+        if (this.note != null) noteIframe.src = this.note.url + "/standalone";
         noteIframe.width = 400;
         noteIframe.height = 400;
-        noteTitle.addEventListener("click", (e) => {
+
+        function openNoteInput() {
             const noteTitleInputContainer = create(null, "div", "project-note-input");
             const noteTitleInput = create(noteTitleInputContainer, "input");
             noteTitleInput.type = "search";
-            noteTitleInput.value = this.note.title;
-            let currentId = this.note.id;
-            let currentTitle = this.note.title;
-            let currentUrl = this.note.url;
+            let currentId = null;
+            let currentTitle = null;
+            let currentUrl = null;
+            if (self.note != null) {
+                noteTitleInput.value = self.note.title;
+                currentId = self.note.id;
+                currentTitle = self.note.title;
+                currentUrl = self.note.url;
+            }
             const results = create(noteTitleInputContainer, "div", "project-note-results");
             bindDocumentInput(noteTitleInput, "note", results, (entry) => {
                 if (entry != null) {
@@ -129,20 +135,30 @@ class Project {
                     currentUrl = entry.url;
                 }
                 noteTitleInputContainer.replaceWith(noteTitle);
-                noteTitle.textContent = currentTitle;
-                noteLink.href = currentUrl;
-                noteIframe.src = currentUrl + "/standalone";
-                self.note = {
-                    id: currentId,
-                    title: currentTitle,
-                    url: currentUrl
+                if (currentTitle != null) {
+                    noteTitle.textContent = currentTitle;
+                }
+                if (currentUrl != null) {
+                    noteLink.href = currentUrl;
+                    noteIframe.src = currentUrl + "/standalone";
+                }
+                if (currentId != null && currentTitle != null && currentUrl != null) {
+                    self.note = {
+                        id: currentId,
+                        title: currentTitle,
+                        url: currentUrl
+                    }
                 }
                 self.inflateHeader();
                 self.save();
             });
             noteTitle.replaceWith(noteTitleInputContainer);
             noteTitleInput.focus();
-        });
+        }
+
+        if (this.note == null) openNoteInput();
+
+        noteTitle.addEventListener("click", openNoteInput);
         dialog.showModal();
     }
 
@@ -178,7 +194,7 @@ class Project {
             const noteSpan = create(header, "span", "project-note");
             noteSpan.textContent = this.note.title;
             noteSpan.addEventListener("click", (e) => {
-                e.preventDefault(); 
+                e.preventDefault();
                 e.stopPropagation();
                 self.openNoteDialog();});
         }
@@ -190,14 +206,14 @@ class Project {
             self.inflateTitleInput(title);
             return false;
         });
-        
+
         header.addEventListener("click", (event) => { self.toggleExpanded(); });
         header.addEventListener("mouseenter", (event) => {
             self.container.querySelector(".project-body").classList.add("glimpse");
         });
         header.addEventListener("mouseleave", (event) => {
             self.container.querySelector(".project-body").classList.remove("glimpse");
-            
+
         });
     }
 
@@ -212,16 +228,14 @@ class Project {
             let value = input.value.trim();
             if (value == "") {
                 self.checklistItems.splice(entryIndex, 1);
-                if (self.checklistItems.length != 0) {
-                    self.concatChecklist();
-                }
+                self.concatChecklist();
             } else {
                 self.setChecklistItemText(entryIndex, value);
             }
             self.update();
         }
         input.addEventListener("focusout", callback);
-        input.addEventListener("keydown", (e) => { if (e.key == "Enter") { 
+        input.addEventListener("keydown", (e) => { if (e.key == "Enter") {
             callback();
             if (e.ctrlKey || e.altKey || e.shiftKey) {
                 let checklist = self.container.querySelector(".project-checklist");
@@ -282,23 +296,26 @@ class Project {
         var self = this;
         let checklist = create(body, "div", "project-checklist");
         this.inflateChecklistItems(checklist);
-        let buttons = create(checklist, "div", "project-buttons");
-        let buttonAddItem = create(buttons, "button", "project-button");
-        buttonAddItem.title = "Add checklist item";
-        buttonAddItem.innerHTML = `<i class="ri-add-line"></i> Add`;
-        buttonAddItem.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.addNewChecklistItem(checklist);
-            return false;
+        const buttons = create(checklist, "div", "project-buttons");
+
+        function addButton(label, iconClass, title, onClick) {
+            const buttonAddItem = create(buttons, "button", "project-button");
+            buttonAddItem.title = title;
+            buttonAddItem.innerHTML = `<i class="${iconClass}"></i> ${label}`;
+            buttonAddItem.addEventListener("click", (event) => {
+                event.stopPropagation();
+                onClick();
+                return false;
+            });
+        }
+
+        addButton("Add", "ri-add-line", "Add checklist item", () => { self.addNewChecklistItem(checklist) });
+        addButton("Clear", "ri-close-line", "Clear completed items", () => { self.clearChecklist() });
+        addButton("Copy", "ri-file-copy-2-line", "Copy as Markdown", () => {
+            navigator.clipboard.writeText(self.toMarkdown());
+            toast("Copied to clipboard!", 600);
         });
-        let buttonClear = create(buttons, "button", "project-button");
-        buttonClear.title = "Clear completed items";
-        buttonClear.innerHTML = `<i class="ri-close-line"></i> Clear`;
-        buttonClear.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.clearChecklist();
-            return false;
-        });
+        
         return checklist;
     }
 
@@ -359,48 +376,20 @@ class Project {
 
     inflateContextMenuItems(menu) {
         var self = this;
-
-        if (this.checklist == null) {
-            addContextMenuOption(menu, `<i class="ri-checkbox-circle-line"></i> Add checklist`, () => {
-                self.expanded = true;
-                self.checklist = "[ ] ";
-                self.splitChecklist();
-                self.inflateBody();
-                let checklistItemElement = self.container.querySelector(".project-checklist-item label");
-                self.inflateChecklistItemLabelInput(checklistItemElement, "", 0);
-            });
+        if (this.note == null) {
+            addContextMenuOption(menu, "ri-sticky-note-line", "Bind note", () => {self.openNoteDialog()});
         } else {
-            addContextMenuOption(menu, `<i class="ri-close-line"></i> Clear checklist`, () => {
-                self.clearChecklist();
-            });
-            addContextMenuOption(menu, `<i class="ri-checkbox-circle-line"></i> Remove checklist`, () => {
-                self.checklist = null;
-                self.update();
-            });
+            addContextMenuOption(menu, "ri-sticky-note-line", "Unbind note", () => {self.unbindNote()});
         }
-
-        addContextMenuOption(menu, `<i class="ri-file-copy-2-line"></i> Copy as Markdown`, () => {
-            navigator.clipboard.writeText(this.toMarkdown());
-            toast("Copied to clipboard!", 600);
-        });
-
-        addContextMenuOption(menu, `<i class="ri-pencil-fill"></i> Edit in admin`, () => {
+        addContextMenuOption(menu, "ri-pencil-fill", "Edit in admin", () => {
             window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
         });
-
         if (this.archived) {
-            addContextMenuOption(menu, `<i class="ri-archive-line"></i> Unarchive project`, () => {
-                self.unarchive();
-            });
+            addContextMenuOption(menu, "ri-archive-line", "Unarchive", () => {self.unarchive()});
         } else {
-            addContextMenuOption(menu, `<i class="ri-archive-line"></i> Archive project`, () => {
-                self.archive();
-            });
+            addContextMenuOption(menu, "ri-archive-line", "Archive", () => {self.archive()});
         }
-
-        addContextMenuOption(menu, `<i class="ri-delete-bin-line"></i> Delete project`, () => {
-            self.delete();
-        });
+        addContextMenuOption(menu, "ri-delete-bin-line", "Delete", () => {self.delete()});
     }
 
     inflateContextMenu(event) {
@@ -461,10 +450,8 @@ class Project {
 
     toMarkdown() {
         let rows = [];
-        rows.push(`# ${this.title}\n`); // TODO: add note title
-        rows.push("");
+        rows.push(`# ${this.reference()}\n`);
         if (this.checklist != null) {
-            rows.push("## Checklist" + "\n");
             this.checklistItems.forEach(item => {
                 rows.push("- [" + (item.state ? "x" : " ") + "] " + item.text);
             });
@@ -512,7 +499,25 @@ class Project {
         this.inflate();
     }
 
+    reference() {
+        if (this.note != null && this.title != null) {
+            return `${this.note.title} - ${this.title}`;
+        } else if (this.note != null) {
+            return this.note.title;
+        } else if (this.title != null) {
+            return this.title;
+        } else {
+            return "Untitled";
+        }
+    }
+
     clearChecklist() {
+        let toClear = 0;
+        for (let i = this.checklistItems.length - 1; i >= 0; i--) {
+            if (this.checklistItems[i].state) toClear++;
+        }
+        if (toClear == 0) return;
+        if (!confirm(`Please confirm clearing ${toClear} item${toClear > 1 ? "s" : ""} from '${this.reference()}'`)) return;
         for (let i = this.checklistItems.length - 1; i >= 0; i--) {
             if (this.checklistItems[i].state) {
                 this.checklistItems.splice(i, 1);
@@ -521,6 +526,11 @@ class Project {
         if (this.checklistItems.length != 0) {
             this.concatChecklist();
         }
+        this.update();
+    }
+
+    unbindNote() {
+        this.note = null;
         this.update();
     }
 
@@ -579,7 +589,7 @@ function saveProjectRanks(ordering) {
         let projectId = project.getAttribute("project_id");
         ranks[projectId] = ordering[i];
         projects[projectId].rank = ordering[i];
-    }); 
+    });
     inflateProjects();
     apiPost("edit-project-ranks", {ranks: JSON.stringify(ranks)}, () => {
         toast("Ranks saved!", 600);
