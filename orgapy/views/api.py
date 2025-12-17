@@ -90,9 +90,16 @@ def api(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_project")
 def api_list_projects(request: HttpRequest) -> JsonResponse:
+    note_filter = request.GET.get("note")
     show_archived = request.GET.get("archived", "0") == "1"
     projects = []
-    for project in Project.objects.filter(user=request.user):
+    query = Project.objects.filter(user=request.user)
+    if note_filter is not None:
+        try:
+            query = query.filter(note__id=int(note_filter))
+        except ValueError:
+            pass
+    for project in query:
         if project.archived and not show_archived:
             continue
         projects.append({

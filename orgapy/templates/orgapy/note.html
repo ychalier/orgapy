@@ -7,8 +7,11 @@
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'orgapy/dependencies/katex.min.css' %}" />
 <script src="{% static 'orgapy/dependencies/showdown-katex.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
 <script src="{% static 'orgapy/js/notes.js' %}"></script>
+<script src="{% static 'orgapy/js/dragrank.js' %}"></script>
+<script src="{% static 'orgapy/js/projects.js' %}"></script>
 {% endblock head %}
 
 {% block menu %}
@@ -48,6 +51,8 @@
 
 <div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 
+<div id="projects"></div>
+
 {% endblock main_content %}
 
 {% block right_column %}
@@ -70,5 +75,9 @@
     markdownToHtml(".markdown", true, true);
     {% if not readonly %}bindWidgets({{ note.id }});{% endif %}
     createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
+    window.addEventListener("load", () => {
+        // document.getElementById("btn-project-create").addEventListener("click", onButtonProjectCreate);
+        fetchProjects({{ note.id }}, true);
+    });
 </script>
 {% endblock body_scripts %}

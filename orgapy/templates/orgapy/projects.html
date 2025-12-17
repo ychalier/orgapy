@@ -246,5 +246,10 @@
 {{ block.super }}
 <script>
     markdownToHtml(".markdown", true);
+    window.addEventListener("load", () => {
+        window.addEventListener("click", clearContextMenus);
+        document.getElementById("btn-project-create").addEventListener("click", onButtonProjectCreate);
+        fetchProjects();
+    });
 </script>
 {% endblock body_scripts %}

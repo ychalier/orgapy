@@ -33,7 +33,7 @@ function addContextMenuOption(menu, iconClass, label, callback) {
 
 class Project {
 
-    constructor(data) {
+    constructor(data, forceExpand=false) {
         this.id = data.id;
         this.creation = data.creation;
         this.modification = data.modification;
@@ -47,6 +47,8 @@ class Project {
         this.expanded = false;
         this.container = null;
         this.previousProjectData = this.toJsonString();
+        this.forceExpand = forceExpand;
+        if (this.forceExpand) this.expanded = true;
     }
 
     splitChecklist() {
@@ -207,13 +209,12 @@ class Project {
             return false;
         });
 
-        header.addEventListener("click", (event) => { self.toggleExpanded(); });
+        header.addEventListener("click", (event) => { if (!self.forceExpand) self.toggleExpanded(); });
         header.addEventListener("mouseenter", (event) => {
             self.container.querySelector(".project-body").classList.add("glimpse");
         });
         header.addEventListener("mouseleave", (event) => {
             self.container.querySelector(".project-body").classList.remove("glimpse");
-
         });
     }
 
@@ -616,15 +617,17 @@ function inflateProjects() {
     });
 }
 
-function fetchProjects() {
+function fetchProjects(noteId=null, forceExpand=false) {
     const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
-    fetch(URL_API + `?action=list-projects${showArchived ? "&archived=1" : ""}`).then(res => res.json()).then(data => {
-        projects = {};
-        data.projects.forEach(projectData => {
-            projects[projectData.id] = new Project(projectData);
+    fetch(URL_API + `?action=list-projects${noteId == null ? "" : `&note=${noteId}`}${showArchived ? "&archived=1" : ""}`)
+        .then(res => res.json())
+        .then(data => {
+            projects = {};
+            data.projects.forEach(projectData => {
+                projects[projectData.id] = new Project(projectData, forceExpand);
+            });
+            inflateProjects(forceExpand);
         });
-        inflateProjects();
-    });
 }
 
 function onButtonProjectCreate() {
@@ -637,8 +640,4 @@ function onButtonProjectCreate() {
     }, 1);
 }
 
-window.addEventListener("load", () => {
-    window.addEventListener("click", clearContextMenus);
-    document.getElementById("btn-project-create").addEventListener("click", onButtonProjectCreate);
-    fetchProjects();
-});
+window.addEventListener("click", clearContextMenus);
