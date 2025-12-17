@@ -278,10 +278,12 @@ def view_note_standalone(request: HttpRequest, object_id: str) -> HttpResponse:
         has_permission = True
     if not has_permission:
         raise PermissionDenied()
-    return render(request, "orgapy/note_standalone.html", {
+    response = render(request, "orgapy/note_standalone.html", {
         "note": note,
         "readonly": True,
     })
+    response["X-Frame-Options"] = "SAMEORIGIN"
+    return response
 
 
 @permission_required("orgapy.change_note")

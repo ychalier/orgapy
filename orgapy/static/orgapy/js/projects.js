@@ -99,6 +99,53 @@ class Project {
         input.focus();
     }
 
+    openNoteDialog() {
+        var self = this;
+        const dialog = create(this.container, "dialog");
+        dialog.setAttribute("closedby", "any");
+        const dialogHeader = create(dialog, "div", "dialog-header");
+        const noteTitle = create(dialogHeader, "b");
+        noteTitle.textContent = this.note.title;
+        const noteLink = create(dialogHeader, "a", "action-button");
+        noteLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i>`;
+        noteLink.href = this.note.url;
+        const noteIframe = create(dialog, "iframe", "dialog-body");
+        noteIframe.src = this.note.url + "/standalone";
+        noteIframe.width = 400;
+        noteIframe.height = 400;
+        noteTitle.addEventListener("click", (e) => {
+            const noteTitleInputContainer = create(null, "div", "project-note-input");
+            const noteTitleInput = create(noteTitleInputContainer, "input");
+            noteTitleInput.type = "search";
+            noteTitleInput.value = this.note.title;
+            let currentId = this.note.id;
+            let currentTitle = this.note.title;
+            let currentUrl = this.note.url;
+            const results = create(noteTitleInputContainer, "div", "project-note-results");
+            bindDocumentInput(noteTitleInput, "note", results, (entry) => {
+                if (entry != null) {
+                    currentId = entry.id;
+                    currentTitle = entry.title;
+                    currentUrl = entry.url;
+                }
+                noteTitleInputContainer.replaceWith(noteTitle);
+                noteTitle.textContent = currentTitle;
+                noteLink.href = currentUrl;
+                noteIframe.src = currentUrl + "/standalone";
+                self.note = {
+                    id: currentId,
+                    title: currentTitle,
+                    url: currentUrl
+                }
+                self.inflateHeader();
+                self.save();
+            });
+            noteTitle.replaceWith(noteTitleInputContainer);
+            noteTitleInput.focus();
+        });
+        dialog.showModal();
+    }
+
     inflateHeader() {
         var self = this;
         let header = this.container.querySelector(".project-header");
@@ -126,14 +173,16 @@ class Project {
             badge.classList.add("done");
         }
         badge.innerHTML = `<i class="ri-checkbox-circle-line"></i> ${completed}/${total}`;
-        
+
         if (this.note != null) {
             const noteSpan = create(header, "span", "project-note");
             noteSpan.textContent = this.note.title;
-            //TODO:
-            //onhover: show embedded view, in iframe, with the note content
-            //onclick: change note
+            noteSpan.addEventListener("click", (e) => {
+                e.preventDefault(); 
+                e.stopPropagation();
+                self.openNoteDialog();});
         }
+
         const title = create(header, "span", "project-title");
         title.textContent = this.title == null ? "Untitled" : this.title;
         title.addEventListener("click", (event) => {

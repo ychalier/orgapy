@@ -690,6 +690,68 @@ function askUserToSubscribeToNotifications(serviceWorkerUrl, publicKeyBase64) {
     }
 }
 
+function bindDocumentInput(searchInput, objectType, resultsContainer, callback) {
+
+    let resultCount = 0;
+    let selectedResult = -1;
+    let entries = {};
+
+    function updateSelectedResult() {
+        Array.from(resultsContainer.children).forEach((result, i) => {
+            if (i == selectedResult) {
+                result.classList.add("active");
+            } else {
+                result.classList.remove("active");
+            }
+        });
+    }
+
+    searchInput.addEventListener("input", (event) => {
+        const query = searchInput.value.trim();
+        fetch(URL_API + `?action=suggestions&q=${query}&t=${objectType}`).then(res => res.json()).then(data => {
+            resultsContainer.innerHTML = "";
+            resultCount = data.results.length;
+            selectedResult = -1;
+            entries = {};
+            for (const entry of data.results) {
+                entries[entry.id] = entry;
+                const result = create(resultsContainer, "div");
+                result.textContent = entry.title;
+                result.setAttribute("object-id", entry.id);
+                result.addEventListener("click", () => {
+                    callback(entry);
+                });
+            }
+        });
+    });
+
+    searchInput.addEventListener("keydown", (event) => {
+        if (event.key == "ArrowDown") {
+            event.preventDefault();
+            if (selectedResult < resultCount-1) {
+                selectedResult++;
+                updateSelectedResult();
+            }
+        } else if (event.key == "ArrowUp") {
+            event.preventDefault();
+            if (selectedResult > 0) {
+                selectedResult--;
+                updateSelectedResult();
+            }
+        } else if (event.key == "Enter") {
+            event.preventDefault();
+            if (selectedResult != undefined && selectedResult >= 0 && selectedResult < resultsContainer.children.length) {
+                callback(entries[resultsContainer.children[selectedResult].getAttribute("object-id")]);
+            } else {
+                callback(null);
+            }
+        } else if (event.key == "Escape") {
+            callback(null);
+        }
+    });
+
+}
+
 window.addEventListener("load", () => {
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {

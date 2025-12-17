@@ -12,38 +12,8 @@
 {% endblock head %}
 
 {% block main_content %}
-
-<div class="container" style="margin: 0 .8rem">
-
-    <header class="card">
-        <h1 class="header-title">{{note.title}}</h1>
-        <div class="header-meta">
-            {% if not readonly %}
-            {% if note.categories.all %}
-            {% for category in note.categories.all %}
-            <a href="{{ category.get_absolute_url }}">#{{ category.name }}</a>
-            {% endfor %}
-            {% else %}
-            <a href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
-            {% endif %}
-            ·
-            {% endif %}
-            <span title="Created on {{ note.date_creation | date }}"><i class="ri-calendar-line"></i> {{ note.date_creation | date }}</span>
-            {% if note.date_creation.date != note.date_modification.date %}
-            · <span title="Edited on {{ note.date_modification | date }}"><i class="ri-edit-circle-line"></i> {{ note.date_modification | date }}</span>
-            {% endif %}
-        </div>
-        {% if note.referenced_in %}
-        <div class="header-refs">
-            {% for ref in note.referenced_in.all %}
-            <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </header>
-
-    <div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
-
+<div class="container">
+    <div class="card markdown novmargin">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 </div>
 {% endblock main_content %}
 

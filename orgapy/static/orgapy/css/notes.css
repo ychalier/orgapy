@@ -175,7 +175,7 @@
     gap: .2rem;
 }
 
-.smde-dropdown-result {
+.smde-dropdown-results > div {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -184,8 +184,8 @@
     padding: 0 .2rem;
 }
 
-.smde-dropdown-result.active,
-.smde-dropdown-result:hover {
+.smde-dropdown-results > div.active,
+.smde-dropdown-results > div:hover {
     background: #00000040;
     border-radius: .2rem;
 }
