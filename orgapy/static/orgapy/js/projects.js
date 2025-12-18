@@ -13,6 +13,8 @@ var converter = new showdown.Converter({
     extensions: []
 });
 
+const PROJECT_SAVE_TIMEOUT = 1000;
+
 var projects = {};
 
 /** Projects ******************************************************************/
@@ -49,6 +51,7 @@ class Project {
         this.previousProjectData = this.toJsonString();
         this.forceExpand = forceExpand;
         if (this.forceExpand) this.expanded = true;
+        this.saveTimeout = null;
     }
 
     splitChecklist() {
@@ -492,24 +495,30 @@ class Project {
     }
 
     save(refreshList=false) {
-        let projectData = this.toJsonString();
-        if (projectData == this.previousProjectData) {
-            console.log("No change detected, skipping save");
-            return;
-        }
-        this.previousProjectData = projectData;
         var self = this;
-        apiPost("edit-project",
-            {
-                project_id: this.id,
-                project_data: projectData
-            }, (data) => {
-                self.modification = data.modification;
-                toast("Saved!", 600);
-                if (refreshList) {
-                    fetchProjects();
-                }
-            });
+        function actuallySave() {
+            let projectData = self.toJsonString();
+            if (projectData == self.previousProjectData) {
+                console.log("No change detected, skipping save");
+                return;
+            }
+            self.previousProjectData = projectData;
+            apiPost("edit-project",
+                {
+                    project_id: self.id,
+                    project_data: projectData
+                }, (data) => {
+                    self.modification = data.modification;
+                    toast("Saved!", 600);
+                    if (refreshList) {
+                        fetchProjects();
+                    }
+                });
+        }
+        if (this.saveTimeout != null) {
+            clearTimeout(this.saveTimeout);
+        }
+        this.saveTimeout = setTimeout(actuallySave, PROJECT_SAVE_TIMEOUT);        
     }
 
     update() {
