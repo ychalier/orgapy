@@ -55,11 +55,8 @@
 }
 
 .project-note {
-    flex-shrink: 0;
     color: white;
     cursor: pointer;
-    flex-basis: 0;
-    flex-grow: 1;
 }
 
 .project-note + .project-title {

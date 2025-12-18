@@ -341,11 +341,13 @@ dialog::backdrop {
     align-items: baseline;
     gap: 1ch;
     margin-bottom: .8rem;
+    max-width: 400px;
 }
 
 dialog iframe {
     border: none;
     border-radius: .4rem;
+    width: 100%;
 }
 
 /***** MODAL ******************************************************************/

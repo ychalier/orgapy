@@ -37,7 +37,7 @@ class Project {
         this.id = data.id;
         this.creation = data.creation;
         this.modification = data.modification;
-        this.title = data.title;
+        this.title = data.title == null ? null : (data.title == "" ? null : data.title);
         this.checklist = data.checklist;
         this.rank = data.rank;
         this.note = data.note;
@@ -206,7 +206,7 @@ class Project {
         }
 
         const title = create(header, "span", "project-title");
-        title.textContent = this.title == null ? (this.note == null ? "Untitled" : "     ") : this.title;
+        title.textContent = this.title == null ? (this.note == null ? "Untitled" : "") : this.title;
         title.addEventListener("click", (event) => {
             event.stopPropagation();
             self.inflateTitleInput(title);
@@ -214,6 +214,7 @@ class Project {
         });
 
         header.addEventListener("click", (event) => { if (!self.forceExpand) self.toggleExpanded(); });
+        header.addEventListener("dblclick", (event) => { self.inflateTitleInput(title); });
         header.addEventListener("mouseenter", (event) => {
             self.container.querySelector(".project-body").classList.add("glimpse");
         });
@@ -381,6 +382,9 @@ class Project {
 
     inflateContextMenuItems(menu) {
         var self = this;
+        if (this.title == null && this.note != null) {
+            addContextMenuOption(menu, "", "Set title", () => {self.inflateTitleInput(self.container.querySelector(".project-header .project-title"))});
+        }
         if (this.note == null) {
             addContextMenuOption(menu, "ri-sticky-note-line", "Bind note", () => {self.openNoteDialog()});
         } else {
