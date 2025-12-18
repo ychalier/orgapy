@@ -24,8 +24,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_create_project(request)
         case "edit-project":
             return api_edit_project(request)
-        case "edit-project-ranks":
-            return api_edit_project_ranks(request)
         case "archive-project":
             return api_archive_project(request)
         case "unarchive-project":
@@ -108,7 +106,6 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
             "modification": project.date_modification.timestamp(),
             "title": project.title,
             "checklist": project.checklist if project.checklist else None,
-            "rank": project.rank,
             "note": None if project.note is None else {
                 "id": project.note.id,
                 "title": project.note.title,
@@ -137,81 +134,12 @@ def api_create_project(request: HttpRequest) -> JsonResponse:
         "modification": project.date_modification.timestamp(),
         "title": project.title,
         "checklist": None,
-        "rank": project.rank,
         "note": None,
         "archived": False,
     }})
 
 
-@permission_required("orgapy.change_project")
-def api_edit_project(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    project_id = request.POST.get("project_id")
-    project_data = request.POST.get("project_data")
-    if project_id is None or project_data is None:
-        raise BadRequest()
-    try:
-        project_id = int(project_id)
-        project_data = json.loads(project_data)
-    except:
-        raise BadRequest()
-    if not Project.objects.filter(id=project_id, user=request.user).exists():
-        raise Http404()
-    project = Project.objects.get(id=project_id, user=request.user)
-    if project.date_modification.timestamp() > project_data["modification"]:
-        return JsonResponse({"success": False, "reason": "Project has newer modifications"})
-    project.title = project_data["title"]
-    project.rank = float(project_data["rank"])
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
-    compare_checklists(request.user, project.reference, project.checklist, project_data["checklist"])
-    if project_data["checklist"] is not None:
-        project.checklist = project_data["checklist"]
-    else:
-        project.checklist = None
-
-    note = None
-    if project_data["note"] is not None:
-        try:
-            note = Note.objects.get(user=request.user, id=int(project_data["note"]["id"]))
-        except Note.DoesNotExist:
-            pass
-    project.note = note # type: ignore
-
-    project.save()
-    return JsonResponse({
-        "success": True,
-        "modification": project.date_modification.timestamp()
-    })
-
-
-@permission_required("orgapy.change_project")
-def api_edit_project_ranks(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    ranks_data = request.POST.get("ranks")
-    if ranks_data is None:
-        raise BadRequest()
-    try:
-        ranks_data = json.loads(ranks_data)
-    except:
-        raise BadRequest()
-    projects, ranks = [], []
-    for project_id, rank in ranks_data.items():
-        if not Project.objects.filter(id=int(project_id), user=request.user).exists():
-            raise Http404()
-        project = Project.objects.get(id=int(project_id), user=request.user)
-        projects.append(project)
-        ranks.append(float(rank))
-    for project, rank in zip(projects, ranks):
-        project.rank = rank
-        project.save()
-    return JsonResponse({"success": True})
-
-
-@permission_required("orgapy.change_project")
-def api_archive_project(request: HttpRequest) -> JsonResponse:
+def get_project_from_post(request: HttpRequest) -> Project:
     if request.method != "POST":
         raise BadRequest()
     project_id = request.POST.get("project_id")
@@ -221,9 +149,50 @@ def api_archive_project(request: HttpRequest) -> JsonResponse:
         project_id = int(project_id)
     except:
         raise BadRequest()
-    if not Project.objects.filter(id=project_id, user=request.user).exists():
+    try:
+        project = Project.objects.get(id=project_id, user=request.user)
+    except Project.DoesNotExist:
         raise Http404()
-    project = Project.objects.get(id=project_id, user=request.user)
+    return project
+
+
+@permission_required("orgapy.change_project")
+def api_edit_project(request: HttpRequest) -> JsonResponse:
+    project = get_project_from_post(request)
+    project_data = request.POST.get("project_data")
+    if project_data is None:
+        raise BadRequest()
+    try:
+        project_data = json.loads(project_data)
+    except:
+        raise BadRequest()
+    if project.date_modification.timestamp() > project_data["modification"]:
+        return JsonResponse({"success": False, "reason": "Project has newer modifications"})
+    project.title = project_data["title"]
+    if isinstance(request.user, AnonymousUser):
+        raise PermissionDenied()
+    compare_checklists(request.user, project.reference, project.checklist, project_data["checklist"])
+    if project_data["checklist"] is not None:
+        project.checklist = project_data["checklist"]
+    else:
+        project.checklist = None
+    note = None
+    if project_data["note"] is not None:
+        try:
+            note = Note.objects.get(user=request.user, id=int(project_data["note"]["id"]))
+        except Note.DoesNotExist:
+            pass
+    project.note = note # type: ignore
+    project.save()
+    return JsonResponse({
+        "success": True,
+        "modification": project.date_modification.timestamp()
+    })
+
+
+@permission_required("orgapy.change_project")
+def api_archive_project(request: HttpRequest) -> JsonResponse:
+    project = get_project_from_post(request)
     project.archived = True
     project.save()
     return JsonResponse({
@@ -234,18 +203,7 @@ def api_archive_project(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.change_project")
 def api_unarchive_project(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    project_id = request.POST.get("project_id")
-    if project_id is None:
-        raise BadRequest()
-    try:
-        project_id = int(project_id)
-    except:
-        raise BadRequest()
-    if not Project.objects.filter(id=project_id, user=request.user).exists():
-        raise Http404()
-    project = Project.objects.get(id=project_id, user=request.user)
+    project = get_project_from_post(request)
     project.archived = False
     project.save()
     return JsonResponse({
@@ -256,18 +214,7 @@ def api_unarchive_project(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.delete_project")
 def api_delete_project(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    project_id = request.POST.get("project_id")
-    if project_id is None:
-        raise BadRequest()
-    try:
-        project_id = int(project_id)
-    except:
-        raise BadRequest()
-    if not Project.objects.filter(id=project_id, user=request.user).exists():
-        raise Http404()
-    project = Project.objects.get(id=project_id, user=request.user)
+    project = get_project_from_post(request)
     project.delete()
     return JsonResponse({"success": True})
 

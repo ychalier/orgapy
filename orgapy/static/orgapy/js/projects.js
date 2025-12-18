@@ -483,7 +483,6 @@ class Project {
             title: this.title,
             modification: this.modification,
             checklist: this.checklist,
-            rank: this.rank,
             note: this.note,
         }
     }
@@ -564,7 +563,6 @@ class TemporaryProject extends Project {
             modification: new Date(),
             title: null,
             checklist: null,
-            rank: null,
             note: note == undefined ? null : note,
         }, forceExpand);
         this.isTemporary = true;
@@ -595,6 +593,8 @@ class TemporaryProject extends Project {
 
 }
 
+const STORAGE_KEY_RANK = "orgapy.projects.ranks";
+
 function saveProjectRanks(ordering) {
     let ranks = {};
     document.querySelectorAll("#projects .project").forEach((project, i) => {
@@ -603,9 +603,14 @@ function saveProjectRanks(ordering) {
         projects[projectId].rank = ordering[i];
     });
     inflateProjects();
-    apiPost("edit-project-ranks", {ranks: JSON.stringify(ranks)}, () => {
-        toast("Ranks saved!", 600);
-    });
+    let rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
+    if (rankStorage == null) {
+        rankStorage = {};
+    } else {
+        rankStorage = JSON.parse(rankStorage);
+    }
+    rankStorage[window.location.pathname] = ranks;
+    localStorage.setItem(STORAGE_KEY_RANK, JSON.stringify(rankStorage));
 }
 
 function inflateProjects() {
@@ -630,11 +635,22 @@ function inflateProjects() {
 
 function fetchProjects(noteId=null, forceExpand=false) {
     const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
+    let ranks = {};
+    const rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
+    if (rankStorage != null) {
+        const parsedRankStorage = JSON.parse(rankStorage);
+        if (window.location.pathname in parsedRankStorage) {
+            ranks = parsedRankStorage[window.location.pathname];
+        }
+    }
     fetch(URL_API + `?action=list-projects${noteId == null ? "" : `&note=${noteId}`}${showArchived ? "&archived=1" : ""}`)
         .then(res => res.json())
         .then(data => {
             projects = {};
             data.projects.forEach(projectData => {
+                if (projectData.id in ranks) {
+                    projectData.rank = ranks[projectData.id];
+                }
                 projects[projectData.id] = new Project(projectData, forceExpand);
             });
             inflateProjects(forceExpand);

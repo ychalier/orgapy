@@ -285,7 +285,7 @@ class Project(models.Model):
     progress_current = models.PositiveIntegerField(blank=True, null=True) # Deprecated
     description = models.TextField(blank=True, null=True)                 # Deprecated
     checklist = models.TextField(blank=True, null=True)
-    rank = models.FloatField()
+    rank = models.FloatField()                                            # Deprecated
     note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True)
     archived = models.BooleanField(default=False)
 
