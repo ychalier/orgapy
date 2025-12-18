@@ -51,7 +51,7 @@
 
 <div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 
-<div id="projects"></div>
+<div id="projects" class="projects-withtitle"></div>
 
 {% endblock main_content %}
 
@@ -64,6 +64,7 @@
     {% if note.public %}<a href="{% url 'orgapy:note' object_id=note.nonce %}" class="action-button" title="Share"><i class="ri-share-line"></i></a>{% endif %}
     <a href="{% url 'orgapy:export_note' object_id=note.id %}" class="action-button" title="Download as Markdown"><i class="ri-download-line"></i></a>
     <a href="{% url 'orgapy:delete_note' object_id=note.id %}" class="action-button link-confirm" message="Please confirm deletion of '{{ note.title }}'" title="Delete"><i class="ri-delete-bin-line"></i></a>
+    <button id="btn-add-project" class="action-button" title="Add project"><i class="ri-briefcase-line"></i></button>
 </div>
 {% endif %}
 <div class="card" id="toc"></div>
@@ -76,7 +77,13 @@
     {% if not readonly %}bindWidgets({{ note.id }});{% endif %}
     createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
     window.addEventListener("load", () => {
-        // document.getElementById("btn-project-create").addEventListener("click", onButtonProjectCreate);
+        document.getElementById("btn-add-project").addEventListener("click", () => {
+            onButtonProjectCreate({
+                id: "{{ note.id }}",
+                title: "{{ note.title | safe }}",
+                url: "{{ note.url }}",
+            }, true);
+        });
         fetchProjects({{ note.id }}, true);
     });
 </script>

@@ -11,6 +11,14 @@
     margin-top: .4rem;
 }
 
+.projects-withtitle:has(div)::before {
+    content: "Projects";
+    font-weight: bold;
+    font-size: larger;
+    display: block;
+    margin-bottom: .8rem;
+}
+
 .project {
     position: relative;
     box-sizing: border-box;
@@ -36,12 +44,22 @@
     gap: 1ch;
     user-select: none;
     position: relative;
+    overflow: hidden;
+}
+
+.project-note,
+.project-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .project-note {
     flex-shrink: 0;
     color: white;
     cursor: pointer;
+    flex-basis: 0;
+    flex-grow: 1;
 }
 
 .project-note + .project-title {

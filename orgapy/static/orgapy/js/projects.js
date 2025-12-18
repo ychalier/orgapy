@@ -27,7 +27,7 @@ function clearContextMenus() {
 function addContextMenuOption(menu, iconClass, label, callback) {
     let option = menu.appendChild(document.createElement("li"));
     option.classList.add("menu-item");
-    create(option, "span").innerHTML = `<i class="${iconClass}></i> ${label}`;
+    create(option, "span").innerHTML = `<i class="${iconClass}"></i> ${label}`;
     option.addEventListener("click", callback);
 }
 
@@ -83,7 +83,11 @@ class Project {
     onTitleInputChange(input) {
         this.container.classList.remove("editing");
         let titleString = input.value.trim();
-        this.title = titleString.trim();
+        if (titleString == "") {
+            this.title = null;
+        } else {
+            this.title = titleString.trim();
+        }
         this.update();
     }
 
@@ -202,7 +206,7 @@ class Project {
         }
 
         const title = create(header, "span", "project-title");
-        title.textContent = this.title == null ? "Untitled" : this.title;
+        title.textContent = this.title == null ? (this.note == null ? "Untitled" : "     ") : this.title;
         title.addEventListener("click", (event) => {
             event.stopPropagation();
             self.inflateTitleInput(title);
@@ -539,36 +543,29 @@ class Project {
 
 class TemporaryProject extends Project {
 
-    constructor() {
+    constructor(note, forceExpand=false) {
         super({
             id: null,
             creation: new Date(),
             modification: new Date(),
-            title: "",
+            title: null,
             checklist: null,
             rank: null,
-            note: null,
-        });
+            note: note == undefined ? null : note,
+        }, forceExpand);
         this.isTemporary = true;
     }
 
     onTitleInputChange(input) {
         this.container.classList.remove("editing");
         let titleString = input.value.trim();
-        if (titleString.trim() == "") {
-            remove(this.container);
-            return;
-        }
-        let match = titleString.match(/^(.+?)(?:@(\d+))? *$/);
-        let title = match[1].trim();
-        let note = null;
-        if (match[2] != undefined) {
-            note = parseInt(match[2]);
-        }
+        let title = titleString.trim();
+        if (title == "") title = null;
+        var self = this;
         apiPost("create-project", {}, (data) => {
-            projects[data.project.id] = new Project(data.project);
+            projects[data.project.id] = new Project(data.project, self.forceExpand);
             projects[data.project.id].title = title;
-            projects[data.project.id].note = note;
+            projects[data.project.id].note = self.note;
             inflateProjects();
             projects[data.project.id].save();
         });
@@ -630,9 +627,9 @@ function fetchProjects(noteId=null, forceExpand=false) {
         });
 }
 
-function onButtonProjectCreate() {
+function onButtonProjectCreate(note, forceExpand) {
     let container = document.getElementById("projects");
-    let tempProject = new TemporaryProject();
+    let tempProject = new TemporaryProject(note, forceExpand);
     let tempProjectElement = tempProject.create();
     container.appendChild(tempProjectElement);
     setTimeout(() => {

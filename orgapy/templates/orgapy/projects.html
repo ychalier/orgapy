@@ -248,7 +248,9 @@
     markdownToHtml(".markdown", true);
     window.addEventListener("load", () => {
         window.addEventListener("click", clearContextMenus);
-        document.getElementById("btn-project-create").addEventListener("click", onButtonProjectCreate);
+        document.getElementById("btn-project-create").addEventListener("click", () => {
+            onButtonProjectCreate(null, false);
+        });
         fetchProjects();
     });
 </script>
