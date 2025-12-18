@@ -20,6 +20,10 @@
 
 {% block main_content %}
 
+<div class="card">
+    <div id="events"></div>
+</div>
+
 {% if settings.beach_mode %}
 <div class="card">
     <h2>🏖️ Beach Mode On 🌞</h2>
@@ -41,10 +45,6 @@
 
 <div id="projects" class="projects"></div>
 {% endif %}
-
-<div class="card">
-    <div id="events"></div>
-</div>
 
 <div class="modal" id="modal-objective-form">
     <span class="modal-overlay" onclick="closeModal('modal-objective-form')"></span>
