@@ -108,7 +108,7 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
                     elements.push(element);
                     element.className = "searchbar-suggestion";
                     container.appendChild(element);
-                    element.href = entry.url;               
+                    element.href = entry.url;
                     element.innerHTML = `<mark>${ entry.title.slice(0, query.length) }</mark>${ entry.title.slice(query.length) }`;
                     element.addEventListener("mouseenter", () => {
                         selected = i;
@@ -158,7 +158,7 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
     });
 }
 
-function markdownToHtmlFancy(element, useKatex=false) {
+function markdownToHtmlFancy(element, useKatex=false, embed=false) {
     const extensions = [];
     if (useKatex) {
         extensions.push(
@@ -173,6 +173,35 @@ function markdownToHtmlFancy(element, useKatex=false) {
             })
         )
     }
+
+    if (embed) {
+        extensions.push(
+            {
+                type: "output",
+                regex: /(@embedsheet\/(\d+))/g,
+                replace: `<a class="reference" ref-type="sheet" ref-id="$2"><i class="ri-table-line" title="Sheet"></i><span>$1</span></a>`
+            },
+            {
+                type: "output",
+                regex: /(@embedmap\/(\d+))/g,
+                replace: `<a class="reference" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i><span>$1</span></a>`
+            },
+        );
+    } else {
+        extensions.push(
+            {
+                type: "output",
+                regex: /@embedsheet\/(\d+)/g,
+                replace: `<iframe src="../sheets/$1?embed=1"></iframe><a href="../sheets/$1"><small>Edit sheet</small></a>`
+            },
+            {
+                type: "output",
+                regex: /@embedmap\/(\d+)/g,
+                replace: `<iframe src="../maps/$1?embed=1"></iframe><a href="../maps/$1"><small>Edit map</small></a>`
+            },
+        );
+    }
+
     let converter = new showdown.Converter({
         omitExtraWLInCodeBlocks: true,
         customizedHeaderId: true,
@@ -242,16 +271,6 @@ function markdownToHtmlFancy(element, useKatex=false) {
                 type: "output",
                 regex: /(@map\/(\d+))/g,
                 replace: `<a class="reference" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i><span>$1</span></a>`
-            },
-            {
-                type: "output",
-                regex: /@embedsheet\/(\d+)/g,
-                replace: `<iframe src="../sheets/$1?embed=1"></iframe><a href="../sheets/$1"><small>Edit sheet</small></a>`
-            },
-            {
-                type: "output",
-                regex: /@embedmap\/(\d+)/g,
-                replace: `<iframe src="../maps/$1?embed=1"></iframe><a href="../maps/$1"><small>Edit map</small></a>`
             },
             {
                 type: "output",
@@ -338,10 +357,10 @@ function markdownToHtmlBasic(element) {
     }
 }
 
-function markdownToHtml(selector, fancy=false, useKatex=false) {
+function markdownToHtml(selector, fancy=false, useKatex=false, embed=false) {
     document.querySelectorAll(selector).forEach(element => {
         if (fancy) {
-            markdownToHtmlFancy(element, useKatex);
+            markdownToHtmlFancy(element, useKatex, embed);
         } else {
             markdownToHtmlBasic(element);
         }
@@ -471,7 +490,7 @@ function bindSearchButton(form, button) {
         const query = prompt("Search", input.value);
         if (query) {
             input.value = query;
-            form.submit(); 
+            form.submit();
         }
         return false;
     });
@@ -576,7 +595,7 @@ function setupCategoryInput() {
         updateSuggestions();
         inputNew.focus();
     }
-    
+
     inputNew.addEventListener("input", () => {
         const value = inputNew.value.toLowerCase().trimStart();
         if (inputEndChars.includes(value.charAt(value.length - 1))) {

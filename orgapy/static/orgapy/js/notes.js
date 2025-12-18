@@ -276,58 +276,11 @@ function openSmdeDropdown(cmInstance, word) {
         }
     });
 
-    // Bind searchbar
-    // searchbar.addEventListener("input", () => {
-    //     const query = searchbar.value.trim();
-    //     fetch(URL_API + `?action=suggestions&q=${query}&t=${objectType}`).then(res => res.json()).then(data => {
-    //         results.innerHTML = "";
-    //         smdeResultCount = data.results.length;
-    //         smdeSelectedResult = -1;
-    //         for (const entry of data.results) {
-    //             const result = create(results, "div", "smde-dropdown-result")
-    //             result.textContent = entry.title;
-    //             result.setAttribute("object-id", entry.id);
-    //             result.addEventListener("click", () => { setObjectId(entry.id, "interlink-set"); });
-    //         }
-    //     });
-    // });
-
-    // function updateSelectedResult() {
-    //     results.querySelectorAll(".smde-dropdown-result").forEach((result, i) => {
-    //         if (i == smdeSelectedResult) {
-    //             result.classList.add("active");
-    //         } else {
-    //             result.classList.remove("active");
-    //         }
-    //     });
-    // }
-
     function unfocusSmdeDropdown() {
         smdeDropdownState = "interlink-set";
         cmInstance.setCursor({line: cursor.line, ch: iEnd});
         cmInstance.focus();
     }
-
-    // searchbar.addEventListener("keydown", (event) => {
-    //     if (event.key == "ArrowDown" && smdeSelectedResult < smdeResultCount - 1) {
-    //         event.preventDefault();
-    //         smdeSelectedResult++;
-    //         updateSelectedResult();
-    //     } else if (event.key == "ArrowUp" && smdeSelectedResult > 0) {
-    //         event.preventDefault();
-    //         smdeSelectedResult--;
-    //         updateSelectedResult();
-    //     } else if (event.key == "Enter") {
-    //         event.preventDefault();
-    //         if (smdeSelectedResult != undefined && smdeSelectedResult >= 0 && smdeSelectedResult < results.children.length) {
-    //             setObjectId(results.children[smdeSelectedResult].getAttribute("object-id"), "interlink-set")
-    //         } else {
-    //             unfocusSmdeDropdown();
-    //         }
-    //     } else if (event.key == "Escape") {
-    //         unfocusSmdeDropdown();
-    //     }
-    // });
     
     if (smdeDropdownState == "interlink-set") {
         cmInstance.focus(); 
