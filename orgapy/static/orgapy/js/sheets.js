@@ -2787,31 +2787,26 @@ class Sheet {
         this.script.evaluate(this);
     }
 
-    openImportModal() {
+    openImportDialog() {
         var self = this;
-        const modal = create(document.body, "div", "modal");
-        const modalOverlay = create(modal, "span", "modal-overlay");
-        modalOverlay.addEventListener("click", () => {
-            remove(modal);
-        });
-        const modalContainer = create(modal, "div", "modal-container");
-        const card = create(modalContainer, "div", "card");
-        create(card, "h3").textContent = "Import Sheet";
-        create(card, "div").textContent = "Upload a CSV or TSV file";
-        const inputParagraph = create(card, "p");
+        const dialog = create(document.body, "dialog");
+        dialog.setAttribute("closedby", "any");
+        create(dialog, "h3").textContent = "Import Sheet";
+        create(dialog, "div").textContent = "Upload a CSV or TSV file";
+        const inputParagraph = create(dialog, "p");
         create(inputParagraph, "label").textContent = "Local file";
         const input = create(inputParagraph, "input");
         input.setAttribute("type", "file");
         input.setAttribute("accept", ".tsv,.csv,.txt");
-        const bottomRow = create(card, "div", "row");
+        const bottomRow = create(dialog, "div", "row");
         const buttonCancel = create(bottomRow, "button");
         buttonCancel.textContent = "Cancel";
         buttonCancel.addEventListener("click", () => {
-            remove(modal);
+            dialog.close();
         });
         const buttonImport = create(bottomRow, "button");
         buttonImport.textContent = "Import";
-        modal.classList.add("active");
+        dialog.showModal();
         buttonImport.addEventListener("click", () => {
             if (input.files.length > 0) {
                 let reader = new FileReader();
@@ -2820,33 +2815,28 @@ class Sheet {
                     self.importTsv(reader.result.replaceAll("\r", ""));
                 }
             }
-            remove(modal);
+            dialog.close();
         });
     }
 
-    openScriptModal() {
+    openScriptDialog() {
         var self = this;
-        const modal = create(document.body, "div", "modal");
-        const modalOverlay = create(modal, "span", "modal-overlay");
-        modalOverlay.addEventListener("click", () => {
-            remove(modal);
-        });
-        const modalContainer = create(modal, "div", "modal-container");
-        const card = create(modalContainer, "div", "card");
-        create(card, "h3").textContent = "Script";
-        create(card, "div").textContent = "Write script formula, one per line";
-        const textarea = create(create(card, "p"), "textarea", "script-textarea");
+        const dialog = create(document.body, "dialog");
+        dialog.setAttribute("closedby", "any");
+        create(dialog, "h3").textContent = "Script";
+        create(dialog, "div").textContent = "Write script formula, one per line";
+        const textarea = create(create(dialog, "p"), "textarea", "script-textarea");
         textarea.addEventListener("keydown", (event) => {
             event.stopPropagation();
         });
         if (this.script != null) {
             textarea.value = this.script.string;
         }
-        const bottomRow = create(card, "div", "row");
+        const bottomRow = create(dialog, "div", "row");
         const buttonCancel = create(bottomRow, "button");
         buttonCancel.textContent = "Cancel";
         buttonCancel.addEventListener("click", () => {
-            remove(modal);
+            dialog.close();
         });
         const buttonCompute = create(bottomRow, "button");
         buttonCompute.textContent = "Save";
@@ -2855,11 +2845,11 @@ class Sheet {
         });
         const buttonSave = create(bottomRow, "button");
         buttonSave.textContent = "Save & close";
-        modal.classList.add("active");
+        dialog.showModal();
         textarea.focus();
         buttonSave.addEventListener("click", () => {
             self.updateScript(textarea.value);
-            remove(modal);
+            dialog.close();
         });
     }
 
@@ -2878,7 +2868,7 @@ class Sheet {
         });
 
         this.toolbar.querySelector(".sheet-button-script").addEventListener("click", () => {
-            self.openScriptModal();
+            self.openScriptDialog();
         });
 
         this.toolbarButtonToggleShrink = this.toolbar.querySelector(".sheet-button-shrink");
@@ -2887,7 +2877,7 @@ class Sheet {
         });
 
         this.toolbar.querySelector(".sheet-button-upload").addEventListener("click", () => {
-            self.openImportModal();
+            self.openImportDialog();
         });
 
         this.toolbar.querySelector(".sheet-button-download").addEventListener("click", () => {

@@ -57,7 +57,7 @@ function fetchEvents(force=false) {
         url = `${url}&force=1`;
     }
     fetch(url).then(res => res.json()).then(data => {
-        let calendarInputEvents = document.querySelector("#modal-add-event select[name='calendarid']");
+        let calendarInputEvents = dialogAddEvent.querySelector("select[name='calendarid']");
         calendarInputEvents.innerHTML = "";
         calendars = {};
         data.calendars.forEach(calendar => {
@@ -119,13 +119,13 @@ function inflateCalendar() {
 }
 
 function onAllDayInputChange() {
-    const allDayInput = document.querySelector("#modal-add-event input[name='allday']");
+    const allDayInput = dialogAddEvent.querySelector("input[name='allday']");
     if (allDayInput.checked) {
-        document.querySelector("#modal-add-event input[name='dtstart-time']").disabled = true;
-        document.querySelector("#modal-add-event input[name='dtend-time']").disabled = true;
+        dialogAddEvent.querySelector("input[name='dtstart-time']").disabled = true;
+        dialogAddEvent.querySelector("input[name='dtend-time']").disabled = true;
     } else {
-        document.querySelector("#modal-add-event input[name='dtstart-time']").removeAttribute("disabled");
-        document.querySelector("#modal-add-event input[name='dtend-time']").removeAttribute("disabled");
+        dialogAddEvent.querySelector("input[name='dtstart-time']").removeAttribute("disabled");
+        dialogAddEvent.querySelector("input[name='dtend-time']").removeAttribute("disabled");
     }
 }
 
@@ -133,7 +133,7 @@ window.addEventListener("load", () => {
     document.getElementById("btn-add-event").addEventListener("click", () => {
         let form = document.getElementById("form-add-event");
         let formData = new FormData(form);
-        closeModal("modal-add-event");
+        dialogAddEvent.close()
         fetchApi(form.action, form.method, formData, () => {
             toast("Event added", 600);
             if (document.getElementById("events") == null) {
@@ -153,10 +153,10 @@ window.addEventListener("load", () => {
     });
 
     document.getElementById("events-add").addEventListener("click", () => {
-        showModal("modal-add-event");
+        dialogAddEvent.showModal();
     });
 
-    document.querySelector("#modal-add-event input[name='allday']").addEventListener("change", onAllDayInputChange);
+    dialogAddEvent.querySelector("input[name='allday']").addEventListener("change", onAllDayInputChange);
 
     onAllDayInputChange();
     fetchEvents(false);

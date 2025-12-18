@@ -46,172 +46,148 @@
 <div id="projects" class="projects"></div>
 {% endif %}
 
-<div class="modal" id="modal-objective-form">
-    <span class="modal-overlay" onclick="closeModal('modal-objective-form')"></span>
-    <div class="modal-container">
-        <form>
-            {% csrf_token %}
-            <input hidden name="id" />
-            <div class="card">
-                <b>Objective</b>
-                <p>
-                    <label for="input-objective-name">Name</label>
-                    <input required minlength="1" name="name" type="text" id="input-objective-name" />
-                </p>
-                <p>
-                    <label cfor="input-objective-period">Period</label>
-                    <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" />
-                </p>
-                <p>
-                    <label for="input-objective-flexible" class="toggle">
-                        <input name="flexible" type="checkbox" id="input-objective-flexible" />
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-text">Flexible</span>
-                    </label>
-                </p>
-                <div class="row">
-                    <input type="submit" class="button button-primary" name="add" value="Add"/>
-                    <input type="submit" class="button-primary" name="save" value="Save"/>
-                    <input type="submit" class="button" name="archive" value="Archive"/>
-                    <input type="submit" class="button" name="delete" value="Delete"/>
-                    <input type="submit" class="button" name="completion" value="Completion"/>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="modal" id="modal-completion-form">
-    <span class="modal-overlay" onclick="closeModal('modal-completion-form')"></span>
-    <div class="modal-container">
-        <form>
-            {% csrf_token %}
-            <input hidden name="id" />
-            <input hidden name="timestamp" />
-            <div class="card">
-                <b>Completion</b>
-                <p>
-                    <label>Date</label>
-                    <input type="date" name="date" />
-                </p>
-                <p>
-                    <label>Time</label>
-                    <input type="time" name="time" step="1" />
-                </p>
-                <div class="row">
-                    <input type="submit" class="button button-primary" name="add" value="Add"/>
-                    <input type="submit" class="button" name="save" value="Save"/>
-                    <input type="submit" class="button" name="delete" value="Delete"/>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="modal" id="modal-tasks">
-    <span class="modal-overlay" onclick="closeModal('modal-tasks')"></span>
-    <div class="modal-container">
-        <div class="card">
-            <b>Tasks</b>
-            <ul class="tasks"></ul>
-            <button onclick="closeModal('modal-tasks')">Close</button>
+<dialog id="dialogObjectiveForm" closedby="any">
+    <form>
+        {% csrf_token %}
+        <input hidden name="id" />
+        <b>Objective</b>
+        <p>
+            <label for="input-objective-name">Name</label>
+            <input required minlength="1" name="name" type="text" id="input-objective-name" />
+        </p>
+        <p>
+            <label cfor="input-objective-period">Period</label>
+            <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" />
+        </p>
+        <p>
+            <label for="input-objective-flexible" class="toggle">
+                <input name="flexible" type="checkbox" id="input-objective-flexible" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Flexible</span>
+            </label>
+        </p>
+        <div class="row">
+            <input type="submit" class="button button-primary" name="add" value="Add"/>
+            <input type="submit" class="button-primary" name="save" value="Save"/>
+            <input type="submit" class="button" name="archive" value="Archive"/>
+            <input type="submit" class="button" name="delete" value="Delete"/>
+            <input type="submit" class="button" name="completion" value="Completion"/>
         </div>
-    </div>
-</div>
+    </form>
+</dialog>
 
-<div id="modal-add-event" class="modal">
-    <span class="modal-overlay" onclick="closeModal('modal-add-event')"></span>
-    <div class="modal-container">
-        <div class="card">
-            <b>Add Event</b>
-            <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event">
-                {% csrf_token %}
-                <p>
-                    <label>Calendar</label>
-                    <select class="form-select" name="calendarid"></select>
-                </p>
-                <p>
-                    <label>Title</label>
-                    <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
-                </p>
-                <p>
-                    <label class="toggle">
-                        <input type="checkbox" name="allday" />
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-text">All Day</span>
-                    </label>
-                </p>
-                <p>
-                    <label>Date start</label>
-                    <span class="row">
-                        <input name="dtstart-date" type="date" />
-                        <input name="dtstart-time" type="time" />
-                    </span>
-                </p>
-                <p>
-                    <label>Date end</label>
-                    <span class="row">
-                        <input name="dtend-date" type="date" />
-                        <input name="dtend-time" type="time" />
-                    </span>
-                </p>
-                <p>
-                    <label>Location</label>
-                    <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
-                </p>
-            </form>
-            <div class="row">
-                <button id="btn-add-event" class="button-primary">Add</button>
-                <button onclick="closeModal('modal-add-event')">Cancel</button>
-            </div>
+<dialog id="dialogCompletionForm" closedby="any">
+    <form>
+        {% csrf_token %}
+        <input hidden name="id" />
+        <input hidden name="timestamp" />
+        <b>Completion</b>
+        <p>
+            <label>Date</label>
+            <input type="date" name="date" />
+        </p>
+        <p>
+            <label>Time</label>
+            <input type="time" name="time" step="1" />
+        </p>
+        <div class="row">
+            <input type="submit" class="button button-primary" name="add" value="Add"/>
+            <input type="submit" class="button" name="save" value="Save"/>
+            <input type="submit" class="button" name="delete" value="Delete"/>
         </div>
-        
-    </div>
-</div>
+    </form>
+</dialog>
 
-<div id="modal-task-form" class="modal">
-    <span class="modal-overlay" onclick="closeModal('modal-task-form')"></span>
-    <div class="modal-container">
-        <div class="card">
-            <b>Add Task</b>
-            <form>
-                {% csrf_token %}
-                <input name="id" hidden />
-                <p>
-                    <label>Title</label>
-                    <input name="title" type="text" placeholder="Housework, Call X, …" />
-                </p>
-                <p>
-                    <label>Date start</label>
-                    <input name="start_date" type="date" />
-                </p>
-                <p>
-                    <label>Date due</label>
-                    <input name="due_date" type="date" />
-                </p>
-                <p>
-                    <label>Recurring mode</label>
-                    <select class="form-select" name="recurring_mode">
-                        <option value="ON" selected>Once</option>
-                        <option value="DY">Daily</option>
-                        <option value="WK">Weekly</option>
-                        <option value="MN">Monthly</option>
-                        <option value="YR">Yearly</option>
-                    </select>
-                </p>
-                <p>
-                    <label>Recurring period</label>
-                    <input name="recurring_period" type="number" />
-                </p>
-                <div class="row">
-                    <input type="submit" class="button button-primary" name="add" value="Add" />
-                    <input type="submit" class="button button-primary" name="save" value="Save" />
-                    <input type="submit" class="button" name="delete" value="Delete" />
-                </div>
-            </form>
-        </div>
+<dialog id="dialogExploreTasks" closedby="any">
+    <b>Tasks</b>
+    <ul class="tasks"></ul>
+    <form method="dialog">
+        <button>Close</button>
+    </form>
+</dialog>
+
+<dialog id="dialogAddEvent" closedby="any">
+    <b>Add Event</b>
+    <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event">
+        {% csrf_token %}
+        <p>
+            <label>Calendar</label>
+            <select class="form-select" name="calendarid"></select>
+        </p>
+        <p>
+            <label>Title</label>
+            <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
+        </p>
+        <p>
+            <label class="toggle">
+                <input type="checkbox" name="allday" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">All Day</span>
+            </label>
+        </p>
+        <p>
+            <label>Date start</label>
+            <span class="row">
+                <input name="dtstart-date" type="date" />
+                <input name="dtstart-time" type="time" />
+            </span>
+        </p>
+        <p>
+            <label>Date end</label>
+            <span class="row">
+                <input name="dtend-date" type="date" />
+                <input name="dtend-time" type="time" />
+            </span>
+        </p>
+        <p>
+            <label>Location</label>
+            <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
+        </p>
+    </form>
+    <div class="row">
+        <button id="btn-add-event" class="button-primary">Add</button>
+        <button onclick="dialogAddEvent.close()">Cancel</button>
     </div>
-</div>
+</dialog>
+
+<dialog id="dialogTaskForm" closedby="any">
+    <b>Add Task</b>
+    <form>
+        {% csrf_token %}
+        <input name="id" hidden />
+        <p>
+            <label>Title</label>
+            <input name="title" type="text" placeholder="Housework, Call X, …" />
+        </p>
+        <p>
+            <label>Date start</label>
+            <input name="start_date" type="date" />
+        </p>
+        <p>
+            <label>Date due</label>
+            <input name="due_date" type="date" />
+        </p>
+        <p>
+            <label>Recurring mode</label>
+            <select class="form-select" name="recurring_mode">
+                <option value="ON" selected>Once</option>
+                <option value="DY">Daily</option>
+                <option value="WK">Weekly</option>
+                <option value="MN">Monthly</option>
+                <option value="YR">Yearly</option>
+            </select>
+        </p>
+        <p>
+            <label>Recurring period</label>
+            <input name="recurring_period" type="number" />
+        </p>
+        <div class="row">
+            <input type="submit" class="button button-primary" name="add" value="Add" />
+            <input type="submit" class="button button-primary" name="save" value="Save" />
+            <input type="submit" class="button" name="delete" value="Delete" />
+        </div>
+    </form>
+</dialog>
 
 {% endblock main_content %}
 

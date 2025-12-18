@@ -103,7 +103,7 @@ class Task {
             title.title += `\nDue: ${dtf(this.dueDate, "dd/mm/YYYY")}`;
         }
         title.addEventListener("click", (event) => {
-            openModalTaskForm(self);
+            openDialogTaskForm(self);
         });
     }
 
@@ -135,34 +135,34 @@ function fetchTasks() {
     });
 }
 
-function openModalTaskForm(task=null) {
-    let modal = document.getElementById("modal-task-form");
-    modal.querySelector("form").reset();
+function openDialogTaskForm(task=null) {
+    let dialog = document.getElementById("dialogTaskForm");
+    dialog.querySelector("form").reset();
     if (task != null) {
-        modal.querySelector("input[name='id']").value = task.id;
-        modal.querySelector("input[name='title']").value = task.title;
-        modal.querySelector("input[name='start_date']").value = task.startDate.toISOString().substring(0, 10);
+        dialog.querySelector("input[name='id']").value = task.id;
+        dialog.querySelector("input[name='title']").value = task.title;
+        dialog.querySelector("input[name='start_date']").value = task.startDate.toISOString().substring(0, 10);
         if (task.dueDate != null) {
-            modal.querySelector("input[name='due_date']").value = task.dueDate.toISOString().substring(0, 10);
+            dialog.querySelector("input[name='due_date']").value = task.dueDate.toISOString().substring(0, 10);
         }
-        modal.querySelectorAll("select[name='recurring_mode'] option").forEach(option => {
+        dialog.querySelectorAll("select[name='recurring_mode'] option").forEach(option => {
             if (option.value == task.recurringMode) {
                 option.selected = true;
             } else {
                 option.removeAttribute("selected");
             }
         });
-        modal.querySelector("input[name='recurring_period']").value = task.recurringPeriod;
-        modal.querySelector("input[name='add']").style.display = "none";
-        modal.querySelector("input[name='save']").style.display = "unset";
-        modal.querySelector("input[name='delete']").style.display = "unset";
+        dialog.querySelector("input[name='recurring_period']").value = task.recurringPeriod;
+        dialog.querySelector("input[name='add']").style.display = "none";
+        dialog.querySelector("input[name='save']").style.display = "unset";
+        dialog.querySelector("input[name='delete']").style.display = "unset";
     } else {
-        modal.querySelector("input[name='start_date']").value = (new Date()).toISOString().substring(0, 10);
-        modal.querySelector("input[name='add']").style.display = "unset";
-        modal.querySelector("input[name='save']").style.display = "none";
-        modal.querySelector("input[name='delete']").style.display = "none";
+        dialog.querySelector("input[name='start_date']").value = (new Date()).toISOString().substring(0, 10);
+        dialog.querySelector("input[name='add']").style.display = "unset";
+        dialog.querySelector("input[name='save']").style.display = "none";
+        dialog.querySelector("input[name='delete']").style.display = "none";
     }
-    modal.classList.add("active");
+    dialog.showModal();
 }
 
 function inflateTasks() {
@@ -202,34 +202,34 @@ function inflateTasks() {
     
 }
 
-function openModalTasks() {
-    let modal = document.getElementById("modal-tasks");
-    let tasksContainer = modal.querySelector(".tasks");
+function openDialogExploreTasks() {
+    const dialog = document.getElementById("dialogExploreTasks");
+    const tasksContainer = dialog.querySelector(".tasks");
     tasksContainer.innerHTML = "";
     fetch(URL_API + "?action=list-tasks&limit=365").then(res => res.json()).then(data => {
         data.tasks.forEach(task => {
             const taskElement = create(tasksContainer, "li");
             taskElement.textContent = `${task.title} (${new Date(task.due_date).toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "short"})})`;
             taskElement.addEventListener("click", () => {
-                modal.classList.remove("active");
-                openModalTaskForm(new Task(task));
+                dialog.close();
+                openDialogTaskForm(new Task(task));
             });
         });
     });
-    modal.classList.add("active");
+    dialog.showModal();
 }
 
 window.addEventListener("load", () => {
 
     document.getElementById("tasks-add").addEventListener("click", () => {
-        openModalTaskForm();
+        openDialogTaskForm();
     })
     
-    document.getElementById("tasks-explore").addEventListener("click", openModalTasks);
+    document.getElementById("tasks-explore").addEventListener("click", openDialogExploreTasks);
 
-    document.querySelector("#modal-task-form form").addEventListener("submit", (event) => {
+    dialogTaskForm.querySelector("form").addEventListener("submit", (event) => {
         event.preventDefault();
-        closeModal("modal-task-form");
+        dialogTaskForm.close();
         if (event.submitter.name == "delete" && !confirm(`Are you sure you want to delete this task?`)) return;
         let url = URL_API + "?action=";
         switch (event.submitter.name) {

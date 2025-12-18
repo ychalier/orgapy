@@ -66,14 +66,6 @@ function apiPost(action, body, onSuccess=null) {
     fetchApi(URL_API + "?action=" + action, "post", formData, onSuccess);
 }
 
-function showModal(modalId) {
-    document.getElementById(modalId).classList.add("active");
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove("active");
-}
-
 function bindSearchbarClearIcon(searchbar) {
     window.addEventListener("load", () => {
         const input = searchbar.querySelector(".searchbar-input");
