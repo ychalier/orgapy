@@ -58,6 +58,7 @@ def view_projects_archive(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/projects_archive.html", {
         "projects": projects,
         "paginator": pretty_paginator(projects),
+        "active": "projects",
     })
 
 

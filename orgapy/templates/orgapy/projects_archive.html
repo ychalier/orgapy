@@ -8,6 +8,12 @@
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
 {% endblock head %}
 
+{% block menu %}
+<li class="menu-item"><a href="{% url 'orgapy:projects_archive' %}"><i class="ri-archive-line"></i> Projects Archive</a></li>
+<hr class="menu-separator">
+{{ block.super }}
+{% endblock menu %}
+
 {% block main_content %}
 
 <h1>Projects Archive</h1>

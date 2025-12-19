@@ -10,6 +10,12 @@
 <script src="{% static 'orgapy/js/projects.js' %}"></script>
 {% endblock head %}
 
+{% block menu %}
+<li class="menu-item"><a href="{% url 'orgapy:projects_archive' %}"><i class="ri-archive-line"></i> Projects Archive</a></li>
+<hr class="menu-separator">
+{{ block.super }}
+{% endblock menu %}
+
 {% block main_content %}
 <div id="projects"></div>
 {% endblock main_content %}
