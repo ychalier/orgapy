@@ -905,7 +905,7 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 #column-left {
-    flex-grow: 1;
+    flex-grow: .3;
     flex-basis: 0;
 }
 
@@ -943,6 +943,22 @@ input:checked+.toggle-slider+.toggle-text {
 
 #column-right-sticky>* {
     margin: 0;
+}
+
+#rightColumnContainer {
+    overflow: auto;
+    max-height: 100vh;
+}
+
+#rightColumnContainer details,
+#rightColumnTarget details {
+    margin: .4rem 0;
+}
+
+#rightColumnContainer summary,
+#rightColumnTarget summary {
+    margin: .4rem 0;
+    font-weight: bold;
 }
 
 @media (max-width: 800px) {

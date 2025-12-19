@@ -763,7 +763,39 @@ function bindDocumentInput(searchInput, objectType, resultsContainer, callback) 
 
 }
 
+const RIGHT_COLUMN_RELAYOUT_THRESHOLD = 800;
+
+function onResize() {
+    const rightColumnTarget = document.getElementById("rightColumnTarget");
+    if (rightColumnTarget != null) {
+        const targetHasContent = rightColumnTarget.innerHTML.trim() != "";
+        const sourceHasContent = rightColumnContainer.innerHTML.trim() != "";
+        if (!(targetHasContent ^ sourceHasContent)) {
+            throw new Error();
+        }
+        const targetShouldHaveContent = window.innerWidth <= RIGHT_COLUMN_RELAYOUT_THRESHOLD;
+        if (targetShouldHaveContent && !targetHasContent) {
+            Array.from(rightColumnContainer.children).forEach(el => {
+                rightColumnTarget.appendChild(rightColumnContainer.removeChild(el));
+            });
+            rightColumnTarget.querySelectorAll("details").forEach(details => {
+                details.removeAttribute("open");
+            });
+        } else if (targetHasContent && !targetShouldHaveContent) {
+            Array.from(rightColumnTarget.children).forEach(el => {
+                rightColumnContainer.appendChild(rightColumnTarget.removeChild(el));
+            });
+            rightColumnContainer.querySelectorAll("details").forEach(details => {
+                details.setAttribute("open", true);
+            });            
+        }
+    }
+}
+
+window.addEventListener("resize", onResize);
+
 window.addEventListener("load", () => {
+    onResize();
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {
             event.preventDefault();

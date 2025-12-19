@@ -15,7 +15,7 @@ function createToc(contentContainer, tocContainer) {
         removeToc();
         return;
     }
-    tocContainer.innerHTML = "<b>Contents</b>";
+    tocContainer.innerHTML = "";
     titles.forEach(title => {
         let anchor = tocContainer.appendChild(document.createElement("a"));
         anchor.classList.add("link-hidden");

@@ -49,9 +49,9 @@
     {% endif %}
 </header>
 
-<div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
+<div id="rightColumnTarget"></div>
 
-<div id="noteProjects" class="projects-withtitle"></div>
+<div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 
 {% endblock main_content %}
 
@@ -67,7 +67,14 @@
     <button id="btn-add-project" class="action-button" title="Add project"><i class="ri-briefcase-line"></i></button>
 </div>
 {% endif %}
-<div class="card" id="toc"></div>
+<details open>
+    <summary>Contents</summary>
+    <div id="toc"></div>
+</details>
+<details open>
+    <summary>Projects</summary>
+    <div id="noteProjects"></div>
+</details>
 {% endblock right_column %}
 
 {% block body_scripts %}
