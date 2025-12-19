@@ -225,3 +225,6 @@
     border-radius: .2rem;
 }
 
+details:has(#noteProjects):not(:has(div.project)) {
+    display: none;
+}

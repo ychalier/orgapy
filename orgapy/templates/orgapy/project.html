@@ -25,7 +25,11 @@
 <script>
     window.addEventListener("load", () => {
         const projectsContainer = document.getElementById("projects");
-        fetchProjects(projectsContainer, noteId=null, forceExpand=true, statusFilter=null, projectId={{ project.id }});
+        fetchProjects(projectsContainer,
+            noteId=null,
+            forceExpand=true,
+            statusFilter=null,
+            projectId={{ project.id }});
     });
 </script>
 {% endblock body_scripts %}

@@ -771,7 +771,8 @@ function onResize() {
         const targetHasContent = rightColumnTarget.innerHTML.trim() != "";
         const sourceHasContent = rightColumnContainer.innerHTML.trim() != "";
         if (!(targetHasContent ^ sourceHasContent)) {
-            throw new Error();
+            console.warn("Nothing to move");
+            return;
         }
         const targetShouldHaveContent = window.innerWidth <= RIGHT_COLUMN_RELAYOUT_THRESHOLD;
         if (targetShouldHaveContent && !targetHasContent) {

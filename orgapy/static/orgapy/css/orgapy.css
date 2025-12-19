@@ -980,7 +980,8 @@ input:checked+.toggle-slider+.toggle-text {
         width: 100%;
     }
 
-    #column-right .action-buttons {
+    #column-right .action-buttons,
+    #rightColumnTarget .action-buttons {
         flex-direction: row !important;
     }
 

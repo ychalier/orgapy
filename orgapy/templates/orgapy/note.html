@@ -83,16 +83,22 @@
     markdownToHtml(".markdown", true, true);
     {% if not readonly %}bindWidgets({{ note.id }});{% endif %}
     createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
+    const projectsDetails = noteProjects.parentElement;
     window.addEventListener("load", () => {
         const projectsContainer = document.getElementById("noteProjects");
         document.getElementById("btn-add-project").addEventListener("click", () => {
+            projectsDetails.setAttribute("open", true);
             onButtonProjectCreate(projectsContainer, {
                 id: "{{ note.id }}",
                 title: "{{ note.title | safe }}",
                 url: "{{ note.url }}",
             }, true);
         });
-        fetchProjects(projectsContainer, noteId={{ note.id }}, forceExpand=true, statusFilter="AC,IN", projectId=null);
+        fetchProjects(projectsContainer,
+            noteId={{ note.id }},
+            forceExpand=true,
+            statusFilter="AC,IN",
+            projectId=null);
     });
 </script>
 {% endblock body_scripts %}
