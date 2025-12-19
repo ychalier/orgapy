@@ -29,9 +29,23 @@
     border-radius: .4rem;
 }
 
+.project.inactive {
+    background-color: #222222;
+    border-color: #222;
+    color: #888;
+}
+
+.project.inactive .project-body {
+    background-color: #2f2f2f;
+}
+
 .project.archived {
-    background: #10101080;
-    border-color: #00000080;
+    background-color: #0b1923;
+    border-color: #000000;
+}
+
+.project.archived .project-body {
+    background-color: #1a2c37;
 }
 
 .project-header {
@@ -120,6 +134,12 @@
     width: 100%;
     color: inherit;
     border-radius: 0;
+}
+
+.project-title-input {
+    flex-shrink: 1;
+    width: unset;
+    flex-grow: 1;
 }
 
 .project-note + .project-title-input {

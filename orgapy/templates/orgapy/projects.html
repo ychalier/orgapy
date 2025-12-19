@@ -224,10 +224,11 @@
     markdownToHtml(".markdown", true);
     window.addEventListener("load", () => {
         window.addEventListener("click", clearContextMenus);
+        const projectsContainer = document.getElementById("projects");
         document.getElementById("btn-project-create").addEventListener("click", () => {
-            onButtonProjectCreate(null, false);
+            onButtonProjectCreate(projectsContainer, null, false);
         });
-        fetchProjects();
+        fetchProjects(projectsContainer, nodeId=null, forceExpand=false, statusFilter="AC");
     });
 </script>
 {% endblock body_scripts %}

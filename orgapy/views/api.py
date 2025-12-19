@@ -6,7 +6,7 @@ import dateutil.relativedelta
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 
@@ -89,7 +89,7 @@ def api(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_project")
 def api_list_projects(request: HttpRequest) -> JsonResponse:
     note_filter = request.GET.get("note")
-    show_archived = request.GET.get("archived", "0") == "1"
+    status_filter = request.GET.get("status")
     projects = []
     query = Project.objects.filter(user=request.user)
     if note_filter is not None:
@@ -97,22 +97,16 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
             query = query.filter(note__id=int(note_filter))
         except ValueError:
             pass
+    if status_filter is not None:
+        nodes = None
+        for status in status_filter.split(","):
+            if nodes is None:
+                nodes = Q(status=status)
+            else:
+                nodes |= Q(status=status)
+        query = query.filter(nodes)
     for project in query:
-        if project.archived and not show_archived:
-            continue
-        projects.append({
-            "id": project.id,
-            "creation": project.date_creation.timestamp(),
-            "modification": project.date_modification.timestamp(),
-            "title": project.title,
-            "checklist": project.checklist if project.checklist else None,
-            "note": None if project.note is None else {
-                "id": project.note.id,
-                "title": project.note.title,
-                "url": project.note.get_absolute_url(),
-            },
-            "archived": project.archived,
-        })
+        projects.append(project.to_json_dict())
     return JsonResponse({"projects": projects})
 
 
@@ -128,15 +122,7 @@ def api_create_project(request: HttpRequest) -> JsonResponse:
         rank=int(max_rank) + 1
     )
     # TODO: handle title & note
-    return JsonResponse({"success": True, "project": {
-        "id": project.id,
-        "creation": project.date_creation.timestamp(),
-        "modification": project.date_modification.timestamp(),
-        "title": project.title,
-        "checklist": None,
-        "note": None,
-        "archived": False,
-    }})
+    return JsonResponse({"success": True, "project": project.to_json_dict()})
 
 
 def get_project_from_post(request: HttpRequest) -> Project:
@@ -176,6 +162,7 @@ def api_edit_project(request: HttpRequest) -> JsonResponse:
         project.checklist = project_data["checklist"]
     else:
         project.checklist = None
+    project.status = project_data["status"]
     note = None
     if project_data["note"] is not None:
         try:

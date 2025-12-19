@@ -273,6 +273,15 @@ class Quote(models.Model):
 
 class Project(models.Model):
 
+    ACTIVE = "AC"
+    INACTIVE = "IN"
+    ARCHIVED = "AR"
+    STATUS_CHOICES = [
+        (ACTIVE, "Active"),
+        (INACTIVE, "Inactive"),
+        (ARCHIVED, "Archived"),
+    ]
+
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -287,7 +296,8 @@ class Project(models.Model):
     checklist = models.TextField(blank=True, null=True)
     rank = models.FloatField()                                            # Deprecated
     note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True)
-    archived = models.BooleanField(default=False)
+    archived = models.BooleanField(default=False)                         # Deprecated
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=ACTIVE)
 
     class Meta:
 
@@ -308,6 +318,21 @@ class Project(models.Model):
         if self.note is not None and self.title is not None:
             return f"{self.note.title} - {self.title}"
         return "Untitled"
+    
+    def to_json_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "creation": self.date_creation.timestamp(),
+            "modification": self.date_modification.timestamp(),
+            "title": self.title,
+            "checklist": self.checklist if self.checklist else None,
+            "note": None if self.note is None else {
+                "id": self.note.id,
+                "title": self.note.title,
+                "url": self.note.get_absolute_url(),
+            },
+            "status": self.status,
+        }
 
 
 class Calendar(models.Model):

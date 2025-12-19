@@ -1,4 +1,4 @@
-var converter = new showdown.Converter({
+var markdownConverter = new showdown.Converter({
     omitExtraWLInCodeBlocks: true,
     customizedHeaderId: true,
     headerLevelStart: 1,
@@ -35,7 +35,8 @@ function addContextMenuOption(menu, iconClass, label, callback) {
 
 class Project {
 
-    constructor(data, forceExpand=false) {
+    constructor(parentContainer, data, forceExpand=false) {
+        this.parentContainer = parentContainer;
         this.id = data.id;
         this.creation = data.creation;
         this.modification = data.modification;
@@ -43,7 +44,7 @@ class Project {
         this.checklist = data.checklist;
         this.rank = data.rank;
         this.note = data.note;
-        this.archived = data.archived;
+        this.status = data.status;
         this.checklistItems = null;
         this.splitChecklist();
         this.expanded = false;
@@ -181,6 +182,30 @@ class Project {
         dialog.showModal();
     }
 
+    openStatusDialog() {
+        var self = this;
+        const dialog = create(this.container, "dialog");
+        dialog.setAttribute("closedby", "any");
+        const dialogHeader = create(dialog, "div", "dialog-header");
+        create(dialogHeader, "b").textContent = this.reference();
+        const dialogBody = create(dialog, "div", "dialog-body");
+        const select = create(create(dialogBody, "p"), "select");
+        for (const [optionName, optionValue] of [["Active", "AC"], ["Inactive", "IN"], ["Archived", "AR"]]) {
+            const option = create(select, "option");
+            option.textContent = optionName;
+            option.value = optionValue;
+            if (self.status == optionValue) option.selected = true;
+        }
+        select.addEventListener("change", () => {
+            self.setStatus(select.options[select.selectedIndex].value);
+            dialog.close();
+        });
+        const closeButton = create(create(dialogBody, "div", "row"), "button");
+        closeButton.textContent = "Close";
+        closeButton.addEventListener("click", () => {dialog.close();});
+        dialog.showModal();
+    }
+
     inflateHeader() {
         var self = this;
         let header = this.container.querySelector(".project-header");
@@ -208,6 +233,11 @@ class Project {
             badge.classList.add("done");
         }
         badge.innerHTML = `<i class="ri-checkbox-circle-line"></i> ${completed}/${total}`;
+        badge.addEventListener("dblclick", (e) => {
+            e.stopPropagation();
+            self.openStatusDialog();
+            return false;
+        })
 
         if (this.note != null) {
             const noteSpan = create(header, "span", "project-note");
@@ -274,7 +304,7 @@ class Project {
             let checkbox = create(checklistItem, "input");
             checkbox.type = "checkbox";
             let label = create(checklistItem, "label");
-            label.innerHTML = converter.makeHtml(item.text).slice(3, -4); // slice to remove <p> tag
+            label.innerHTML = markdownConverter.makeHtml(item.text).slice(3, -4); // slice to remove <p> tag
             if (item.state) {
                 checkbox.checked = true;
                 checklistItem.classList.add("project-checklist-item-checked");
@@ -386,11 +416,14 @@ class Project {
     inflate() {
         this.container.innerHTML = "";
         this.container.className = `project`;
-        if (this.archived) {
+        if (this.status == "AR") {
             this.container.classList.add("archived");
+        } else if (this.status == "IN") {
+            this.container.classList.add("inactive");
         }
         this.inflateHeader();
         this.inflateBody();
+        this.setStatusClass();
     }
 
     inflateContextMenuItems(menu) {
@@ -406,11 +439,7 @@ class Project {
         addContextMenuOption(menu, "ri-pencil-fill", "Edit in admin", () => {
             window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
         });
-        if (this.archived) {
-            addContextMenuOption(menu, "ri-archive-line", "Unarchive", () => {self.unarchive()});
-        } else {
-            addContextMenuOption(menu, "ri-archive-line", "Archive", () => {self.archive()});
-        }
+        addContextMenuOption(menu, "", "Status", () => {self.openStatusDialog()});
         addContextMenuOption(menu, "ri-delete-bin-line", "Delete", () => {self.delete()});
     }
 
@@ -437,37 +466,30 @@ class Project {
             apiPost("delete-project", {project_id: this.id}, () => {
                 toast("Deleted!", 600);
                 delete projects[self.id];
-                inflateProjects();
+                inflateProjects(self.parentContainer);
             });
         }
     }
 
-    archive() {
-        var self = this;
-        if (confirm(`Are you sure to archive '${this.title}'?`) == true) {
-            apiPost("archive-project", {project_id: this.id}, (data) => {
-                self.modification = data.modification;
-                self.archived = true;
-                toast("Archived!", 600);
-                const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
-                if (!showArchived) {
-                    delete projects[self.id];
-                }
-                inflateProjects();
-            });
+    setStatusClass() {
+        if (this.status == "AC") {
+            this.container.classList.remove("inactive");
+            this.container.classList.remove("archived");
+        } else if (this.status == "IN") {
+            this.container.classList.add("inactive");
+            this.container.classList.remove("archived");
+        } else if (this.status == "AR") {
+            this.container.classList.remove("inactive");
+            this.container.classList.add("archived");
+        } else {
+            console.warn("Invalid status", this.status);
         }
     }
 
-    unarchive() {
-        var self = this;
-        if (confirm(`Are you sure to unarchive '${this.title}'?`) == true) {
-            apiPost("unarchive-project", {project_id: this.id}, (data) => {
-                self.modification = data.modification;
-                self.archived = false;
-                toast("Unarchived!", 600);
-                inflateProjects();
-            });
-        }
+    setStatus(newStatus) {
+        this.status = newStatus;
+        this.setStatusClass();
+        this.save();
     }
 
     toMarkdown() {
@@ -487,6 +509,7 @@ class Project {
             modification: this.modification,
             checklist: this.checklist,
             note: this.note,
+            status: this.status,
         }
     }
 
@@ -494,7 +517,7 @@ class Project {
         return JSON.stringify(this.toDict());
     }
 
-    save(refreshList=false) {
+    save() {
         var self = this;
         function actuallySave() {
             let projectData = self.toJsonString();
@@ -510,9 +533,6 @@ class Project {
                 }, (data) => {
                     self.modification = data.modification;
                     toast("Saved!", 600);
-                    if (refreshList) {
-                        fetchProjects();
-                    }
                 });
         }
         if (this.saveTimeout != null) {
@@ -565,15 +585,19 @@ class Project {
 
 class TemporaryProject extends Project {
 
-    constructor(note, forceExpand=false) {
-        super({
-            id: null,
-            creation: new Date(),
-            modification: new Date(),
-            title: null,
-            checklist: null,
-            note: note == undefined ? null : note,
-        }, forceExpand);
+    constructor(parentContainer, note, forceExpand=false) {
+        super(
+            parentContainer,
+            {
+                id: null,
+                creation: new Date(),
+                modification: new Date(),
+                title: null,
+                checklist: null,
+                note: note == undefined ? null : note,
+                status: "AC",
+            },
+            forceExpand);
         this.isTemporary = true;
     }
 
@@ -584,10 +608,10 @@ class TemporaryProject extends Project {
         if (title == "") title = null;
         var self = this;
         apiPost("create-project", {}, (data) => {
-            projects[data.project.id] = new Project(data.project, self.forceExpand);
+            projects[data.project.id] = new Project(self.parentContainer, data.project, self.forceExpand);
             projects[data.project.id].title = title;
             projects[data.project.id].note = self.note;
-            inflateProjects();
+            inflateProjects(self.parentContainer);
             projects[data.project.id].save();
         });
     }
@@ -604,14 +628,14 @@ class TemporaryProject extends Project {
 
 const STORAGE_KEY_RANK = "orgapy.projects.ranks";
 
-function saveProjectRanks(ordering) {
+function saveProjectRanks(container, container, ordering) {
     let ranks = {};
-    document.querySelectorAll("#projects .project").forEach((project, i) => {
+    container.querySelectorAll(".project").forEach((project, i) => {
         let projectId = project.getAttribute("project_id");
         ranks[projectId] = ordering[i];
         projects[projectId].rank = ordering[i];
     });
-    inflateProjects();
+    inflateProjects(container);
     let rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
     if (rankStorage == null) {
         rankStorage = {};
@@ -622,9 +646,8 @@ function saveProjectRanks(ordering) {
     localStorage.setItem(STORAGE_KEY_RANK, JSON.stringify(rankStorage));
 }
 
-function inflateProjects() {
+function inflateProjects(container) {
     dragRankClear();
-    let container = document.getElementById("projects");
     if (container == null) {
         console.log("Could not find projects container");
         return;
@@ -636,14 +659,13 @@ function inflateProjects() {
         container.appendChild(projects[projectId].create());
     });
     dragRank(container, ".project", (ordering, permutation) => {
-        setTimeout(() => {saveProjectRanks(ordering)}, 300);
+        setTimeout(() => {saveProjectRanks(container, ordering)}, 300);
     }, {
         dragAllowed: (element) => { return !element.classList.contains("editing"); }
     });
 }
 
-function fetchProjects(noteId=null, forceExpand=false) {
-    const showArchived = (new URLSearchParams(window.location.search)).get("archivedProjects") == "1";
+function fetchProjects(container, noteId=null, forceExpand=false, statusFilter=null) {
     let ranks = {};
     const rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
     if (rankStorage != null) {
@@ -652,7 +674,7 @@ function fetchProjects(noteId=null, forceExpand=false) {
             ranks = parsedRankStorage[window.location.pathname];
         }
     }
-    fetch(URL_API + `?action=list-projects${noteId == null ? "" : `&note=${noteId}`}${showArchived ? "&archived=1" : ""}`)
+    fetch(URL_API + `?action=list-projects${noteId == null ? "" : `&note=${noteId}`}${statusFilter == null ? "" : `&status=${statusFilter}`}`)
         .then(res => res.json())
         .then(data => {
             projects = {};
@@ -660,15 +682,14 @@ function fetchProjects(noteId=null, forceExpand=false) {
                 if (projectData.id in ranks) {
                     projectData.rank = ranks[projectData.id];
                 }
-                projects[projectData.id] = new Project(projectData, forceExpand);
+                projects[projectData.id] = new Project(container, projectData, forceExpand);
             });
-            inflateProjects(forceExpand);
+            inflateProjects(container);
         });
 }
 
-function onButtonProjectCreate(note, forceExpand) {
-    let container = document.getElementById("projects");
-    let tempProject = new TemporaryProject(note, forceExpand);
+function onButtonProjectCreate(container, note, forceExpand) {
+    let tempProject = new TemporaryProject(container, note, forceExpand);
     let tempProjectElement = tempProject.create();
     container.appendChild(tempProjectElement);
     setTimeout(() => {

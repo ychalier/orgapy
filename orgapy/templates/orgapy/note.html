@@ -51,7 +51,7 @@
 
 <div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 
-<div id="projects" class="projects-withtitle"></div>
+<div id="noteProjects" class="projects-withtitle"></div>
 
 {% endblock main_content %}
 
@@ -77,14 +77,15 @@
     {% if not readonly %}bindWidgets({{ note.id }});{% endif %}
     createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
     window.addEventListener("load", () => {
+        const projectsContainer = document.getElementById("noteProjects");
         document.getElementById("btn-add-project").addEventListener("click", () => {
-            onButtonProjectCreate({
+            onButtonProjectCreate(projectsContainer, {
                 id: "{{ note.id }}",
                 title: "{{ note.title | safe }}",
                 url: "{{ note.url }}",
             }, true);
         });
-        fetchProjects({{ note.id }}, true);
+        fetchProjects(projectsContainer, noteId={{ note.id }}, forceExpand=true, statusFilter="AC,IN");
     });
 </script>
 {% endblock body_scripts %}
