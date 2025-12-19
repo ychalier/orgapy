@@ -1,0 +1,29 @@
+
+#tasks {
+    line-height: 1.6;
+}
+
+#tasks > details:first-child > .card-subtitle {
+    margin-top: 0;
+}
+
+.task-overdue {
+    color: #e65400;
+}
+
+.task-button-complete {
+    margin-right: .3rem;
+    height: 19px;
+    width: 19px;
+    border-radius: .2rem;
+    background: #303030;
+    padding: 0;
+}
+
+.task-button-complete i {
+    visibility: hidden;
+}
+
+.task-button-complete:hover i {
+    visibility: visible;
+}
