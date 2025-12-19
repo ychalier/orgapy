@@ -1,0 +1,37 @@
+#events {
+    line-height: 1.6;
+}
+
+.event {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.event-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.event-time ~ .event-title {
+    margin-left: .2rem;
+}
+
+.event-over {
+    opacity: 0.5;
+}
+
+.event-dot-wrapper {
+    margin-right: .2rem;
+}
+
+.event-dot {
+    display: inline-block;
+    margin-top: .1rem;
+    width: 8px;
+    height: 8px;
+    background: #8ed2ff;
+    border-radius: 50%;
+    cursor: pointer;
+}
