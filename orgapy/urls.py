@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.view_landing, name="landing"),
     path("about", views.view_about, name="about"),
     path("projects", views.view_projects, name="projects"),
+    path("projects/<object_id>", views.view_project, name="project"),
     path("search", views.view_search, name="search"),
     path("categories/", views.view_categories, name="categories"),
     path("categories/<name>", views.view_category, name="category"),

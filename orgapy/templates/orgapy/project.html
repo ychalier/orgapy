@@ -1,0 +1,25 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}{{project.reference}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
+<script src="{% static 'orgapy/js/dragrank.js' %}"></script>
+<script src="{% static 'orgapy/js/projects.js' %}"></script>
+{% endblock head %}
+
+{% block main_content %}
+<div id="projects"></div>
+{% endblock main_content %}
+
+{% block body_scripts %}
+{{ block.super }}
+<script>
+    window.addEventListener("load", () => {
+        const projectsContainer = document.getElementById("projects");
+        fetchProjects(projectsContainer, noteId=null, forceExpand=true, statusFilter=null, projectId={{ project.id }});
+    });
+</script>
+{% endblock body_scripts %}

@@ -665,7 +665,7 @@ function inflateProjects(container) {
     });
 }
 
-function fetchProjects(container, noteId=null, forceExpand=false, statusFilter=null) {
+function fetchProjects(container, noteId=null, forceExpand=false, statusFilter=null, projectId=null) {
     let ranks = {};
     const rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
     if (rankStorage != null) {
@@ -674,7 +674,11 @@ function fetchProjects(container, noteId=null, forceExpand=false, statusFilter=n
             ranks = parsedRankStorage[window.location.pathname];
         }
     }
-    fetch(URL_API + `?action=list-projects${noteId == null ? "" : `&note=${noteId}`}${statusFilter == null ? "" : `&status=${statusFilter}`}`)
+    const params = {action: "list-projects"};
+    if (noteId != null) params["note"] = noteId;
+    if (statusFilter != null) params["status"] = statusFilter;
+    if (projectId != null) params["project"] = projectId;
+    fetch(URL_API + "?" + (new URLSearchParams(params)).toString())
         .then(res => res.json())
         .then(data => {
             projects = {};

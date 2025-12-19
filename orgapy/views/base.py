@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils.text import slugify
 
-from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, PushSubscription
+from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, PushSubscription, Project
 from .utils import ConflictError, find_user_object, pretty_paginator, save_document_core, get_or_create_settings, toggle_object_attribute, view_documents_single, view_documents_mixed
 
 
@@ -37,6 +37,16 @@ def view_projects(request: HttpRequest) -> HttpResponse:
         "active": "projects",
     })
 
+
+@permission_required("orgapy.view_project")
+def view_project(request: HttpRequest, object_id: str) -> HttpResponse:
+    if isinstance(request.user, AnonymousUser):
+        raise PermissionDenied()
+    project = find_user_object(Project, "id", object_id, request.user)
+    return render(request, "orgapy/project.html", {
+        "project": project,
+        "active": "projects",
+    })
 
 # OBJECTS AND CATEGORIES #######################################################
 

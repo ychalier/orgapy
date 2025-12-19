@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %} {{note.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}{{note.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block head %}
 {{ block.super }}
@@ -85,7 +85,7 @@
                 url: "{{ note.url }}",
             }, true);
         });
-        fetchProjects(projectsContainer, noteId={{ note.id }}, forceExpand=true, statusFilter="AC,IN");
+        fetchProjects(projectsContainer, noteId={{ note.id }}, forceExpand=true, statusFilter="AC,IN", projectId=null);
     });
 </script>
 {% endblock body_scripts %}

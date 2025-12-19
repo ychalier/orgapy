@@ -231,7 +231,7 @@
         document.getElementById("btn-project-create").addEventListener("click", () => {
             onButtonProjectCreate(projectsContainer, null, false);
         });
-        fetchProjects(projectsContainer, nodeId=null, forceExpand=false, statusFilter="AC");
+        fetchProjects(projectsContainer, nodeId=null, forceExpand=false, statusFilter="AC", projectId=null);
     });
 </script>
 {% endblock body_scripts %}

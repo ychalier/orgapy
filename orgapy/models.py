@@ -307,7 +307,7 @@ class Project(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
     def get_absolute_url(self):
-        return reverse("orgapy:projects") + f"#project-{self.id}"
+        return reverse("orgapy:project", kwargs={"object_id": self.id})
     
     @property
     def reference(self) -> str:

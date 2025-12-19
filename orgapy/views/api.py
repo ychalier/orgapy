@@ -90,8 +90,14 @@ def api(request: HttpRequest) -> HttpResponse:
 def api_list_projects(request: HttpRequest) -> JsonResponse:
     note_filter = request.GET.get("note")
     status_filter = request.GET.get("status")
+    project_filter = request.GET.get("project")
     projects = []
     query = Project.objects.filter(user=request.user)
+    if project_filter is not None:
+        try:
+            query = query.filter(id=int(project_filter))
+        except:
+            raise BadRequest()
     if note_filter is not None:
         try:
             query = query.filter(note__id=int(note_filter))
