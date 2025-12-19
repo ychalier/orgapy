@@ -310,6 +310,22 @@ class Project(models.Model):
         return reverse("orgapy:project", kwargs={"object_id": self.id})
     
     @property
+    def items_count(self) -> int:
+        if self.checklist is None:
+            return 0
+        return len(re.findall(r"^\[[ x]\]", self.checklist, re.MULTILINE))
+    
+    @property
+    def completed_items_count(self) -> int:
+        if self.checklist is None:
+            return 0
+        return len(re.findall(r"^\[x\]", self.checklist, re.MULTILINE))
+
+    @property
+    def all_completed(self) -> bool:
+        return self.completed_items_count == self.items_count
+
+    @property
     def reference(self) -> str:
         if self.note is None and self.title is not None:
             return self.title

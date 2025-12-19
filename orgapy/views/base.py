@@ -28,6 +28,9 @@ def view_about(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/about.html", {})
 
 
+# PROJECTS #####################################################################
+
+
 @permission_required("orgapy.view_project")
 def view_projects(request: HttpRequest) -> HttpResponse:
     if isinstance(request.user, AnonymousUser):
@@ -35,6 +38,26 @@ def view_projects(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/projects.html", {
         "settings": get_or_create_settings(request.user),
         "active": "projects",
+    })
+
+
+@permission_required("orgapy.view_project")
+def view_projects_archive(request: HttpRequest) -> HttpResponse:
+    note_filter = request.GET.get("note")
+    query = Project.objects.filter(user=request.user, status=Project.ARCHIVED)
+    if note_filter is not None:
+        try:
+            query = query.filter(note__id=int(note_filter))
+        except:
+            raise BadRequest()
+    query = query.order_by("-date_modification")
+    page_size = 24
+    paginator = Paginator(query, page_size)
+    page = request.GET.get("page")
+    projects = paginator.get_page(page)
+    return render(request, "orgapy/projects_archive.html", {
+        "projects": projects,
+        "paginator": pretty_paginator(projects),
     })
 
 
@@ -47,6 +70,26 @@ def view_project(request: HttpRequest, object_id: str) -> HttpResponse:
         "project": project,
         "active": "projects",
     })
+
+
+@permission_required("orgapy.change_project")
+def view_unarchive_project(request: HttpRequest, object_id: str) -> HttpResponse:
+    project = find_user_object(Project, "id", object_id, request.user)
+    project.status = Project.ACTIVE
+    project.save()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect(project.get_absolute_url())
+
+
+@permission_required("orgapy.delete_project")
+def view_delete_project(request: HttpRequest, object_id: str) -> HttpResponse:
+    project = find_user_object(Project, "id", object_id, request.user)
+    project.delete()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:projects")
+
 
 # OBJECTS AND CATEGORIES #######################################################
 

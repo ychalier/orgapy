@@ -1,0 +1,40 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Projects Archive &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
+{% endblock head %}
+
+{% block main_content %}
+
+<h1>Projects Archive</h1>
+
+{% if projects %}
+<div class="card card-oneline">
+    {% for project in projects %}
+    <div class="oneline oneline-striped">
+        <span class="project-badge{% if project.all_completed %} done{% endif %}">{{ project.completed_items_count }}/{{ project.items_count }}</span>
+        <a class="oneline-truncate link-hidden" href="{{ project.get_absolute_url }}" title="{{ project.reference }}">{{ project.reference }}</a>
+        <span class="show-on-parent-hover">
+            <a class="button-inline link-confirm" title="Unarchive" href="{% url 'orgapy:unarchive_project' object_id=project.id %}?next={{ request.get_full_path | urlencode }}" message="Please confirm removing '{{ project.reference }}' from the archive"><i class="ri-archive-line"></i></a>
+            <a class="button-inline link-confirm" title="Delete" href="{% url 'orgapy:delete_project' object_id=project.id %}?next={{ request.get_full_path | urlencode }}" message="Please confirm deletion of '{{ project.reference }}'"><i class="ri-delete-bin-line"></i></a>
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+{% block empty %}
+<div class="card">
+    <p>Nothing found 😔</p>
+</div>
+{% endblock empty %}
+{% endif %}
+
+{% include 'orgapy/partials/pagination.html' %}
+
+<script>document.querySelectorAll(".show-on-parent-hover .dropdown").forEach(bindDropdown);</script>
+
+{% endblock main_content %}
