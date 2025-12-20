@@ -606,6 +606,12 @@ class TemporaryProject extends Project {
         let titleString = input.value.trim();
         let title = titleString.trim();
         if (title == "") title = null;
+        if (title == null) {
+            if (!(confirm("Create project with no title?"))) {
+                inflateProjects(this.parentContainer);
+                return;
+            }
+        }
         var self = this;
         apiPost("create-project", {}, (data) => {
             projects[data.project.id] = new Project(self.parentContainer, data.project, self.forceExpand);
