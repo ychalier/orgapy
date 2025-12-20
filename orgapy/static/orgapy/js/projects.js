@@ -429,7 +429,7 @@ class Project {
     inflateContextMenuItems(menu) {
         var self = this;
         if (this.title == null && this.note != null) {
-            addContextMenuOption(menu, "", "Set title", () => {self.inflateTitleInput(self.container.querySelector(".project-header .project-title"))});
+            addContextMenuOption(menu, "ri-input-field", "Set title", () => {self.inflateTitleInput(self.container.querySelector(".project-header .project-title"))});
         }
         if (this.note == null) {
             addContextMenuOption(menu, "ri-sticky-note-line", "Bind note", () => {self.openNoteDialog()});
@@ -439,7 +439,7 @@ class Project {
         addContextMenuOption(menu, "ri-pencil-fill", "Edit in admin", () => {
             window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
         });
-        addContextMenuOption(menu, "", "Status", () => {self.openStatusDialog()});
+        addContextMenuOption(menu, "ri-checkbox-circle-line", "Status", () => {self.openStatusDialog()});
         addContextMenuOption(menu, "ri-delete-bin-line", "Delete", () => {self.delete()});
     }
 
