@@ -404,6 +404,10 @@ dialog h3 {
     gap: .2rem;
 }
 
+#rightColumnContainer:not(:has(.project)):not(:has(#toc)) .action-buttons {
+    flex-direction: column;
+}
+
 .action-button {
     text-decoration: none;
     color: inherit;
@@ -905,7 +909,7 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 #column-left {
-    flex-grow: .3;
+    flex-grow: .2;
     flex-basis: 0;
 }
 
@@ -978,11 +982,6 @@ input:checked+.toggle-slider+.toggle-text {
 
     #column-right-sticky {
         width: 100%;
-    }
-
-    #column-right .action-buttons,
-    #rightColumnTarget .action-buttons {
-        flex-direction: row !important;
     }
 
 }
