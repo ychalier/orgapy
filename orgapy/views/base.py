@@ -107,9 +107,13 @@ def view_categories(request: HttpRequest) -> HttpResponse:
     uncategorized = Note.objects.filter(user=request.user, categories__isnull=True).count()\
         + Sheet.objects.filter(user=request.user, categories__isnull=True).count()\
         + Map.objects.filter(user=request.user, categories__isnull=True).count()
+    projects = Note.objects.filter(user=request.user, project__isnull=False).count()
     return render(request, "orgapy/categories.html", {
         "categories": Category.objects.filter(user=request.user),
-        "uncategorized": uncategorized,
+        "specials": {
+            "uncategorized": uncategorized,
+            "projects": projects,
+        },
     })
 
 
@@ -120,7 +124,9 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
     if name in ["quote"]:
         return render(request, f"orgapy/specials/{name}.html", {})
     category = "uncategorized"
-    if name != "uncategorized":
+    if name == "projects":
+        category = "projects"
+    elif name != "uncategorized":
         category = find_user_object(Category, "name", name, request.user)
     return view_documents_mixed(request, "orgapy/category.html", category)
 

@@ -9,14 +9,20 @@
     <h1>Categories</h1>
 </header>
 
-<div class="card categories">
-    {% for category in categories %}
-    <div class="category">
-        <span><a class="oneline-truncate link-hidden" href="{{ category.get_absolute_url }}">{{ category.name | capfirst }}</a> <span class="label {% if category.count == 0 %}label-red{% endif %}">{{ category.count }}</span></span>
+<div class="card">
+    <div class="categories categories-specials">
+        {% for special, count in specials.items %}
+        <div class="category">
+            <span><a class="oneline-truncate link-hidden" href="{% url 'orgapy:category' name=special %}">{{ special | capfirst}}</a> <span class="label {% if count == 0 %}label-grey{% endif %}">{{ count }}</span></span>
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-    <div class="category">
-        <span><a class="oneline-truncate link-hidden" href="{% url 'orgapy:category' name='uncategorized' %}">Uncategorized</a>  <span class="label {% if uncategorized == 0 %}label-grey{% endif %}">{{ uncategorized }}</span></span>
+    <div class="categories">
+        {% for category in categories %}
+        <div class="category">
+            <span><a class="oneline-truncate link-hidden" href="{{ category.get_absolute_url }}">{{ category.name | capfirst }}</a> <span class="label {% if category.count == 0 %}label-red{% endif %}">{{ category.count }}</span></span>
+        </div>
+        {% endfor %}
     </div>
 </div>
 

@@ -275,7 +275,11 @@ def view_documents_single(
     return render_documents(request, documents, template_name, attrs, active=active)
 
 
-def view_documents_mixed(request: HttpRequest, template_name: str, category: Category | Literal["uncategorized"] | None = None, **boolargs: bool) -> HttpResponse:
+def view_documents_mixed(
+        request: HttpRequest,
+        template_name: str,
+        category: Category | Literal["uncategorized"] | Literal["projects"] | None = None,
+        **boolargs: bool) -> HttpResponse:
     base_notes = base_sheets = base_maps = None
     if isinstance(category, Category):
         base_notes = category.notes.all() # type: ignore
@@ -288,6 +292,14 @@ def view_documents_mixed(request: HttpRequest, template_name: str, category: Cat
         base_maps = Map.objects.filter(categories__isnull=True)
         category_arg = {
             "name": "uncategorized",
+            "id": -1
+        }
+    elif category == "projects":
+        base_notes = Note.objects.filter(project__isnull=False)
+        base_sheets = Sheet.objects.none()
+        base_maps = Map.objects.none()
+        category_arg = {
+            "name": "projects",
             "id": -1
         }
     else:

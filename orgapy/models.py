@@ -122,6 +122,9 @@ class Note(Document):
 
     def get_absolute_url(self):
         return reverse("orgapy:note", kwargs={"object_id": self.id})
+    
+    def ongoing_projects(self):
+        return self.project_set.exclude(status=Project.ARCHIVED) # type: ignore
 
 
 class SheetGroup(models.Model):

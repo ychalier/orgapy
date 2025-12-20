@@ -18,6 +18,9 @@
     {% else %}
     <a class="oneline-truncate link-hidden" href="{{ obj.get_absolute_url }}" title="{{ obj.title }}">{{ obj.title }}</a>
     {% endif %}
+    {% if obj.active == "notes" and obj.ongoing_projects %}
+    <a class="label label-inline label-pink" href="{% url 'orgapy:category' name='projects' %}">{{ obj.ongoing_projects.count }} <i class="ri-briefcase-line"></i></a>
+    {% endif %}
     <span>
         {% if obj.categories.all %}
         {% for category in obj.categories.all %}

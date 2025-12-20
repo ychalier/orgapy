@@ -1163,6 +1163,11 @@ a.reference {
     color: #8ed2ff !important;
 }
 
+.label-inline {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 .label-grey {
     background: hsl(204, 0%, 18%);
     color: hsl(204, 0%, 78%) !important;
@@ -1171,6 +1176,11 @@ a.reference {
 .label-red {
     background: hsl(0, 34%, 18%);
     color: hsl(0, 100%, 78%) !important;
+}
+
+.label-pink {
+    background: hsl(288, 35%, 18%);
+    color: hsl(288, 100%, 78%) !important;
 }
 
 .reference i {
@@ -1281,11 +1291,20 @@ a.reference {
     gap: .4rem;
 }
 
+.categories-specials {
+    margin-bottom: .4rem;
+}
+
 .category {
     background: #202020;
     border: 1px solid black;
     padding: .4rem;
     border-radius: .4rem;
+}
+
+.categories-specials .category {
+    background: none;
+    border-color: #202020;
 }
 
 /**
