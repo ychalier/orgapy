@@ -924,6 +924,7 @@ input:checked+.toggle-slider+.toggle-text {
     flex-grow: 1;
     flex-basis: 0;
     padding-top: calc(48.6px + 1.6rem);
+    max-width: 400px;
 }
 
 #column-main.readonly + #column-right {
