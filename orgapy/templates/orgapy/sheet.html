@@ -13,43 +13,47 @@
 
 <div class="sheet" sheet-id="{{sheet.id}}">
     <div class="sheet-toolbar">
-        <a class="link-hidden" href="{% url 'orgapy:sheets' %}"><i class="ri-table-line"></i></a>
-        <span class="sheet-title oneline-truncate">{{sheet.title}}</span>
-        {% if not readonly %}
-        <span class="sheet-toolbar-buttons">
-            <a class="button-inline" href="{% url 'orgapy:edit_sheet' object_id=sheet.id %}?next={{ request.get_full_path | urlencode }}" title="Edit"><i class="ri-pencil-fill"></i></a>
-            <button title="Save" class="sheet-button-save"><i class="ri-save-line"></i></button>
-            <div class="dropdown">
-                <a class="button-inline dropdown-toggle" title="More" tabindex="0"><i class="ri-more-fill"></i></a>
-                <ul class="menu">
-                    <li class="menu-item"><a href="{% url 'orgapy:toggle_sheet_public' object_id=sheet.id %}?next={{ request.get_full_path | urlencode }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}">{% if sheet.public %}<i class="ri-lock-line"></i> Make private{% else %}<i class="ri-lock-unlock-line"></i> Publish{% endif %}</li>
-                    <li class="menu-item"><a class="link-confirm" message="Please confirm deletion of '{{ sheet.title }}'" href="{% url 'orgapy:delete_sheet' object_id=sheet.id %}" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
-                    <li class="menu-item"><button title="Script" class="sheet-button-script">ℱ Script</button></li>
-                    <li class="menu-item"><button title="Toggle shrink" class="sheet-button-shrink"><i class="ri-fullscreen-exit-line"></i> Shrink</button></li>
-                    <li class="menu-item"><button title="Upload TSV" class="sheet-button-upload"><i class="ri-upload-line"></i> Upload TSV</button></li>
-                    <li class="menu-item"><button title="Download as TSV" class="sheet-button-download"><i class="ri-download-line"></i> Download TSV</button></li>
-                    <li class="menu-item"><button title="Download as TSV" class="sheet-button-copy"><i class="ri-file-copy-2-line"></i> Copy as Markdown</button></li>
-                </ul>
-            </div>
-        </span>
-        {% endif %}
-        {% if not readonly and sheet.referenced_in %}
-            {% for ref in sheet.referenced_in.all %}
-            <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
-            {% endfor %}
-        {% endif %}
-        {% if not readonly%}
-            {% if sheet.categories.all %}
-                {% for category in sheet.categories.all %}
-                <a class="link-tenuous" href="{{ category.get_absolute_url }}">#{{category.name}}</a>
-                {% endfor%}
-            {% else %}
-                <a class="link-tenuous" href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
+        <span class="sheet-toolbar-primary">
+            <a class="link-hidden" href="{% url 'orgapy:sheets' %}"><i class="ri-table-line"></i></a>
+            {% if not readonly %}
+            <span class="sheet-toolbar-buttons">
+                <a class="button-inline" href="{% url 'orgapy:edit_sheet' object_id=sheet.id %}?next={{ request.get_full_path | urlencode }}" title="Edit"><i class="ri-pencil-fill"></i></a>
+                <button title="Save" class="sheet-button-save"><i class="ri-save-line"></i></button>
+                <div class="dropdown">
+                    <a class="button-inline dropdown-toggle" title="More" tabindex="0"><i class="ri-more-fill"></i></a>
+                    <ul class="menu">
+                        <li class="menu-item"><a href="{% url 'orgapy:toggle_sheet_public' object_id=sheet.id %}?next={{ request.get_full_path | urlencode }}" title="{% if sheet.public %}Make private{% else %}Make public{% endif %}">{% if sheet.public %}<i class="ri-lock-line"></i> Make private{% else %}<i class="ri-lock-unlock-line"></i> Publish{% endif %}</a></li>
+                        <li class="menu-item"><a class="link-confirm" message="Please confirm deletion of '{{ sheet.title }}'" href="{% url 'orgapy:delete_sheet' object_id=sheet.id %}" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+                        <li class="menu-item"><button title="Script" class="sheet-button-script">ℱ Script</button></li>
+                        <li class="menu-item"><button title="Toggle shrink" class="sheet-button-shrink"><i class="ri-fullscreen-exit-line"></i> Shrink</button></li>
+                        <li class="menu-item"><button title="Upload TSV" class="sheet-button-upload"><i class="ri-upload-line"></i> Upload TSV</button></li>
+                        <li class="menu-item"><button title="Download as TSV" class="sheet-button-download"><i class="ri-download-line"></i> Download TSV</button></li>
+                        <li class="menu-item"><button title="Download as TSV" class="sheet-button-copy"><i class="ri-file-copy-2-line"></i> Copy as Markdown</button></li>
+                    </ul>
+                </div>
+            </span>
             {% endif %}
-        {% endif %}
-        {% if sheet.description %}
-        <span class="markdown-inline">{{sheet.description | safe}}</span>
-        {% endif %}
+        </span>
+        <span class="sheet-toolbar-secondary">
+            <span class="sheet-title">{{sheet.title}}</span>
+            {% if not readonly%}
+                {% if sheet.categories.all %}
+                    {% for category in sheet.categories.all %}
+                    <a class="link-tenuous" href="{{ category.get_absolute_url }}">#{{category.name}}</a>
+                    {% endfor%}
+                {% else %}
+                    <a class="link-tenuous" href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
+                {% endif %}
+            {% endif %}
+            {% if not readonly and sheet.referenced_in %}
+                {% for ref in sheet.referenced_in.all %}
+                <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
+                {% endfor %}
+            {% endif %}
+            {% if sheet.description %}
+            <span class="markdown-inline">{{sheet.description | safe}}</span>
+            {% endif %}
+        </span>
     </div>
     <div class="sheet-head"></div>
     <div class="sheet-body"></div>

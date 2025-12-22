@@ -32,10 +32,6 @@
     padding-top: 0;
 }
 
-.sheet-title {
-    color: white;
-}
-
 .sheet-toolbar {
     position: fixed;
     top: 0;
@@ -47,7 +43,21 @@
     background: #202020;
     line-height: 32px;
     gap: .4rem;
-    padding-left: .4rem;
+    padding: 0 .4rem;
+}
+
+.sheet-toolbar-primary,
+.sheet-toolbar-secondary {
+    display: flex;
+    gap: .4rem;
+}
+
+.sheet-toolbar-secondary {
+    overflow: auto;
+}
+
+.sheet-toolbar-secondary * {
+    white-space: nowrap;
 }
 
 .sheet-toolbar-buttons {
@@ -84,6 +94,10 @@
 .sheet-toolbar-buttons > button:hover {
     background-color: #303030;
     border-color: #555;
+}
+
+.sheet-title {
+    color: white;
 }
 
 .sheet-toolbar a.reference {
