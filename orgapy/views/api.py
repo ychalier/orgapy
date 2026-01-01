@@ -10,7 +10,7 @@ from django.db.models import Max, Q
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 
-from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective, PushSubscription
+from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective, PushSubscription, MoodLog
 from ..utils import parse_dt, parse_date
 from .utils import find_user_object, compare_checklists, compare_objective_histories
 
@@ -82,6 +82,8 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_save_subscription(request)
         case "rename-subscription":
             return api_rename_subscription(request)
+        case "create-mood-log":
+            return api_create_mood_log(request)
         case _:
             raise BadRequest()
 
@@ -832,4 +834,25 @@ def api_rename_subscription(request: HttpRequest) -> JsonResponse:
     if new_name is not None:
         sub.name = new_name.strip()
         sub.save()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.create_mood_log")
+def api_create_mood_log(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        raise BadRequest()
+    try:
+        MoodLog.objects.create(
+            user=request.user,
+            date=datetime.datetime.strptime(request.POST["date"], "%Y-%m-%d"),
+            mood=int(request.POST["mood"]),
+            energy=int(request.POST["energy"]),
+            health=int(request.POST["health"]),
+            stress=int(request.POST["stress"]),
+            activities=request.POST["activities"])
+    except ValueError:
+        raise BadRequest()
+    except KeyError:
+        raise BadRequest()
+
     return JsonResponse({"success": True})

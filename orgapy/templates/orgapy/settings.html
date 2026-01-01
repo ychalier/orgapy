@@ -27,6 +27,15 @@
             <span class="hint">Documents in trash for longer than this value will be destroyed.</span>
         </p>
         <p>
+            <label for="input-mood-hours">Mood Log Hours</label>
+            <input id="input-mood-hours" type="number" name="mood_log_hours" value="{{ settings.mood_log_hours }}" min="0" max="23" step="1" />
+        </p>
+        <p>
+            <label for="input-mood-activities">Mood Activities</label>
+            <textarea id="input-mood-activities" name="mood_activities" rows="5">{{ settings.mood_activities}}</textarea>
+            <span class="hint">Write one activity per line. Each line contains a label and an emoji, separated by a space.</span>
+        </p>
+        <p>
             <label class="toggle">
                 <input type="checkbox" name="beach_mode" {% if settings.beach_mode %}checked{% endif %} />
                 <span class="toggle-slider"></span>

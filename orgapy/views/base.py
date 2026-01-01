@@ -10,8 +10,28 @@ from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils.text import slugify
 
-from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, PushSubscription, Project
-from .utils import ConflictError, find_user_object, pretty_paginator, save_document_core, get_or_create_settings, toggle_object_attribute, view_documents_single, view_documents_mixed
+from ..models import (
+    Category,
+    Note,
+    Sheet,
+    Map,
+    ProgressCounter,
+    ProgressLog,
+    Calendar,
+    PushSubscription,
+    Project,
+    MoodLog)
+
+from .utils import (
+    ConflictError,
+    find_user_object,
+    pretty_paginator,
+    save_document_core,
+    get_or_create_settings,
+    toggle_object_attribute,
+    view_documents_single,
+    view_documents_mixed,
+    get_pending_mood_logs)
 
 
 # GENERAL ######################################################################
@@ -35,8 +55,11 @@ def view_about(request: HttpRequest) -> HttpResponse:
 def view_projects(request: HttpRequest) -> HttpResponse:
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
+    settings = get_or_create_settings(request.user)
+    pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours)
     return render(request, "orgapy/projects.html", {
-        "settings": get_or_create_settings(request.user),
+        "settings": settings,
+        "pending_mood_logs": pending_mood_logs,
         "active": "projects",
     })
 
@@ -772,6 +795,8 @@ def view_settings(request: HttpRequest) -> HttpResponse:
         user_settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
         user_settings.calendar_lookahead = int(request.POST.get("calendar_lookahead", 3))
         user_settings.trash_period = int(request.POST.get("trash_period", 30))
+        user_settings.mood_log_hours = int(request.POST.get("mood_log_hours", 19))
+        user_settings.mood_activities = request.POST.get("mood_activities", "").strip()
         user_settings.beach_mode = bool(request.POST.get("beach_mode", False))
         user_settings.save()
         if "ref" in request.POST and request.POST["ref"]:
@@ -822,3 +847,29 @@ def view_delete_subscription(request: HttpRequest, object_id: str) -> HttpRespon
     sub = find_user_object(PushSubscription, "id", object_id, request.user)
     sub.delete()
     return redirect("orgapy:settings")
+
+
+# MOOD #########################################################################
+
+
+@permission_required("orgapy.view_mood_log")
+def view_mood(request: HttpRequest) -> HttpResponse:
+    if isinstance(request.user, AnonymousUser):
+        raise PermissionDenied()
+    settings = get_or_create_settings(request.user)
+    pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours)
+    logs = MoodLog.objects.filter(user=request.user).order_by("-date")
+    return render(request, "orgapy/mood.html", {
+        "settings": settings,
+        "pending_mood_logs": pending_mood_logs,
+        "logs": logs,
+    })
+
+
+@permission_required("orgapy.delete_mood_log")
+def view_delete_mood_log(request: HttpRequest, object_id: str) -> HttpResponse:
+    mood_log = find_user_object(MoodLog, "id", object_id, request.user)
+    mood_log.delete()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:mood")

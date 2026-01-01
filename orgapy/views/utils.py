@@ -1,7 +1,8 @@
+import datetime
 import json
 import re
-import urllib.parse
 from typing import Literal, TypeVar
+from urllib.parse import urlencode
 
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
@@ -11,10 +12,10 @@ from django.http import HttpRequest, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..models import Settings, Category, Note, Sheet, Map, ProgressLog, Document, PushSubscription, Project
+from ..models import Settings, Category, Note, Sheet, Map, ProgressLog, Document, PushSubscription, Project, MoodLog
 
 
-UserObject = TypeVar("UserObject", Category, Note, Sheet, Map, ProgressLog, PushSubscription, Project)
+UserObject = TypeVar("UserObject", Category, Note, Sheet, Map, ProgressLog, PushSubscription, Project, MoodLog)
 DocumentT = TypeVar("DocumentT", Note, Sheet, Map)
 LoggedUser = AbstractBaseUser
 
@@ -28,7 +29,7 @@ def pretty_paginator(page: Page, show_around: int = 2, **attrs) -> dict:
         ],
         page.paginator.num_pages,
     })
-    attr_string = urllib.parse.urlencode(attrs)
+    attr_string = urlencode(attrs)
     if attr_string != "":
         attr_string = "&" + attr_string
     paginator = {
@@ -323,3 +324,21 @@ def toggle_object_attribute(request: HttpRequest, active: str, object_id: str, a
     if "next" in request.GET:
         return redirect(request.GET["next"])
     return redirect(obj.get_absolute_url())
+
+
+def get_pending_mood_logs(user: LoggedUser, today_hours: int) -> list[datetime.date]:
+    last_mood_log = MoodLog.objects.filter(user=user).order_by("-date").first()
+    now = datetime.datetime.now()
+    today = now.date()
+    if last_mood_log is None:
+        date_start = datetime.date(today.year, 1, 1)
+    else:
+        date_start = last_mood_log.date + datetime.timedelta(days=1)
+    if date_start > today:
+        return []
+    dates: list[datetime.date] = [date_start]
+    while dates[-1] < today:
+        dates.append(dates[-1] + datetime.timedelta(days=1))
+    if now.hour < today_hours:
+        dates.pop()
+    return dates

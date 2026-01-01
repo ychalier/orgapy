@@ -234,6 +234,10 @@ blockquote ul li::marker {
     margin-bottom: 0 !important;
 }
 
+.ha {
+    text-align: center;
+}
+
 /***** ARTWORK ****************************************************************/
 
 img.artwork {
@@ -1393,4 +1397,48 @@ a.reference {
 
 .editable-input {
     width: fit-content;
+}
+
+/** MOOD LOG ******************************************************************/
+
+.mood-log-form {
+    user-select: none;
+}
+
+.mood-log-form>div {
+    display: flex;
+    gap: .8rem;
+}
+
+.mood-log-form-trackers,
+.mood-log-form-activities {
+    display: flex;
+    gap: .1rem;
+}
+
+.mood-log-form-activities {
+    flex-grow: 1;
+    overflow: auto;
+}
+
+.mood-activity {
+    opacity: .33;
+}
+
+.mood-activity.active {
+    opacity: 1;
+}
+
+.mood-log-form button {
+    padding: 0 .1rem;
+    border-radius: .2rem;
+    font-size: small;
+    border-color: #6b9fc2;
+    color: #6b9fc2;
+    cursor: pointer;
+}
+
+.mood-table th + th,
+.mood-table td + td {
+    padding-left: 1rem;
 }

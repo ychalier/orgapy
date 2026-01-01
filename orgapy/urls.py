@@ -62,6 +62,9 @@ urlpatterns = [
     path("progress/<year>/export", views.view_progress_export, name="progress_export"),
     path("settings", views.view_settings, name="settings"),
     path("settings/calendar", views.view_calendar_form, name="calendar_form"),
+    path("subscription/<object_id>/delete", views.view_delete_subscription, name="delete_subscription"),
+    path("mood", views.view_mood, name="mood"),
+    path("mood/<object_id>/delete", views.view_delete_mood_log, name="delete_mood_log"),
     path("<active>/<object_id>/edit", views.view_edit, name="edit"),
     path("<active>/<object_id>/export", views.view_export, name="export"),
     path("<active>/<object_id>/delete", views.view_delete, name="delete"),
@@ -73,6 +76,5 @@ urlpatterns = [
     path("trash", views.view_trash, name="trash"),
     path("trash/restore", views.view_restore_all, name="restore_all"),
     path("trash/destroy", views.view_destroy_all, name="destroy_all"),
-    path("subscription/<object_id>/delete", views.view_delete_subscription, name="delete_subscription"),
     path("api", api, name="api"),
 ]

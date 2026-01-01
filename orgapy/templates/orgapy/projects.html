@@ -13,12 +13,14 @@
     const URL_ADMIN_PROJECT_CHANGE = "{% url 'admin:orgapy_project_changelist' %}";
     const URL_ORGAPY_NOTE = "{% url 'orgapy:note' object_id='objectId' %}";
     const OBJECTIVE_START_HOURS = {{ settings.objective_start_hours }};
+    const MOOD_ACTIVITIES = [{% for label, emoji in settings.mood_activities_list %}{label:"{{ label }}",emoji:"{{ emoji }}"},{% endfor %}];
 </script>
 <script src="{% static 'orgapy/js/dragrank.js' %}"></script>
 <script src="{% static 'orgapy/js/calendar.js' %}"></script>
 <script src="{% static 'orgapy/js/tasks.js' %}"></script>
 <script src="{% static 'orgapy/js/objectives.js' %}"></script>
 <script src="{% static 'orgapy/js/projects.js' %}"></script>
+<script src="{% static 'orgapy/js/mood.js' %}"></script>
 {% endblock head %}
 
 {% block main_content %}
@@ -26,6 +28,10 @@
 <div class="card">
     <div id="events"></div>
 </div>
+
+{% if pending_mood_logs %}
+{% include 'orgapy/partials/mood_log_forms.html' %}
+{% endif %}
 
 {% if settings.beach_mode %}
 <div class="card">

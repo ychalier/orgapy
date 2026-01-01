@@ -1,0 +1,31 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Mood &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<script>
+    const MOOD_ACTIVITIES = [{% for label, emoji in settings.mood_activities_list %}{label:"{{ label }}",emoji:"{{ emoji }}"},{% endfor %}];
+</script>
+<script src="{% static 'orgapy/js/mood.js' %}"></script>
+{% endblock head %}
+
+{% block main_content %}
+
+{% if pending_mood_logs %}
+{% include 'orgapy/partials/mood_log_forms.html' %}
+{% endif %}
+
+<div class="card">
+    <table class="mood-table">
+        <thead>
+            <tr><th>Date</th><th>Mood</th><th>Energy</th><th>Health</th><th>Stress</th><th>Activities</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}<tr><td class="ha">{{ log.date | date:'M-d' }}</td><td class="ha">{{ log.mood_display }}</td><td class="ha">{{ log.energy_display }}</td><td class="ha">{{ log.health_display }}</td><td class="ha">{{ log.stress_display }}</td><td>{{ log.activities_display }}</td><td class="row"><a title="Edit" href="{% url 'admin:orgapy_moodlog_change' log.id %}" class="button button-primary button-slim"><i class="ri-pencil-fill"></i></a><a href="{% url 'orgapy:delete_mood_log' log.id %}?next={{ request.get_full_path | urlencode }}" class="button button-delete button-slim link-confirm" message="Please confirm deletion of {{ log.date }} log" title="Delete"><i class="ri-delete-bin-line"></i></a></td></tr>{% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock main_content %}

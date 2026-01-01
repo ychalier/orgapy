@@ -20,6 +20,8 @@ class Settings(models.Model):
     calendar_lookahead = models.PositiveIntegerField(default=3)
     beach_mode = models.BooleanField(default=False)
     trash_period = models.PositiveIntegerField(default=30)
+    mood_log_hours = models.PositiveIntegerField(default=19, validators=[MinValueValidator(0), MaxValueValidator(23)])
+    mood_activities = models.TextField(default="Hiking 🥾\nRunning 🏃\nParty 🎉")
 
     class Meta:
 
@@ -27,6 +29,14 @@ class Settings(models.Model):
 
     def __str__(self):
         return f"Settings(user={self.user})"
+
+    @property
+    def mood_activities_list(self) -> list[tuple[str, str]]:
+        activities = []
+        for line in self.mood_activities.strip().split("\n"):
+            label, emoji = line.strip().split(" ")
+            activities.append((label, emoji))
+        return activities
 
 
 class Category(models.Model):
@@ -122,7 +132,7 @@ class Note(Document):
 
     def get_absolute_url(self):
         return reverse("orgapy:note", kwargs={"object_id": self.id})
-    
+
     def ongoing_projects(self):
         return self.project_set.exclude(status=Project.ARCHIVED) # type: ignore
 
@@ -311,13 +321,13 @@ class Project(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:project", kwargs={"object_id": self.id})
-    
+
     @property
     def items_count(self) -> int:
         if self.checklist is None:
             return 0
         return len(re.findall(r"^\[[ x]\]", self.checklist, re.MULTILINE))
-    
+
     @property
     def completed_items_count(self) -> int:
         if self.checklist is None:
@@ -337,7 +347,7 @@ class Project(models.Model):
         if self.note is not None and self.title is not None:
             return f"{self.note.title} - {self.title}"
         return "Untitled"
-    
+
     def to_json_dict(self) -> dict:
         return {
             "id": self.id,
@@ -563,7 +573,7 @@ class ProgressLog(models.Model):
 
 
 class PushSubscription(models.Model):
-    
+
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     subscription = models.TextField()
@@ -576,3 +586,48 @@ class PushSubscription(models.Model):
 
     def __str__(self):
         return f"PushSubscription(user={self.user}, name={self.name})"
+
+
+class MoodLog(models.Model):
+
+    UNSET = 0
+    BAD = 1
+    NEUTRAL = 2
+    GOOD = 3
+
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    date = models.DateField()
+    mood = models.PositiveIntegerField()
+    energy = models.PositiveIntegerField()
+    health = models.PositiveIntegerField()
+    stress = models.PositiveIntegerField()
+    activities = models.TextField(default="")
+
+    class Meta:
+
+        ordering = ["user", "created_at"]
+
+    def __str__(self):
+        return f"MoodLog(user={self.user}, date={self.date})"
+    
+    @property
+    def mood_display(self) -> str:
+        return "🟥🟦🟩"[self.mood - 1]
+    
+    @property
+    def energy_display(self) -> str:
+        return "🟥🟦🟩"[self.energy - 1]
+    
+    @property
+    def health_display(self) -> str:
+        return "🟥🟦🟩"[self.health - 1]
+    
+    @property
+    def stress_display(self) -> str:
+        return "🟥🟦🟩"[self.stress - 1]
+
+    @property
+    def activities_display(self) -> str:
+        return self.activities.replace(",", " ")

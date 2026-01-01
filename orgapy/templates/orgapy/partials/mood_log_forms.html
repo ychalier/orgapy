@@ -1,0 +1,21 @@
+<div class="card">
+    <span class="card-subtitle">mood</span>
+    {% for pending_mood_log_date in pending_mood_logs %}
+    <form class="mood-log-form">
+        {% csrf_token %}
+        <input type="text" name="date" value="{{ pending_mood_log_date | date:'Y-m-d' }}" hidden />
+        <input type="text" name="mood" value="2" hidden />
+        <input type="text" name="energy" value="2" hidden />
+        <input type="text" name="health" value="2" hidden />
+        <input type="text" name="stress" value="2" hidden />
+        <input type="text" name="activities" value="" hidden />
+        <div>
+            <span>{{ pending_mood_log_date | date:'M-d' }}</span>
+            <div class="mood-log-form-trackers"></div>
+            <div class="mood-log-form-activities"></div>
+            <button><i class="ri-save-line"></i></button>
+        </div>
+    </form>
+    {% endfor %}
+    <script>inflateMoodLogForms();</script>
+</div>
