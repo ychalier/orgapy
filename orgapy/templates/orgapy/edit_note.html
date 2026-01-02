@@ -43,27 +43,29 @@
 {% endblock main_content %}
 
 {% block right_column %}
-<div id="save-note-buttons">
-    <button id="btn-save-note-exit" class="button-block">Save and exit</button>
-    {% block save_and_continue %}<button id="btn-save-note-continue" class="button-block">Save and continue</button>{% endblock %}
+<div class="rightColumnSticky">
+    <div id="save-note-buttons">
+        <button id="btn-save-note-exit" class="button-block">Save and exit</button>
+        {% block save_and_continue %}<button id="btn-save-note-continue" class="button-block">Save and continue</button>{% endblock %}
+    </div>
+    <form id="form-note-edit-secondary">
+        <label class="toggle">
+            <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Pinned</span>
+        </label>
+        <label class="toggle">
+            <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Public</span>
+        </label>
+        <label class="toggle">
+            <input type="checkbox" name="hidden" {% if note.hidden %}checked{% endif %} />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Hidden</span>
+        </label>
+    </form>
 </div>
-<form id="form-note-edit-secondary">
-    <label class="toggle">
-        <input type="checkbox" name="pinned" {% if note.pinned %}checked{% endif %} />
-        <span class="toggle-slider"></span>
-        <span class="toggle-text">Pinned</span>
-    </label>
-    <label class="toggle">
-        <input type="checkbox" name="public" {% if note.public %}checked{% endif %} />
-        <span class="toggle-slider"></span>
-        <span class="toggle-text">Public</span>
-    </label>
-    <label class="toggle">
-        <input type="checkbox" name="hidden" {% if note.hidden %}checked{% endif %} />
-        <span class="toggle-slider"></span>
-        <span class="toggle-text">Hidden</span>
-    </label>
-</form>
 {% endblock right_column %}
 
 {% block body_scripts %}
