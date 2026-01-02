@@ -611,22 +611,32 @@ class MoodLog(models.Model):
 
     def __str__(self):
         return f"MoodLog(user={self.user}, date={self.date})"
-    
+
+    @staticmethod
+    def tracker_classname(value) -> str:
+        if value == 1:
+            return "mood-bad"
+        elif value == 2:
+            return "mood-neutral"
+        elif value == 3:
+            return "mood-good"
+        return ""
+
     @property
-    def mood_display(self) -> str:
-        return "🟥🟦🟩"[self.mood - 1]
-    
+    def mood_classname(self) -> str:
+        return self.tracker_classname(self.mood)
+
     @property
-    def energy_display(self) -> str:
-        return "🟥🟦🟩"[self.energy - 1]
-    
+    def energy_classname(self) -> str:
+        return self.tracker_classname(self.energy)
+
     @property
-    def health_display(self) -> str:
-        return "🟥🟦🟩"[self.health - 1]
-    
+    def health_classname(self) -> str:
+        return self.tracker_classname(self.health)
+
     @property
-    def stress_display(self) -> str:
-        return "🟥🟦🟩"[self.stress - 1]
+    def stress_classname(self) -> str:
+        return self.tracker_classname(self.stress)
 
     @property
     def activities_display(self) -> str:

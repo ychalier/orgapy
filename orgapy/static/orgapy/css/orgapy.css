@@ -991,7 +991,7 @@ input:checked+.toggle-slider+.toggle-text {
 
 }
 
-/** 
+/**
  * Navbar
  */
 
@@ -1408,12 +1408,14 @@ a.reference {
 .mood-log-form>div {
     display: flex;
     gap: .8rem;
+    align-items: center;
 }
 
 .mood-log-form-trackers,
 .mood-log-form-activities {
     display: flex;
-    gap: .1rem;
+    gap: .2rem;
+    align-items: baseline;
 }
 
 .mood-log-form-activities {
@@ -1441,4 +1443,28 @@ a.reference {
 .mood-table th + th,
 .mood-table td + td {
     padding-left: 1rem;
+}
+
+.mood-good,
+.mood-neutral,
+.mood-bad {
+    display: inline-block;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: .2rem;
+    background-color: white;
+    box-shadow: 0 0 4px black;
+    cursor: pointer;
+}
+
+.mood-good {
+    background-color: #f9fac3;
+}
+
+.mood-neutral {
+    background-color: #f39a48;
+}
+
+.mood-bad {
+    background-color: #eb0a62;
 }

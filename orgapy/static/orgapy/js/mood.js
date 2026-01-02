@@ -14,11 +14,11 @@ function inflateMoodLogForm(form) {
             const currentValue = parseInt(input.value);
             const nextValue = (currentValue - 1 + 3 + delta) % 3 + 1;
             if (nextValue == 1) {
-                span.textContent = "🟥";
+                span.className = "mood-bad";
             } else if (nextValue == 2) {
-                span.textContent = "🟦";
+                span.className = "mood-neutral";
             } else if (nextValue == 3) {
-                span.textContent = "🟩";
+                span.className = "mood-good";
             } else {
                 throw new Error(`Invalid value ${nextValue}`);
             }
