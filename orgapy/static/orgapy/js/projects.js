@@ -116,11 +116,15 @@ class Project {
         const dialogHeader = create(dialog, "div", "dialog-header");
         const noteTitle = create(dialogHeader, "b");
         if (this.note != null) noteTitle.textContent = this.note.title;
-        const noteLink = create(dialogHeader, "a", "action-button");
+        const actionButtons = create(dialogHeader, "span", "action-buttons");
+        const noteLink = create(actionButtons, "a", "action-button");
         noteLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i>`;
         if (this.note != null) noteLink.href = this.note.url;
-        const noteClear = create(dialogHeader, "span", "action-button");
-        noteClear.innerHTML = `<i class="ri-close-line"></i>`;
+        const noteEditLink = create(actionButtons, "a", "action-button");
+        noteEditLink.innerHTML = `<i class="ri-pencil-fill"></i>`;
+        if (this.note != null) noteEditLink.href = this.note.url + "/edit";
+        const noteClear = create(actionButtons, "span", "action-button");
+        noteClear.innerHTML = `<i class="ri-delete-bin-line"></i>`;
         const noteIframe = create(dialog, "iframe", "dialog-body");
         if (this.note != null) noteIframe.src = this.note.url + "/standalone";
         noteIframe.width = 400;

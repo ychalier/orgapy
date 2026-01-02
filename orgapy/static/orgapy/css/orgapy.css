@@ -333,6 +333,7 @@ dialog {
     border: 1px solid black;
     border-radius: .4rem;
     box-shadow: 0 0 2px black;
+    width: 600px;
 }
 
 dialog::backdrop {
