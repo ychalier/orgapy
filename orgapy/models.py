@@ -1,6 +1,7 @@
 import datetime
 import json
 import re
+from math import ceil
 
 import caldav
 from django.db import models
@@ -289,10 +290,12 @@ class Project(models.Model):
     ACTIVE = "AC"
     INACTIVE = "IN"
     ARCHIVED = "AR"
+    FUTURE = "FU"
     STATUS_CHOICES = [
         (ACTIVE, "Active"),
         (INACTIVE, "Inactive"),
         (ARCHIVED, "Archived"),
+        (FUTURE, "Future"),
     ]
 
     id = models.BigAutoField(primary_key=True)
@@ -362,6 +365,14 @@ class Project(models.Model):
             },
             "status": self.status,
         }
+    
+    @property
+    def progress(self) -> int:
+        q = self.items_count
+        if q == 0:
+            return 0
+        p = self.completed_items_count
+        return ceil(100 * p / q)
 
 
 class Calendar(models.Model):

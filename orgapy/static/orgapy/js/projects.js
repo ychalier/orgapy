@@ -188,26 +188,10 @@ class Project {
 
     openStatusDialog() {
         var self = this;
-        const dialog = create(this.container, "dialog");
-        dialog.setAttribute("closedby", "any");
-        const dialogHeader = create(dialog, "div", "dialog-header");
-        create(dialogHeader, "b").textContent = this.reference();
-        const dialogBody = create(dialog, "div", "dialog-body");
-        const select = create(create(dialogBody, "p"), "select");
-        for (const [optionName, optionValue] of [["Active", "AC"], ["Inactive", "IN"], ["Archived", "AR"]]) {
-            const option = create(select, "option");
-            option.textContent = optionName;
-            option.value = optionValue;
-            if (self.status == optionValue) option.selected = true;
-        }
-        select.addEventListener("change", () => {
-            self.setStatus(select.options[select.selectedIndex].value);
-            dialog.close();
+        openProjectStatusDialog(this.container.querySelector(".project-status"), this.id, (newStatus, response) => {
+            self.status = newStatus;
+            self.modification = response.modification;
         });
-        const closeButton = create(create(dialogBody, "div", "row"), "button");
-        closeButton.textContent = "Close";
-        closeButton.addEventListener("click", () => {dialog.close();});
-        dialog.showModal();
     }
 
     inflateHeader() {
@@ -223,6 +207,25 @@ class Project {
             header.innerHTML = "";
         }
         header.className = "project-header";
+
+        const status = create(header, "span", "project-status label");
+        status.setAttribute("status", this.status);
+        if (this.status == "AC") {
+            status.textContent = "ACTIVE";
+        } else if (this.status == "IN") {
+            status.textContent = "INACTIVE";
+            status.classList.add("label-grey");
+        } else if (this.status == "AR") {
+            status.textContent = "ARCHIVED";
+            status.classList.add("label-purple");
+        } else if (this.status == "FU") {
+            status.textContent = "FUTURE";
+            status.classList.add("label-pink");
+        }
+        status.addEventListener("click", (e) => {
+            e.stopPropagation();
+            self.openStatusDialog();
+        });
 
         const badge = create(header, "span", "project-badge");
         let total = 0;
@@ -427,6 +430,8 @@ class Project {
             this.container.classList.add("archived");
         } else if (this.status == "IN") {
             this.container.classList.add("inactive");
+        } else if (this.status == "FU") {
+            this.container.classList.add("future");
         }
         this.inflateHeader();
         this.inflateBody();
@@ -712,6 +717,34 @@ function onButtonProjectCreate(container, note, forceExpand) {
     setTimeout(() => {
         tempProjectElement.querySelector("input").focus();
     }, 1);
+}
+
+function openProjectStatusDialog(statusSpan, projectId, onSuccess=null) {
+    const dialog = create(document.body, "dialog", "dialog-card row");
+    dialog.setAttribute("closedby", "any");
+    const currentStatus = statusSpan.getAttribute("status");
+    for (const [value, name, labelClass] of [["AC", "ACTIVE", ""], ["IN", "INACTIVE", "label-grey"], ["AR", "ARCHIVED", "label-purple"], ["FU", "FUTURE", "label-pink"]]) {
+        if (value == currentStatus) continue;
+        const option = create(dialog, "span", "label " + labelClass);
+        option.textContent = name;
+        option.addEventListener("click", () => {
+            dialog.close();
+            apiPost("set-project-status", {project_id: projectId, status: value}, (response) => {
+                if (statusSpan != null) {
+                    statusSpan.setAttribute("status", value);
+                    statusSpan.textContent = name;
+                    statusSpan.className = "project-status label-inline label " + labelClass; 
+                }
+                if (onSuccess != null) {
+                    onSuccess(value, response);
+                }
+            });
+        });
+    }
+    dialog.addEventListener("close", () => {
+        document.body.removeChild(dialog);
+    });
+    dialog.showModal();
 }
 
 window.addEventListener("click", clearContextMenus);

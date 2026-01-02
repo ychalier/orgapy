@@ -40,12 +40,12 @@
 }
 
 .project.archived {
-    background-color: #0b1923;
+    background-color: hsl(255, 52%, 9%);
     border-color: #000000;
 }
 
 .project.archived .project-body {
-    background-color: #1a2c37;
+    background-color: hsl(255, 35%, 18%);
 }
 
 .project-header {
@@ -75,6 +75,12 @@
 
 .project-note + .project-title {
     color: #888;
+}
+
+.project-status {
+    width: 1.8rem;
+    overflow: hidden;
+    text-overflow: "";
 }
 
 .project-badge {

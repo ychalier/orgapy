@@ -1,0 +1,52 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{% block subtitle %}Projects &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
+<script src="{% static 'orgapy/js/projects.js' %}"></script>
+{% endblock head %}
+
+{% block menu %}
+<li class="menu-item"><a href="{% url 'orgapy:projects_all' %}"><i class="ri-briefcase-line"></i> All Projects</a></li>
+<hr class="menu-separator">
+{{ block.super }}
+{% endblock menu %}
+
+{% block main_content %}
+
+{% if projects %}
+<div class="card card-oneline">
+    {% for project in projects %}
+    <div class="oneline oneline-striped" project-id="{{ project.id }}">
+        <span class="project-status label label-inline {% if project.status == 'FU' %}label-pink{% elif project.status == 'IN' %}label-grey{% elif project.status == 'AR' %}label-purple{% endif %}" status="{{ project.status }}">{{ project.get_status_display | upper }}</span>
+        <span class="project-badge{% if project.items_count == 0 %} empty{% elif project.all_completed %} done{% endif %}" {% if project.items_count > 0 and not project.all_completed %}style="background: linear-gradient(90deg,rgba(37, 135, 50, 1){{ project.progress }}%,rgb(48, 48, 48) {{ project.progress }}%)"{% endif %}>{{ project.completed_items_count }}/{{ project.items_count }}</span>
+        <a class="oneline-truncate link-hidden" href="{{ project.get_absolute_url }}" title="{{ project.reference }}">{{ project.reference }}</a>
+        <span class="show-on-parent-hover">
+            <a class="button-inline link-confirm" title="Delete" href="{% url 'orgapy:delete_project' object_id=project.id %}?next={{ request.get_full_path | urlencode }}" message="Please confirm deletion of '{{ project.reference }}'"><i class="ri-delete-bin-line"></i></a>
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+{% block empty %}
+<div class="card">
+    <p>Nothing found 😔</p>
+</div>
+{% endblock empty %}
+{% endif %}
+
+{% include 'orgapy/partials/pagination.html' %}
+
+<script>
+    document.querySelectorAll(".show-on-parent-hover .dropdown").forEach(bindDropdown);
+    document.querySelectorAll(".project-status").forEach(statusSpan => {
+        statusSpan.addEventListener("click", () => {
+            openProjectStatusDialog(statusSpan, statusSpan.parentElement.getAttribute("project-id"));
+        });
+    });
+</script>
+
+{% endblock main_content %}

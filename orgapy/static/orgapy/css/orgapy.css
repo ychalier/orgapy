@@ -359,6 +359,11 @@ dialog h3 {
     margin: 0 0 .4rem 0;
 }
 
+.dialog-card {
+    background: #101010;
+    width: fit-content;
+}
+
 /**
  * Pagination
  */
@@ -1202,6 +1207,11 @@ a.reference {
 .label-pink {
     background: hsl(288, 35%, 18%);
     color: hsl(288, 100%, 78%) !important;
+}
+
+.label-purple {
+    background: hsl(255, 35%, 18%);
+    color: hsl(255, 100%, 78%) !important;
 }
 
 .reference i {

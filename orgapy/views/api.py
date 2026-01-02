@@ -24,10 +24,8 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_create_project(request)
         case "edit-project":
             return api_edit_project(request)
-        case "archive-project":
-            return api_archive_project(request)
-        case "unarchive-project":
-            return api_unarchive_project(request)
+        case "set-project-status":
+            return api_set_project_status(request)
         case "delete-project":
             return api_delete_project(request)
         case "list-objectives":
@@ -186,20 +184,12 @@ def api_edit_project(request: HttpRequest) -> JsonResponse:
 
 
 @permission_required("orgapy.change_project")
-def api_archive_project(request: HttpRequest) -> JsonResponse:
+def api_set_project_status(request: HttpRequest) -> JsonResponse:
     project = get_project_from_post(request)
-    project.archived = True
-    project.save()
-    return JsonResponse({
-        "success": True,
-        "modification": project.date_modification.timestamp(),
-    })
-
-
-@permission_required("orgapy.change_project")
-def api_unarchive_project(request: HttpRequest) -> JsonResponse:
-    project = get_project_from_post(request)
-    project.archived = False
+    status = request.POST.get("status")
+    if status not in [Project.ACTIVE, Project.INACTIVE, Project.ARCHIVED, Project.FUTURE]:
+        raise BadRequest()
+    project.status = status
     project.save()
     return JsonResponse({
         "success": True,
