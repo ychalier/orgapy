@@ -17,6 +17,23 @@
 
 {% block main_content %}
 
+<div class="card">
+    <span class="card-subtitle" style="display: inline-block">filters</span>
+    {% if request.GET.status or request.GET.note %}
+        {% if request.GET.note %}<span class="label label-inline">@note/{{ request.GET.note }}</span>{% endif %}
+        {% if request.GET.status == 'AC' %}<span class="label label-inline">ACTIVE</span>{% endif %}
+        {% if request.GET.status == 'IN' %}<span class="label label-inline label-grey">INACTIVE</span>{% endif %}
+        {% if request.GET.status == 'AR' %}<span class="label label-inline label-purple">ARCHIVED</span>{% endif %}
+        {% if request.GET.status == 'FU' %}<span class="label label-inline label-pink">FUTURE</span>{% endif %}
+        <a href="?" class="label label-inline label-grey"><i class="ri-close-line"></i> Clear</a>
+    {% else %}
+    <a href="?status=AC" class="label label-inline">ACTIVE</a>
+    <a href="?status=IN" class="label label-inline label-grey">INACTIVE</a>
+    <a href="?status=AR" class="label label-inline label-purple">ARCHIVED</a>
+    <a href="?status=FU" class="label label-inline label-pink">FUTURE</a>
+    {% endif %}
+</div>
+
 {% if projects %}
 <div class="card card-oneline">
     {% for project in projects %}

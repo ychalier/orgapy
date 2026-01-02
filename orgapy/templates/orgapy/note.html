@@ -47,6 +47,9 @@
         {% endfor %}
     </div>
     {% endif %}
+    {% if note.archived_projects_count > 0 %}
+    <a class="link-tenuous" href="{% url 'orgapy:projects_all' %}?note={{ note.id }}&status=AR">View archived projects ({{ note.archived_projects_count }})</a>
+    {% endif %}
 </header>
 
 <div id="rightColumnTarget"></div>

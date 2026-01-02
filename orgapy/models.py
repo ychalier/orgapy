@@ -136,6 +136,10 @@ class Note(Document):
 
     def ongoing_projects(self):
         return self.project_set.exclude(status=Project.ARCHIVED) # type: ignore
+    
+    @property
+    def archived_projects_count(self) -> int:
+        return self.project_set.filter(status=Project.ARCHIVED).count() # type: ignore
 
 
 class SheetGroup(models.Model):

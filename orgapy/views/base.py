@@ -67,12 +67,15 @@ def view_projects(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_project")
 def view_projects_all(request: HttpRequest) -> HttpResponse:
     note_filter = request.GET.get("note")
+    status_filter = request.GET.get("status")
     query = Project.objects.filter(user=request.user)
     if note_filter is not None:
         try:
             query = query.filter(note__id=int(note_filter))
         except:
             raise BadRequest()
+    if status_filter is not None:
+        query = query.filter(status=status_filter)
     query = query.order_by("-date_modification")
     page_size = 24
     paginator = Paginator(query, page_size)
