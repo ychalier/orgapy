@@ -634,7 +634,7 @@ class TemporaryProject extends Project {
 
 const STORAGE_KEY_RANK = "orgapy.projects.ranks";
 
-function saveProjectRanks(container, container, ordering) {
+function saveProjectRanks(container, ordering) {
     let ranks = {};
     container.querySelectorAll(".project").forEach((project, i) => {
         let projectId = project.getAttribute("project_id");
