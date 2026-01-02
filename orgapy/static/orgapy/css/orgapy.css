@@ -405,7 +405,8 @@ dialog h3 {
 .action-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: .2rem;
+    outline: 1px solid black;
+    border-radius: .4rem;
 }
 
 #rightColumnContainer:not(:has(.project)):not(:has(#toc)) .action-buttons {
@@ -420,13 +421,33 @@ dialog h3 {
     color: #f0f0f0;
     border: 1px solid black;
     padding: .4rem;
-    border-radius: .4rem;
+    border-radius: 0;
     background-color: #101010;
     cursor: pointer;
     transition: .2s ease-in-out;
     width: 34.4px;
     height: 34.4px;
     text-align: center;
+}
+
+.action-button:first-child {
+    border-top-left-radius: .4rem;
+    border-bottom-left-radius: .4rem;
+}
+
+.action-button:last-child {
+    border-top-right-radius: .4rem;
+    border-bottom-right-radius: .4rem;
+}
+
+#rightColumnContainer:not(:has(.project)):not(:has(#toc)) .action-button:first-child {
+    border-bottom-left-radius: 0;
+    border-top-right-radius: .4rem;
+}
+
+#rightColumnContainer:not(:has(.project)):not(:has(#toc)) .action-button:last-child {
+    border-top-right-radius: 0;
+    border-bottom-left-radius: .4rem;
 }
 
 .action-button:hover {
@@ -939,24 +960,18 @@ input:checked+.toggle-slider+.toggle-text {
     margin-top: 0;
 }
 
-#column-right-sticky {
+.rightColumnSticky {
     position: sticky;
     top: .8rem;
     left: 0;
-    margin-right: .8rem;
-    display: flex;
-    flex-direction: column;
+    z-index: 1;
     width: fit-content;
-    gap: .4rem;
 }
 
-#column-right-sticky>* {
-    margin: 0;
-}
 
 #rightColumnContainer {
-    overflow: auto;
-    max-height: 100vh;
+    height: 100%;
+    margin-right: .8rem;
 }
 
 #rightColumnContainer details,
