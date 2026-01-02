@@ -231,6 +231,9 @@ class Project {
             badge.classList.add("empty");
         } else if (completed == total) {
             badge.classList.add("done");
+        } else {
+            const progress = Math.floor(100 * completed / total);
+            badge.style.background = `linear-gradient(90deg,rgba(37, 135, 50, 1)${progress}%,rgb(48, 48, 48) ${progress + 1}%)`
         }
         badge.innerHTML = `<i class="ri-checkbox-circle-line"></i> ${completed}/${total}`;
         badge.addEventListener("dblclick", (e) => {
