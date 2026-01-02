@@ -43,6 +43,11 @@ function inflateYear(year) {
         const key = dtf(dt, "YYYY-mm-dd");
         if (key in yearData) {
             dayCell.classList.add("filled");
+            if (yearData[key].length > 1 && yearData[key].length < 6) {
+                dayCell.classList.add(`filled-${yearData[key].length}`);
+            } else if (yearData[key].length > 5) {
+                dayCell.classList.add(`filled-more`);
+            }
             if (yearData[key].length > 0) {
                 dayCell.addEventListener("click", () => {
                     window.location.href = yearData[key][0].href;
@@ -94,7 +99,8 @@ function inflateYear(year) {
 }
 
 function fetchJournalData(category) {
-    fetchApi(URL_API + `?action=search&category=${category}`, "get", null, searchResults => {
+    const url = category == null ? URL_API + `?action=search` : URL_API + `?action=search&category=${category}`;
+    fetchApi(url, "get", null, searchResults => {
         data = {};
         for (const obj of searchResults.objects) {
             const dt = new Date(obj.dateCreation);

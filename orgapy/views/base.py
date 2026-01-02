@@ -144,8 +144,10 @@ def view_categories(request: HttpRequest) -> HttpResponse:
 def view_category(request: HttpRequest, name: str) -> HttpResponse:
     if name in ["journal", "org"]:
         return render(request, f"orgapy/specials/journal.html", {"category": name})
-    if name in ["quote"]:
-        return render(request, f"orgapy/specials/{name}.html", {})
+    if name == "quote":
+        return render(request, f"orgapy/specials/quote.html", {})
+    if name == "all":
+        return render(request, f"orgapy/specials/all.html", {})
     category = "uncategorized"
     if name == "projects":
         category = "projects"

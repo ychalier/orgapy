@@ -53,6 +53,27 @@
     background: #39d353;
 }
 
+.journal-day.filled-2 {
+    background: #83d941;
+}
+
+.journal-day.filled-3 {
+    background: #b5eb64;
+}
+
+.journal-day.filled-4 {
+    background: #e6f590;
+}
+
+.journal-day.filled-5 {
+    background: #feffe2;
+}
+
+.journal-day.filled-more {
+    background: #ffffff;
+    outline: 1px solid red;
+}
+
 .journal-popover {
     position: absolute;
     background: #202020;

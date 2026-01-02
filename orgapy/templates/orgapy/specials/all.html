@@ -1,0 +1,22 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{{ category | title }} &mid; {{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/specials/journal.css' %}" />
+{% endblock head %}
+
+{% block main_content %}
+
+<header class="card card-fake-transparent">
+    <h1>Documents</h1>
+    <p>Browse all documents (notes, sheets and maps) in database.</p>
+    <div id="journal"></div>
+</header>
+
+<script src="{% static 'orgapy/js/specials/journal.js' %}"></script>
+<script>fetchJournalData(null)</script>
+
+{% endblock main_content %}
