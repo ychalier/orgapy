@@ -14,14 +14,14 @@
     <span title="Hidden"><i class="ri-eye-line"></i></span>
     {% endif %}
     {% if obj.deleted %}
-    <span class="oneline-truncate" title="{{ obj.title }}">{{ obj.title }}</span>
+    <span class="obj-title oneline-truncate" title="{{ obj.title }}">{{ obj.title }}</span>
     {% else %}
-    <a class="oneline-truncate link-hidden" href="{{ obj.get_absolute_url }}" title="{{ obj.title }}">{{ obj.title }}</a>
+    <a class="obj-title oneline-truncate link-hidden" href="{{ obj.get_absolute_url }}" title="{{ obj.title }}">{{ obj.title }}</a>
     {% endif %}
     {% if obj.active == "notes" and obj.ongoing_projects %}
     <a class="label label-inline label-pink" href="{% url 'orgapy:category' name='projects' %}">{{ obj.ongoing_projects.count }} <i class="ri-briefcase-line"></i></a>
     {% endif %}
-    <span>
+    <span class="obj-categories">
         {% if obj.categories.all %}
         {% for category in obj.categories.all %}
         <a class="link-tenuous" href="{{ category.get_absolute_url }}">#{{category.name}}</a>

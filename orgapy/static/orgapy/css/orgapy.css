@@ -1320,6 +1320,17 @@ a.reference {
     top: .3rem;
 }
 
+.obj-title {
+    min-width: 5ch;
+}
+
+.obj-categories {
+    flex-shrink: 2 !important;
+    min-width: 5ch;
+    overflow: auto;
+    text-overflow: ellipsis;
+}
+
 .categories {
     display: flex;
     flex-direction: row;
