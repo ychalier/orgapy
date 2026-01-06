@@ -193,7 +193,7 @@ function inflateTasks() {
         const tasksInCategory = tasks.filter(task => task.category == category);
         if (tasksInCategory.length == 0) continue;
         const details = create(container, "details");
-        details.open = true;
+        details.open = category == TASK_TODAY || category == TASK_TOMORROW || category == TASK_THIS_WEEK;
         create(details, "summary", "card-subtitle").textContent = `${TASK_CATEGORY_LABELS[category]} (${tasksInCategory.length})`;
         for (const task of tasksInCategory) {
             task.inflate(details);
