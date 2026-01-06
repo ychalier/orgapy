@@ -331,7 +331,7 @@ def get_pending_mood_logs(user: LoggedUser, today_hours: int) -> list[datetime.d
     now = datetime.datetime.now()
     today = now.date()
     if last_mood_log is None:
-        date_start = datetime.date(today.year, 1, 1)
+        date_start = today
     else:
         date_start = last_mood_log.date + datetime.timedelta(days=1)
     if date_start > today:

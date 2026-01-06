@@ -1431,6 +1431,10 @@ a.reference {
     user-select: none;
 }
 
+.mood-log-form + .mood-log-form {
+    margin-top: .2rem;
+}
+
 .mood-log-form>div {
     display: flex;
     gap: .8rem;
