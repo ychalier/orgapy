@@ -1470,9 +1470,28 @@ a.reference {
     cursor: pointer;
 }
 
-.mood-table th + th,
-.mood-table td + td {
-    padding-left: 1rem;
+.mood-table-wrapper {
+    overflow: auto;
+}
+
+.mood-table th,
+.mood-table td {
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    padding-left: .2rem;
+}
+
+.mood-table th:first-child,
+.mood-table td:first-child {
+    padding-left: 0;
+}
+
+@media (max-width: 800px) {
+
+    .mood-table th:not(:first-child) {
+        writing-mode: sideways-lr;
+    }
+
 }
 
 .mood-good,

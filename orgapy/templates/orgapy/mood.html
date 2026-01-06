@@ -18,14 +18,16 @@
 {% endif %}
 
 <div class="card">
-    <table class="mood-table">
-        <thead>
-            <tr><th>Date</th><th>Mood</th><th>Energy</th><th>Health</th><th>Stress</th><th>Activities</th><th></th></tr>
-        </thead>
-        <tbody>
-            {% for log in logs %}<tr><td class="ha">{{ log.date | date:'M-d' }}</td><td class="ha"><span class="{{ log.mood_classname }}"></span></td><td class="ha"><span class="{{ log.energy_classname }}"></span></td><td class="ha"><span class="{{ log.health_classname }}"></span></td><td class="ha"><span class="{{ log.stress_classname }}"></span></td><td>{{ log.activities_display }}</td><td class="row"><a title="Edit" href="{% url 'admin:orgapy_moodlog_change' log.id %}" class="button button-primary button-slim"><i class="ri-pencil-fill"></i></a><a href="{% url 'orgapy:delete_mood_log' log.id %}?next={{ request.get_full_path | urlencode }}" class="button button-delete button-slim link-confirm" message="Please confirm deletion of {{ log.date }} log" title="Delete"><i class="ri-delete-bin-line"></i></a></td></tr>{% endfor %}
-        </tbody>
-    </table>
+    <div class="mood-table-wrapper">
+        <table class="mood-table">
+            <thead>
+                <tr><th>Date</th><th>Mood</th><th>Energy</th><th>Health</th><th>Stress</th><th>Activities</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}<tr><td class="ha">{{ log.date | date:'M-d' }}</td><td class="ha"><span class="{{ log.mood_classname }}"></span></td><td class="ha"><span class="{{ log.energy_classname }}"></span></td><td class="ha"><span class="{{ log.health_classname }}"></span></td><td class="ha"><span class="{{ log.stress_classname }}"></span></td><td>{{ log.activities_display }}</td><td class="row"><a title="Edit" href="{% url 'admin:orgapy_moodlog_change' log.id %}" class="button button-primary button-slim"><i class="ri-pencil-fill"></i></a><a href="{% url 'orgapy:delete_mood_log' log.id %}?next={{ request.get_full_path | urlencode }}" class="button button-delete button-slim link-confirm" message="Please confirm deletion of {{ log.date }} log" title="Delete"><i class="ri-delete-bin-line"></i></a></td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 {% endblock main_content %}
