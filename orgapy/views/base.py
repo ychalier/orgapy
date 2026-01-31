@@ -792,6 +792,7 @@ def view_settings(request: HttpRequest) -> HttpResponse:
         user_settings.trash_period = int(request.POST.get("trash_period", 30))
         user_settings.mood_log_hours = int(request.POST.get("mood_log_hours", 19))
         user_settings.mood_activities = request.POST.get("mood_activities", "").strip()
+        user_settings.groceries_data = request.POST.get("groceries_data")
         user_settings.beach_mode = bool(request.POST.get("beach_mode", False))
         user_settings.save()
         if "ref" in request.POST and request.POST["ref"]:
@@ -868,3 +869,36 @@ def view_delete_mood_log(request: HttpRequest, object_id: str) -> HttpResponse:
     if "next" in request.GET:
         return redirect(request.GET["next"])
     return redirect("orgapy:mood")
+
+
+# GROCERIES ####################################################################
+
+
+@permission_required("orgapy.add_note")
+def view_groceries(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        items = []
+        for key, value in request.POST.items():
+            if ";" in key and value == "on":
+                items.append((key.split(";", 1)))
+        try:
+            cat = Category.objects.get(user=request.user, name="groceries")
+        except Category.DoesNotExist:
+            cat = Category.objects.create(user=request.user, name="groceries")
+        old_section = None
+        note_content = ""
+        for section_label, item_label in items:
+            if section_label != old_section:
+                note_content += f"\n**{section_label}**\n\n"
+                old_section = section_label
+            note_content += f"- [ ] {item_label}\n"
+        note = Note.objects.create(
+            user=request.user,
+            title=f"Shopping list {datetime.datetime.now().strftime("%b, %d")}",
+            content=note_content.strip(),
+        )
+        note.date_creation = datetime.datetime.now()
+        note.save()
+        note.categories.add(cat)
+        return redirect("orgapy:note", object_id=note.id)
+    return render(request, "orgapy/groceries.html", {})

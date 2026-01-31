@@ -23,6 +23,7 @@ class Settings(models.Model):
     trash_period = models.PositiveIntegerField(default=30)
     mood_log_hours = models.PositiveIntegerField(default=19, validators=[MinValueValidator(0), MaxValueValidator(23)])
     mood_activities = models.TextField(default="Hiking 🥾\nRunning 🏃\nParty 🎉")
+    groceries_data = models.TextField(blank=True, null=True)
 
     class Meta:
 
@@ -38,6 +39,12 @@ class Settings(models.Model):
             label, emoji = line.strip().split(" ")
             activities.append((label, emoji))
         return activities
+
+    @property
+    def groceries(self) -> dict:
+        if self.groceries_data:
+            return json.loads(self.groceries_data)
+        return {}
 
 
 class Category(models.Model):
@@ -136,7 +143,7 @@ class Note(Document):
 
     def ongoing_projects(self):
         return self.project_set.exclude(status=Project.ARCHIVED) # type: ignore
-    
+
     @property
     def archived_projects_count(self) -> int:
         return self.project_set.filter(status=Project.ARCHIVED).count() # type: ignore
@@ -369,7 +376,7 @@ class Project(models.Model):
             },
             "status": self.status,
         }
-    
+
     @property
     def progress(self) -> int:
         q = self.items_count

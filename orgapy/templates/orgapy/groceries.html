@@ -1,0 +1,31 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+{% block title %}{% block subtitle %}Groceries &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<style>
+    input[type=checkbox] {
+        width: unset;
+    }
+</style>
+{% endblock head %}
+
+{% block main_content %}
+<h1>Groceries</h1>
+<div class="card">
+    <form action="" method="post">
+        {% csrf_token %}
+        {% for section in request.user.settings.groceries.sections %}
+        <b>{{ section.label }}</b>
+        <ul>
+            {% for item in section.items %}
+            <li><label><input type="checkbox" name="{{ section.label }};{{ item.label }}" />{{ item.label }}</label></li>
+            {% endfor %}
+        </ul>
+        {% endfor %}
+        <button class="button-primary" type="submit">Create list</button>
+    </form>
+    <br>
+</div>
+{% endblock main_content %}
