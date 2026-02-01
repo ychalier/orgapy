@@ -56,7 +56,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
     settings = get_or_create_settings(request.user)
-    pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours)
+    pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
     return render(request, "orgapy/projects.html", {
         "settings": settings,
         "pending_mood_logs": pending_mood_logs,
@@ -791,6 +791,7 @@ def view_settings(request: HttpRequest) -> HttpResponse:
         user_settings.calendar_lookahead = int(request.POST.get("calendar_lookahead", 3))
         user_settings.trash_period = int(request.POST.get("trash_period", 30))
         user_settings.mood_log_hours = int(request.POST.get("mood_log_hours", 19))
+        user_settings.mood_log_lookback_days = int(request.POST.get("mood_log_lookback_days", 2))
         user_settings.mood_activities = request.POST.get("mood_activities", "").strip()
         user_settings.groceries_data = request.POST.get("groceries_data")
         user_settings.beach_mode = bool(request.POST.get("beach_mode", False))
@@ -853,7 +854,7 @@ def view_mood(request: HttpRequest) -> HttpResponse:
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
     settings = get_or_create_settings(request.user)
-    pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours)
+    pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
     logs = MoodLog.objects.filter(user=request.user).order_by("-date")
     return render(request, "orgapy/mood.html", {
         "settings": settings,

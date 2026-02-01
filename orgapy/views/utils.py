@@ -326,7 +326,7 @@ def toggle_object_attribute(request: HttpRequest, active: str, object_id: str, a
     return redirect(obj.get_absolute_url())
 
 
-def get_pending_mood_logs(user: LoggedUser, today_hours: int) -> list[datetime.date]:
+def get_pending_mood_logs(user: LoggedUser, today_hours: int, lookback_days: int) -> list[datetime.date]:
     last_mood_log = MoodLog.objects.filter(user=user).order_by("-date").first()
     now = datetime.datetime.now()
     today = now.date()
@@ -334,6 +334,8 @@ def get_pending_mood_logs(user: LoggedUser, today_hours: int) -> list[datetime.d
         date_start = today
     else:
         date_start = last_mood_log.date + datetime.timedelta(days=1)
+    date_start_lookback = today - datetime.timedelta(days=lookback_days)
+    date_start = max(date_start, date_start_lookback)
     if date_start > today:
         return []
     dates: list[datetime.date] = [date_start]

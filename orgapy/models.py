@@ -23,6 +23,7 @@ class Settings(models.Model):
     trash_period = models.PositiveIntegerField(default=30)
     mood_log_hours = models.PositiveIntegerField(default=19, validators=[MinValueValidator(0), MaxValueValidator(23)])
     mood_activities = models.TextField(default="Hiking 🥾\nRunning 🏃\nParty 🎉")
+    mood_log_lookback_days = models.PositiveIntegerField(default=2)
     groceries_data = models.TextField(blank=True, null=True)
 
     class Meta:
