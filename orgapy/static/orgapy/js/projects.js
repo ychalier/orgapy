@@ -301,6 +301,23 @@ class Project {
                 self.addNewChecklistItem(checklist);
             }
         } });
+        input.addEventListener("paste", (e) => {
+            const text = e.clipboardData.getData("text/plain").trim();
+            if (text.includes("\n")) {
+                e.preventDefault();
+                const lines = text.split("\n");
+                input.parentElement.classList.remove("editing");
+                self.container.classList.remove("editing");
+                self.checklistItems[entryIndex].text = lines[0].trim();
+                for (const line of lines.slice(1)) {
+                    if (line.trim() == "") continue;
+                    entryIndex++;
+                    self.checklistItems.splice(entryIndex, 0, {state: false, text: line.trim()});
+                }
+                self.concatChecklist();
+                self.update();
+            }
+        });
         element.replaceWith(input);
         input.focus();
         this.updateExpansion();
