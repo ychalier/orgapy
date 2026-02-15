@@ -410,14 +410,16 @@ class Calendar(models.Model):
         self.last_sync = timezone.now()
         events = []
         lookahead = self.user.settings.calendar_lookahead
+        now = datetime.datetime.now()
+        this_morning = datetime.datetime(now.year, now.month, now.day, 0, 0, 0, 0, now.tzinfo)
         with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
             principal = client.principal()
             for calendar in principal.calendars():
                 if calendar.name != self.calendar_name:
                     continue
                 events = calendar.search(
-                    start=datetime.datetime.now().date(),
-                    end=datetime.datetime.now().date() + datetime.timedelta(days=lookahead),
+                    start=this_morning,
+                    end=this_morning + datetime.timedelta(days=lookahead),
                     event=True,
                     expand=True)
         events_data = []
