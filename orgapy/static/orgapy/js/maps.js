@@ -47,7 +47,7 @@ function stopPropagation(event) {
 
 
 function reverseLatLng(coordinates) {
-    if (coordinates.length == 2 && typeof(coordinates[0]) == "number") {
+    if ((coordinates.length == 2 || coordinates.length == 3) && typeof(coordinates[0]) == "number") {
         return [coordinates[1], coordinates[0]];
     }
     let output = [];
