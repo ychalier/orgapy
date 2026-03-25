@@ -386,7 +386,7 @@ function bindDropdown(dropdown) {
     const toggle = dropdown.querySelector(".dropdown-toggle");
     const menu = dropdown.querySelector(".menu");
 
-    function hideDropdown(timeout=300) {
+    function hideDropdown(timeout=1) {
         hideTimeout = setTimeout(() => {
             dropdown.appendChild(menu);
         }, timeout);
@@ -434,18 +434,18 @@ function bindDropdown(dropdown) {
 
     toggle.addEventListener("focusin", () => {
         isToggleFocused = true;
-        const padding = 14;
+        const padding = 2;
         menu.style.position = "absolute";
         menu.style.zIndex = 9999;
         const toggleBounds = toggle.getBoundingClientRect();
         const menuBounds = menu.getBoundingClientRect();
-        const fitsUnder = toggleBounds.bottom + padding + menuBounds.height <= window.innerHeight;
+        const fitsUnder = (toggleBounds.bottom - toggleBounds.height / 2) + padding + menuBounds.height <= window.innerHeight;
         const baseLeft = toggleBounds.left;
         const maxLeft = screen.width - padding - menuBounds.width;
         const left = Math.max(padding, Math.min(baseLeft, maxLeft));
         menu.style.left = left + "px";
         if (fitsUnder) {
-            menu.style.top = (toggleBounds.bottom + padding + window.scrollY) + "px";
+            menu.style.top = ((toggleBounds.bottom - toggleBounds.height / 2) + padding + window.scrollY) + "px";
         } else {
             menu.style.top = (toggleBounds.top - padding - menuBounds.height + window.scrollY) + "px";
         }

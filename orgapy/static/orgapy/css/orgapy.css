@@ -485,9 +485,8 @@ dialog h3 {
     background: #303030;
     border: 1px solid #555;
     border-radius: .2rem;
-    gap: .2rem;
     box-shadow: 0 0 4px black;
-    padding: .4rem;
+    padding: 0;
     list-style: none;
     margin: 0;
 }
@@ -1312,23 +1311,63 @@ a.reference {
  * Object list
  */
 
+.oli {
+    display: flex;
+    width: 100%;
+    height: fit-content;
+    align-items: stretch;
+}
+
+.oli-content {
+    display: flex;
+    flex-basis: 100%;
+    flex-shrink: 1;
+    padding: .4rem 0 .4rem .4rem;
+    flex-wrap: wrap;
+    gap: .4rem;
+    align-items: baseline;
+}
+
+.oli-menu {
+    flex-basis: content;
+    flex-shrink: 0;
+}
+
+.oli-menu .dropdown-toggle {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    padding: .4rem;
+    color: #888;
+}
+
+.oli-menu .dropdown-toggle:hover {
+    color: white;
+}
+
+.oli:first-child {
+    border-top-left-radius: .4rem;
+    border-top-right-radius: .4rem;
+}
+
+.oli:last-child {
+    border-bottom-left-radius: .4rem;
+    border-bottom-right-radius: .4rem;
+}
+
+.oli:nth-child(even) {
+    background: #202020;
+}
+
+.oli:hover {
+    background: #304350;
+}
+
 .obj-date-hint {
-    position: relative;
     color: #888;
     font-size: x-small;
     text-transform: uppercase;
-    top: .3rem;
-}
-
-.obj-title {
-    min-width: 5ch;
-}
-
-.obj-categories {
-    flex-shrink: 2 !important;
-    min-width: 5ch;
-    overflow: auto;
-    text-overflow: ellipsis;
 }
 
 .categories {
