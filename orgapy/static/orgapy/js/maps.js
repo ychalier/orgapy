@@ -765,6 +765,16 @@ class Feature {
         });
     }
 
+    setLabelFromProperty(propertyName) {
+        if (propertyName in this.properties) {
+            this.properties.label = this.properties[propertyName];
+        } else {
+            this.properties.label = this.layer.findDefaultLabel();
+        }
+        this.inflate();
+        this.onChange("edit-feature");
+    }
+
     saveGeometry() {
         switch(this.geometry.type) {
             case "Point":
@@ -980,11 +990,22 @@ class Layer {
             moreButton.tabIndex = 0;
             const buttonsMenu = create(buttonsDropdown, "ul", "menu");
             let renameButton = create(create(buttonsMenu, "li", "menu-item"), "button");
-            renameButton.innerHTML = `<i class="ri-input-field"></i> Rename`;
-            renameButton.title = "Rename";
+            renameButton.innerHTML = `<i class="ri-input-field"></i> Rename layer`;
+            renameButton.title = "Rename layer";
             renameButton.addEventListener("click", (event) => {
                 event.stopPropagation();
                 self.inflateLabelEdit();
+            });
+            let labelButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+            labelButton.innerHTML = `<i class="ri-pencil-fill"></i> Set labels`;
+            labelButton.title = "Set labels";
+            labelButton.addEventListener("click", (event) => {
+                event.stopPropagation();
+                const propertyName = prompt("Provide the property name to use as label. Probably 'name' or 'title'.");
+                if (propertyName == null || propertyName == "") return;
+                for (const feature of this.features) {
+                    feature.setLabelFromProperty(propertyName);
+                }
             });
             let editButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             editButton.innerHTML = `<i class="ri-paint-fill"></i> Edit style`;
