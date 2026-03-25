@@ -998,7 +998,7 @@ class Layer {
             });
             let labelButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             labelButton.innerHTML = `<i class="ri-pencil-fill"></i> Set labels`;
-            labelButton.title = "Set labels";
+            labelButton.title = "Set feature labels";
             labelButton.addEventListener("click", (event) => {
                 event.stopPropagation();
                 const propertyName = prompt("Provide the property name to use as label. Probably 'name' or 'title'.");
@@ -1006,6 +1006,22 @@ class Layer {
                 for (const feature of this.features) {
                     feature.setLabelFromProperty(propertyName);
                 }
+            });
+            let sortButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+            sortButton.innerHTML = `<i class="ri-arrow-down-line"></i> Sort features`;
+            sortButton.title = "Sort features";
+            sortButton.addEventListener("click", (event) => {
+                event.stopPropagation();
+                let propertyName = prompt("Provide the property name to use as key. Start with a minus to sort in decreasing order.", "label");
+                if (propertyName == null || propertyName == "") return;
+                let decreasing = false;
+                if (propertyName.startsWith("-")) {
+                    decreasing = true;
+                    propertyName = propertyName.slice(1);
+                }
+                const r = decreasing ? -1 : 1;
+                self.features.sort((a, b) => { return a.properties[propertyName] <= b.properties[propertyName] ? -r : r});
+                self.inflate();
             });
             let editButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             editButton.innerHTML = `<i class="ri-paint-fill"></i> Edit style`;
