@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}{{note.title}} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}{% if note.title %}{{note.title}}{% else %}Untitled{% endif %} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block head %}
 {{ block.super }}
@@ -23,7 +23,7 @@
 {% block main_content %}
 
 <header class="card">
-    <h1 class="header-title">{{note.title}}</h1>
+    <h1 class="header-title">{% if note.title %}{{note.title}}{% else %}<i>Untitled</i>{% endif %}</h1>
     <div class="header-meta">
         {% if not readonly %}
         {% if note.categories.all %}
