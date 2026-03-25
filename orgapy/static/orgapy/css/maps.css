@@ -316,13 +316,20 @@ body.fullscreen {
 .leaflet-popup-content-wrapper {
     background: #101010;
     color: inherit;
-    padding: .4rem;
     border-radius: .4rem;
-    border: 1px solid black;
+}
+
+.leaflet-popup-close-button {
+    height: 34px !important;
+    line-height: 30px !important;
 }
 
 .leaflet-popup-content {
     margin: 0;
+}
+
+.leaflet-popup-tip {
+    background: #303030;
 }
 
 .feature-popup {
@@ -345,19 +352,28 @@ body.fullscreen {
     background: #1b2931;
 }
 
+.feature-label {
+    background: #303030;
+    padding: .4rem 1.4rem .4rem .4rem;
+}
+
 .feature-properties {
-    display: flex;
-    margin: .4rem 0;
+    display: none;
     flex-direction: column;
-    max-height: 300px;
+    max-height: min(500px, 70vh);
     overflow: auto;
+    border-top: 1px solid #8f8f9d;
+}
+
+.feature-properties:has(.feature-property) {
+    display: flex;
 }
 
 .feature-property {
     display: flex;
     align-items: baseline;
-    margin-bottom: .2rem;
     flex-direction: column;
+    padding: .2rem .4rem .2rem .4rem;
 }
 
 .feature-property-label {
@@ -376,6 +392,24 @@ body.fullscreen {
     box-sizing: border-box;
     width: 100%;
     font-weight: inherit;
+}
+
+.feature-buttons {
+    background: #303030;
+    padding: .2rem .4rem;
+    border-top: 1px solid #8f8f9d;
+    display: flex;
+    gap: .2rem;
+}
+
+.feature-buttons button {
+    border: none;
+    background: none;
+    padding: .2rem;
+}
+
+.feature-buttons button:hover {
+    background: #666;
 }
 
 @media (max-width: 500px) {
