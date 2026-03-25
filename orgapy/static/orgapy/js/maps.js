@@ -121,28 +121,35 @@ const crosshairIcon = L.icon({
 const markerIcons = {
     "circle": L.divIcon({
         className: 'marker-icon',
-        html: `<svg viewBox="-40 -40 80 80"><circle cx="0" cy="0" r="32" stroke-width="4" fill="inherit" stroke="inherit"></svg>`,
+        html: `<svg viewBox="-40 -40 80 80"><circle cx="0" cy="0" r="32" stroke-width="inherit" fill="inherit" stroke="inherit"></svg>`,
         iconSize: [24, 24],
         iconAnchor: [12, 12],
     }),
     "rectangle": L.divIcon({
         className: 'marker-icon',
-        html: `<svg viewBox="-40 -40 80 80"><rect x="-32" y="-32" width="64" height="64" stroke-width="4" fill="inherit" stroke="inherit"></svg>`,
+        html: `<svg viewBox="-40 -40 80 80"><rect x="-32" y="-32" width="64" height="64" stroke-width="inherit" fill="inherit" stroke="inherit"></svg>`,
         iconSize: [24, 24],
         iconAnchor: [12, 12],
     }),
     "cross": L.divIcon({
         className: "marker-icon",
-        html: `<svg viewBox="8 8 64 64"><path stroke-width="4" fill="inherit" stroke="inherit" d="M 57.406981,14.980574 40,32.387554 22.593019,14.980574 14.980574,22.593019 32.387554,40 14.980574,57.406981 22.593019,65.019426 40,47.612446 57.406981,65.019426 65.019426,57.406981 47.612446,40 65.019426,22.593019 Z" /></svg>`,
+        html: `<svg viewBox="8 8 64 64"><path stroke-width="inherit" fill="inherit" stroke="inherit" d="M 57.406981,14.980574 40,32.387554 22.593019,14.980574 14.980574,22.593019 32.387554,40 14.980574,57.406981 22.593019,65.019426 40,47.612446 57.406981,65.019426 65.019426,57.406981 47.612446,40 65.019426,22.593019 Z" /></svg>`,
         iconSize: [24, 24],
         iconAnchor: [12, 12],
     }),
     "plus": L.divIcon({
         className: "marker-icon",
-        html: `<svg viewBox="8 8 64 64"><path stroke-width="4" fill="inherit" stroke="inherit" d="M 34.617188 10 L 34.617188 34.617188 L 10 34.617188 L 10 45.382812 L 34.617188 45.382812 L 34.617188 70 L 45.382812 70 L 45.382812 45.382812 L 70 45.382812 L 70 34.617188 L 45.382812 34.617188 L 45.382812 10 L 34.617188 10 z " /></svg>`,
+        html: `<svg viewBox="8 8 64 64"><path stroke-width="inherit" fill="inherit" stroke="inherit" d="M 34.617188 10 L 34.617188 34.617188 L 10 34.617188 L 10 45.382812 L 34.617188 45.382812 L 34.617188 70 L 45.382812 70 L 45.382812 45.382812 L 70 45.382812 L 70 34.617188 L 45.382812 34.617188 L 45.382812 10 L 34.617188 10 z " /></svg>`,
         iconSize: [24, 24],
         iconAnchor: [12, 12],
     }),
+}
+
+const markerIconCharacters = {
+    circle: "●",
+    rectangle: "◼",
+    cross: "✕",
+    plus: "+"
 }
 
 class Dashboard {
@@ -394,9 +401,9 @@ class Dashboard {
 
 const RESERVERD_PROPERTIES = new Set(["label", "strokeColor", "strokeWidth", "fillColor", "fillOpacity", "markerIcon"]);
 const DEFAULT_STROKE_COLOR = "#000000";
-const DEFAULT_STROKE_WIDTH = "3.0";
+const DEFAULT_STROKE_WIDTH = 4;
 const DEFAULT_FILL_COLOR = "#0080ff";
-const DEFAULT_FILL_OPACITY = "0.25";
+const DEFAULT_FILL_OPACITY = 25;
 const DEFAULT_MARKER_ICON = "circle";
 
 
@@ -447,6 +454,7 @@ class Feature {
             case "Point":
                 this.mapElement.setIcon(markerIcons[style.markerIcon]);
                 this.mapElement._icon.style.stroke = style.strokeColor;
+                this.mapElement._icon.style.strokeWidth = style.strokeWidth;
                 this.mapElement._icon.style.fill = style.fillColor;
                 break;
             case "LineString":
@@ -460,13 +468,14 @@ class Feature {
                     color: style.strokeColor,
                     weight: style.strokeWidth,
                     fillColor: style.fillColor,
-                    fillOpacity: style.fillOpacity,
+                    fillOpacity: (style.fillOpacity / 100),
                 });
                 break;
             case "MultiPoint":
                 this.mapElement.getLayers().forEach(marker => {
                     marker.setIcon(markerIcons[style.markerIcon]);
                     marker._icon.style.stroke = style.strokeColor;
+                    marker._icon.style.strokeWidth = style.strokeWidth;
                     marker._icon.style.fill = style.fillColor;
                 });
                 break;
@@ -484,7 +493,7 @@ class Feature {
                         color: style.strokeColor,
                         weight: style.strokeWidth,
                         fillColor: style.fillColor,
-                        fillOpacity: style.fillOpacity,
+                        fillOpacity: (style.fillOpacity / 100),
                     });
                 });
                 break;
@@ -499,13 +508,13 @@ class Feature {
         let wrapper = create(container, "div", "feature-popup");
         let label = create(wrapper, "span", "feature-label");
         label.textContent = this.properties.label;
-        let table = create(wrapper, "div", "feature-properties");
+        let table = create(create(wrapper, "div", "feature-properties-wrapper"), "div", "feature-properties");
         for (let property in this.properties) {
             if (RESERVERD_PROPERTIES.has(property)) continue;
             let tr = create(table, "div", "feature-property");
-            let cellProperty = create(tr, "div", "feature-property-label");
+            let cellProperty = create(create(tr, "div", "feature-property-label"), "div");
             cellProperty.textContent = property;
-            let cellValue = create(tr, "div", "feature-property-value");
+            let cellValue = create(create(tr, "div", "feature-property-value"), "div");
             cellValue.textContent = this.properties[property];
         }
         if (this.layer.map.readonly) return;
@@ -570,10 +579,10 @@ class Feature {
         let wrapper = create(container, "div", "feature-popup");
         let inputsValues = {};
         let inputsLabels = {};
-        let labelInput = create(wrapper, "input");
+        let labelInput = create(wrapper, "input", "feature-label");
         labelInput.value = this.properties.label;
         inputsValues.label = labelInput;
-        let table = create(wrapper, "div", "feature-properties");
+        let table = create(create(wrapper, "div", "feature-properties-wrapper"), "div", "feature-properties");
         let addedPropertiesCounter = 0;
         for (let property in this.properties) {
             if (RESERVERD_PROPERTIES.has(property)) continue;
@@ -599,46 +608,54 @@ class Feature {
             });
         }
         let styleForm = create(wrapper, "form", "feature-style");
-        let strokeColorInput, strokeWidthInput, fillColorInput, fillOpacityInput, markerIconSelect;
-        if (true) {
-            create(styleForm, "span", "feature-style-label").textContent = "Stroke color";
-            strokeColorInput = create(styleForm, "input", "feature-style-input");
-            strokeColorInput.type = "color";
-            strokeColorInput.value = this.properties.strokeColor;
-            inputsValues["strokeColor"] = strokeColorInput;
-            create(styleForm, "span", "feature-style-label").textContent = "Stroke width";
-            strokeWidthInput = create(styleForm, "input",  "feature-style-input");
-            strokeWidthInput.type = "range";
-            strokeWidthInput.min = "0";
-            strokeWidthInput.max = "10";
-            strokeWidthInput.step = "0.1";
-            strokeWidthInput.value = this.properties.strokeWidth;
-            inputsValues["strokeWidth"] = strokeWidthInput;
-        }
-        if (this.geometry.type != "LineString" && this.geometry.type != "MultiLineString") {
-            create(styleForm, "span", "feature-style-label").textContent = "Fill color";
-            fillColorInput = create(styleForm, "input", "feature-style-input");
+        let fillColorInput, fillOpacityInput, markerIconSelect;
+
+        const strokeGroup = create(styleForm, "div", "feature-style-group");
+        const strokeLabel = create(strokeGroup, "div", "feature-style-label");
+        strokeLabel.textContent = "Stroke";
+        const strokeInputs = create(strokeGroup, "div", "feature-style-inputs");
+        const strokeColorInput = create(strokeInputs, "input", "feature-style-input");
+        strokeColorInput.type = "color";
+        strokeColorInput.value = this.properties.strokeColor;
+        inputsValues["strokeColor"] = strokeColorInput;
+        const strokeWidthInput = create(strokeInputs, "input", "feature-style-input");
+        strokeWidthInput.type = "number";
+        strokeWidthInput.min = "0";
+        strokeWidthInput.max = "16";
+        strokeWidthInput.step = "1";
+        strokeWidthInput.value = this.properties.strokeWidth;
+        inputsValues["strokeWidth"] = strokeWidthInput;
+
+        if (this.geometry.type == "Point" || this.geometry.type == "MultiPoint" || this.geometry.type == "Polygon" || this.geometry.type == "MultiPolygon") {
+            const fillGroup = create(styleForm, "div", "feature-style-group");
+            const fillLabel = create(fillGroup, "div", "feature-style-label");
+            fillLabel.textContent = "Fill";
+            const fillInputs = create(fillGroup, "div", "feature-style-inputs");
+            fillColorInput = create(fillInputs, "input", "feature-style-input");
             fillColorInput.type = "color";
             fillColorInput.value = this.properties.fillColor;
             inputsValues["fillColor"] = fillColorInput;
-            if (this.geometry.type != "Point" && this.geometry.type != "MultiPoint") {
-                create(styleForm, "span", "feature-style-label").textContent = "Fill opacity";
-                fillOpacityInput = create(styleForm, "input", "feature-style-input");
-                fillOpacityInput.type = "range";
+            if (this.geometry.type == "Polygon" || this.geometry.type == "MultiPolygon") {
+                fillOpacityInput = create(fillInputs, "input", "feature-style-input");
+                fillOpacityInput.type = "number";
                 fillOpacityInput.min = "0";
-                fillOpacityInput.max = "1";
-                fillOpacityInput.step = "0.01";
+                fillOpacityInput.max = "100";
+                fillOpacityInput.step = "1";
                 fillOpacityInput.value = this.properties.fillOpacity;
                 inputsValues["fillOpacity"] = fillOpacityInput;
             }
         }
         if (this.geometry.type == "Point" || this.geometry.type == "MultiPoint") {
-            create(styleForm, "span", "feature-style-label").textContent = "Marker icon";
-            markerIconSelect = create(styleForm, "select", "feature-style-input");
+            //create(styleForm, "span", "feature-style-label").textContent = "Marker icon";
+            const markerGroup = create(styleForm, "div", "feature-style-group");
+            const markerLabel = create(markerGroup, "div", "feature-style-label");
+            markerLabel.textContent = "Marker";
+            const markerInputs = create(markerGroup, "div", "feature-style-inputs");
+            markerIconSelect = create(markerInputs, "select", "feature-style-input");
             for (const markerIconValue in markerIcons) {
                 const option = create(markerIconSelect, "option");
                 option.value = markerIconValue;
-                option.textContent = markerIconValue;
+                option.textContent = markerIconCharacters[markerIconValue];
             }
             markerIconSelect.value = this.properties.markerIcon;
             inputsValues["markerIcon"] = markerIconSelect;
@@ -653,7 +670,7 @@ class Feature {
             }
             self.setStyle(customStyle);
         });
-        let buttons = create(wrapper, "div", "row");
+        let buttons = create(wrapper, "div", "feature-buttons");
         let buttonSave = create(buttons, "button");
         buttonSave.innerHTML = `<i class="ri-save-line"></i>`
         buttonSave.title = "Save";
@@ -680,10 +697,12 @@ class Feature {
             let tr = create(table, "div", "feature-property");
             let cellProperty = create(tr, "div", "feature-property-label");
             let inputLabel = create(cellProperty, "input");
+            inputLabel.placeholder = "Label";
             inputLabel.value = "";
             inputsLabels[property] = inputLabel;
             let cellValue = create(tr, "div", "feature-property-value");
             let inputValue = create(cellValue, "input");
+            inputValue.placeholder = "Value";
             inputValue.value = "";
             inputsValues[property] = inputValue;
             let cellButtons = create(tr, "div", "feature-property-buttons");
@@ -747,11 +766,19 @@ class Feature {
         }
         this.mapElement.addTo(this.layer.map.leafletMap);
         this.setStyle();
+
+        let minPopupWidth = 300;
+        let maxPopupWidth = 500;
+        if (window.innerWidth <= 500) {
+            maxPopupWidth = window.innerWidth - 16;
+        } else {
+            maxPopupWidth = Math.min(maxPopupWidth, window.innerWidth - 16 - 350);
+        }
         this.mapElement.bindPopup(l => {
             const container = create();
             self.inflatePopup(container);
             return container;
-        }, {minWidth: 200, maxWidth: 500});
+        }, {minWidth: minPopupWidth, maxWidth: maxPopupWidth});
         this.mapElement.bindTooltip(this.properties.label);
         // this.mapElement.addEventListener("popupclose", () => {
         //     try {
@@ -947,6 +974,7 @@ class Layer {
 
     setVisibilityCheckboxColor() {
         this.visibilityCheckbox.style.accentColor = this.mostCommonOrDefaultStyle().fillColor;
+        this.visibilityCheckbox.style.boxShadow = `0 0 0 1.8px ${this.mostCommonOrDefaultStyle().strokeColor}`;
     }
 
     inflate() {
@@ -1066,7 +1094,7 @@ class Layer {
         if (this.map.readonly) return;
 
         this.setupFeatureDragrank();
-        
+
 
     }
 
@@ -1642,51 +1670,58 @@ class LayerStyleDialog extends Dialog {
         super.open();
         let title = create(this.container, "div", "dialog-title");
         title.textContent = "Edit Layer Style";
-        let form = create(this.container, "form");
-        form.style.flexDirection = "column";
+        const styleForm = create(this.container, "form", "layer-style");
+
         let layer = this.map.getSelectedLayer();
 
-        const pStrokeColor = create(form, "p");
-        create(pStrokeColor, "span", ["feature-style-label"]).textContent = "Stroke color";
-        let strokeColorInput = create(pStrokeColor, "input", "feature-style-input");
+        const strokeGroup = create(styleForm, "div", "feature-style-group");
+        const strokeLabel = create(strokeGroup, "div", "feature-style-label");
+        strokeLabel.textContent = "Stroke";
+        const strokeInputs = create(strokeGroup, "div", "feature-style-inputs");
+        const strokeColorInput = create(strokeInputs, "input", "feature-style-input");
         strokeColorInput.type = "color";
         strokeColorInput.value = orDefault(layer.mostCommonPropertyValue("strokeColor"), DEFAULT_STROKE_COLOR);
-
-        const pStrokeWidth = create(form, "p");
-        create(pStrokeWidth, "span", ["feature-style-label"]).textContent = "Stroke width";
-        let strokeWidthInput = create(pStrokeWidth, "input",  "feature-style-input");
-        strokeWidthInput.type = "range";
+        const strokeWidthInput = create(strokeInputs, "input", "feature-style-input");
+        strokeWidthInput.type = "number";
         strokeWidthInput.min = "0";
-        strokeWidthInput.max = "10";
-        strokeWidthInput.step = "0.1";
+        strokeWidthInput.max = "16";
+        strokeWidthInput.step = "1";
         strokeWidthInput.value = orDefault(layer.mostCommonPropertyValue("strokeWidth"), DEFAULT_STROKE_WIDTH);
 
-        const pFillColor = create(form, "p");
-        create(pFillColor, "span", ["feature-style-label"]).textContent = "Fill color";
-        let fillColorInput = create(pFillColor, "input", "feature-style-input");
+        const fillGroup = create(styleForm, "div", "feature-style-group");
+        const fillLabel = create(fillGroup, "div", "feature-style-label");
+        fillLabel.textContent = "Fill";
+        const fillInputs = create(fillGroup, "div", "feature-style-inputs");
+        const fillColorInput = create(fillInputs, "input", "feature-style-input");
         fillColorInput.type = "color";
         fillColorInput.value = orDefault(layer.mostCommonPropertyValue("fillColor"), DEFAULT_FILL_COLOR);
-
-        const pFillOpacity = create(form, "p");
-        create(pFillOpacity, "span", ["feature-style-label"]).textContent = "Fill opacity";
-        let fillOpacityInput = create(pFillOpacity, "input", "feature-style-input");
-        fillOpacityInput.type = "range";
+        const fillOpacityInput = create(fillInputs, "input", "feature-style-input");
+        fillOpacityInput.type = "number";
         fillOpacityInput.min = "0";
-        fillOpacityInput.max = "1";
-        fillOpacityInput.step = "0.01";
+        fillOpacityInput.max = "100";
+        fillOpacityInput.step = "1";
         fillOpacityInput.value = orDefault(layer.mostCommonPropertyValue("fillOpacity"), DEFAULT_FILL_OPACITY);
 
-        const pMarkerIcon = create(form, "p");
-        create(pMarkerIcon, "span", ["feature-style-label"]).textContent = "Marker icon";
-        let markerIconSelect = create(pMarkerIcon, "select", "feature-style-input");
-        for (const markerIconClass in markerIcons) {
+        const markerGroup = create(styleForm, "div", "feature-style-group");
+        const markerLabel = create(markerGroup, "div", "feature-style-label");
+        markerLabel.textContent = "Marker";
+        const markerInputs = create(markerGroup, "div", "feature-style-inputs");
+        const markerIconSelect = create(markerInputs, "select", "feature-style-input");
+        for (const markerIconValue in markerIcons) {
             const option = create(markerIconSelect, "option");
-            option.value = markerIconClass;
-            option.textContent = markerIconClass;
+            option.value = markerIconValue;
+            option.textContent = markerIconCharacters[markerIconValue];
         }
         markerIconSelect.value = orDefault(layer.mostCommonPropertyValue("markerIcon"), DEFAULT_MARKER_ICON);
 
-        form.addEventListener("submit", (event) => {
+        styleForm.addEventListener("submit", (event) => {
+            
+        });
+
+        const buttons = create(this.container, "div", "row");
+        const saveButton = create(buttons, "button", "button-primary");
+        saveButton.textContent = "Save";
+        saveButton.addEventListener("click", (event) => {
             event.preventDefault();
             let strokeColor = strokeColorInput.value;
             let strokeWidth = strokeWidthInput.value;
@@ -1704,12 +1739,6 @@ class LayerStyleDialog extends Dialog {
             layer.onChange("edit-layer");
             self.close();
         });
-
-        const buttons = create(form, "div", "row");
-        const saveButton = create(buttons, "input", "button button-primary");
-        saveButton.type = "submit";
-        saveButton.name = "save";
-        saveButton.value = "Save";
         const cancelButton = create(buttons, "button");
         cancelButton.textContent = "Cancel";
         cancelButton.addEventListener("click", (event) => {
