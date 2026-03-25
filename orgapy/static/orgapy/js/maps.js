@@ -112,6 +112,38 @@ function getHueRotation(color, baseColor="#2981ca") {
     return hexToHsl(color)[0] - hexToHsl(baseColor)[0];
 }
 
+const crosshairIcon = L.icon({
+    iconUrl: URL_IMAGE_CROSSHAIR,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+});
+
+const markerIcons = {
+    "circle": L.divIcon({
+        className: 'marker-icon',
+        html: `<svg viewBox="-40 -40 80 80"><circle cx="0" cy="0" r="32" stroke-width="4" fill="inherit" stroke="inherit"></svg>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+    }),
+    "rectangle": L.divIcon({
+        className: 'marker-icon',
+        html: `<svg viewBox="-40 -40 80 80"><rect x="-32" y="-32" width="64" height="64" stroke-width="4" fill="inherit" stroke="inherit"></svg>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+    }),
+    "cross": L.divIcon({
+        className: "marker-icon",
+        html: `<svg viewBox="8 8 64 64"><path stroke-width="4" fill="inherit" stroke="inherit" d="M 57.406981,14.980574 40,32.387554 22.593019,14.980574 14.980574,22.593019 32.387554,40 14.980574,57.406981 22.593019,65.019426 40,47.612446 57.406981,65.019426 65.019426,57.406981 47.612446,40 65.019426,22.593019 Z" /></svg>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+    }),
+    "plus": L.divIcon({
+        className: "marker-icon",
+        html: `<svg viewBox="8 8 64 64"><path stroke-width="4" fill="inherit" stroke="inherit" d="M 34.617188 10 L 34.617188 34.617188 L 10 34.617188 L 10 45.382812 L 34.617188 45.382812 L 34.617188 70 L 45.382812 70 L 45.382812 45.382812 L 70 45.382812 L 70 34.617188 L 45.382812 34.617188 L 45.382812 10 L 34.617188 10 z " /></svg>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+    }),
+}
 
 class Dashboard {
 
@@ -360,11 +392,12 @@ class Dashboard {
 }
 
 
-const RESERVERD_PROPERTIES = new Set(["label", "strokeColor", "strokeWidth", "fillColor", "fillOpacity"]);
-const DEFAULT_STROKE_COLOR = "#0080ff";
+const RESERVERD_PROPERTIES = new Set(["label", "strokeColor", "strokeWidth", "fillColor", "fillOpacity", "markerIcon"]);
+const DEFAULT_STROKE_COLOR = "#000000";
 const DEFAULT_STROKE_WIDTH = "3.0";
 const DEFAULT_FILL_COLOR = "#0080ff";
 const DEFAULT_FILL_OPACITY = "0.25";
+const DEFAULT_MARKER_ICON = "circle";
 
 
 class Feature {
@@ -385,6 +418,7 @@ class Feature {
         setDefault(this.properties, "strokeWidth", DEFAULT_STROKE_WIDTH);
         setDefault(this.properties, "fillColor", DEFAULT_FILL_COLOR);
         setDefault(this.properties, "fillOpacity", DEFAULT_FILL_OPACITY);
+        setDefault(this.properties, "markerIcon", DEFAULT_MARKER_ICON);
         this.mapElement = null;
         this.panelElement = null;
         this.editing = false;
@@ -411,7 +445,9 @@ class Feature {
         let style = customStyle == null ? this.properties : customStyle;
         switch(this.geometry.type) {
             case "Point":
-                this.mapElement._icon.style.filter = `hue-rotate(${getHueRotation(style.fillColor)}deg)`;
+                this.mapElement.setIcon(markerIcons[style.markerIcon]);
+                this.mapElement._icon.style.stroke = style.strokeColor;
+                this.mapElement._icon.style.fill = style.fillColor;
                 break;
             case "LineString":
                 this.mapElement.setStyle({
@@ -429,7 +465,9 @@ class Feature {
                 break;
             case "MultiPoint":
                 this.mapElement.getLayers().forEach(marker => {
-                    marker._icon.style.filter = `hue-rotate(${getHueRotation(style.fillColor)}deg)`;
+                    marker.setIcon(markerIcons[style.markerIcon]);
+                    marker._icon.style.stroke = style.strokeColor;
+                    marker._icon.style.fill = style.fillColor;
                 });
                 break;
             case "MultiLineString":
@@ -561,8 +599,8 @@ class Feature {
             });
         }
         let styleForm = create(wrapper, "form", "feature-style");
-        let strokeColorInput, strokeWidthInput, fillColorInput, fillOpacityInput;
-        if (this.geometry.type != "Point" && this.geometry.type != "MultiPoint") {
+        let strokeColorInput, strokeWidthInput, fillColorInput, fillOpacityInput, markerIconSelect;
+        if (true) {
             create(styleForm, "span", "feature-style-label").textContent = "Stroke color";
             strokeColorInput = create(styleForm, "input", "feature-style-input");
             strokeColorInput.type = "color";
@@ -594,12 +632,24 @@ class Feature {
                 inputsValues["fillOpacity"] = fillOpacityInput;
             }
         }
+        if (this.geometry.type == "Point" || this.geometry.type == "MultiPoint") {
+            create(styleForm, "span", "feature-style-label").textContent = "Marker icon";
+            markerIconSelect = create(styleForm, "select", "feature-style-input");
+            for (const markerIconValue in markerIcons) {
+                const option = create(markerIconSelect, "option");
+                option.value = markerIconValue;
+                option.textContent = markerIconValue;
+            }
+            markerIconSelect.value = this.properties.markerIcon;
+            inputsValues["markerIcon"] = markerIconSelect;
+        }
         styleForm.addEventListener("change", () => {
             let customStyle = {
                 strokeColor: strokeColorInput ? strokeColorInput.value : self.properties.strokeColor,
                 strokeWidth: strokeWidthInput ? strokeWidthInput.value : self.properties.strokeWidth,
                 fillColor: fillColorInput ? fillColorInput.value : self.properties.fillColor,
                 fillOpacity: fillOpacityInput ? fillOpacityInput.value : self.properties.fillOpacity,
+                markerIcon: markerIconSelect ? markerIconSelect.value : self.properties.markerIcon,
             }
             self.setStyle(customStyle);
         });
@@ -703,13 +753,13 @@ class Feature {
             return container;
         }, {minWidth: 200, maxWidth: 500});
         this.mapElement.bindTooltip(this.properties.label);
-        this.mapElement.addEventListener("popupclose", () => {
-            try {
-                self.setStyle();
-            } catch {
-                //pass: this may fail if element is being recreated
-            }
-        });
+        // this.mapElement.addEventListener("popupclose", () => {
+        //     try {
+        //         self.setStyle();
+        //     } catch {
+        //         //pass: this may fail if element is being recreated
+        //     }
+        // });
         this.mapElement.addEventListener("editable:disable", () => {
             self.saveGeometry();
         });
@@ -750,6 +800,7 @@ class Feature {
             strokeWidth: this.properties.strokeWidth,
             fillColor: getOppositeColor(this.properties.fillColor),
             fillOpacity: this.properties.fillOpacity,
+            markerIcon: this.properties.markerIcon
         })
     }
 
@@ -885,14 +936,7 @@ class Layer {
     }
 
     setVisibilityCheckboxColor() {
-        let accentColor = DEFAULT_FILL_COLOR;
-        const layerStyle = this.mostCommonOrDefaultStyle();
-        if (layerStyle.fillColor != DEFAULT_FILL_COLOR) {
-            accentColor = layerStyle.fillColor;
-        } else if (layerStyle.strokeColor != DEFAULT_STROKE_COLOR) {
-            accentColor = layerStyle.strokeColor;
-        }
-        this.visibilityCheckbox.style.accentColor = accentColor;
+        this.visibilityCheckbox.style.accentColor = this.mostCommonOrDefaultStyle().fillColor;
     }
 
     inflate() {
@@ -1163,9 +1207,10 @@ class Layer {
     mostCommonOrDefaultStyle() {
         return {
             strokeColor: orDefault(this.mostCommonPropertyValue("strokeColor"), DEFAULT_STROKE_COLOR),
-            strokeWidth: orDefault(this.mostCommonPropertyValue("strokeWidth"), DEFAULT_STROKE_COLOR),
-            fillColor: orDefault(this.mostCommonPropertyValue("fillColor"), DEFAULT_STROKE_COLOR),
-            fillOpacity: orDefault(this.mostCommonPropertyValue("fillOpacity"), DEFAULT_STROKE_COLOR),
+            strokeWidth: orDefault(this.mostCommonPropertyValue("strokeWidth"), DEFAULT_STROKE_WIDTH),
+            fillColor: orDefault(this.mostCommonPropertyValue("fillColor"), DEFAULT_FILL_COLOR),
+            fillOpacity: orDefault(this.mostCommonPropertyValue("fillOpacity"), DEFAULT_FILL_OPACITY),
+            markerIcon: orDefault(this.mostCommonPropertyValue("markerIcon"), DEFAULT_MARKER_ICON),
         };
     }
 
@@ -1231,6 +1276,7 @@ class Map {
                 features.push(feature.mapElement);
             });
         });
+        if (features.length === 0) return;
         let group = new L.featureGroup(features);
         this.leafletMap.fitBounds(group.getBounds());
     }
@@ -1248,11 +1294,6 @@ class Map {
     setUserPosition(position) {
         //@see https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API/Using_the_Geolocation_API
         if (this.userPositionWidget == null) {
-            const crosshairIcon = L.icon({
-                iconUrl: URL_IMAGE_CROSSHAIR,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12],
-            });
             this.userPositionWidget = new L.Marker(
                 [position.coords.latitude, position.coords.longitude],
                 {icon: crosshairIcon}
@@ -1598,17 +1639,29 @@ class LayerStyleDialog extends Dialog {
         fillOpacityInput.step = "0.01";
         fillOpacityInput.value = orDefault(layer.mostCommonPropertyValue("fillOpacity"), DEFAULT_FILL_OPACITY);
 
+        const pMarkerIcon = create(form, "p");
+        create(pMarkerIcon, "span", ["feature-style-label"]).textContent = "Marker icon";
+        let markerIconSelect = create(pMarkerIcon, "select", "feature-style-input");
+        for (const markerIconClass in markerIcons) {
+            const option = create(markerIconSelect, "option");
+            option.value = markerIconClass;
+            option.textContent = markerIconClass;
+        }
+        markerIconSelect.value = orDefault(layer.mostCommonPropertyValue("markerIcon"), DEFAULT_MARKER_ICON);
+
         form.addEventListener("submit", (event) => {
             event.preventDefault();
             let strokeColor = strokeColorInput.value;
             let strokeWidth = strokeWidthInput.value;
             let fillColor = fillColorInput.value;
             let fillOpacity = fillOpacityInput.value;
+            let markerIcon = markerIconSelect.value;
             layer.features.forEach(f => {
                 f.properties.strokeColor = strokeColor;
                 f.properties.strokeWidth = strokeWidth;
                 f.properties.fillColor = fillColor;
                 f.properties.fillOpacity = fillOpacity;
+                f.properties.markerIcon = markerIcon;
                 f.setStyle();
             });
             layer.onChange("edit-layer");

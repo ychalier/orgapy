@@ -96,6 +96,11 @@ body.fullscreen {
     width: 240px;
 }
 
+.marker-icon {
+    background: none;
+    border: none;
+}
+
 /* Form */
 
 .form-inline {
