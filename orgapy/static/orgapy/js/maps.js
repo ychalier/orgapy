@@ -959,7 +959,7 @@ class Feature {
 
 class Layer {
 
-    constructor(map, index, label) {
+    constructor(map, index, label, visible) {
         this.map = map;
         this.index = index;
         this.label = label;
@@ -971,6 +971,7 @@ class Layer {
         this.counterLabel = null;
         this.featuresContainer = null;
         this.selected = false;
+        this.visible = visible;
     }
 
     findDefaultLabel() {
@@ -1048,7 +1049,12 @@ class Layer {
         this.counterLabel = create(labelContainer, "span", "map-layer-count");
         this.counterLabel.textContent = `(${this.features.length})`;
 
-        this.visibilityCheckbox = create(summary, "i", "map-layer-visible ri-eye-line");
+        this.visibilityCheckbox = create(summary, "i", "map-layer-visible");
+        if (this.visible) {
+            this.visibilityCheckbox.classList.add("ri-eye-line");
+        } else {
+            this.visibilityCheckbox.classList.add("ri-eye-off-line");
+        }
         this.visibilityCheckbox.addEventListener("click", () => {
             self.toggleVisibility();
         });
@@ -1293,23 +1299,25 @@ class Layer {
     }
 
     toggleVisibility() {
-        let wasVisible = this.visibilityCheckbox.classList.contains("ri-eye-line");
-        if (wasVisible) {
-            this.visibilityCheckbox.classList.remove("ri-eye-line");
-            this.visibilityCheckbox.classList.add("ri-eye-off-line");
-        } else {
+        this.visible = !this.visible;
+        if (this.visible) {
             this.visibilityCheckbox.classList.add("ri-eye-line");
             this.visibilityCheckbox.classList.remove("ri-eye-off-line");
+        } else {
+            this.visibilityCheckbox.classList.remove("ri-eye-line");
+            this.visibilityCheckbox.classList.add("ri-eye-off-line");
         }
-        let visible = !wasVisible;
-        this.features.forEach(feature => {
-            if (visible) {
+        this.onChange("layer-visible");
+        // TODO: fix this
+        for (const feature of this.features) {
+            if (this.visible) {
                 feature.inflateMapElement();
             } else {
                 feature.mapElement.remove();
                 feature.mapElement = null;
             }
-        });
+        }
+        this.map.resetZIndices();
     }
 
     toGeojson() {
@@ -1321,6 +1329,7 @@ class Layer {
             type: "FeatureCollection",
             features: featureArray,
             label: this.label,
+            visible: this.visible,
         }
     }
 
@@ -1460,7 +1469,7 @@ class Map {
         this.inflate();
         if (geojsonData != null) {
             geojsonData.forEach(layerData => {
-                this.addLayer();
+                this.addLayer(layerData.visible == true);
                 this.addGeojsonFromData(layerData, true);
             });
             this.fitViewToFeatures();
@@ -1477,7 +1486,7 @@ class Map {
         }
     }
 
-    addLayer() {
+    addLayer(visible=true) {
         let i = 0;
         let label = null;
         while (true) {
@@ -1492,7 +1501,7 @@ class Map {
             }
             if (!found) break;
         }
-        let layer = new Layer(this, this.layers.length, label);
+        let layer = new Layer(this, this.layers.length, label, visible);
         this.layers.push(layer);
         layer.inflate();
         this.selectLayer(layer.index);
