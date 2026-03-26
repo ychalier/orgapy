@@ -730,7 +730,7 @@ class Feature {
     inflateMapElement() {
         var self = this;
         if (this.mapElement != null) {
-            this.layer.map.leafletMap.removeLayer(this.mapElement);
+            this.layer.featureGroup.removeLayer(this.mapElement);
         }
         let parts = [];
         switch(this.geometry.type) {
@@ -764,7 +764,7 @@ class Feature {
             default:
                 throw new Error("Not implemented!");
         }
-        this.mapElement.addTo(this.layer.map.leafletMap);
+        this.layer.featureGroup.addLayer(this.mapElement);
         this.setStyle();
 
         let minPopupWidth = 300;
@@ -950,6 +950,7 @@ class Layer {
         this.index = index;
         this.label = label;
         this.features = [];
+        this.featureGroup = null;
         this.container = null;
         this.visibilityCheckbox = null;
         this.labelElement = null;
@@ -1007,6 +1008,9 @@ class Layer {
             this.container.addEventListener("click", () => {
                 self.map.selectLayer(self.index);
             });
+            this.featureGroup = L.featureGroup();
+            this.featureGroup.addTo(this.map.leafletMap);
+            this.featureGroup.setZIndex(this.index);
         }
         this.container.innerHTML = "";
 
@@ -1168,6 +1172,7 @@ class Layer {
         this.features.forEach(feature => {
             feature.delete();
         })
+        this.featureGroup.delete();
         remove(this.container);
     }
 
@@ -1175,6 +1180,7 @@ class Layer {
         const feature = new Feature(this, this.features.length, geojsonData);
         this.features.push(feature);
         this.inflate();
+        this.map.resetZIndices();
         this.onChange("add-feature");
     }
 
@@ -1479,12 +1485,19 @@ class Map {
         this.onChange("add-layer");
     }
 
+    resetZIndices() {
+        for (let i = 0; i < this.layers.length; i++) {
+            this.layers[i].featureGroup.bringToFront();
+        }
+    }
+
     moveLayerUp(layerIndex) {
         if (layerIndex <= 0) return;
         [this.layers[layerIndex - 1], this.layers[layerIndex]] = [this.layers[layerIndex], this.layers[layerIndex - 1]];
         this.layers[layerIndex - 1].index--;
         this.layers[layerIndex].index++;
         swapSibling(this.layers[layerIndex - 1].container, this.layers[layerIndex].container);
+        this.resetZIndices();
         this.onChange("layer-order");
     }
 
@@ -1494,6 +1507,7 @@ class Map {
         this.layers[layerIndex + 1].index++;
         this.layers[layerIndex].index--;
         swapSibling(this.layers[layerIndex].container, this.layers[layerIndex + 1].container);
+        this.resetZIndices();
         this.onChange("layer-order");
     }
 
