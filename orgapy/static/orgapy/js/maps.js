@@ -1093,22 +1093,6 @@ class Layer {
         });
         if (this.map.readonly) return;
 
-        this.setupFeatureDragrank();
-
-
-    }
-
-    setupFeatureDragrank() {
-        if (this.readonly) return;
-        var self = this;
-        dragRankClear("feature");
-        dragRank(this.featuresContainer, ".map-feature", (ordering, permutation) => {
-            dragRankReorder(self.features, permutation);
-            self.onChange("feature-order");
-        }, {
-            dragid: "feature",
-            domReorder: true,
-        });
     }
 
     onChange(change) {
@@ -1170,7 +1154,6 @@ class Layer {
         this.features[i].delete();
         this.features.splice(i, 1);
         this.counterLabel.textContent = `(${this.features.length})`;
-        this.setupFeatureDragrank();
         this.onChange("delete-feature");
     }
 
@@ -1353,7 +1336,6 @@ class Map {
         this.layers.forEach(layer => {
             layer.inflate();
         });
-        this.setupLayerDragrank();
     }
 
     setUserPosition(position) {
@@ -1416,20 +1398,6 @@ class Map {
         layer.inflate();
         this.selectLayer(layer.index);
         this.onChange("add-layer");
-        this.setupLayerDragrank();
-    }
-
-    setupLayerDragrank() {
-        if (this.readonly) return;
-        var self = this;
-        dragRankClear("layer");
-        dragRank(this.dashboard.layersContainer, ".map-layer", (ordering, permutation) => {
-            dragRankReorder(self.layers, permutation);
-            self.onChange("layer-order");
-        }, {
-            dragid: "layer",
-            domReorder: true,
-        });
     }
 
     getArrayLayerIndex(layerIndex) {
