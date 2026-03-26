@@ -620,14 +620,9 @@ button.locked {
         flex-direction: column;
     }
 
-    .map-dashboard-controls {
-        display: none;
-    }
-
     .map-dashboard {
         flex-basis: content;
         max-height: 40%;
-        gap: .4rem;
         overflow: auto;
     }
 
