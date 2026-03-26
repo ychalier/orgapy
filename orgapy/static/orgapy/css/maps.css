@@ -415,27 +415,20 @@ body.fullscreen {
     font-size: 16px;
 }
 
-/*
-.feature-popup input,
-.feature-popup button {
+.feature-popup-header {
+    display: flex;
+    flex-direction: column;
     background: #303030;
+    padding: .4rem 1.4rem .4rem .4rem;
 }
-*/
-
-/*
-.feature-popup button.active {
-    color: black;
-    background: #8ed2ff;
-}
-
-.feature-popup button:hover {
-    background: #1b2931;
-}
-*/
 
 .feature-label {
-    background: #303030 !important;
-    padding: .4rem 1.4rem .4rem .4rem !important;
+    padding: 0 !important;
+}
+
+.feature-layer-label {
+    font-size: small;
+    font-style: italic;
 }
 
 .feature-properties-wrapper {

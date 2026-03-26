@@ -505,10 +505,13 @@ class Feature {
     inflatePopup(container) {
         var self = this;
         container.innerHTML = "";
-        let wrapper = create(container, "div", "feature-popup");
-        let label = create(wrapper, "span", "feature-label");
+        const wrapper = create(container, "div", "feature-popup");
+        const header = create(wrapper, "div", "feature-popup-header");
+        const label = create(header, "span", "feature-label");
         label.textContent = this.properties.label;
-        let table = create(create(wrapper, "div", "feature-properties-wrapper"), "div", "feature-properties");
+        const layerLabel = create(header, "span", "feature-layer-label");
+        layerLabel.textContent = this.layer.label;
+        const table = create(create(wrapper, "div", "feature-properties-wrapper"), "div", "feature-properties");
         for (let property in this.properties) {
             if (RESERVERD_PROPERTIES.has(property)) continue;
             let tr = create(table, "div", "feature-property");
@@ -576,14 +579,21 @@ class Feature {
     inflatePopupEdit(container) {
         var self = this;
         container.innerHTML = "";
-        let wrapper = create(container, "div", "feature-popup");
-        let inputsValues = {};
-        let inputsLabels = {};
-        let labelInput = create(wrapper, "input", "feature-label");
+        const wrapper = create(container, "div", "feature-popup");
+        const inputsValues = {};
+        const inputsLabels = {};
+
+        const header = create(wrapper, "div", "feature-popup-header");
+        
+        const labelInput = create(header, "input", "feature-label");
         labelInput.value = this.properties.label;
         inputsValues.label = labelInput;
-        let table = create(create(wrapper, "div", "feature-properties-wrapper"), "div", "feature-properties");
-        let addedPropertiesCounter = 0;
+
+        const layerLabel = create(header, "span", "feature-layer-label");
+        layerLabel.textContent = this.layer.label;
+
+        const table = create(create(wrapper, "div", "feature-properties-wrapper"), "div", "feature-properties");
+        const addedPropertiesCounter = 0;
         for (let property in this.properties) {
             if (RESERVERD_PROPERTIES.has(property)) continue;
             let tr = create(table, "div", "feature-property");
@@ -1172,7 +1182,7 @@ class Layer {
         this.features.forEach(feature => {
             feature.delete();
         })
-        this.featureGroup.delete();
+        this.featureGroup.remove();
         remove(this.container);
     }
 
