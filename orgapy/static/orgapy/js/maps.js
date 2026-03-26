@@ -1,6 +1,7 @@
 const PROVIDERS = [
     {
         label: "Open Street Map",
+        shortLabel: "OSM",
         tiles: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         options: {
             maxZoom: 19,
@@ -10,6 +11,7 @@ const PROVIDERS = [
     },
     {
         label: "Open Topo Map",
+        shortLabel: "TOPO",
         tiles: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
         options: {
             maxZoom: 17,
@@ -19,6 +21,7 @@ const PROVIDERS = [
     },
     {
         label: "Esri World Imagery",
+        shortLabel: "ESRI",
         tiles: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         options: {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
@@ -210,10 +213,10 @@ class Dashboard {
     inflateSearchBar(container) {
         this.searchbarContainer = create(container, "div", "map-searchbar");
         let searchForm = create(this.searchbarContainer, "form", "form-inline");
-        let searchInput = create(searchForm, "input");
-        searchInput.type = "text";
+        let searchInput = create(searchForm, "input", "map-searchbar-input");
+        searchInput.type = "search";
         searchInput.placeholder = "Search";
-        let searchButton = create(searchForm, "button");
+        let searchButton = create(searchForm, "button", "map-searchbar-button");
         searchButton.innerHTML = `<i class="ri-search-line"></i>`;
         searchButton.title = "Search";
         var self = this;
@@ -298,13 +301,14 @@ class Dashboard {
                 self.map.leafletMap.panTo(self.map.userPositionWidget.getLatLng());
             }
         });
+
+        this.inflateProvider(buttonsContainer);
     }
 
     inflateControls() {
         if (this.map.readonly) return;
         const controlsContainer = create(this.container, "div", "map-dashboard-controls");
         this.inflateSearchBar(controlsContainer);
-        this.inflateProvider(controlsContainer);
         this.inflateButtons(controlsContainer);
     }
 
@@ -315,7 +319,7 @@ class Dashboard {
         PROVIDERS.forEach((provider, i) => {
             let option = create(selectBaseMap, "option");
             option.value = i;
-            option.textContent = provider.label;
+            option.textContent = provider.shortLabel;
         });
         selectBaseMap.addEventListener("input", () => {
             let providerIndex = null;
@@ -593,7 +597,7 @@ class Feature {
         layerLabel.textContent = this.layer.label;
 
         const table = create(create(wrapper, "div", "feature-properties-wrapper"), "div", "feature-properties");
-        const addedPropertiesCounter = 0;
+        var addedPropertiesCounter = 0;
         for (let property in this.properties) {
             if (RESERVERD_PROPERTIES.has(property)) continue;
             let tr = create(table, "div", "feature-property");

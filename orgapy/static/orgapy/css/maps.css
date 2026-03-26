@@ -54,7 +54,7 @@ body.fullscreen {
 .map-dashboard-controls {
     display: flex;
     flex-direction: column;
-    gap: .1rem;
+    /*gap: .1rem;*/
 }
 
 .map-refs {
@@ -182,29 +182,26 @@ body.fullscreen {
     border-radius: .2rem;
 }
 
-/*
-.feature-style-input {
-    width: 100%;
-}
-
-.feature-style-input[type='color'] {
-    border: 1px solid #8f8f9d;
-    border-radius: .2rem;
-    padding: 0;
-    max-height: 24px;
-}
-
-.feature-style-input + .feature-style-label {
-    margin-top: .2rem;
-}
-*/
-
 /* Controls */
 
 .map-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .1rem;
+    display: flex;   
+    gap: 0;
+    border-top: 1px solid black;
+    width: fit-content;
+}
+
+.map-toolbar>*{
+    border-radius: 0;
+    border: none;
+}
+
+.map-toolbar>*:first-child {
+    border-bottom-left-radius: .4rem;
+}
+
+.map-toolbar>*:last-child {
+    border-bottom-right-radius: .4rem;
 }
 
 .map-coordinates {
@@ -526,6 +523,15 @@ select:focus {
 
 .feature-buttons button:hover {
     background: #666;
+}
+
+.map-searchbar-input {
+    border-top-left-radius: .4rem;
+    border: none;
+}
+
+.map-searchbar-button {
+    border: none;
 }
 
 @media (max-width: 500px) {
