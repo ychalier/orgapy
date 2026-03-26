@@ -115,8 +115,9 @@ function getHueRotation(color, baseColor="#2981ca") {
     return hexToHsl(color)[0] - hexToHsl(baseColor)[0];
 }
 
-const crosshairIcon = L.icon({
-    iconUrl: URL_IMAGE_CROSSHAIR,
+const myLocationIcon = L.divIcon({
+    className: 'marker-icon',
+    html: `<svg viewBox="0 0 64 64"><path fill="#0080ff" d="M 30.540279,1.3185368 C 21.85287,1.7355383 13.407023,5.9858694 8.0183511,12.833493 3.9546162,17.921357 1.5435875,24.318441 1.3176227,30.832208 c -0.00742,0.341758 -0.034104,1.122627 -0.019034,1.633173 0.1026939,8.958812 4.3632131,17.765213 11.3510433,23.379104 6.80836,5.55241 16.060068,7.975408 24.710313,6.392653 8.481481,-1.477834 16.226182,-6.700437 20.734752,-14.041597 4.79067,-7.664124 5.952252,-17.483415 2.996549,-26.034261 C 58.391991,14.137344 52.247379,7.3329317 44.473788,3.9482133 40.11815,2.0124147 35.302284,1.1003088 30.540279,1.3185368 Z m 1.476563,8.3125 C 39.697214,9.5670689 47.223518,13.826397 51.14992,20.4246 55.254274,27.112498 55.445145,35.993992 51.580062,42.831811 47.864087,49.659959 40.365376,54.233805 32.585544,54.366339 25.493337,54.582485 18.407012,51.187995 14.156807,45.500692 9.7545982,39.722426 8.4278763,31.744166 10.799036,24.868004 13.315628,17.185047 20.318132,11.177024 28.319917,9.9414043 29.541014,9.7397576 30.779281,9.6379001 32.016842,9.6310368 Z M 31.426998,21.998224 c -3.731676,0.203908 -7.267254,2.672273 -8.660156,6.154297 -0.737458,1.688316 -0.960826,3.786778 -0.592715,5.666585 0.666555,4.033484 4.074272,7.402597 8.113666,8.029574 3.92568,0.759566 8.171616,-1.151858 10.212856,-4.588115 2.201744,-3.403129 1.967243,-8.137213 -0.544354,-11.315076 -1.961397,-2.654135 -5.247824,-4.12239 -8.529297,-3.947265 z"/></svg>`,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
 });
@@ -279,26 +280,6 @@ class Dashboard {
                 buttonToggleEdition.querySelector("i").className = "ri-close-line";
             } else {
                 buttonToggleEdition.querySelector("i").className = "ri-pencil-fill";
-            }
-        });
-
-        const buttonHome = create(buttonsContainer, "button");
-        buttonHome.innerHTML = `<i class="ri-home-line"></i>`;
-        buttonHome.title = "Reset view";
-        buttonHome.addEventListener("click", (event) => {
-            event.stopPropagation();
-            self.map.fitViewToFeatures();
-        });
-
-        const buttonUserPosition = create(buttonsContainer, "button");
-        buttonUserPosition.setAttribute("id", "button-user-position");
-        buttonUserPosition.setAttribute("disabled", true);
-        buttonUserPosition.innerHTML = `<i class="ri-focus-2-line"></i>`;
-        buttonUserPosition.title = "Go to current position";
-        buttonUserPosition.addEventListener("click", (event) => {
-            event.stopPropagation();
-            if (self.map.userPositionWidget != null) {
-                self.map.leafletMap.panTo(self.map.userPositionWidget.getLatLng());
             }
         });
 
@@ -1378,6 +1359,115 @@ function swapSibling(node2, node1) {
     node1.parentNode.insertBefore(node2, node1);
 }
 
+L.Control.Zoom = L.Control.extend({
+    onAdd: function(map) {
+        const container = L.DomUtil.create("div");
+        container.classList.add("button-group-vertical");
+        
+        const buttonZoomIn = create(container, "button");
+        buttonZoomIn.textContent = "✚";
+        buttonZoomIn.addEventListener("click", (event) => {
+            event.preventDefault();
+            map.zoomIn();
+        });
+
+        const buttonZoomOut = create(container, "button");
+        buttonZoomOut.textContent = "━";
+        buttonZoomOut.addEventListener("click", (event) => {
+            event.preventDefault();
+            map.zoomOut();
+        });
+
+        return container;
+    },
+    onRemove: function(map) {}
+});
+
+L.control.zoom = function(opts) {
+    return new L.Control.Zoom(opts);
+}
+
+L.Control.MyLocation = L.Control.extend({
+    onAdd: function(map) {
+        const container = L.DomUtil.create("div");
+        
+        var active = false;
+        var marker;
+        function onPosition(position) {
+            if (marker == undefined) {
+                marker = new L.Marker([position.coords.latitude, position.coords.longitude], {icon: myLocationIcon});
+                marker.addTo(map);
+            }
+            marker.setLatLng(new L.LatLng(position.coords.latitude, position.coords.longitude));
+        }
+
+        function panToPosition(position) {
+            map.panTo(new L.LatLng(position.coords.latitude, position.coords.longitude));
+        }
+
+        const button = create(container, "button");
+        button.innerHTML = `<i class="ri-focus-2-line"></i>`;
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            if (!active) {
+                active = true;
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition((position) => {onPosition(position); panToPosition(position)});
+                    navigator.geolocation.watchPosition((position) => {onPosition(position)});
+                } else {
+                    console.log("Geolocation not available, skipping");
+                }
+            }
+            if (marker != undefined) {
+                map.panTo(marker.getLatLng());
+            }
+        });
+
+        return container;
+    },
+    onRemove: function(map) {
+
+    }
+});
+
+L.control.mylocation = function(opts) {
+    return new L.Control.MyLocation(opts);
+}
+
+L.Control.Home = L.Control.extend({
+    onAdd: function(map) {
+        const container = L.DomUtil.create("div");
+
+        function trigger() {
+            const layers = [];
+            map.eachLayer(layer => {
+                if (layer._latlng != undefined) {
+                    layers.push(layer)
+                }
+            });
+            if (layers.length === 0) return;
+            const group = new L.featureGroup(layers);
+            map.fitBounds(group.getBounds());
+        }
+        
+        const button = create(container, "button");
+        button.innerHTML = `<i class="ri-home-line"></i>`;
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            trigger();            
+        });
+
+        setTimeout(trigger, 1);
+
+        return container;
+    },
+    onRemove: function(map) {}
+});
+
+L.control.home = function(opts) {
+    return new L.Control.Home(opts);
+}
+
 class Map {
 
     constructor(objectId, mapLayout, readonly=false) {
@@ -1425,22 +1515,10 @@ class Map {
         });
         this.loadTileLayer();
         L.control.zoom({position: "bottomright"}).addTo(this.leafletMap);
+        L.control.mylocation({position: "bottomright"}).addTo(this.leafletMap);
+        L.control.home({position: "bottomright"}).addTo(this.leafletMap);
         this.dashboard = new Dashboard(this, this.dashboardContainer);
         this.dashboard.inflate();
-    }
-
-    fitViewToFeatures() {
-        const featureElements = [];
-        for (const layer of this.layers) {
-            for (const feature of layer.features) {
-                if (feature.mapElement != null) {
-                    featureElements.push(feature.mapElement);
-                }
-            }
-        }
-        if (featureElements.length === 0) return;
-        const group = new L.featureGroup(featureElements);
-        this.leafletMap.fitBounds(group.getBounds());
     }
 
     inflate() {
@@ -1450,19 +1528,6 @@ class Map {
         this.layers.forEach(layer => {
             layer.inflate();
         });
-    }
-
-    setUserPosition(position) {
-        //@see https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API/Using_the_Geolocation_API
-        if (this.userPositionWidget == null) {
-            this.userPositionWidget = new L.Marker(
-                [position.coords.latitude, position.coords.longitude],
-                {icon: crosshairIcon}
-            );
-            this.userPositionWidget.addTo(this.leafletMap);
-            document.getElementById("button-user-position").removeAttribute("disabled");
-        }
-        this.userPositionWidget.setLatLng(new L.LatLng(position.coords.latitude, position.coords.longitude));
     }
 
     setup(geojsonData, config, modification) {
@@ -1477,17 +1542,9 @@ class Map {
                 this.addLayer(layerData.visible == true);
                 this.addGeojsonFromData(layerData, true);
             });
-            this.fitViewToFeatures();
         }
         if (this.buttonSave != null) {
             this.buttonSave.disabled = true;
-        }
-        if ("geolocation" in navigator) {
-            var self = this;
-            navigator.geolocation.getCurrentPosition((position) => {self.setUserPosition(position)});
-            navigator.geolocation.watchPosition((position) => {self.setUserPosition(position)});
-        } else {
-            console.log("Geolocation not available, skipping");
         }
     }
 

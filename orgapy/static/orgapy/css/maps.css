@@ -534,6 +534,27 @@ select:focus {
     border: none;
 }
 
+.leaflet-control button {
+    width: 34px;
+    height: 34px;
+}
+
+.button-group-vertical button {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+}
+
+.button-group-vertical button:first-child {
+    border-top-left-radius: .4rem;
+    border-top-right-radius: .4rem;
+}
+
+.button-group-vertical button:last-child {
+    border-bottom-left-radius: .4rem;
+    border-bottom-right-radius: .4rem;
+}
+
 @media (max-width: 500px) {
 
     .map-layout {
