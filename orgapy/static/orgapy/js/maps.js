@@ -448,7 +448,7 @@ class Feature {
 
     setStyle(customStyle=null) {
         if (this.mapElement == null) return;
-        this.layer.setVisibilityCheckboxColor();
+        this.layer.setLayerStyleHint();
         let style = customStyle == null ? this.properties : customStyle;
         switch(this.geometry.type) {
             case "Point":
@@ -972,49 +972,54 @@ class Layer {
         input.focus();
     }
 
-    setVisibilityCheckboxColor() {
-        this.visibilityCheckbox.style.accentColor = this.mostCommonOrDefaultStyle().fillColor;
-        this.visibilityCheckbox.style.boxShadow = `0 0 0 1.8px ${this.mostCommonOrDefaultStyle().strokeColor}`;
+    setLayerStyleHint() {
+        const style = this.mostCommonOrDefaultStyle();
+        this.toggle.style.fill = style.fillColor;
+        this.toggle.style.stroke = style.strokeColor;
+        this.toggle.style.strokeWidth = style.strokeWidth;
     }
 
     inflate() {
         var self = this;
         if (this.container == null) {
-            this.container = create(this.map.dashboard.layersContainer, "details", "map-layer");
+            this.container = create(this.map.dashboard.layersContainer, "div", "map-layer");
             this.container.addEventListener("click", () => {
                 self.map.selectLayer(self.index);
             });
         }
         this.container.innerHTML = "";
 
-        const summary = create(this.container, "summary");
-        this.labelElement = create(summary, "span", "map-layer-title oneline-truncate");
+        const summary = create(this.container, "div", "map-layer-summary");
+
+        this.toggle = create(summary, "span", "map-layer-toggle");
+        this.toggle.innerHTML = `<svg viewBox="0 0 64 64"><path d="M 6.5 9 L 51.6 32 L 6.5 54.9 L 6.5 9" stroke-width="inherit" stroke="inherit" fill="inherit"/></svg>`
+        this.toggle.addEventListener("click", () => {
+            self.container.classList.toggle("open");
+        });
+
+        const labelContainer = create(summary, "span", "map-layer-label");
+
+        this.labelElement = create(labelContainer, "span", "map-layer-title");
         this.labelElement.textContent = this.label;
         this.labelElement.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopImmediatePropagation();
-            self.container.open = !self.container.open;
         });
 
-        this.counterLabel = create(summary, "span", "map-layer-count");
+        this.counterLabel = create(labelContainer, "span", "map-layer-count");
         this.counterLabel.textContent = `(${this.features.length})`;
 
-        this.visibilityCheckbox = create(summary, "input");
-        this.visibilityCheckbox.type = "checkbox";
-        this.visibilityCheckbox.checked = true;
-        this.setVisibilityCheckboxColor();
-
-        this.visibilityCheckbox.addEventListener("dblclick", (event) => {
-            event.stopPropagation();
-        });
-        this.visibilityCheckbox.addEventListener("input", () => {
+        this.visibilityCheckbox = create(summary, "i", "map-layer-visible ri-eye-line");
+        this.visibilityCheckbox.addEventListener("click", () => {
             self.toggleVisibility();
         });
+        
+        this.setLayerStyleHint();
 
         if (!this.map.readonly) {
             const buttonsDropdown = create(summary, "span", "dropdown");
             const moreButton = create(buttonsDropdown, "a", "button-inline dropdown-toggle");
-            moreButton.innerHTML = ` <i class="ri-more-fill"></i>`;
+            moreButton.innerHTML = ` <i class="ri-more-2-fill"></i>`;
             moreButton.tabIndex = 0;
             const buttonsMenu = create(buttonsDropdown, "ul", "menu");
             let renameButton = create(create(buttonsMenu, "li", "menu-item"), "button");
@@ -1204,7 +1209,15 @@ class Layer {
     }
 
     toggleVisibility() {
-        let visible = this.visibilityCheckbox.checked;
+        let wasVisible = this.visibilityCheckbox.classList.contains("ri-eye-line");
+        if (wasVisible) {
+            this.visibilityCheckbox.classList.remove("ri-eye-line");
+            this.visibilityCheckbox.classList.add("ri-eye-off-line");
+        } else {
+            this.visibilityCheckbox.classList.add("ri-eye-line");
+            this.visibilityCheckbox.classList.remove("ri-eye-off-line");
+        }
+        let visible = !wasVisible;
         this.features.forEach(feature => {
             if (visible) {
                 feature.inflateMapElement();

@@ -258,34 +258,44 @@ body.fullscreen {
     background: #1b2931;
 }
 
-.map-layer summary {
+.map-layer-summary {
+    display: flex;
     width: 100%;
     user-select: none;
+    align-items: baseline;
 }
 
-.map-layer summary > * {
-    height: 19px;
-}
-
-.map-layer summary input[type=text] {
-    width: 75%;
-    border-radius: .2rem;
-    padding: .2rem;
-}
-
-.map-layer summary .dropdown {
-    float: right;
+.map-layer-toggle {
     margin-right: .2rem;
+    width: 19px;
+    transform-origin: 6px 8px;
 }
 
-.map-layer summary input[type=checkbox] {
-    float: right;
+.map-layer.open .map-layer-toggle {
+    transform: rotate(90deg);
+}
+
+.map-layer-label {
+    width: 100%;
+}
+
+.map-layer-summary input[type=text] {
     width: fit-content;
-    margin: 0;
+    border-radius: .2rem;
+    height: 19px;
+    padding: 0;
+    background: none;
+}
+
+.map-layer-visible {
+    color: #888;
+}
+
+.map-layer-summary .dropdown-toggle {
+    color: inherit;
 }
 
 .map-layer-title {
-    cursor: pointer;
     color: white;
 }
 
@@ -295,7 +305,7 @@ body.fullscreen {
 }
 
 .map-layer > details > summary {
-    color:hsl(0, 0%, 50%)
+    color:hsl(0, 0%, 50%);
 }
 
 .map-features {
@@ -305,6 +315,10 @@ body.fullscreen {
     line-height: 1.6 !important;
     display: flex;
     flex-direction: column;
+}
+
+.map-layer:not(.open) .map-features {
+    display: none;
 }
 
 .map-feature {
