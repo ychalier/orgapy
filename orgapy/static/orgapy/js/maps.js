@@ -956,7 +956,6 @@ class Layer {
         this.counterLabel = null;
         this.featuresContainer = null;
         this.selected = false;
-        this.featureIndexCounter = 0;
     }
 
     findDefaultLabel() {
@@ -1040,18 +1039,38 @@ class Layer {
 
         if (!this.map.readonly) {
             const buttonsDropdown = create(summary, "span", "dropdown");
+
             const moreButton = create(buttonsDropdown, "a", "button-inline dropdown-toggle");
             moreButton.innerHTML = ` <i class="ri-more-2-fill"></i>`;
             moreButton.tabIndex = 0;
+            
             const buttonsMenu = create(buttonsDropdown, "ul", "menu");
-            let renameButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+            
+            const renameButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             renameButton.innerHTML = `<i class="ri-input-field"></i> Rename layer`;
             renameButton.title = "Rename layer";
             renameButton.addEventListener("click", (event) => {
                 event.stopPropagation();
                 self.inflateLabelEdit();
             });
-            let labelButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+
+            const moveUpButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+            moveUpButton.innerHTML = `<i class="ri-arrow-up-line"></i> Move up`;
+            moveUpButton.title = "Move up";
+            moveUpButton.addEventListener("click", (event) => {
+                event.stopPropagation();
+                self.map.moveLayerUp(self.index);
+            });
+
+            const moveDownButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+            moveDownButton.innerHTML = `<i class="ri-arrow-down-line"></i> Move down`;
+            moveDownButton.title = "Move down";
+            moveDownButton.addEventListener("click", (event) => {
+                event.stopPropagation();
+                self.map.moveLayerDown(self.index);
+            });
+
+            const labelButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             labelButton.innerHTML = `<i class="ri-pencil-fill"></i> Set labels`;
             labelButton.title = "Set feature labels";
             labelButton.addEventListener("click", (event) => {
@@ -1062,7 +1081,8 @@ class Layer {
                     feature.setLabelFromProperty(propertyName);
                 }
             });
-            let sortButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+
+            const sortButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             sortButton.innerHTML = `<i class="ri-arrow-down-line"></i> Sort features`;
             sortButton.title = "Sort features";
             sortButton.addEventListener("click", (event) => {
@@ -1076,9 +1096,13 @@ class Layer {
                 }
                 const r = decreasing ? -1 : 1;
                 self.features.sort((a, b) => { return a.properties[propertyName] <= b.properties[propertyName] ? -r : r});
+                for (let i = 0; i < self.features.length; i++) {
+                    self.features[i].index = i;
+                }
                 self.inflate();
             });
-            let editButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+
+            const editButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             editButton.innerHTML = `<i class="ri-paint-fill"></i> Edit style`;
             editButton.title = "Edit style";
             editButton.addEventListener("click", (event) => {
@@ -1086,7 +1110,8 @@ class Layer {
                 self.map.selectLayer(self.index);
                 self.map.openLayerStyleDialog();
             });
-            let importButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+
+            const importButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             importButton.innerHTML = `<i class="ri-upload-line"></i> Import GeoJson`;
             importButton.title = "Import GeoJson";
             importButton.addEventListener("click", (event) => {
@@ -1094,7 +1119,8 @@ class Layer {
                 self.map.selectLayer(self.index);
                 self.map.openImportDialog();
             });
-            let exportButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+
+            const exportButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             exportButton.innerHTML = `<i class="ri-download-line"></i> Export to GeoJson`;
             exportButton.title = "Export to GeoJson";
             exportButton.addEventListener("click", (event) => {
@@ -1102,7 +1128,8 @@ class Layer {
                 self.map.selectLayer(self.index);
                 self.exportToGeojson();
             });
-            let deleteButton = create(create(buttonsMenu, "li", "menu-item"), "button");
+
+            const deleteButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i> Delete`;
             deleteButton.title = "Delete";
             deleteButton.addEventListener("click", (event) => {
@@ -1111,6 +1138,7 @@ class Layer {
                     self.map.deleteLayer(self.index);
                 }
             });
+
             bindDropdown(buttonsDropdown);
         }
 
@@ -1144,8 +1172,8 @@ class Layer {
     }
 
     addFeature(geojsonData) {
-        this.features.push(new Feature(this, this.featureIndexCounter, geojsonData));
-        this.featureIndexCounter++;
+        const feature = new Feature(this, this.features.length, geojsonData);
+        this.features.push(feature);
         this.inflate();
         this.onChange("add-feature");
     }
@@ -1175,8 +1203,8 @@ class Layer {
             feature.delete();
         }
         geojsonData.features.forEach(geojsonFeatureData => {
-            this.features.push(new Feature(this, this.featureIndexCounter, geojsonFeatureData));
-            this.featureIndexCounter++;
+            const feature = new Feature(this, this.features.length, geojsonFeatureData);
+            this.features.push(feature);
         });
         if (replace && "label" in geojsonData) {
             this.label = geojsonData.label;
@@ -1184,21 +1212,17 @@ class Layer {
         this.inflate();
     }
 
-    getArrayFeatureIndex(featureIndex) {
-        for (let i = 0; i < this.features.length; i++) {
-            if (this.features[i].index == featureIndex) return i;
-        }
-    }
-
     getFeature(featureIndex) {
-        return this.features[this.getArrayFeatureIndex(featureIndex)];
+        return this.features[featureIndex];
     }
 
     deleteFeature(featureIndex) {
-        let i = this.getArrayFeatureIndex(featureIndex);
-        this.features[i].delete();
-        this.features.splice(i, 1);
+        this.features[featureIndex].delete();
+        this.features.splice(featureIndex, 1);
         this.counterLabel.textContent = `(${this.features.length})`;
+        for (let i = featureIndex; i < this.features.length; i++) {
+            this.features[i].index--;
+        }
         this.onChange("delete-feature");
     }
 
@@ -1317,6 +1341,10 @@ class Layer {
 
 }
 
+function swapSibling(node2, node1) {
+    node1.parentNode.replaceChild(node1, node2);
+    node1.parentNode.insertBefore(node2, node1);
+}
 
 class Map {
 
@@ -1331,7 +1359,6 @@ class Map {
         this.userPositionWidget = null;
         this.dashboard = null;
         this.selectedLayer = null;
-        this.layerIndexCounter = 0;
         this.editing = false;
         this.title = "Untitled map";
         this.providerIndex = 0;
@@ -1445,22 +1472,33 @@ class Map {
             }
             if (!found) break;
         }
-        let layer = new Layer(this, this.layerIndexCounter, label);
-        this.layerIndexCounter++;
+        let layer = new Layer(this, this.layers.length, label);
         this.layers.push(layer);
         layer.inflate();
         this.selectLayer(layer.index);
         this.onChange("add-layer");
     }
 
-    getArrayLayerIndex(layerIndex) {
-        for (let i = 0; i < this.layers.length; i++) {
-            if (this.layers[i].index == layerIndex) return i;
-        }
+    moveLayerUp(layerIndex) {
+        if (layerIndex <= 0) return;
+        [this.layers[layerIndex - 1], this.layers[layerIndex]] = [this.layers[layerIndex], this.layers[layerIndex - 1]];
+        this.layers[layerIndex - 1].index--;
+        this.layers[layerIndex].index++;
+        swapSibling(this.layers[layerIndex - 1].container, this.layers[layerIndex].container);
+        this.onChange("layer-order");
+    }
+
+    moveLayerDown(layerIndex) {
+        if (layerIndex >= this.layers.length - 1) return;
+        [this.layers[layerIndex + 1], this.layers[layerIndex]] = [this.layers[layerIndex], this.layers[layerIndex + 1]];
+        this.layers[layerIndex + 1].index++;
+        this.layers[layerIndex].index--;
+        swapSibling(this.layers[layerIndex].container, this.layers[layerIndex + 1].container);
+        this.onChange("layer-order");
     }
 
     getLayer(layerIndex) {
-        return this.layers[this.getArrayLayerIndex(layerIndex)];
+        return this.layers[layerIndex];
     }
 
     getSelectedLayer() {
@@ -1494,9 +1532,12 @@ class Map {
     deleteLayer(layerIndex) {
         if (this.readonly) return;
         this.getLayer(layerIndex).delete();
-        this.layers.splice(this.getArrayLayerIndex(layerIndex), 1);
+        this.layers.splice(layerIndex, 1);
         if (this.selectedLayer == layerIndex) {
             this.selectedLayer = null;
+        }
+        for (let i = layerIndex; i < this.layers.length; i++) {
+            this.layers[i].index--;
         }
         this.onChange("delete-layer");
     }
