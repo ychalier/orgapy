@@ -588,7 +588,7 @@ class Feature {
         const inputsLabels = {};
 
         const header = create(wrapper, "div", "feature-popup-header");
-        
+
         const labelInput = create(header, "input", "feature-label");
         labelInput.value = this.properties.label;
         inputsValues.label = labelInput;
@@ -867,9 +867,9 @@ class Feature {
         this.panelElement = create(this.layer.featuresContainer, "li", "map-feature");
         const hasLabel = this.properties.label != undefined && this.properties.label != "";
         create(this.panelElement, "span", "map-feature-label").innerHTML = hasLabel ? this.properties.label : "<i>&lt;null&gt;</i>";
-        
+
         const buttons = create(this.panelElement, "span", "map-feature-buttons");
-        
+
         const moveUp = create(buttons, "button");
         moveUp.innerHTML = `<i class="ri-arrow-up-line"></i>`;
         moveUp.title = "Move up";
@@ -885,7 +885,7 @@ class Feature {
             event.stopPropagation();
             self.layer.moveFeatureDown(self.index);
         });
-        
+
         const moveToAnotherLayerButton = create(buttons, "button");
         moveToAnotherLayerButton.innerHTML = `<i class="ri-arrow-right-line"></i>`;
         moveToAnotherLayerButton.title = "Move to another layer";
@@ -893,7 +893,7 @@ class Feature {
             event.stopPropagation();
             new MoveFeatureDialog(self.layer.map, self.layer.index, self.index).open();
         });
-        
+
         this.panelElement.addEventListener("mouseenter", (event) => {
             self.startHighlight();
         });
@@ -929,7 +929,7 @@ class Feature {
 
     goto() {
         if (this.geometry.type == "Point") {
-            let zoom = Math.max(this.layer.map.leafletMap.getZoom(), 13);            
+            let zoom = Math.max(this.layer.map.leafletMap.getZoom(), 13);
             this.layer.map.leafletMap.flyTo(reverseLatLng(this.geometry.coordinates), zoom, {duration: 0.3});
         } else {
             this.layer.map.leafletMap.fitBounds(this.mapElement.getBounds(), {duration: 0.3});
@@ -1032,7 +1032,7 @@ class Layer {
         const summary = create(this.container, "div", "map-layer-summary");
 
         this.toggle = create(summary, "span", "map-layer-toggle");
-        this.toggle.innerHTML = `<svg viewBox="0 0 64 64"><path d="M 6.5 9 L 51.6 32 L 6.5 54.9 L 6.5 9" stroke-width="inherit" stroke="inherit" fill="inherit"/></svg>`
+        this.toggle.innerHTML = `<svg viewBox="0 0 64 64"><path d="M 6.5 9 L 51.6 32 L 6.5 54.9 L 6.5 9" stroke-linejoine="round" stroke-width="inherit" stroke="inherit" fill="inherit"/></svg>`
         this.toggle.addEventListener("click", () => {
             self.container.classList.toggle("open");
         });
@@ -1058,7 +1058,7 @@ class Layer {
         this.visibilityCheckbox.addEventListener("click", () => {
             self.toggleVisibility();
         });
-        
+
         this.setLayerStyleHint();
 
         if (!this.map.readonly) {
@@ -1067,9 +1067,9 @@ class Layer {
             const moreButton = create(buttonsDropdown, "a", "button-inline dropdown-toggle");
             moreButton.innerHTML = ` <i class="ri-more-2-fill"></i>`;
             moreButton.tabIndex = 0;
-            
+
             const buttonsMenu = create(buttonsDropdown, "ul", "menu");
-            
+
             const renameButton = create(create(buttonsMenu, "li", "menu-item"), "button");
             renameButton.innerHTML = `<i class="ri-input-field"></i> Rename layer`;
             renameButton.title = "Rename layer";
@@ -1167,10 +1167,13 @@ class Layer {
         }
 
         this.featuresContainer = create(this.container, "ul", "map-features");
-        this.features.forEach(feature => {
-            feature.inflate();
-        });
-        if (this.map.readonly) return;
+        for (const feature of this.features) {
+            if (this.visible) {
+                feature.inflate();
+            } else {
+                feature.inflatePanelElement();
+            }
+        }
 
     }
 
@@ -1427,14 +1430,16 @@ class Map {
     }
 
     fitViewToFeatures() {
-        let features = [];
-        this.layers.forEach(layer => {
-            layer.features.forEach(feature => {
-                features.push(feature.mapElement);
-            });
-        });
-        if (features.length === 0) return;
-        let group = new L.featureGroup(features);
+        const featureElements = [];
+        for (const layer of this.layers) {
+            for (const feature of layer.features) {
+                if (feature.mapElement != null) {
+                    featureElements.push(feature.mapElement);
+                }
+            }
+        }
+        if (featureElements.length === 0) return;
+        const group = new L.featureGroup(featureElements);
         this.leafletMap.fitBounds(group.getBounds());
     }
 
@@ -1814,7 +1819,7 @@ class LayerStyleDialog extends Dialog {
         markerIconSelect.value = orDefault(layer.mostCommonPropertyValue("markerIcon"), DEFAULT_MARKER_ICON);
 
         styleForm.addEventListener("submit", (event) => {
-            
+
         });
 
         const buttons = create(this.container, "div", "row");
