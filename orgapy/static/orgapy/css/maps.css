@@ -337,18 +337,22 @@ body.fullscreen {
     height: 1.6rem;
 }
 
-.map-feature button {
+.map-feature-buttons {
     display: none;
-    height: 1.6rem;
+    gap: .1rem;
+    flex-shrink: 0;
+}
+
+.map-feature:hover .map-feature-buttons {
+    display: inline;
+}
+
+.map-feature-buttons button {
     padding: 0;
     border: none;
     border-radius: .1rem;
-    margin-left: .4rem;
     background: none;
-}
-
-.map-feature:hover button {
-    display: inline;
+    color: #888;
 }
 
 /* Dialogs */
@@ -435,7 +439,7 @@ body.fullscreen {
 }
 
 .feature-properties-wrapper {
-    max-height: min(500px, 50vh);
+    max-height: min(500px, 40vh);
     overflow: auto;
     border-top: 1px solid #8f8f9d;
 }

@@ -853,22 +853,43 @@ class Feature {
         this.panelElement = create(this.layer.featuresContainer, "li", "map-feature");
         const hasLabel = this.properties.label != undefined && this.properties.label != "";
         create(this.panelElement, "span", "map-feature-label").innerHTML = hasLabel ? this.properties.label : "<i>&lt;null&gt;</i>";
-        let moveButton = create(this.panelElement, "button");
-        moveButton.innerHTML = `<i class="ri-arrow-right-line"></i>`;
-        moveButton.title = "Move to another layer";
-        moveButton.addEventListener("click", (event) => {
+        
+        const buttons = create(this.panelElement, "span", "map-feature-buttons");
+        
+        const moveUp = create(buttons, "button");
+        moveUp.innerHTML = `<i class="ri-arrow-up-line"></i>`;
+        moveUp.title = "Move up";
+        moveUp.addEventListener("click", (event) => {
+            event.stopPropagation();
+            self.layer.moveFeatureUp(self.index);
+        });
+
+        const moveDown = create(buttons, "button");
+        moveDown.innerHTML = `<i class="ri-arrow-down-line"></i>`;
+        moveDown.title = "Move up";
+        moveDown.addEventListener("click", (event) => {
+            event.stopPropagation();
+            self.layer.moveFeatureDown(self.index);
+        });
+        
+        const moveToAnotherLayerButton = create(buttons, "button");
+        moveToAnotherLayerButton.innerHTML = `<i class="ri-arrow-right-line"></i>`;
+        moveToAnotherLayerButton.title = "Move to another layer";
+        moveToAnotherLayerButton.addEventListener("click", (event) => {
             event.stopPropagation();
             new MoveFeatureDialog(self.layer.map, self.layer.index, self.index).open();
         });
+        
         this.panelElement.addEventListener("mouseenter", (event) => {
             self.startHighlight();
         });
         this.panelElement.addEventListener("mouseleave", (event) => {
             self.endHighlight();
         });
-        this.panelElement.addEventListener("dblclick", (event) => {
+        this.panelElement.addEventListener("click", (event) => {
             event.stopPropagation();
             self.goto();
+            self.mapElement.openPopup();
         });
     }
 
@@ -894,9 +915,10 @@ class Feature {
 
     goto() {
         if (this.geometry.type == "Point") {
-            this.layer.map.leafletMap.flyTo(reverseLatLng(this.geometry.coordinates));
+            let zoom = Math.max(this.layer.map.leafletMap.getZoom(), 13);            
+            this.layer.map.leafletMap.flyTo(reverseLatLng(this.geometry.coordinates), zoom, {duration: 0.3});
         } else {
-            this.layer.map.leafletMap.fitBounds(this.mapElement.getBounds());
+            this.layer.map.leafletMap.fitBounds(this.mapElement.getBounds(), {duration: 0.3});
         }
     }
 
@@ -1126,6 +1148,24 @@ class Layer {
         this.featureIndexCounter++;
         this.inflate();
         this.onChange("add-feature");
+    }
+
+    moveFeatureUp(featureIndex) {
+        if (featureIndex == 0) return;
+        [this.features[featureIndex - 1], this.features[featureIndex]] = [this.features[featureIndex], this.features[featureIndex - 1]];
+        this.features[featureIndex].index++;
+        this.features[featureIndex-1].index--;
+        this.inflate();
+        this.onChange("edit-feature");
+    }
+
+    moveFeatureDown(featureIndex) {
+        if (featureIndex >= this.features.length - 1) return;
+        [this.features[featureIndex + 1], this.features[featureIndex]] = [this.features[featureIndex], this.features[featureIndex + 1]];
+        this.features[featureIndex].index--;
+        this.features[featureIndex+1].index++;
+        this.inflate();
+        this.onChange("edit-feature");
     }
 
     addFeatures(geojsonData, replace=false) {
@@ -1504,7 +1544,7 @@ class Map {
 
     onChange(change) {
         if (this.readonly) return;
-        console.log("Change:", change);
+        //console.log("Change:", change);
         if (this.buttonSave != null) {
             this.buttonSave.removeAttribute("disabled");
         }
