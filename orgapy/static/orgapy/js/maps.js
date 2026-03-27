@@ -753,6 +753,14 @@ class Feature {
         }
     }
 
+    getCenter() {
+        if (this.geometry.type == "Point") {
+            return this.mapElement.getLatLng();
+        } else {
+            return this.mapElement.getBounds().getCenter();
+        }
+    }
+
     enableEdit() {
         this.editing = true;
         if (this.mapElement instanceof L.FeatureGroup) {
@@ -865,19 +873,52 @@ class Layer {
     }
 
     sortFeatures() {
-        let propertyName = prompt("Provide the property name to use as key. Start with a minus to sort in decreasing order.", "label");
-        if (propertyName == null || propertyName == "") return;
-        let decreasing = false;
-        if (propertyName.startsWith("-")) {
-            decreasing = true;
-            propertyName = propertyName.slice(1);
+        const promptText = "" +
+            "Provide the property name to use as key. " +
+            "You may use special keys 'lat' and 'lon'. " +
+            "You may specify multiple keys, separated by commas. " +
+            "Start a key with a minus to sort in decreasing order.";
+
+        const query = prompt(promptText, "label")?.trim();
+        if (query == null || query == "") return;
+
+        const keys = query.split(",");
+        for (let i = 0; i < keys.length; i++) {
+            const keyString = keys[i];
+            const decreasing = keyString.startsWith("-");
+            keys[i] = [decreasing, decreasing ? keyString.slice(1) : keyString];
         }
-        const r = decreasing ? -1 : 1;
-        self.features.sort((a, b) => { return a.properties[propertyName] <= b.properties[propertyName] ? -r : r});
-        for (let i = 0; i < self.features.length; i++) {
-            self.features[i].index = i;
+
+        function compareFeatures(a, b) {
+            for (const [decreasing, key] of keys) {
+                let valueA, valueB;
+                if (key == "lat" || key == "lon" || key == "lng" || key == "latitude" || key == "longitude") {
+                    const posA = a.getCenter();
+                    const posB = b.getCenter();
+                    if (key == "lat" || key == "latitude") {
+                        valueA = posA.lat;
+                        valueB = posB.lat;
+                    } else {
+                        valueA = posA.lng;
+                        valueB = posB.lng;
+                    }
+                } else {
+                    valueA = a.properties[key];
+                    valueB = b.properties[key];
+                }
+                if (valueA == valueB) continue;
+                if (valueA < valueB) return decreasing ? 1 : -1;
+                return decreasing ? -1 : 1;
+            }
+            return 0;
         }
-        self.inflate();
+
+        this.features.sort(compareFeatures);
+        for (let i = 0; i < this.features.length; i++) {
+            this.features[i].index = i;
+        }
+
+        this.inflate();
     }
 
     editStyle() {
@@ -1318,7 +1359,7 @@ class Map {
         query = query.trim();
 
         const {filters, tokens} = parseQuery(query);
-        
+
         for (const layer of this.layers) {
             if (layer.visible) {
                 layer.container.classList.add("open");
