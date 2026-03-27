@@ -1285,6 +1285,27 @@ function splitQuery(query) {
 
 const trimQuotes = (s) => {return s.replace(/^(\"+)/, "").replace(/(\"+)$/, "")};
 
+function clearContextMenus() {
+    let context_menus = document.querySelectorAll(".contextmenu");
+    for (let i = 0; i < context_menus.length; i++) {
+        document.body.removeChild(context_menus[i]);
+    }
+}
+
+function addContextMenuOption(menu, iconClass, label, callback) {
+    let option = menu.appendChild(document.createElement("li"));
+    option.classList.add("menu-item");
+    if (iconClass == null) {
+        create(option, "span").textContent = label;
+    } else {
+        create(option, "span").innerHTML = `<i class="${iconClass}"></i> ${label}`;
+    }
+    option.addEventListener("click", () => {
+        callback();
+        clearContextMenus();
+    });
+}
+
 function parseQuery(query) {
     const split = splitQuery(query);
     const filters = [];
@@ -1309,6 +1330,11 @@ function parseQuery(query) {
         }
     }
     return {filters: filters, tokens: tokens};
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text);
+    toast("Copied to clipboard!", 600);
 }
 
 class Map {
@@ -1515,14 +1541,39 @@ class Map {
 
     }
 
+    addMarker(latlng, defaultLabel="My Point") {
+        const layer = this.getSelectedLayer();
+        const properties = layer.mostCommonOrDefaultStyle();
+        properties.label = defaultLabel;
+        const feature = layer.addFeature({
+            type: "Feature",
+            geometry: {
+                type: "Point",
+                coordinates: [latlng.lng, latlng.lat],
+            },
+            properties: properties
+        });
+        feature.mapElement.openPopup();
+    }
+
+    inflateContextMenu(x, y, latlng) {
+        var self = this;
+        clearContextMenus();
+        const menu = create(document.body, "ul", "contextmenu menu");
+        const coordsString = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+        addContextMenuOption(menu, null, coordsString, () => {copyToClipboard(coordsString)});
+        addContextMenuOption(menu, "ri-map-pin-line", "Add marker", () => {self.addMarker(latlng)});
+        const bounds = menu.getBoundingClientRect();
+        menu.style.left = Math.min(x, window.innerWidth - (bounds.width + 8)) + "px";
+        menu.style.top = Math.min(y, window.innerHeight - (bounds.height + 8)) + "px";
+    }
+
     inflateMap() {
         this.leafletMap = L.map(this.container, {
             editable: this.editable,
             zoomControl: false,
         }).setView([46, 2], 6);
-        this.leafletMap.on('editable:vertex:ctrlclick editable:vertex:metakeyclick', function (e) {
-            e.vertex.continue();
-        });
+        this.leafletMap.on("editable:vertex:ctrlclick editable:vertex:metakeyclick", function (e) {e.vertex.continue()});
         this.loadTileLayer();
         this.inflateDashboard();
         L.control.draw({position: "topleft", controller: this}).addTo(this.leafletMap);
@@ -1530,6 +1581,13 @@ class Map {
         L.control.zoom({position: "bottomright"}).addTo(this.leafletMap);
         L.control.mylocation({position: "bottomright"}).addTo(this.leafletMap);
         L.control.home({position: "bottomright"}).addTo(this.leafletMap);
+        var self = this;
+        this.leafletMap.on("click", (e) => {clearContextMenus()});
+        this.leafletMap.on("movestart", (e) => {clearContextMenus()});
+        this.leafletMap.on("contextmenu", (e) => {
+            const bounds = self.container.getBoundingClientRect();
+            self.inflateContextMenu(e.containerPoint.x + bounds.left, e.containerPoint.y + bounds.top, e.latlng);
+        });
     }
 
     inflate() {

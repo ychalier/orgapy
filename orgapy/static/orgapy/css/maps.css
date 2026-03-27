@@ -614,6 +614,10 @@ button.locked {
     display: none;
 }
 
+.contextmenu {
+    z-index: 1000;
+}
+
 @media (max-width: 500px) {
 
     .map-layout {
