@@ -1431,8 +1431,21 @@ class Map {
         label.textContent = `${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
     }
 
+    showAllFeatures() {
+        for (const layer of this.layers) {
+            for (const feature of layer.features) {
+                feature.show();
+            }
+        }
+    }
+
     onSearchFeature(query) {
         query = query.trim();
+
+        if (query == "") {
+            this.showAllFeatures();
+            return;
+        }
 
         const {filters, tokens} = parseQuery(query);
 
@@ -1525,6 +1538,11 @@ class Map {
                 });
             });
         }
+
+        const searchbar = this.dashboardContainer.querySelector("form.search-form input[type=search]");
+        searchbar.value = "";
+        this.showAllFeatures();
+
     }
 
     onSearchResult(result) {
