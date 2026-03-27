@@ -1042,7 +1042,7 @@ class Layer {
             createMenuButton("Move up", "ri-arrow-up-line", () => {self.moveUp()});
             createMenuButton("Move down", "ri-arrow-down-line", () => {self.moveDown()});
             createMenuButton("Reset labels", "ri-pencil-fill", () => {self.resetFeatureLabels()});
-            createMenuButton("Sort features", "ri-arrow-down-line", () => {self.sortFeatures()});
+            createMenuButton("Sort features", "ri-bar-chart-2-line", () => {self.sortFeatures()});
             createMenuButton("Edit style", "ri-paint-fill", () => {self.editStyle()});
             createMenuButton("Import GeoJSON", "ri-upload-line", () => {self.importGeojson()});
             createMenuButton("Export to GeoJSON", "ri-download-line", () => {self.exportToGeojson()});
@@ -1256,6 +1256,14 @@ class Layer {
         };
     }
 
+    expand() {
+        this.container.classList.add("open");
+    }
+
+    collapse() {
+        this.container.classList.remove("open");
+    }
+
 }
 
 L.Control.Draw = L.Control.extend({
@@ -1430,9 +1438,9 @@ class Map {
 
         for (const layer of this.layers) {
             if (layer.visible) {
-                layer.container.classList.add("open");
+                layer.expand();
             } else {
-                layer.container.classList.remove("open");
+                layer.collapse();
                 continue;
             }
             for (const feature of layer.features) {
@@ -1526,6 +1534,18 @@ class Map {
         feature.mapElement.openPopup();
     }
 
+    expandAllLayers() {
+        for (const layer of this.layers) {
+            layer.expand();
+        }
+    }
+
+    collapseAllLayers() {
+        for (const layer of this.layers) {
+            layer.collapse();
+        }
+    }
+
     inflateDashboard() {
         var self = this;
         this.dashboardContainer.innerHTML = "";
@@ -1569,6 +1589,14 @@ class Map {
             e.preventDefault();
             self.onSearchSubmit(searchInput.value);
         }
+
+        const layersButtons = create(this.dashboardContainer, "div", "row");
+        const expandAllButton = create(layersButtons, "button", "button-slim");
+        expandAllButton.textContent = "Expand all";
+        expandAllButton.onclick = () => {self.expandAllLayers()};
+        const collapseAllButton = create(layersButtons, "button", "button-slim");
+        collapseAllButton.textContent = "Collapse all";
+        collapseAllButton.onclick = () => {self.collapseAllLayers()};
 
         this.layersContainer = create(this.dashboardContainer, "div", "map-layers");
         this.layersContainer.addEventListener("wheel", (e) => {e.stopPropagation()});
