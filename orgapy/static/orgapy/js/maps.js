@@ -484,7 +484,7 @@ class Feature {
         this.layer.addFeature(selfCopy);
     }
 
-    delete() {
+    removeFromLayer() {
         this.layer.deleteFeature(this.index);
     }
 
@@ -514,7 +514,7 @@ class Feature {
             toggleButton.classList.add("locked");
         }
         createMapButton(buttons, "Duplicate", "ri-file-copy-2-line", () => {self.duplicate()});
-        createMapButton(buttons, "Delete", "ri-delete-bin-line", () => {self.delete()});
+        createMapButton(buttons, "Delete", "ri-delete-bin-line", () => {self.removeFromLayer()});
     }
 
     inflatePopupEdit(container) {
@@ -741,7 +741,9 @@ class Feature {
 
     focus() {
         this.goto();
-        this.mapElement.openPopup();
+        if (this.mapElement != null) {
+            this.mapElement.openPopup();
+        }
     }
 
     inflatePanelElement() {
