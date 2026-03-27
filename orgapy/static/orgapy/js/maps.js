@@ -749,7 +749,13 @@ class Feature {
         if (this.panelElement != null) {
             remove(this.panelElement);
         }
-        this.panelElement = create(this.layer.featuresContainer, "li", "map-feature");
+        this.panelElement = document.createElement("li");
+        this.panelElement.classList.add("map-feature");
+        if (this.layer.featuresContainer.childNodes.length > this.index) {
+            this.layer.featuresContainer.insertBefore(this.panelElement, this.layer.featuresContainer.childNodes[this.index]);
+        } else {
+            this.layer.featuresContainer.appendChild(this.panelElement);
+        }
         const hasLabel = this.properties.label != undefined && this.properties.label != "";
         create(this.panelElement, "span", "map-feature-label").innerHTML = hasLabel ? this.properties.label : "<i>&lt;null&gt;</i>";
         const buttons = create(this.panelElement, "span", "map-feature-buttons");
