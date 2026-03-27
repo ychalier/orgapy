@@ -28,6 +28,46 @@ const PROVIDERS = [
             referrerPolicy: 'strict-origin-when-cross-origin',
         }
     },
+    {
+        label: "Positron",
+        tiles: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        options: {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            maxZoom: 20,
+            subdomains: 'abcd',
+        }
+    },
+    {
+        label: "Positron NoLabels",
+        tiles: "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+        options: {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            maxZoom: 20,
+            subdomains: 'abcd',
+        }
+    },
+    {
+        label: "DarkMatter",
+        tiles: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        options: {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            maxZoom: 20,
+            subdomains: 'abcd',
+        }
+    },
+    {
+        label: "DarkMatter NoLabels",
+        tiles: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
+        options: {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            maxZoom: 20,
+            subdomains: 'abcd',
+        }
+    },
+    {
+        label: "None",
+        tiles: null
+    }
 ];
 
 const MYLOCATION_ICON = L.divIcon({
@@ -1371,8 +1411,10 @@ class Map {
             this.tileLayer = null;
         }
         let provider = PROVIDERS[this.providerIndex];
-        this.tileLayer = L.tileLayer(provider.tiles, provider.options);
-        this.tileLayer.addTo(this.leafletMap);
+        if (provider.tiles != null) {
+            this.tileLayer = L.tileLayer(provider.tiles, provider.options);
+            this.tileLayer.addTo(this.leafletMap);
+        }
     }
 
     updateMapCoordinates() {
