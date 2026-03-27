@@ -1746,6 +1746,7 @@ class Map {
         [this.layers[layerIndex - 1], this.layers[layerIndex]] = [this.layers[layerIndex], this.layers[layerIndex - 1]];
         this.layers[layerIndex - 1].index--;
         this.layers[layerIndex].index++;
+        this.selectedLayer--;
         swapSibling(this.layers[layerIndex - 1].container, this.layers[layerIndex].container);
         this.resetZIndices();
         this.onChange("layer-order");
@@ -1756,6 +1757,7 @@ class Map {
         [this.layers[layerIndex + 1], this.layers[layerIndex]] = [this.layers[layerIndex], this.layers[layerIndex + 1]];
         this.layers[layerIndex + 1].index++;
         this.layers[layerIndex].index--;
+        this.selectedLayer++;
         swapSibling(this.layers[layerIndex].container, this.layers[layerIndex + 1].container);
         this.resetZIndices();
         this.onChange("layer-order");
