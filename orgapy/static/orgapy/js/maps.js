@@ -260,6 +260,8 @@ function createStyleForm(container, initialStyle) {
 /******************************************************************************/
 /* LEAFLET CONTROLS */
 
+const preventDefaultAndStopPropagation = (e) => {e.preventDefault(); e.stopPropagation()};
+
 L.Control.Zoom = L.Control.extend({
     onAdd: function(map) {
         const container = L.DomUtil.create("div");
@@ -272,12 +274,16 @@ L.Control.Zoom = L.Control.extend({
             map.zoomIn();
         });
 
+        buttonZoomIn.ondblclick = preventDefaultAndStopPropagation;
+
         const buttonZoomOut = create(container, "button");
         buttonZoomOut.textContent = "━";
         buttonZoomOut.addEventListener("click", (event) => {
             event.preventDefault();
             map.zoomOut();
         });
+
+        buttonZoomOut.ondblclick = preventDefaultAndStopPropagation;
 
         return container;
     },
@@ -324,6 +330,7 @@ L.Control.MyLocation = L.Control.extend({
                 map.panTo(marker.getLatLng());
             }
         });
+        button.ondblclick = preventDefaultAndStopPropagation;
 
         return container;
     },
@@ -343,11 +350,7 @@ L.Control.Home = L.Control.extend({
 
         function trigger() {
             const layers = [];
-            map.eachLayer(layer => {
-                if (layer._latlng != undefined) {
-                    layers.push(layer)
-                }
-            });
+            map.eachLayer(layer => {if (Object.keys(layer.options).length > 0) layers.push(layer)});
             if (layers.length === 0) return;
             const group = new L.featureGroup(layers);
             map.fitBounds(group.getBounds());
@@ -359,6 +362,7 @@ L.Control.Home = L.Control.extend({
             event.preventDefault();
             trigger();
         });
+        button.ondblclick = preventDefaultAndStopPropagation;
 
         setTimeout(trigger, 1);
 
@@ -760,10 +764,12 @@ class Feature {
         }
         const hasLabel = this.properties.label != undefined && this.properties.label != "";
         create(this.panelElement, "span", "map-feature-label").innerHTML = hasLabel ? this.properties.label : "<i>&lt;null&gt;</i>";
-        const buttons = create(this.panelElement, "span", "map-feature-buttons");
-        createMapButton(buttons, "Move up", "ri-arrow-up-line", () => {self.moveUp()});
-        createMapButton(buttons, "Move down", "ri-arrow-down-line", () => {self.moveDown()});
-        createMapButton(buttons, "Move to another layer", "ri-arrow-right-line", () => {self.openMoveDialog()});
+        if (!this.layer.map.readonly) {
+            const buttons = create(this.panelElement, "span", "map-feature-buttons");
+            createMapButton(buttons, "Move up", "ri-arrow-up-line", () => {self.moveUp()});
+            createMapButton(buttons, "Move down", "ri-arrow-down-line", () => {self.moveDown()});
+            createMapButton(buttons, "Move to another layer", "ri-arrow-right-line", () => {self.openMoveDialog()});
+        }
         this.panelElement.addEventListener("mouseenter", () => {self.startHighlight()});
         this.panelElement.addEventListener("mouseleave", () => {self.endHighlight()});
         this.panelElement.addEventListener("click", (event) => {
@@ -1002,12 +1008,11 @@ class Layer {
         this.container.innerHTML = "";
 
         const summary = create(this.container, "div", "map-layer-summary");
+        summary.ondblclick = () => {self.container.classList.toggle("open")};
 
         this.toggle = create(summary, "span", "map-layer-toggle");
         this.toggle.innerHTML = `<svg viewBox="0 0 64 64"><path d="M 6.5 9 L 51.6 32 L 6.5 54.9 L 6.5 9" stroke-linejoin="round" stroke-width="inherit" stroke="inherit" fill="inherit"/></svg>`
-        this.toggle.addEventListener("click", () => {
-            self.container.classList.toggle("open");
-        });
+        this.toggle.onclick = () => {self.container.classList.toggle("open")};
 
         const labelContainer = create(summary, "span", "map-layer-label");
 
@@ -1519,6 +1524,8 @@ class Map {
     }
 
     onSearchSubmit(query) {
+        if (this.readonly) return;
+
         var self = this;
 
         query = query.trim();
@@ -1578,20 +1585,28 @@ class Map {
 
         const header = create(this.dashboardContainer, "div", "map-header");
 
-        const prevButton = create(header, "a", "link-hidden");
-        prevButton.innerHTML = `<i class="ri-map-2-line"></i>`;
-        prevButton.href = "../maps";
-
-        const titleInput = create(header, "input", "map-title");
-        titleInput.placeholder = "Title";
-        titleInput.value = this.title;
-        titleInput.oninput = () => {
-            if (self.readonly) return;
-            self.title = titleInput.value.trim();
-            self.onChange("edit-map");
+        if (!this.readonly) {
+            const prevButton = create(header, "a", "link-hidden");
+            prevButton.innerHTML = `<i class="ri-map-2-line"></i>`;
+            prevButton.href = "../maps";
         }
 
-        this.buttonSave = createMapButton(header, "Save", "ri-save-line", () => {self.saveData()});
+        if (this.readonly) {
+            create(header, "span", "map-title").textContent = this.title;
+        } else {
+            const titleInput = create(header, "input", "map-title");
+            titleInput.placeholder = "Title";
+            titleInput.value = this.title;
+            titleInput.oninput = () => {
+                if (self.readonly) return;
+                self.title = titleInput.value.trim();
+                self.onChange("edit-map");
+            }
+        }
+
+        if (!this.readonly) {
+            this.buttonSave = createMapButton(header, "Save", "ri-save-line", () => {self.saveData()});
+        }
 
         const referencesTemplate = document.getElementById("template-refs");
         if (referencesTemplate != null) {
@@ -1626,9 +1641,12 @@ class Map {
 
         this.layersContainer = create(this.dashboardContainer, "div", "map-layers");
         this.layersContainer.addEventListener("wheel", (e) => {e.stopPropagation()});
-        const buttonAddLayer = create(this.layersContainer, "button");
-        buttonAddLayer.innerHTML = `<i class="ri-add-line"></i> Add layer`;
-        buttonAddLayer.onclick = () => {self.addLayer()};
+
+        if (!this.readonly) {
+            const buttonAddLayer = create(this.layersContainer, "button");
+            buttonAddLayer.innerHTML = `<i class="ri-add-line"></i> Add layer`;
+            buttonAddLayer.onclick = () => {self.addLayer()};
+        }
 
         const footer = create(this.dashboardContainer, "div", "map-footer");
         create(footer, "div", "map-coordinates");
@@ -1658,7 +1676,9 @@ class Map {
         const menu = create(document.body, "ul", "contextmenu menu");
         const coordsString = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
         addContextMenuOption(menu, null, coordsString, () => {copyToClipboard(coordsString)});
-        addContextMenuOption(menu, "ri-map-pin-line", "Add marker", () => {self.addMarker(latlng)});
+        if (!this.readonly) {
+            addContextMenuOption(menu, "ri-map-pin-line", "Add marker", () => {self.addMarker(latlng)});
+        }
         const bounds = menu.getBoundingClientRect();
         menu.style.left = Math.min(x, window.innerWidth - (bounds.width + 8)) + "px";
         menu.style.top = Math.min(y, window.innerHeight - (bounds.height + 8)) + "px";
@@ -1672,7 +1692,9 @@ class Map {
         this.leafletMap.on("editable:vertex:ctrlclick editable:vertex:metakeyclick", function (e) {e.vertex.continue()});
         this.loadTileLayer();
         this.inflateDashboard();
-        L.control.draw({position: "topleft", controller: this}).addTo(this.leafletMap);
+        if (!this.readonly) {
+            L.control.draw({position: "topleft", controller: this}).addTo(this.leafletMap);
+        }
         L.control.tileProvider({position: "topright", controller: this}).addTo(this.leafletMap);
         L.control.zoom({position: "bottomright"}).addTo(this.leafletMap);
         L.control.mylocation({position: "bottomright"}).addTo(this.leafletMap);
