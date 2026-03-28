@@ -350,7 +350,7 @@ L.Control.Home = L.Control.extend({
 
         function trigger() {
             const layers = [];
-            map.eachLayer(layer => {if (Object.keys(layer.options).length > 0) layers.push(layer)});
+            map.eachLayer(layer => {if (Object.keys(layer.options).length > 0 && !("setUrl" in layer)) layers.push(layer)});
             if (layers.length === 0) return;
             const group = new L.featureGroup(layers);
             map.fitBounds(group.getBounds());
