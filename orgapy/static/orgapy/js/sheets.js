@@ -2096,31 +2096,34 @@ class Sheet {
         this.onChange(true, false);
     }
 
-    sortRows(j, ascending) {
-        // TODO: use ctype comparator?
+    sortRows(sortKeys) {
+        //sortKeys: array of [int (column type) and bool (ascending)]
         let order = [];
         var self = this;
         for (let i = 0; i < this.height; i++) {
             order.push(i);
         }
-        if (j == null) {
+        if (sortKeys.length == 0) {
             if (this.ordering == null) return;
             for (let i = 0; i < this.height; i++) {
                 order[i] = this.ordering.indexOf(i);
             }
         } else {
-            order.sort((p, q) => {
-                let a = self.values[p][j];
-                let b = self.values[q][j];
-                if (a == null && b == null) return 0;
-                if (a == null) return -1;
-                if (b == null) return 1;
-                if (a < b) return -1;
-                if (a > b) return 1;
+            function compareRows(p, q) {
+                for (let k = 0; k < sortKeys.length; k++) {
+                    const [j, ascending] = sortKeys[k];
+                    const a = self.values[p][j];
+                    const b = self.values[q][j];
+                    if (a == null && b == null) return 0;
+                    if (a == null) return ascending ? -1 : 1;
+                    if (b == null) return ascending ? 1 : -1;
+                    if (a < b) return ascending ? -1 : 1;
+                    if (a > b) return ascending ? 1 : -1;
+                }
                 return 0;
-            });
+            }
+            order.sort(compareRows);
         }
-        if (!ascending) order.reverse();
         if (this.ordering == null) {
             this.ordering = order;
         } else {
@@ -2822,8 +2825,7 @@ class Sheet {
                 }
             }
             if (orderingKeys.length > 0) {
-                //TODO: implement sorting with multiple keys
-                self.sortRows(orderingKeys[0][0], orderingKeys[0][1]);
+                self.sortRows(orderingKeys);
             }
             dialog.close();
         }
