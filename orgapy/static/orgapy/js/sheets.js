@@ -2010,6 +2010,7 @@ class Sheet {
                 );
             });
         }
+        this.contextMenu.addItem("Sort", () => {self.openSortDialog(j)});
         this.contextMenu.addItem("Resize", () => {
             let newWidth = prompt(`Column width (default is ${DEFAULT_COLUMN_WIDTH}):`, self.columnWidths[j]);
             if (newWidth != null) {    
@@ -2128,11 +2129,6 @@ class Sheet {
         this.rowHeights = tidy(this.rowHeights, order);
         this.highlights = tidy(this.highlights, order);
         this.inflate();
-        this.container.querySelectorAll(`.sheet-column-sort`).forEach(element => {
-            element.classList.remove("ascending");
-            element.classList.remove("descending");
-        });
-        if (j != null) this.columnHeads[j].querySelector(".sheet-column-sort").classList.add(ascending ? "ascending" : "descending");
         this.setRowNames();
         this.onChange(true, true);
     }
@@ -2261,7 +2257,6 @@ class Sheet {
             self.selection.all();
         });
         cellTopLeft.addEventListener("dblclick", () => {
-            self.sortRows(null, true);
             self.selection.reset();
             self.selection.clear();
         });
@@ -2282,10 +2277,6 @@ class Sheet {
                 if (!self.readonly) {
                     self.openColumnContextMenu(event.clientX, event.clientY, j);
                 }
-            });
-            let cellSort = this.columnHeads[j].querySelector(".sheet-column-sort");
-            cellSort.addEventListener("click", (event) => {
-                self.sortRows(j, !cellSort.classList.contains("ascending"));
             });
             let cellName = this.columnHeads[j].querySelector(".sheet-column-name");
             cellName.addEventListener("dblclick", (event) => {
@@ -2623,8 +2614,6 @@ class Sheet {
             this.columnHeads.push(columnHeadCell);
             this.columnHeads[j].style.width = this.columnWidths[j] + "px";
             let shelf = create(this.columnHeads[j], "div", "sheet-cell-shelf");
-            let cellSort = create(shelf, "span", "sheet-cell-shelf-item sheet-column-sort");
-            cellSort.title = "Sort";
             let cellName = create(shelf, "span", "sheet-cell-shelf-item sheet-column-name");
             cellName.textContent = this.columnNames[j];
             cellName.title = this.columnNames[j];
@@ -2785,6 +2774,34 @@ class Sheet {
     evaluateScript() {
         if (this.script == null) return;
         this.script.evaluate(this);
+    }
+
+    openSortDialog(j) {
+        var self = this;
+        const dialog = create(document.body, "dialog");
+        dialog.setAttribute("closedby", "any");
+        create(dialog, "h3").textContent = "Sort rows";
+        const inputParagraph = create(dialog, "p");
+        const inputColumn = create(inputParagraph, "input");
+        inputColumn.value = j;
+        const selectOrdering = create(inputParagraph, "select");
+        const optionAscending = create(selectOrdering, "option");
+        optionAscending.value = "ascending";
+        optionAscending.textContent = "Ascending";
+        const optionDescending = create(selectOrdering, "option");
+        optionDescending.value = "descending";
+        optionDescending.textContent = "Descending";
+        const bottomRow = create(dialog, "div", "row");
+        const buttonCancel = create(bottomRow, "button");
+        buttonCancel.textContent = "Cancel";
+        buttonCancel.onclick = () => {dialog.close()};
+        const buttonSort = create(bottomRow, "button");
+        buttonSort.textContent = "Sort";
+        dialog.showModal();
+        buttonSort.onclick = () => {
+            self.sortRows(parseInt(inputColumn.value), selectOrdering.value == "ascending");
+            dialog.close();
+        }
     }
 
     openImportDialog() {

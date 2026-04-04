@@ -320,6 +320,7 @@
     transform: translate(-50%, -50%);
 }
 
+/*TODO: remove
 .sheet-column-sort {
     position: absolute;
     top: 0;
@@ -349,6 +350,7 @@
     visibility: visible;
     transform: rotate(-90deg);
 }
+*/
 
 .sheet-column-name {
     overflow: hidden;
