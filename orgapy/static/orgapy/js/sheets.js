@@ -2132,6 +2132,13 @@ class Sheet {
         this.values = tidy(this.values, order);
         this.rowHeights = tidy(this.rowHeights, order);
         this.highlights = tidy(this.highlights, order);
+        let isInOrder = true;
+        for (let i = 0; i < this.height; i++) {
+            isInOrder = isInOrder && this.ordering[i] == i;
+        }
+        if (isInOrder) {
+            this.ordering = null;
+        }
         this.inflate();
         this.setRowNames();
         this.onChange(true, true);
@@ -2824,9 +2831,7 @@ class Sheet {
                     orderingKeys.push([parseInt(columnSelect.value), orderingSelect.value == "ascending"]);
                 }
             }
-            if (orderingKeys.length > 0) {
-                self.sortRows(orderingKeys);
-            }
+            self.sortRows(orderingKeys);
             dialog.close();
         }
     }
