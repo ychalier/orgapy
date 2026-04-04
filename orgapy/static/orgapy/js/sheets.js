@@ -7,6 +7,7 @@ const FIRST_COLUMN_WIDTH = 42;
 const HANDLE_SIZE = 5;
 
 const MAX_DIFFERENT_VALUES_FOR_FILTERS = 50;
+const MAX_SORT_KEYS = 3;
 
 const CTYPE_TEXT = 0;
 const CTYPE_BOOLEAN = 1;
@@ -2781,16 +2782,29 @@ class Sheet {
         const dialog = create(document.body, "dialog");
         dialog.setAttribute("closedby", "any");
         create(dialog, "h3").textContent = "Sort rows";
-        const inputParagraph = create(dialog, "p");
-        const inputColumn = create(inputParagraph, "input");
-        inputColumn.value = j;
-        const selectOrdering = create(inputParagraph, "select");
-        const optionAscending = create(selectOrdering, "option");
-        optionAscending.value = "ascending";
-        optionAscending.textContent = "Ascending";
-        const optionDescending = create(selectOrdering, "option");
-        optionDescending.value = "descending";
-        optionDescending.textContent = "Descending";
+        const table = create(create(dialog, "table"), "tbody");
+        for (let k = 0; k < MAX_SORT_KEYS; k++) {
+            const tr = create(table, "tr");
+            const columnSelect = create(create(tr, "td"), "select");
+            columnSelect.name = "column";
+            const nullOption = create(columnSelect, "option");
+            nullOption.value = "none";
+            nullOption.textContent = "---";
+            for (let jPrime = 0; jPrime < self.width; jPrime++) {
+                const option = create(columnSelect, "option");
+                option.value = jPrime;
+                option.textContent = self.columnNames[jPrime];
+            }
+            columnSelect.value = k == 0 ? j : "none";
+            const orderingSelect = create(create(tr, "td"), "select");
+            orderingSelect.name = "ordering";
+            for (const orderingValue of ["ascending", "descending"]) {
+                const option = create(orderingSelect, "option");
+                option.value = orderingValue;
+                option.textContent = orderingValue.charAt(0).toUpperCase() + orderingValue.slice(1);
+            }
+            orderingSelect.value = "ascending";
+        }
         const bottomRow = create(dialog, "div", "row");
         const buttonCancel = create(bottomRow, "button");
         buttonCancel.textContent = "Cancel";
@@ -2799,7 +2813,18 @@ class Sheet {
         buttonSort.textContent = "Sort";
         dialog.showModal();
         buttonSort.onclick = () => {
-            self.sortRows(parseInt(inputColumn.value), selectOrdering.value == "ascending");
+            const orderingKeys = [];
+            for (const tr of table.querySelectorAll("tr")) {
+                const columnSelect = tr.querySelector("select[name='column']");
+                const orderingSelect = tr.querySelector("select[name='ordering']");
+                if (columnSelect.value != "none") {
+                    orderingKeys.push([parseInt(columnSelect.value), orderingSelect.value == "ascending"]);
+                }
+            }
+            if (orderingKeys.length > 0) {
+                //TODO: implement sorting with multiple keys
+                self.sortRows(orderingKeys[0][0], orderingKeys[0][1]);
+            }
             dialog.close();
         }
     }
