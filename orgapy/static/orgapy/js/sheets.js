@@ -1907,10 +1907,11 @@ class Sheet {
         this.onChange(true, false);
     }
 
-    insertRow(i) {
+    insertRow(i, refI, dI) {
         if (this.editing) this.stopEditing();
         let n = prompt("How many rows to insert?", 1);
         if (n != null) {
+            if (this.ordering != null && !confirm("This table is sorted. Rows will be inserted relatively to your selection. Proceed?")) return;
             n = parseInt(n);
             for (let p = 0; p < n; p++) {
                 this.height++;
@@ -1924,7 +1925,13 @@ class Sheet {
                 this.values.splice(i, 0, row);
                 this.highlights.splice(i, 0, highlightsRow);
                 if (this.ordering != null) {
-                    this.ordering.splice(i, 0, this.values.length - 1);
+                    const newIndex = this.ordering[refI] + dI;
+                    for (let q = 0; q < this.ordering.length; q++) {
+                        if (this.ordering[q] >= newIndex) {
+                            this.ordering[q]++;
+                        }
+                    }
+                    this.ordering.splice(i, 0, newIndex);
                 }
             }
             this.inflate();
@@ -2058,12 +2065,12 @@ class Sheet {
         });
         this.contextMenu.addItem("Insert top", () => {
             let bounds = self.selection.bounds();
-            self.insertRow(bounds.top);
+            self.insertRow(bounds.top, bounds.top, 0);
             self.selection.move(1, 0, true);
         });
         this.contextMenu.addItem("Insert bottom", () => {
             let bounds = self.selection.bounds();
-            self.insertRow(bounds.bottom + 1);
+            self.insertRow(bounds.bottom + 1, bounds.bottom, 1);
         });
         this.contextMenu.addItem("Delete", () => {
             let rowsToDelete = self.selection.rows();
