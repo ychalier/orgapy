@@ -94,7 +94,7 @@
         simplemde.codemirror.on("cursorActivity", onCmCursorActivity);
         simplemde.codemirror.on("change", () => {
             const btnSaveNoteContinue = document.getElementById("btn-save-note-continue");
-            if (btnSaveNoteContinue != null) btnSaveNoteContinue.classList.remove("disabled");
+            if (btnSaveNoteContinue != null) btnSaveNoteContinue.removeAttribute("disabled");
         });
         window.addEventListener("load", () => {
             simplemde.codemirror.refresh();

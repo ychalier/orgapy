@@ -520,7 +520,7 @@ function setupCategoryInput() {
         container.innerHTML = "";
         for (const categoryIdOrName of readInputHiddenValues()) {
             const element = document.createElement("span");
-            element.classList.add("category")
+            element.classList.add("category-chip")
             container.appendChild(element);
             if (categoryIdOrName in categoryIndex) {
                 element.textContent = categoryIndex[categoryIdOrName];

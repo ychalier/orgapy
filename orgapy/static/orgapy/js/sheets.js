@@ -2918,7 +2918,7 @@ class Sheet {
         if (this.toolbar == null) return;
 
         this.toolbarButtonSave = this.toolbar.querySelector(".sheet-button-save");
-        this.toolbarButtonSave.setAttribute("disabled", true);
+        this.toolbarButtonSave.setAttribute("disabled", "");
         this.toolbarButtonSave.addEventListener("click", () => {
             self.saveData();
         });
@@ -3035,7 +3035,7 @@ class Sheet {
                 toast("Saved!", 600);
                 this.modification = data.modification;
                 if (this.toolbarButtonSave != null) {
-                    this.toolbarButtonSave.setAttribute("disabled", true);
+                    this.toolbarButtonSave.setAttribute("disabled", "");
                 }
             });
     }

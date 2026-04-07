@@ -411,7 +411,6 @@ dialog h3 {
 .action-buttons {
     display: flex;
     flex-wrap: wrap;
-    outline: 1px solid black;
     border-radius: .4rem;
 }
 
@@ -585,6 +584,7 @@ dialog h3 {
 
 .card-oneline {
     padding: 0;
+    overflow: hidden;
 }
 
 .card-oneline-title {
@@ -1346,16 +1346,6 @@ a.reference {
     color: white;
 }
 
-.oli:first-child {
-    border-top-left-radius: .4rem;
-    border-top-right-radius: .4rem;
-}
-
-.oli:last-child {
-    border-bottom-left-radius: .4rem;
-    border-bottom-right-radius: .4rem;
-}
-
 .oli:nth-child(even) {
     background: #202020;
 }
@@ -1410,20 +1400,21 @@ a.reference {
     gap: .2rem;
 }
 
-#categories-input .category {
+.category-chip {
     font-size: small;
     background: #8ed2ff;
     color: black;
     padding: .2rem;
     border-radius: .2rem;
     transition: .2s ease-in-out;
+    border: 1px solid #53abe6;
 }
 
-#categories-input .category:hover {
+.category-chip:hover {
     background: #7fbae1;
 }
 
-#categories-input .category i {
+.category-chip i {
     cursor: pointer;
 }
 

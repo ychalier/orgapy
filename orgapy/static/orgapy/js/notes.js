@@ -47,10 +47,10 @@ function bindSaveNoteButtons() {
 
     const buttonSaveNoteContinue = document.getElementById("btn-save-note-continue");
     if (buttonSaveNoteContinue == null) return;
-    buttonSaveNoteContinue.classList.add("disabled");
+    buttonSaveNoteContinue.setAttribute("disabled", "");
     buttonSaveNoteContinue.addEventListener("click", (event) => {
         event.preventDefault();
-        buttonSaveNoteContinue.classList.add("disabled");
+        buttonSaveNoteContinue.setAttribute("disabled", "");
         mergeForms();
         const formdata = new FormData(primaryForm);
         fetch(primaryForm.action, {method: primaryForm.method, body: formdata}).then(res => {
@@ -66,7 +66,7 @@ function bindSaveNoteButtons() {
     });
     document.querySelectorAll("input,textarea").forEach(input => {
         input.addEventListener("input", () => {
-            buttonSaveNoteContinue.classList.remove("disabled");
+            buttonSaveNoteContinue.removeAttribute("disabled");
         });
     });
 }

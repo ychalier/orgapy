@@ -11,7 +11,7 @@ function inflateYear(year) {
     prevButton.textContent = "‹";
     prevButton.title = year - 1;
     if (year == minYear) {
-        prevButton.setAttribute("disabled", "1");
+        prevButton.setAttribute("disabled", "");
     } else {
         prevButton.addEventListener("click", () => {inflateYear(year - 1);});
     }
@@ -20,7 +20,7 @@ function inflateYear(year) {
     nextButton.textContent = "›";
     nextButton.title = year + 1;
     if (year == maxYear) {
-        nextButton.setAttribute("disabled", "1");
+        nextButton.setAttribute("disabled", "");
     } else {
         nextButton.addEventListener("click", () => {inflateYear(year + 1);});
     }
