@@ -1,9 +1,6 @@
 {% load static %}
-
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
     <title>{% block title %}Orgapy{% endblock title %}</title>
     {% block head %}
@@ -27,14 +24,12 @@
     </script>
     {% endblock head %}
 </head>
-
 <body class="{% block body_class %}{% endblock %}">
     {% block body %}
     {% block artworks %}{% endblock artworks %}
-    <div id="columns">
-        <div id="column-left">{% block left_column %}{% endblock left_column %}</div>
-        <main id="column-main" {% if readonly %}class="readonly"{% endif %}>
-        {% block center_column %}
+    <div class="columns">
+        <div class="column-spacer"></div>
+        <main class="column-main">
             <nav class="navbar">
                 <div class="navbar-left">
                     <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-briefcase-line"></i>{% endif %}</a>
@@ -43,15 +38,13 @@
                     <a href="{% url 'orgapy:maps' %}" class="navbar-link {% if active == 'maps' %}active{% endif %}" title="Maps">{% if active == 'maps' %}Maps{% else %}<i class="ri-map-2-line"></i>{% endif %}</a>
                 </div>
                 <div class="navbar-right">
-                    <form id="searchbar" class="searchbar" action="{% url 'orgapy:search' %}" method="get">
-                        <div class="searchbar-container">         
-                            <input class="searchbar-input" autocomplete="off" type="text" name="query" placeholder="Search" tabindex="1" value="{% if query %}{{query}}{% endif %}" />
-                            <i class="searchbar-icon ri-close-line"></i>
-                            <div class="searchbar-suggestions"></div>
-                        </div>
-                        <button class="searchbar-search"><i class="ri-search-line"></i></button>
-                        <button class="searchbar-search-small"><i class="ri-search-line"></i></button>
+                    <form id="searchForm" class="searchbar" action="{% url 'orgapy:search' %}" method="get">
+                        <input class="searchbar-input" autocomplete="off" type="search" name="query" placeholder="Search" tabindex="1" value="{% if query %}{{query}}{% endif %}" />
+                        <i class="searchbar-icon ri-close-line"></i>
+                        <button class="searchbar-button"><i class="ri-search-line"></i></button>
+                        <div class="searchbar-suggestions"></div>
                     </form>
+                    <button id="searchButton"><i class="ri-search-line"></i></button>
                     <div id="menu-dropdown" class="dropdown">
                         <a class="navbar-link dropdown-toggle" tabindex="0"><i class="ri-menu-line"></i></a>
                         <ul class="menu">
@@ -86,12 +79,9 @@
                     </div>
                 </div>
             </nav>
-            {% block main_content_prev %}{% endblock main_content_prev %}
             {% block main_content %}{% endblock main_content %}
-            {% block main_content_next %}{% endblock main_content_next %}
-        {% endblock center_column %}
         </main>
-        <div id="column-right"><div id="rightColumnContainer">{% block right_column %}{% endblock right_column %}</div></div>
+        <div class="column-side"><div id="rightColumnContainer">{% block right_column %}{% endblock right_column %}</div></div>
     </div>
     {% endblock body %}
     <div id="snackbar"></div>
@@ -100,11 +90,10 @@
     {% block body_scrips_minimized %}
     <script>
         bindDropdown(document.getElementById("menu-dropdown"));
-        bindSearchbarClearIcon(document.getElementById("searchbar"));
-        bindSearchButton(document.getElementById("searchbar"), document.querySelector("#searchbar .searchbar-search-small"));
-        bindSearchbarSuggestions(document.getElementById("searchbar"), "suggestions");
+        bindSearchbarClearIcon(searchForm);
+        bindSearchButton(searchForm, searchButton);
+        bindSearchbarSuggestions(searchForm, "suggestions");
     </script>
     {% endblock %}
 </body>
-
 </html>

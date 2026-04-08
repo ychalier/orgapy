@@ -12,7 +12,7 @@
 <div class="card">
     <p>You have no note.</p>
     <div class="card-commands">
-        <a class="button button-primary" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-sticky-note-line"></i> Create note</a>
+        <a class="button button-accent" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-sticky-note-line"></i> Create note</a>
     </div>
 </div>
 {% endblock empty %}

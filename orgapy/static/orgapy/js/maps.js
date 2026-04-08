@@ -1981,11 +1981,11 @@ class ImportGeojsonDialog extends Dialog {
             self.close();
         });
         const buttons = create(form, "div", "row");
-        let importAdd = create(buttons, "input", "button button-primary");
+        let importAdd = create(buttons, "input", "button button-accent");
         importAdd.type = "submit";
         importAdd.name = "add";
         importAdd.value = "Add";
-        let importReplace = create(buttons, "input", "button button-primary");
+        let importReplace = create(buttons, "input", "button button-accent");
         importReplace.type = "submit";
         importReplace.name = "replace";
         importReplace.value = "Replace";
@@ -2025,7 +2025,7 @@ class LayerStyleDialog extends Dialog {
         styleForm.classList.add("style-form-dialog");
 
         const buttons = create(this.container, "div", "row");
-        const saveButton = create(buttons, "button", "button-primary");
+        const saveButton = create(buttons, "button", "button-accent");
         saveButton.textContent = "Save";
         saveButton.addEventListener("click", (event) => {
             event.preventDefault();
@@ -2081,7 +2081,7 @@ class MoveFeatureDialog extends Dialog {
             option.textContent = layer.label;
         });
         let buttons = create(form, "div", "row");
-        let moveButton = create(buttons, "button", "button-primary");
+        let moveButton = create(buttons, "button", "button-accent");
         moveButton.textContent = "Move";
         let cancelButton = create(buttons, "button");
         cancelButton.textContent = "Cancel";
