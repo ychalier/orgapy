@@ -68,9 +68,9 @@ function apiPost(action, body, onSuccess=null) {
 
 function bindSearchbarClearIcon(searchbar) {
     window.addEventListener("load", () => {
-        const input = searchbar.querySelector(".searchbar-input");
-        const icon = searchbar.querySelector(".searchbar-icon");
-        const suggestionsContainer = searchbar.querySelector(".searchbar-suggestions");
+        const input = searchbar.querySelector(".search-input");
+        const icon = searchbar.querySelector(".search-icon");
+        const suggestionsContainer = searchbar.querySelector(".search-suggestions");
         icon.addEventListener("click", () => {
             input.value = "";
             input.focus();
@@ -83,8 +83,8 @@ function bindSearchbarClearIcon(searchbar) {
 
 function bindSearchbarSuggestions(searchbar, apiAction) {
     window.addEventListener("load", () => {
-        const input = searchbar.querySelector(".searchbar-input");
-        const container = searchbar.querySelector(".searchbar-suggestions");
+        const input = searchbar.querySelector(".search-input");
+        const container = searchbar.querySelector(".search-suggestions");
         var selected = null;
         var results;
         var elements = [];
@@ -98,17 +98,17 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
                 for (const [i, entry] of results.entries()) {
                     const element = document.createElement("a");
                     elements.push(element);
-                    element.className = "searchbar-suggestion";
+                    element.className = "search-suggestion";
                     container.appendChild(element);
                     element.href = entry.url;
                     element.innerHTML = `<mark>${ entry.title.slice(0, query.length) }</mark>${ entry.title.slice(query.length) }`;
                     element.addEventListener("mouseenter", () => {
                         selected = i;
-                        element.classList.add("hovered");
+                        element.classList.add("hover");
                     });
                     element.addEventListener("mouseleave", () => {
                         selected = null;
-                        element.classList.remove("hovered");
+                        element.classList.remove("hover");
                     });
                 }
             });
@@ -126,10 +126,10 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
                 } else {
                     selected = Math.min(selected + 1, results.length - 1);
                 }
-                container.querySelectorAll(".hovered").forEach(element => {
-                    element.classList.remove("hovered");
+                container.querySelectorAll(".hover").forEach(element => {
+                    element.classList.remove("hover");
                 });
-                elements[selected].classList.add("hovered");
+                elements[selected].classList.add("hover");
             } else if (event.key == "ArrowUp" && results.length > 0) {
                 event.preventDefault();
                 if (selected == null) {
@@ -139,11 +139,11 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
                 } else {
                     selected = Math.max(0, selected - 1);
                 }
-                container.querySelectorAll(".hovered").forEach(element => {
-                    element.classList.remove("hovered");
+                container.querySelectorAll(".hover").forEach(element => {
+                    element.classList.remove("hover");
                 });
                 if (selected != null) {
-                    elements[selected].classList.add("hovered");
+                    elements[selected].classList.add("hover");
                 }
             }
         });

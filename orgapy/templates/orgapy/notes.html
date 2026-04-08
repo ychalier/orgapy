@@ -10,9 +10,9 @@
 
 {% block empty %}
 <div class="card">
-    <p>You have no note.</p>
-    <div class="card-commands">
-        <a class="button button-accent" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-sticky-note-line"></i> Create note</a>
+    Empty 👀
+    <div class="card-actions">
+        <a class="button" href="{% url 'orgapy:create_note' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-add-line"></i><span>Create note<span></a>
     </div>
 </div>
 {% endblock empty %}

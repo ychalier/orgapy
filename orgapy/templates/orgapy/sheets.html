@@ -4,9 +4,9 @@
 
 {% block empty %}
 <div class="card">
-    <p>You have no sheet.</p>
-    <div class="card-commands">
-        <a class="button button-accent" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-table-line"></i> Create sheet</a>
+    Empty 👀
+    <div class="card-actions">
+        <a class="button" href="{% url 'orgapy:create_sheet' %}{% if query %}?title={{query}}{% endif %}"><i class="ri-add-line"></i><span>Create sheet<span></a>
     </div>
 </div>
 {% endblock empty %}

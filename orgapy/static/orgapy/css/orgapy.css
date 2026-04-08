@@ -39,7 +39,6 @@
 }
 
 :root {
-    /*TODO (idea): merge inputs, buttons and secondary styles */
     font-family: "Fira Sans", sans-serif;
     
     --bg-page: #1f2d38;
@@ -100,6 +99,7 @@ body {
     width: 0;
 }
 
+/* TODO: make column-side sticky */
 .column-side {
     position: relative;
     flex-grow: 1;
@@ -255,15 +255,15 @@ input[type=submit]:disabled {
 button.active,
 .button.active,
 input[type=submit].active {
-    background-color: var(--accent);
+    color: var(--accent);
     border-color: var(--border-accent);
-    color: var(--text-dark);
 }
 
 button.active:hover,
 .button.active:hover,
 input[type=submit].active:hover {
-    background-color: var(--accent-hover);
+    background-color: var(--accent);
+    color: var(--text-dark)
 }
 
 /* TODO: should background be none? */
@@ -440,45 +440,37 @@ input:checked+.toggle-slider+.toggle-text {
     border-right: none;
 }
 
-/***** SEARCHBAR **************************************************************/
 
-.searchbar {
-    display: flex;
+/***** SEARCH *****************************************************************/
+
+.search {
     position: relative;
-    border-radius: .4rem;
+}
+
+.search-bar {
+    width: 14rem;
+    display: flex;
     border: 1px solid var(--border-secondary);
+    overflow: hidden;
+    border-radius: .4rem;
 }
 
-.searchbar:has(.searchbar-suggestion) {
+.search:has(.search-suggestion) .search-bar {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
 }
 
-.searchbar:has(.searchbar-suggestion) .searchbar-input {
-    border-bottom-left-radius: 0;
-}
-
-.searchbar:has(.searchbar-suggestion) .searchbar-button {
-    border-bottom-right-radius: 0;
-}
-
-.searchbar-input {
+.search-input,
+.search-button {
     border: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 0;
 }
 
-.searchbar-input:focus {
+.search-input:focus {
     outline: none;
 }
 
-.searchbar-button {
-    border: none;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-}
-
-.searchbar-icon {
+.search-icon {
     position: absolute;
     top: 50%;
     right: 2rem;
@@ -488,40 +480,40 @@ input:checked+.toggle-slider+.toggle-text {
     cursor: pointer;
 }
 
-.searchbar:hover .searchbar-icon,
-.searchbar-input:focus+.searchbar-icon {
+.search:hover .search-icon,
+.search-input:focus + .search-icon {
     visibility: visible;
 }
 
 /* TODO: move searchbar suggestions to the menu section, and refactor */
-.searchbar-suggestions {
-    position: absolute;
-    left: -1px;
-    top: 1.9rem;
-    width: calc(100% + 2px);
+.search-suggestions {
     display: flex;
     flex-direction: column;
+    width: 14rem;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    transform: translateY(100%);
+    overflow: hidden;
+    border-bottom-left-radius: .4rem;
+    border-bottom-right-radius: .4rem;
+    z-index: 1;
 }
 
-.searchbar-suggestion {
+.search-suggestions:has(.search-suggestion) {
+    border: 1px solid var(--border-secondary);
+}
+
+.search-suggestion {
     background: var(--bg-secondary);
-    z-index: 1;
     text-decoration: none;
     color: inherit;
     padding: .4rem;
-    border-left: 1px solid var(--border-secondary);
-    border-right: 1px solid var(--border-secondary);
 }
 
-.searchbar-suggestion.hovered,
-.searchbar-suggestion:hover {
+.search-suggestion.hover,
+.search-suggestion:hover {
     background: var(--bg-secondary-hover);
-}
-
-.searchbar-suggestion:last-child {
-    border-bottom-left-radius: .4rem;
-    border-bottom-right-radius: .4rem;
-    border-bottom: 1px solid var(--border-secondary);
 }
 
 #searchButton {
@@ -560,19 +552,31 @@ input:checked+.toggle-slider+.toggle-text {
     overflow: hidden;
 }
 
-.card-actions {
+.card:has(.card-actions) {
     padding-bottom: 0;
-    border-bottom: 0;
 }
 
-.card-actions > .actionbar {
+.card-actions {
+    display: flex;
     position: relative;
-    left: calc(-.8rem - 1px);
+    left: -.8rem;
     width: calc(100% + 1.6rem);
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
     margin-top: .8rem;
-    border-color: var(--border-primary);
+    border-top: 1px solid var(--border-secondary);
+    border-bottom-left-radius: .4rem;
+    border-bottom-right-radius: .4rem;
+    overflow: hidden;
+}
+
+.card-actions button,
+.card-actions .button {
+    border: none;
+    border-radius: 0;
+}
+
+.card-actions button:not(:hover),
+.card-actions .button:not(:hover) {
+    background: none;
 }
 
 .card-title {
@@ -586,35 +590,6 @@ input:checked+.toggle-slider+.toggle-text {
     margin-top: .4rem;
 }
 
-/* TODO: refactor with actionbar */
-.card-commands {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: .2rem;
-    flex-wrap: wrap;
-    margin-top: .4rem;
-    font-size: small;
-    line-height: 1;
-}
-
-.card-commands span,
-.card-commands button,
-.card-commands a.button {
-    background: #303030;
-    font-size: small;
-    padding: .2rem;
-    border-radius: .2rem;
-    border: 1px solid #555;
-    line-height: inherit;
-}
-
-.card-commands button:hover,
-.card-commands a.button:hover {
-    background: #1b2931;
-}
-
 
 
 /******************************************************************************/
@@ -625,13 +600,13 @@ input:checked+.toggle-slider+.toggle-text {
     display: none;
 }
 
-.secondary {
-    color: #888;
+.muted {
+    color: var(--text-muted);
 }
 
 .hint {
     font-size: small;
-    color: #888;
+    color: var(--text-muted);
 }
 
 .show-on-parent-hover {

@@ -22,7 +22,7 @@
 
 {% block main_content %}
 
-<header class="card {% if not readonly %}card-actions{% endif %}">
+<header class="card">
     <h1 class="card-title">{% if note.title %}{{note.title}}{% else %}<i>Untitled</i>{% endif %}</h1>
     <div class="header-meta">
         {% if not readonly %}
@@ -51,10 +51,10 @@
     <a class="link-tenuous" href="{% url 'orgapy:projects_all' %}?note={{ note.id }}&status=AR">View archived projects ({{ note.archived_projects_count }})</a>
     {% endif %}
     {% if not readonly %}
-    <div class="actionbar">
+    <div class="card-actions">
         <a href="{% url 'orgapy:edit_note' object_id=note.id %}" class="button" title="Edit"><i class="ri-pencil-fill"></i><span>Edit</span></a>
-        <a href="{% url 'orgapy:toggle_note_pin' object_id=note.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if note.pinned %}active{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i><span>Pin</span></a>
-        <a href="{% url 'orgapy:toggle_note_public' object_id=note.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if note.public %}active{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}"><i class="ri-lock-line"></i><span>Publish</span></a>
+        <a href="{% url 'orgapy:toggle_note_pin' object_id=note.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if note.pinned %}active{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i><span>{% if note.pinned %}Unpin{% else %}Pin{% endif %}</span></a>
+        <a href="{% url 'orgapy:toggle_note_public' object_id=note.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if note.public %}active{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}">{% if note.public %}<i class="ri-lock-line"></i><span>Make private</span>{% else %}<i class="ri-lock-unlock-line"></i><span>Make public</span>{% endif %}</a>
         {% if note.public %}<a href="{% url 'orgapy:note' object_id=note.nonce %}" class="button" title="Share"><i class="ri-share-line"></i><span>Share</span></a>{% endif %}
         <a href="{% url 'orgapy:export_note' object_id=note.id %}" class="button" title="Download as Markdown"><i class="ri-download-line"></i><span>Download</span></a>
         <button id="btn-add-project" class="button" title="Add project"><i class="ri-briefcase-line"></i><span>Project</span></button>
