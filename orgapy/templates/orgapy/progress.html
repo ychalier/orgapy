@@ -35,9 +35,8 @@
         </span>
     </div>
     {% endfor %}
+    {% include 'orgapy/partials/pagination.html' with paginator=paginator %}
 </div>
-
-{% include 'orgapy/partials/pagination.html' with paginator=paginator %}
 
 {% else %}
 <div class="card">

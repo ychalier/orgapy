@@ -96,17 +96,17 @@ function bindSearchbarSuggestions(searchbar, apiAction) {
                 selected = null;
                 elements = [];
                 for (const [i, entry] of results.entries()) {
-                    const element = document.createElement("a");
-                    elements.push(element);
-                    element.className = "search-suggestion";
-                    container.appendChild(element);
+                    const li = create(null, "li", "menu-item search-suggestion");
+                    const element = create(li, "a");
+                    elements.push(li);
+                    container.appendChild(li);
                     element.href = entry.url;
                     element.innerHTML = `<mark>${ entry.title.slice(0, query.length) }</mark>${ entry.title.slice(query.length) }`;
-                    element.addEventListener("mouseenter", () => {
+                    li.addEventListener("mouseenter", () => {
                         selected = i;
                         element.classList.add("hover");
                     });
-                    element.addEventListener("mouseleave", () => {
+                    li.addEventListener("mouseleave", () => {
                         selected = null;
                         element.classList.remove("hover");
                     });

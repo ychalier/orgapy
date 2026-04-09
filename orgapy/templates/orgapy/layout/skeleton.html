@@ -31,24 +31,24 @@
         <div class="column-spacer"></div>
         <main class="column-main">
             <nav class="navbar">
-                <div class="navbar-left">
-                    <a href="{% url 'orgapy:projects' %}" class="navbar-link {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-briefcase-line"></i>{% endif %}</a>
-                    <a href="{% url 'orgapy:notes' %}" class="navbar-link {% if active == 'notes' %}active{% endif %}" title="Notes">{% if active == 'notes' %}Notes{% else %}<i class="ri-sticky-note-line"></i>{% endif %}</a>
-                    <a href="{% url 'orgapy:sheets' %}" class="navbar-link {% if active == 'sheets' %}active{% endif %}" title="Sheets">{% if active == 'sheets' %}Sheets{% else %}<i class="ri-table-line"></i>{% endif %}</a>
-                    <a href="{% url 'orgapy:maps' %}" class="navbar-link {% if active == 'maps' %}active{% endif %}" title="Maps">{% if active == 'maps' %}Maps{% else %}<i class="ri-map-2-line"></i>{% endif %}</a>
+                <div class="row">
+                    <a href="{% url 'orgapy:projects' %}" class="button {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-briefcase-line"></i>{% endif %}</a>
+                    <a href="{% url 'orgapy:notes' %}" class="button {% if active == 'notes' %}active{% endif %}" title="Notes">{% if active == 'notes' %}Notes{% else %}<i class="ri-sticky-note-line"></i>{% endif %}</a>
+                    <a href="{% url 'orgapy:sheets' %}" class="button {% if active == 'sheets' %}active{% endif %}" title="Sheets">{% if active == 'sheets' %}Sheets{% else %}<i class="ri-table-line"></i>{% endif %}</a>
+                    <a href="{% url 'orgapy:maps' %}" class="button {% if active == 'maps' %}active{% endif %}" title="Maps">{% if active == 'maps' %}Maps{% else %}<i class="ri-map-2-line"></i>{% endif %}</a>
                 </div>
-                <div class="navbar-right">
+                <div class="row">
                     <form id="searchForm" class="search" action="{% url 'orgapy:search' %}" method="get">
                         <div class="search-bar">
                             <input class="search-input" autocomplete="off" type="search" name="query" placeholder="Search" tabindex="1" value="{% if query %}{{query}}{% endif %}" />
                             <i class="search-icon ri-close-line"></i>
                             <button class="search-button"><i class="ri-search-line"></i></button>
                         </div>
-                        <div class="search-suggestions"></div>
+                        <ul class="search-suggestions menu"></ul>
                     </form>
                     <button id="searchButton"><i class="ri-search-line"></i></button>
                     <div id="menu-dropdown" class="dropdown">
-                        <a class="navbar-link dropdown-toggle" tabindex="0"><i class="ri-menu-line"></i></a>
+                        <a class="button dropdown-toggle" tabindex="0"><i class="ri-menu-line"></i></a>
                         <ul class="menu">
                             {% block menu %}
                             {% if request.user.is_authenticated %}
@@ -66,12 +66,12 @@
                             </li>
                             <li class="menu-item"><a href="{% url 'orgapy:categories' %}"><i class="ri-hashtag"></i> Categories</a></li>
                             <li class="menu-item"><a href="{% url 'orgapy:trash' %}"><i class="ri-delete-bin-line"></i> Trash</a></li>
-                            <hr class="menu-separator">
+                            <hr>
                             <li class="menu-item"><a href="{% url 'orgapy:progress' %}"><i class="ri-bar-chart-2-line"></i> Progress</a></li>
                             <li class="menu-item"><a href="{% url 'orgapy:mood' %}"><i class="ri-emotion-line"></i> Mood</a></li>
                             <li class="menu-item"><a href="{% url 'orgapy:groceries' %}"><i class="ri-shopping-basket-line"></i> Groceries</a></li>
                             {% if request.user.settings %}
-                            <hr class="menu-separator">
+                            <hr>
                             <li class="menu-item"><a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}"><i class="ri-settings-2-line"></i> Settings</a></li>
                             {% endif %}
                             {% endif %}

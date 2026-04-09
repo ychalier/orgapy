@@ -1,17 +1,13 @@
-<ul class="pagination">
-    <button id="button-paginator-goto" class="paginator-button" title="Go to page"><i class="ri-arrow-right-circle-line"></i></button>
+<div class="card-actions">
+    <button id="button-paginator-goto" title="Go to page"><i class="ri-arrow-right-circle-line"></i></button>
     {% for page in paginator.pages %}
         {% if page %}
-        <li class="page-item{% if page == paginator.active %} active{% endif %}">
-            <a href="?page={{ page }}{{ paginator.attr_string }}">{{ page }}</a>
-        </li>
+            <a class="button {% if page == paginator.active %}active{% endif %}" href="?page={{ page }}{{ paginator.attr_string }}">{{ page }}</a>
         {% else %}
-        <li class="page-item">
             <span>…</span>
-        </li>
         {% endif %}
     {% endfor %}
-</ul>
+</div>
 
 <script>
     bindGotoPaginatorButton("#button-paginator-goto", {{ paginator.active }}, {{ paginator.max }}, "{{ paginator.attr_string | safe }}");

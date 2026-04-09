@@ -10,6 +10,7 @@
     {% for obj in objects %}
     {% include 'orgapy/partials/object_list_item.html' %}
     {% endfor %}
+    {% include 'orgapy/partials/pagination.html' %}
 </div>
 {% else %}
 {% block empty %}
@@ -18,8 +19,6 @@
 </div>
 {% endblock empty %}
 {% endif %}
-
-{% include 'orgapy/partials/pagination.html' %}
 
 <script>document.querySelectorAll(".oli .dropdown").forEach(bindDropdown);</script>
 

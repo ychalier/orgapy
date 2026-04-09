@@ -41,20 +41,24 @@
 :root {
     font-family: "Fira Sans", sans-serif;
     
-    --bg-page: #1f2d38;
+    --bg-page: #373839; /* 1f2d38 */
     
     /* cards */
     --bg-primary: #101010; 
+    --bg-primary-alt: #202020; /* striped lines */
+    --bg-primary-hover: #304350;
     --border-primary: #000000;
 
-    /* inputs, buttons, suggestions */
-    --bg-secondary: #404040;
+    /* inputs, buttons, suggestions, menus */
+    --bg-secondary: #303030;
     --bg-secondary-hover: #555555;
     --border-secondary: #505050;
     
-    /* blockquote */
-    --bg-tertiary: #1e313e; 
-    --border-tertiary: #8ed2ff;
+    /* blockquote, navbar */
+    /* --bg-tertiary: #1e313e; */
+    --bg-tertiary: #0d2739; /* 1f2d38 0d2739 */
+    --bg-tertiary-hover: #2b495e;
+    --border-tertiary: #021725;
     
     --accent: #8ed2ff;
     --accent-hover: #c5e8ff;
@@ -186,14 +190,6 @@ a {
     text-decoration: underline;
 }
 
-/***** LISTS ******************************************************************/
-
-ul,
-ol {
-    line-height: 1.6;
-    padding-left: 1.6rem;
-}
-
 /***** FORMS, INPUTS **********************************************************/
 
 input,
@@ -204,7 +200,7 @@ textarea {
     color: var(--text);
     border: 1px solid var(--border-secondary);
     padding: .4rem;
-    border-radius: .4rem;
+    border-radius: .2rem;
     background-color: var(--bg-secondary);
     width: 100%;
 }
@@ -233,7 +229,7 @@ input[type=submit] {
     color: var(--text);
     border: 1px solid var(--border-secondary);
     padding: .4rem;
-    border-radius: .4rem;
+    border-radius: .2rem;
     background-color: var(--bg-secondary);
     cursor: pointer;
     text-decoration: none;
@@ -266,14 +262,6 @@ input[type=submit].active:hover {
     color: var(--text-dark)
 }
 
-/* TODO: should background be none? */
-.button-inline {
-    text-decoration: none;
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--accent);
-}
-
 button span,
 .button span {
     margin-left: .2rem;
@@ -288,8 +276,15 @@ button span,
     
 }
 
+.button-inline {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
 .button-inline:hover {
     color: var(--accent-hover);
+    background: none;
 }
 
 .button-accent {
@@ -325,7 +320,7 @@ code * {
 /***** QUOTES *****************************************************************/
 
 blockquote {
-    border-left: 0.2rem solid var(--border-tertiary);
+    border-left: 0.2rem solid var(--accent);
     background: var(--bg-tertiary);
     margin-left: 1.6rem;
     padding: .8rem;
@@ -343,6 +338,14 @@ blockquote p + p {
 
 blockquote ul li::marker {
     content: "— ";
+}
+
+/***** ROWS *******************************************************************/
+
+.row {
+    display: flex;
+    gap: .2rem;
+    align-items: center;
 }
 
 
@@ -440,7 +443,6 @@ input:checked+.toggle-slider+.toggle-text {
     border-right: none;
 }
 
-
 /***** SEARCH *****************************************************************/
 
 .search {
@@ -452,7 +454,7 @@ input:checked+.toggle-slider+.toggle-text {
     display: flex;
     border: 1px solid var(--border-secondary);
     overflow: hidden;
-    border-radius: .4rem;
+    border-radius: .2rem;
 }
 
 .search:has(.search-suggestion) .search-bar {
@@ -485,35 +487,15 @@ input:checked+.toggle-slider+.toggle-text {
     visibility: visible;
 }
 
-/* TODO: move searchbar suggestions to the menu section, and refactor */
-.search-suggestions {
-    display: flex;
-    flex-direction: column;
+.menu.search-suggestions {
     width: 14rem;
     position: absolute;
     left: 0;
     bottom: 0;
     transform: translateY(100%);
-    overflow: hidden;
-    border-bottom-left-radius: .4rem;
-    border-bottom-right-radius: .4rem;
-    z-index: 1;
-}
-
-.search-suggestions:has(.search-suggestion) {
-    border: 1px solid var(--border-secondary);
-}
-
-.search-suggestion {
-    background: var(--bg-secondary);
-    text-decoration: none;
-    color: inherit;
-    padding: .4rem;
-}
-
-.search-suggestion.hover,
-.search-suggestion:hover {
-    background: var(--bg-secondary-hover);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    box-shadow: none;
 }
 
 #searchButton {
@@ -529,6 +511,135 @@ input:checked+.toggle-slider+.toggle-text {
     #searchButton {
         display: block;
     }
+}
+
+/***** NAVBAR *****************************************************************/
+
+#column-main.readonly .navbar {
+    display: none;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    margin: .8rem 0;
+    padding: .4rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-tertiary);
+    border-radius: .4rem;
+}
+
+.navbar .button {
+    background: none;
+    border-color: var(--bg-tertiary);
+}
+
+.navbar .button:hover {
+    background-color: var(--bg-tertiary-hover);
+    border-color: var(--border-tertiary);
+}
+
+.navbar .button.active {
+    border-color: var(--border-accent);
+}
+
+.navbar .button.active:hover {
+    background-color: var(--accent-hover);
+}
+
+/***** MENUS AND DROPDOWNS ****************************************************/
+
+.contextmenu {
+    position: fixed;
+    z-index: 2;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border-radius: .2rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    box-shadow: 0 0 4px black;
+    z-index: 2;
+}
+
+.menu:has(.menu-item) {
+    border: 1px solid var(--border-secondary);
+}
+
+.menu-item {
+    cursor: pointer;
+}
+
+.menu-item:hover,
+.menu-item.hover {
+    background: var(--bg-secondary-hover);
+}
+
+.menu a {
+    color: inherit;
+    text-decoration: inherit;
+}
+
+.menu a,
+.menu button,
+.menu .dropdown-toggle {
+    box-sizing: border-box;
+    display: block;
+    border: none;
+    padding: .4rem;
+    background: none;
+    white-space: nowrap;
+    width: 100%;
+    text-align: left;
+    border-radius: 0;
+}
+
+.menu hr {
+    width: 100%;
+    margin: 0;
+    border: none;
+    border-top: 1px solid var(--border-secondary);
+}
+
+.dropdown {
+    display: inline-block;
+    position: relative;
+}
+
+.dropdown > .menu {
+    display: none;
+    left: 0;
+    position: absolute;
+    top: 100%;
+    width: fit-content;
+}
+
+.dropdown.active .menu,
+.dropdown .dropdown-toggle:focus+.menu,
+.dropdown .menu:hover,
+.menu-item .dropdown-toggle:hover+.menu {
+    display: flex;
+}
+
+.menu-item .dropdown {
+    width: 100%;
+}
+
+.menu-item .dropdown-toggle::after {
+    content: "❭";
+    float: right;
+    height: 0;
+    line-height: 1.2rem;
+}
+
+/* TODO: In JavaScript menu handling, position submenu according the available space */
+.menu .menu {
+    top: 0;
+    left: 100%;
 }
 
 
@@ -549,7 +660,6 @@ input:checked+.toggle-slider+.toggle-text {
 
 .card-lines {
     padding: 0;
-    overflow: hidden;
 }
 
 .card:has(.card-actions) {
@@ -566,6 +676,12 @@ input:checked+.toggle-slider+.toggle-text {
     border-bottom-left-radius: .4rem;
     border-bottom-right-radius: .4rem;
     overflow: hidden;
+}
+
+.card-lines .card-actions {
+    left: 0;
+    margin-top: 0;
+    width: 100%;
 }
 
 .card-actions button,
@@ -609,6 +725,12 @@ input:checked+.toggle-slider+.toggle-text {
     color: var(--text-muted);
 }
 
+.x-hint {
+    font-size: x-small;
+    color: var(--text-muted);
+}
+
+/* TODO: remove this in favor of a dropdown */
 .show-on-parent-hover {
     display: none;
 }
@@ -620,16 +742,6 @@ input:checked+.toggle-slider+.toggle-text {
 
 *:hover>i.show-on-parent-hover {
     height: fit-content;
-}
-
-.row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .2rem;
-}
-
-.row>* {
-    width: fit-content;
 }
 
 .cursor-pointer {
@@ -650,6 +762,7 @@ input:checked+.toggle-slider+.toggle-text {
     text-align: center;
 }
 
+/* TODO: remove this by moving buttons to card actions in edit_note */
 .button-block {
     display: block;
     margin: .4rem 0;
@@ -709,129 +822,6 @@ dialog h3 {
     width: fit-content;
 }
 
-/***** PAGINATION *************************************************************/
-
-.pagination {
-    background: #101010;
-    border-radius: .4rem;
-    padding: .4rem;
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: .4rem;
-    margin: .8rem 0;
-}
-
-.page-item a {
-    text-decoration: none;
-    color: inherit;
-    padding: .4rem;
-    border-radius: .4rem;
-}
-
-.page-item.disabled a {
-    color: #888;
-    cursor: default;
-    pointer-events: none;
-    user-select: none;
-}
-
-.page-item.active a {
-    background: #8ed2ff;
-    color: black;
-}
-
-.paginator-button {
-    margin: 0;
-    padding: 0 .4rem;
-    border: none;
-}
-
-/***** MENUS AND DROPDOWNS ****************************************************/
-
-.contextmenu {
-    position: fixed;
-    z-index: 2;
-}
-
-.menu {
-    display: flex;
-    flex-direction: column;
-    background: #303030;
-    border: 1px solid #555;
-    border-radius: .2rem;
-    box-shadow: 0 0 4px black;
-    padding: 0;
-    list-style: none;
-    margin: 0;
-}
-
-.menu .menu {
-    background: #383838;
-}
-
-.menu-item {
-    cursor: pointer;
-    border-radius: .2rem;
-}
-
-.menu-item:hover {
-    background: #888;
-}
-
-.menu-item>* {
-    display: block;
-    white-space: nowrap;
-    padding: .2rem .4rem !important;
-    line-height: 1.6;
-}
-
-.menu-item a {
-    color: inherit;
-    text-decoration: none;
-}
-
-.menu-item button {
-    border: none !important;
-    background: none !important;
-    width: 100%;
-    height: 100%;
-    text-align: left;
-}
-
-.menu-separator {
-    width: 100%;
-    margin: 0;
-    border: 1px solid #444;
-}
-
-.dropdown {
-    display: inline-block;
-    position: relative;
-}
-
-.dropdown > .menu {
-    display: none;
-    left: 0;
-    position: absolute;
-    top: 100%;
-    z-index: 2;
-    width: fit-content;
-}
-
-.dropdown.active .menu,
-.dropdown .dropdown-toggle:focus+.menu,
-.dropdown .menu:hover {
-    display: flex;
-}
-
-.menu-item .dropdown,
-.menu-item .dropdown-toggle {
-    width: 100%;
-}
-
-
-
 /**
  * Header
  */
@@ -848,10 +838,10 @@ dialog h3 {
  * Oneline
  */
 
+
 .oneline {
     display: flex;
     width: 100%;
-    /*margin: .4rem 0;*/
     padding: .4rem;
     height: fit-content;
 }
@@ -892,64 +882,6 @@ dialog h3 {
 
 .oneline:hover {
     background: #304350;
-}
-
-/**
- * Navbar
- */
-
-#column-main.readonly .navbar {
-    display: none;
-}
-
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    background: #07141d;
-    margin: .8rem 0;
-    border-radius: .4rem;
-    border: 1px solid black;
-    padding: .4rem;
-    flex-wrap: wrap;
-    gap: .2rem;
-}
-
-.navbar-left {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .2rem;
-    justify-content: flex-start;
-    align-items: center;
-}
-
-.navbar-right {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .2rem;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.navbar-link {
-    text-decoration: none;
-    border-radius: .4rem;
-    padding: .2rem .4rem;
-    color: inherit;
-    transition: .2s ease-in-out;
-    border: 1px solid #07141d;
-}
-
-.navbar-link.active {
-    border-color: #8ed2ff;
-    color: #8ed2ff;
-}
-
-.navbar-link:hover {
-    color: #8ed2ff;
-}
-
-.navbar-link.dropdown-toggle {
-    height: auto;
 }
 
 /**
@@ -1069,6 +1001,7 @@ header .reference {
 
 .label,
 a.reference {
+    position: relative;
     background: hsl(204, 34%, 18%);
     padding: .1rem .3rem;
     border-radius: .2rem;
@@ -1079,6 +1012,17 @@ a.reference {
 .label-inline {
     padding-top: 0;
     padding-bottom: 0;
+}
+
+.label-badge {
+    box-sizing: border-box;
+    position: absolute;
+    top: -.2rem;
+    right: -.1rem;
+    background: none;
+    color: inherit;
+    font-size: x-small;
+    text-align: center;
 }
 
 .label-grey {
@@ -1190,57 +1134,44 @@ a.reference {
     }
 }
 
-/**
- * Object list
- */
+/***** LINE *******************************************************************/
 
-.oli {
+.line {
+    position: relative;
     display: flex;
-    width: 100%;
-    height: fit-content;
-    align-items: stretch;
-}
-
-.oli-content {
-    display: flex;
-    flex-basis: 100%;
-    flex-shrink: 1;
-    padding: .4rem 0 .4rem .4rem;
+    align-items: baseline;
+    background: var(--bg-primary);
+    padding: .4rem 1rem .4rem .4rem;
     flex-wrap: wrap;
     gap: .4rem;
-    align-items: baseline;
 }
 
-.oli-menu {
-    flex-basis: content;
-    flex-shrink: 0;
+.card-lines > .line:first-child {
+    border-top-left-radius: .2rem;
+    border-top-right-radius: .2rem;
 }
 
-.oli-menu .dropdown-toggle {
-    display: flex;
+.line:nth-child(even) {
+    background: var(--bg-primary-alt);
+}
+
+.line:hover {
+    background: var(--bg-primary-hover);
+}
+
+.line .dropdown-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
     height: 100%;
-    flex-direction: column;
-    justify-content: center;
-    padding: .4rem;
-    color: #888;
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    cursor: pointer;
 }
 
-.oli-menu .dropdown-toggle:hover {
-    color: white;
-}
-
-.oli:nth-child(even) {
-    background: #202020;
-}
-
-.oli:hover {
-    background: #304350;
-}
-
-.obj-date-hint {
-    color: #888;
-    font-size: x-small;
-    text-transform: uppercase;
+.line .dropdown-toggle:hover {
+    color: var(--text);
 }
 
 .categories {

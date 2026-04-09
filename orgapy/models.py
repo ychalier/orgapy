@@ -104,7 +104,7 @@ class Document(models.Model):
     def date_modification_display(self):
         now = datetime.datetime.now()
         if now.date() == self.date_modification.date():
-            return "Today"
+            return "TODAY"
         elif now.year == self.date_modification.year:
             return self.date_modification.strftime("%m-%d")
         return self.date_modification.strftime("%Y-%m-%d")
@@ -276,7 +276,7 @@ class Quote(models.Model):
     def date_modification_display(self):
         now = datetime.datetime.now()
         if now.date() == self.date_modification.date():
-            return "Today"
+            return "TODAY"
         elif now.year == self.date_modification.year:
             return self.date_modification.strftime("%m-%d")
         return self.date_modification.strftime("%Y-%m-%d")

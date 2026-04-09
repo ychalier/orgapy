@@ -29,8 +29,9 @@ function clearContextMenus() {
 function addContextMenuOption(menu, iconClass, label, callback) {
     let option = menu.appendChild(document.createElement("li"));
     option.classList.add("menu-item");
-    create(option, "span").innerHTML = `<i class="${iconClass}"></i> ${label}`;
+    create(option, "button").innerHTML = `<i class="${iconClass}"></i> ${label}`;
     option.addEventListener("click", callback);
+    return option;
 }
 
 class Project {
@@ -469,7 +470,8 @@ class Project {
             window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
         });
         addContextMenuOption(menu, "ri-checkbox-circle-line", "Status", () => {self.openStatusDialog()});
-        addContextMenuOption(menu, "ri-delete-bin-line", "Delete", () => {self.delete()});
+        const option = addContextMenuOption(menu, "ri-delete-bin-line", "Delete", () => {self.delete()});
+        option.querySelector("button").classList.add("button-danger");
     }
 
     inflateContextMenu(event) {
