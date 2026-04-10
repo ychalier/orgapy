@@ -19,7 +19,8 @@
 {% if logs %}
 <div class="card card-lines">
     {% for log in logs %}
-    <div class="oneline oneline-striped">
+    <div class="line dropdown">
+        <span class="x-hint" title="{{ log.dt | date:"Y-m-d H:i:s" }}">{{ log.dt | date:"m-d" }}</span>
         {% if log.type == "PR" %}
         <i class="ri-briefcase-line" title="{{ log.get_type_display }}"></i>
         {% elif log.type == "TA" %}
@@ -27,12 +28,12 @@
         {% elif log.type == "OB" %}
         <i class="ri-focus-2-line" title="{{ log.get_type_display }}"></i>
         {% endif %}
-        <span class="muted" title="{{ log.dt | date:"Y-m-d H:i:s" }}">{{ log.dt | date:"M d" }}</span>
-        <span class="oneline-truncate">{{ log.description }}</span>
-        <span class="show-on-parent-hover">
-            <a href="{% url 'orgapy:edit_progress_log' object_id=log.id %}" class="button-inline" title="Edit"><i class="ri-pencil-fill"></i></a>
-            <a href="{% url 'orgapy:delete_progress_log' object_id=log.id %}" class="button-inline link-confirm" title="Delete"><i class="ri-delete-bin-line"></i></a>
-        </span>
+        <span>{{ log.description }}</span>
+        <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
+        <ul class="menu">
+            <li class="menu-item"><a href="{% url 'orgapy:edit_progress_log' object_id=log.id %}"><i class="ri-pencil-fill"></i> Edit</a></li>
+            <li class="menu-item"><a href="{% url 'orgapy:delete_progress_log' object_id=log.id %}" class="button-danger link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+        </ul>
     </div>
     {% endfor %}
     {% include 'orgapy/partials/pagination.html' with paginator=paginator %}

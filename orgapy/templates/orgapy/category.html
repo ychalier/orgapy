@@ -4,9 +4,10 @@
 
 {% block content_title %}
 <header class="card">
-    <h1>#{{ category.name }} <span class="show-on-parent-hover">
-        <a class="button-inline" href="{% url 'orgapy:edit_category' object_id=category.id %}" title="Rename"><i class="ri-pencil-fill"></i></a>
-        <a class="button-inline link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' object_id=category.id %}" title="Delete"><i class="ri-delete-bin-line"></i></a>
-    </span></h1>
+    <h1 class="card-title">{{ category.name | title }}</h1>
+    <div class="card-actions">
+        <a class="button" href="{% url 'orgapy:edit_category' object_id=category.id %}" title="Rename"><i class="ri-pencil-fill"></i> Rename</a>
+        <a class="button button-danger link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' object_id=category.id %}" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a>
+    </div>
 </header>
 {% endblock content_title %}

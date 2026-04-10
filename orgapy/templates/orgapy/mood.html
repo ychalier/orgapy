@@ -5,6 +5,7 @@
 
 {% block head %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/mood.css' %}" />
 <script>
     const MOOD_ACTIVITIES = [{% for label, emoji in settings.mood_activities_list %}{label:"{{ label }}",emoji:"{{ emoji }}"},{% endfor %}];
 </script>

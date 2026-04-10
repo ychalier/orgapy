@@ -1,0 +1,94 @@
+.ha {
+    text-align: center;
+}
+
+.mood-log-form {
+    user-select: none;
+}
+
+.mood-log-form + .mood-log-form {
+    margin-top: .2rem;
+}
+
+.mood-log-form>div {
+    display: flex;
+    gap: .8rem;
+    align-items: center;
+}
+
+.mood-log-form-trackers,
+.mood-log-form-activities {
+    display: flex;
+    gap: .2rem;
+    align-items: baseline;
+}
+
+.mood-log-form-activities {
+    flex-grow: 1;
+    overflow: auto;
+}
+
+.mood-activity {
+    opacity: .33;
+}
+
+.mood-activity.active {
+    opacity: 1;
+}
+
+.mood-log-form button {
+    padding: 0 .1rem;
+    border-radius: .2rem;
+    font-size: small;
+    border-color: #6b9fc2;
+    color: #6b9fc2;
+    cursor: pointer;
+}
+
+.mood-table-wrapper {
+    overflow: auto;
+}
+
+.mood-table th,
+.mood-table td {
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    padding-left: .2rem;
+}
+
+.mood-table th:first-child,
+.mood-table td:first-child {
+    padding-left: 0;
+}
+
+@media (max-width: 800px) {
+
+    .mood-table th:not(:first-child) {
+        writing-mode: sideways-lr;
+    }
+
+}
+
+.mood-good,
+.mood-neutral,
+.mood-bad {
+    display: inline-block;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: .2rem;
+    background-color: white;
+    box-shadow: 0 0 4px black;
+    cursor: pointer;
+}
+
+.mood-good {
+    background-color: #f9fac3;
+}
+
+.mood-neutral {
+    background-color: #f39a48;
+}
+
+.mood-bad {
+    background-color: #eb0a62;
+}

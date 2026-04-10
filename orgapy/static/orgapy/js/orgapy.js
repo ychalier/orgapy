@@ -171,12 +171,12 @@ function markdownToHtmlFancy(element, useKatex=false, embed=false) {
             {
                 type: "output",
                 regex: /(@embedsheet\/(\d+))/g,
-                replace: `<a class="reference" ref-type="sheet" ref-id="$2"><i class="ri-table-line" title="Sheet"></i><span>$1</span></a>`
+                replace: `<a class="reference label" ref-type="sheet" ref-id="$2"><i class="ri-table-line" title="Sheet"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
                 regex: /(@embedmap\/(\d+))/g,
-                replace: `<a class="reference" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i><span>$1</span></a>`
+                replace: `<a class="reference label" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
             },
         );
     } else {
@@ -252,17 +252,17 @@ function markdownToHtmlFancy(element, useKatex=false, embed=false) {
             {
                 type: "output",
                 regex: /(@note\/(\d+))/g,
-                replace: `<a class="reference" ref-type="note" ref-id="$2"><i class="ri-sticky-note-line" title="Note"></i><span>$1</span></a>`
+                replace: `<a class="reference label" ref-type="note" ref-id="$2"><i class="ri-sticky-note-line" title="Note"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
                 regex: /(@sheet\/(\d+))/g,
-                replace: `<a class="reference" ref-type="sheet" ref-id="$2"><i class="ri-table-line" title="Sheet"></i><span>$1</span></a>`
+                replace: `<a class="reference label" ref-type="sheet" ref-id="$2"><i class="ri-table-line" title="Sheet"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
                 regex: /(@map\/(\d+))/g,
-                replace: `<a class="reference" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i><span>$1</span></a>`
+                replace: `<a class="reference label" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
@@ -495,12 +495,10 @@ function setupCategoryInput() {
         categoryReverseIndex[category.name] = category.id;
     }
 
-    const inputHidden = document.getElementById("categories-input-hidden");
-    const inputNew = document.getElementById("categories-input-new");
     const inputEndChars = " ,;";
 
     function readInputHiddenValues() {
-        const baseValues = inputHidden.value.trim().split(";");
+        const baseValues = categoriesInputHidden.value.trim().split(";");
         const newValues = [];
         for (const v of baseValues) {
             if (v.trim() != "" && !newValues.includes(v.trim())) {
@@ -511,16 +509,14 @@ function setupCategoryInput() {
     }
 
     function cleanInputHiddenValue() {
-        inputHidden.value = readInputHiddenValues().join(";");
+        categoriesInputHidden.value = readInputHiddenValues().join(";");
     }
 
     function updateCategories() {
-        const container = document.getElementById("categories-input-current");
-        container.innerHTML = "";
+        categoriesInputCurrent.innerHTML = "";
         for (const categoryIdOrName of readInputHiddenValues()) {
-            const element = document.createElement("span");
-            element.classList.add("category-chip")
-            container.appendChild(element);
+            const element = create(null, "button", "button-accent");
+            categoriesInputCurrent.appendChild(element);
             if (categoryIdOrName in categoryIndex) {
                 element.textContent = categoryIndex[categoryIdOrName];
             } else {
@@ -530,7 +526,7 @@ function setupCategoryInput() {
             icon.classList.add("ri-close-line");
             element.appendChild(icon);
             icon.addEventListener("click", () => {
-                inputHidden.value = inputHidden.value.replace(categoryIdOrName, "");
+                categoriesInputHidden.value = categoriesInputHidden.value.replace(categoryIdOrName, "");
                 cleanInputHiddenValue();
                 updateCategories();
             });
@@ -558,8 +554,7 @@ function setupCategoryInput() {
 
     function updateSuggestions(prefix) {
         const candidates = getSuggestions(prefix);
-        const container = document.getElementById("categories-suggestions-items");
-        container.innerHTML = "";
+        categoriesSuggestionsItems.innerHTML = "";
         if (candidates.length > 0) {
             for (const categoryName of candidates) {
                 const element = document.createElement("div");
@@ -567,7 +562,7 @@ function setupCategoryInput() {
                 element.addEventListener("click", () => {
                     submitCategoryName(categoryName);
                 });
-                container.appendChild(element);
+                categoriesSuggestionsItems.appendChild(element);
             }
         }
     }
@@ -579,16 +574,16 @@ function setupCategoryInput() {
         } else {
             valueToAppend = categoryName;
         }
-        inputHidden.value = [...readInputHiddenValues(), valueToAppend].join(";");
+        categoriesInputHidden.value = [...readInputHiddenValues(), valueToAppend].join(";");
         cleanInputHiddenValue();
-        inputNew.value = "";
+        categoriesInputNew.value = "";
         updateCategories();
         updateSuggestions();
-        inputNew.focus();
+        categoriesInputNew.focus();
     }
 
-    inputNew.addEventListener("input", () => {
-        const value = inputNew.value.toLowerCase().trimStart();
+    categoriesInputNew.addEventListener("input", () => {
+        const value = categoriesInputNew.value.toLowerCase().trimStart();
         if (inputEndChars.includes(value.charAt(value.length - 1))) {
             const categoryName = value.substring(0, value.length - 1);
             submitCategoryName(categoryName);
@@ -597,16 +592,16 @@ function setupCategoryInput() {
         }
     });
 
-    inputNew.addEventListener("keydown", (event) => {
+    categoriesInputNew.addEventListener("keydown", (event) => {
         if (event.key == "Tab") {
             event.preventDefault();
-            const candidates = getSuggestions(inputNew.value.toLowerCase().trim());
+            const candidates = getSuggestions(categoriesInputNew.value.toLowerCase().trim());
             if (candidates.length == 1) {
                 submitCategoryName(candidates[0]);
             }
             return false;
         } else if (event.key == "Enter") {
-            const value = inputNew.value.toLowerCase().trim();
+            const value = categoriesInputNew.value.toLowerCase().trim();
             event.preventDefault();
             if (value != "") {
                 submitCategoryName(value);

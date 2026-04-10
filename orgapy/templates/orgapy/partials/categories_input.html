@@ -1,0 +1,11 @@
+<div>
+    <!--<label for="categories-input-new">Categories</label>-->
+    <div id="categoriesInput" class="row">
+        <input id="categoriesInputHidden" type="hidden" name="categories" value="{% for category in obj.categories.all %}{% if not forloop.first %};{% endif %}{{ category.id }}{% endfor %}" />
+        <div id="categoriesInputCurrent" class="row"></div>
+        <div id="categoriesSuggestions"><!-- TODO: use search class -->
+            <input id="categoriesInputNew" type="text" placeholder="Category" />
+            <div id="categoriesSuggestionsItems"></div>
+        </div>
+    </div>
+</div>

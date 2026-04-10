@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{% static 'orgapy/css/tasks.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
+<link rel="stylesheet" href="{% static 'orgapy/css/mood.css' %}" />
 <script>
     const URL_ADMIN_PROJECT_CHANGE = "{% url 'admin:orgapy_project_changelist' %}";
     const URL_ORGAPY_NOTE = "{% url 'orgapy:note' object_id='objectId' %}";
@@ -26,12 +27,11 @@
 {% block column_main %}
 
 <div class="card">
-    <div id="events"></div>
+    <!-- TODO: group days with details/summary elements -->
+    <div id="events" class="coll"></div>
 </div>
 
-{% if pending_mood_logs %}
-{% include 'orgapy/partials/mood_log_forms.html' %}
-{% endif %}
+{% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
 
 {% if settings.beach_mode %}
 <div class="card">
@@ -45,14 +45,14 @@
 </div>
 {% else %}
 <div class="card">
-    <div id="tasks"></div>
+    <div id="tasks" class="coll"></div>
 </div>
 
 <div id="objectives-card" class="card hidden">
     <div id="objgraph-wrapper" class="objgraph-wrapper"></div>
 </div>
 
-<div id="projects" class="projects col"></div>
+<div id="projects" class="projects coll"></div>
 {% endif %}
 
 <dialog id="dialogObjectiveForm" closedby="any">

@@ -97,7 +97,7 @@ function inflateEvents() {
     let dates = [...Object.keys(days)];
     dates.sort();
     dates.forEach(date => {
-        let dateElement = create(container, "div", "card-subtitle");
+        let dateElement = create(container, "div", "minititle");
         let dt = new Date(date);
         dateElement.textContent = dt.toLocaleDateString(dt.locales, {weekday: "long", day: "numeric", month: "short"});
         days[date].sort((a, b) => a.dtstart - b.dtstart);

@@ -27,7 +27,7 @@
 <template id="template-refs">
     <div class="map-refs">
         {% for ref in map.referenced_in.all %}
-        <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
+        <a class="reference label" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
         {% endfor %}
     </div>
 </template>

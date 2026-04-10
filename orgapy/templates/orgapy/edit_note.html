@@ -29,7 +29,8 @@
     <input hidden type="text" name="modification" value="{% if note %}{{ note.date_modification.timestamp }}{% endif %}" />
     <header class="card">
         <input class="note-form-title" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
-        <div id="categories-input">
+        {% include 'orgapy/partials/categories_input.html' with obj=note %}
+        <!--<div id="categories-input">
             <input id="categories-input-hidden" type="hidden" name="categories" value="{% for category in note.categories.all %}{% if not forloop.first %};{% endif %}{{ category.id }}{% endfor %}" />
             <div id="categories-input-current"></div>
             <div id="categories-suggestions">
@@ -37,6 +38,7 @@
                 <div id="categories-suggestions-items"></div>
             </div>
         </div>
+    -->
         <div class="card-actions">
             <button id="btn-save-note-exit"><i class="ri-save-line"></i> Save</button>
             {% block save_and_continue %}<button id="btn-save-note-continue"><i class="ri-save-line"></i> Save and continue</button>{% endblock %}
