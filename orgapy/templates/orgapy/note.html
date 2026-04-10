@@ -20,72 +20,52 @@
 {{ block.super }}
 {% endblock menu %}
 
-{% block main_content %}
+{% block column_main %}
 
 <header class="card">
     <h1 class="card-title">{% if note.title %}{{note.title}}{% else %}<i>Untitled</i>{% endif %}</h1>
-    <div class="header-meta">
-        {% if not readonly %}
-        {% if note.categories.all %}
-        {% for category in note.categories.all %}
-        <a href="{{ category.get_absolute_url }}">#{{ category.name }}</a>
-        {% endfor %}
-        {% else %}
-        <a href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
-        {% endif %}
-        · 
-        {% endif %}
-        <span title="Created on {{ note.date_creation | date }}"><i class="ri-calendar-line"></i> {{ note.date_creation | date }}</span>
-        {% if note.date_creation.date != note.date_modification.date %}
-        · <span title="Edited on {{ note.date_modification | date }}"><i class="ri-edit-circle-line"></i> {{ note.date_modification | date }}</span>
-        {% endif %}
+    <div class="col">
+        <div class="muted"><i class="ri-calendar-line"></i> Created on <time>{{ note.date_creation | date:"Y-m-d" }}</time>{% if note.date_creation.date != note.date_modification.date %}, edited on <time>{{ note.date_modification | date:"Y-m-d" }}</time>{% endif %}</div>
+        <div><i class="ri-hashtag"></i> {% if note.categories.all %}{% for category in note.categories.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{{ category.get_absolute_url }}">{{ category.name | title }}</a>{% endfor %}{% else %}<a href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>{% endif %}</div>
+        {% if note.referenced_in.all %}<div><i class="ri-links-line"></i> {% for ref in note.referenced_in.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{% url 'orgapy:note' ref.id %}"> {{ ref.title }}</a>{% endfor %}</div>{% endif %}
     </div>
-    {% if note.referenced_in %}
-    <div class="header-refs">
-        {% for ref in note.referenced_in.all %}
-        <a class="reference" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
-        {% endfor %}
-    </div>
-    {% endif %}
-    {% if note.archived_projects_count > 0 %}
-    <a class="link-tenuous" href="{% url 'orgapy:projects_all' %}?note={{ note.id }}&status=AR">View archived projects ({{ note.archived_projects_count }})</a>
-    {% endif %}
     {% if not readonly %}
     <div class="card-actions">
         <a href="{% url 'orgapy:edit_note' object_id=note.id %}" class="button" title="Edit"><i class="ri-pencil-fill"></i><span>Edit</span></a>
         <a href="{% url 'orgapy:toggle_note_pin' object_id=note.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if note.pinned %}active{% endif %}" title="{% if note.pinned %}Unpin{% else %}Pin{% endif %} this note"><i class="ri-bookmark-fill"></i><span>{% if note.pinned %}Unpin{% else %}Pin{% endif %}</span></a>
-        <a href="{% url 'orgapy:toggle_note_public' object_id=note.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if note.public %}active{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}">{% if note.public %}<i class="ri-lock-line"></i><span>Make private</span>{% else %}<i class="ri-lock-unlock-line"></i><span>Make public</span>{% endif %}</a>
+        <a href="{% url 'orgapy:toggle_note_public' object_id=note.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if note.public %}active{% endif %}" title="{% if note.public %}Make private{% else %}Make public{% endif %}">{% if note.public %}<i class="ri-lock-line"></i><span>Unpublish</span>{% else %}<i class="ri-lock-unlock-line"></i><span>Publish</span>{% endif %}</a>
         {% if note.public %}<a href="{% url 'orgapy:note' object_id=note.nonce %}" class="button" title="Share"><i class="ri-share-line"></i><span>Share</span></a>{% endif %}
         <a href="{% url 'orgapy:export_note' object_id=note.id %}" class="button" title="Download as Markdown"><i class="ri-download-line"></i><span>Download</span></a>
-        <button id="btn-add-project" class="button" title="Add project"><i class="ri-briefcase-line"></i><span>Project</span></button>
+        <a href="{% url 'orgapy:toggle_note_hidden' object_id=note.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if note.hidden %}active{% endif %}" title="{% if note.hidden %}Unhide{% else %}Hide{% endif %} this note">{% if note.hidden %}<i class="ri-eye-off-line"></i><span>Unhide</span>{% else %}<i class="ri-eye-line"></i><span>Hide</span>{% endif %}</span></a>
         <a href="{% url 'orgapy:delete_note' object_id=note.id %}" class="button button-danger link-confirm" message="Please confirm deletion of '{{ note.title }}'" title="Delete"><i class="ri-delete-bin-line"></i><span>Delete</span></a>
     </div>
     {% endif %}
 </header>
 
-<div id="rightColumnTarget"></div>
+<div id="cardNote" class="card card-note">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
 
-<div class="card markdown">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
+{% endblock column_main %}
 
-{% endblock main_content %}
-
-{% block right_column %}
-<details open>
-    <summary>Contents</summary>
+{% block column_side %}
+<div class="card">
+    <b class="card-title">Contents</b>
     <div id="toc"></div>
-</details>
-<details open>
-    <summary>Projects</summary>
-    <div id="noteProjects"></div>
-</details>
-{% endblock right_column %}
+</div>
+<div class="col">
+    <div class="row">
+        <button id="btn-add-project" class="button-primary" title="Add project"><i class="ri-add-line"></i> Create project</button>
+        <a class="button button-primary {% if note.archived_projects_count == 0 %}disabled{% endif %}" href="{% url 'orgapy:projects_all' %}?note={{ note.id }}&status=AR"><i class="ri-briefcase-line"></i> View archived ({{ note.archived_projects_count }})</a>
+    </div>
+    <div id="noteProjects" class="col"></div>
+</div>
+{% endblock column_side %}
 
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    markdownToHtml(".markdown", true, true);
+    markdownToHtml(".card-note", true, true);
     {% if not readonly %}bindWidgets({{ note.id }});{% endif %}
-    createToc(document.querySelector(".markdown"), document.querySelector("#toc"));
+    createToc(cardNote, document.querySelector("#toc"));
     const projectsDetails = noteProjects.parentElement;
     window.addEventListener("load", () => {
         const projectsContainer = document.getElementById("noteProjects");
@@ -99,7 +79,7 @@
         });
         fetchProjects(projectsContainer,
             noteId={{ note.id }},
-            forceExpand=true,
+            forceExpand=false,
             statusFilter="AC,IN,FU",
             projectId=null);
     });

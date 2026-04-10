@@ -3,7 +3,7 @@
 
 {% block title %}{% block subtitle %} #{{ category.name }} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block main_content %}
+{% block column_main %}
 
 <header class="card">
     <h1>#{{ category.name }}</h1>
@@ -21,4 +21,4 @@
     </form>
 </div>
 
-{% endblock main_content %}
+{% endblock column_main %}

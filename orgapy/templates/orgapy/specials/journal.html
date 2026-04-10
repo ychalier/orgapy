@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="{% static 'orgapy/css/specials/journal.css' %}" />
 {% endblock head %}
 
-{% block main_content %}
+{% block column_main %}
 
 <header class="card">
     <h1>{{ category | title }}</h1>
@@ -18,7 +18,7 @@
 <script src="{% static 'orgapy/js/specials/journal.js' %}"></script>
 <script>fetchJournalData("{{ category }}");</script>
 
-{% endblock main_content %}
+{% endblock column_main %}
 
 {% block artworks %}
 <img class="artwork" src="{% static 'orgapy/artworks/journal.png' %}" />

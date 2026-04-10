@@ -3,7 +3,7 @@
 
 {% block title %}{% block subtitle %}Edit {% if sheet %}'{{ sheet.title }}'{% else %}sheet{% endif %} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block main_content %}
+{% block column_main %}
 
 <div class="card">
     <h2>{% block form_title %}Edit sheet{% endblock %}</h2>
@@ -57,7 +57,7 @@
         </div>
     </form>
 </div>
-{% endblock main_content %}
+{% endblock column_main %}
 
 {% block body_scripts %}
 {{ block.super }}

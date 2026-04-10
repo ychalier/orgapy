@@ -1,3 +1,58 @@
+.card-note {
+    padding: 0 .8rem;
+    line-height: 1.4;
+}
+
+.card-note a {
+    overflow-wrap: break-word;
+}
+
+.card-note ul,
+.card-note ol {
+    padding-left: 1.6rem;
+}
+
+.card-note img,
+.card-note video {
+    max-width: 100%;
+    border-radius: .2rem;
+}
+
+.card-note code {
+    background: var(--bg-secondary);
+    padding: .1rem .4rem;
+    border-radius: .2rem;
+}
+
+.card-note pre code {
+    display: block;
+    padding: .8rem;
+    overflow-x: auto;
+    border: 1px solid var(--border-secondary);
+}
+
+.card-note .table-wrapper {
+    overflow-x: auto;
+}
+
+.card-note strong {
+    text-decoration: underline;
+}
+
+.card-note .task-list-item input {
+    width: auto;
+}
+
+.card-note .task-list-item:has(input:checked) {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+.card-note mark {
+    padding: 0 .1rem;
+}
+
+
 /**
  * Toc
  */

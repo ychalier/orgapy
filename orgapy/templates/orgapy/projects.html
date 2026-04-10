@@ -23,7 +23,7 @@
 <script src="{% static 'orgapy/js/mood.js' %}"></script>
 {% endblock head %}
 
-{% block main_content %}
+{% block column_main %}
 
 <div class="card">
     <div id="events"></div>
@@ -52,20 +52,20 @@
     <div id="objgraph-wrapper" class="objgraph-wrapper"></div>
 </div>
 
-<div id="projects" class="projects"></div>
+<div id="projects" class="projects col"></div>
 {% endif %}
 
 <dialog id="dialogObjectiveForm" closedby="any">
     <form>
         {% csrf_token %}
         <input hidden name="id" />
-        <b>Objective</b>
+        <h2>Create objective</h2>
         <p>
             <label for="input-objective-name">Name</label>
             <input required minlength="1" name="name" type="text" id="input-objective-name" />
         </p>
         <p>
-            <label cfor="input-objective-period">Period</label>
+            <label cfor="input-objective-period">Period (days)</label>
             <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" />
         </p>
         <p>
@@ -75,13 +75,13 @@
                 <span class="toggle-text">Flexible</span>
             </label>
         </p>
-        <div class="row">
-            <input type="submit" class="button button-accent" name="add" value="Add"/>
-            <input type="submit" class="button-accent" name="save" value="Save"/>
-            <input type="submit" class="button" name="archive" value="Archive"/>
-            <input type="submit" class="button" name="delete" value="Delete"/>
-            <input type="submit" class="button" name="completion" value="Completion"/>
-        </div>
+        <p class="row">
+            <input type="submit" name="add" value="Add"/>
+            <input type="submit" name="save" value="Save"/>
+            <input type="submit" name="archive" value="Archive"/>
+            <input type="submit" name="completion" value="Add completion"/>
+            <input type="submit" class="button-danger" name="delete" value="Delete"/>
+        </p>
     </form>
 </dialog>
 
@@ -90,7 +90,7 @@
         {% csrf_token %}
         <input hidden name="id" />
         <input hidden name="timestamp" />
-        <b>Completion</b>
+        <h2>Add completion</h2>
         <p>
             <label>Date</label>
             <input type="date" name="date" />
@@ -99,24 +99,34 @@
             <label>Time</label>
             <input type="time" name="time" step="1" />
         </p>
-        <div class="row">
-            <input type="submit" class="button button-accent" name="add" value="Add"/>
-            <input type="submit" class="button" name="save" value="Save"/>
-            <input type="submit" class="button" name="delete" value="Delete"/>
-        </div>
+        <p class="row">
+            <input type="submit" name="add" value="Add"/>
+            <input type="submit" name="save" value="Save"/>
+            <input type="submit" class="button-danger" name="delete" value="Delete"/>
+        </p>
     </form>
 </dialog>
 
 <dialog id="dialogExploreTasks" closedby="any">
-    <b>Tasks</b>
-    <ul class="tasks"></ul>
+    <h2>Tasks</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Start</th>
+                <th>Due</th>
+            </tr>
+        </thead>
+        <tbody id="tasksTable"></tbody>
+    </table>
+    <!--<ul class="tasks"></ul>-->
     <form method="dialog">
-        <button>Close</button>
+        <p><button>Close</button></p>
     </form>
 </dialog>
 
 <dialog id="dialogAddEvent" closedby="any">
-    <b>Add Event</b>
+    <h2>Create event</h2>
     <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event">
         {% csrf_token %}
         <p>
@@ -136,14 +146,14 @@
         </p>
         <p>
             <label>Date start</label>
-            <span class="row">
+            <span class="actionbar">
                 <input name="dtstart-date" type="date" />
                 <input name="dtstart-time" type="time" />
             </span>
         </p>
         <p>
             <label>Date end</label>
-            <span class="row">
+            <span class="actionbar">
                 <input name="dtend-date" type="date" />
                 <input name="dtend-time" type="time" />
             </span>
@@ -153,14 +163,14 @@
             <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
         </p>
     </form>
-    <div class="row">
+    <p class="row">
         <button id="btn-add-event" class="button-accent">Add</button>
         <button onclick="dialogAddEvent.close()">Cancel</button>
-    </div>
+    </p>
 </dialog>
 
 <dialog id="dialogTaskForm" closedby="any">
-    <b>Add Task</b>
+    <h2 class="dialog-title">Create task</h2>
     <form>
         {% csrf_token %}
         <input name="id" hidden />
@@ -190,15 +200,15 @@
             <label>Recurring period</label>
             <input name="recurring_period" type="number" />
         </p>
-        <div class="row">
-            <input type="submit" class="button button-accent" name="add" value="Add" />
-            <input type="submit" class="button button-accent" name="save" value="Save" />
-            <input type="submit" class="button" name="delete" value="Delete" />
-        </div>
+        <p class="row">
+            <input type="submit" name="add" value="Add" />
+            <input type="submit" name="save" value="Save" />
+            <input type="submit" class="button-danger" name="delete" value="Delete" />
+        </p>
     </form>
 </dialog>
 
-{% endblock main_content %}
+{% endblock column_main %}
 
 {% block menu_create %}
 <li class="menu-item"><button id="tasks-add"><i class="ri-checkbox-circle-line"></i> Task</button></li>

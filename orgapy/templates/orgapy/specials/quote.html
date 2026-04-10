@@ -3,7 +3,7 @@
 
 {% block title %}Quotes &mid; {{ block.super }}{% endblock title %}
 
-{% block main_content %}
+{% block column_main %}
 
 <header class="card">
     <h1>Quotes</h1>
@@ -13,7 +13,7 @@
 
 <script src="{% static 'orgapy/js/specials/quote.js' %}"></script>
 
-{% endblock main_content %}
+{% endblock column_main %}
 
 {% block artworks %}
 <img class="artwork" src="{% static 'orgapy/artworks/quote.png' %}" />

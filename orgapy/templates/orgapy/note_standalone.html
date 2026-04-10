@@ -11,15 +11,13 @@
 <script src="{% static 'orgapy/js/notes.js' %}"></script>
 {% endblock head %}
 
-{% block main_content %}
-<div class="container">
-    <div class="card markdown novmargin">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
-</div>
-{% endblock main_content %}
+{% block column_main %}
+<div class="card card-note" style="border: none; border-radius: 0"><h1>{{ note.title }}</h1>{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
+{% endblock column_main %}
 
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    markdownToHtml(".markdown", true, true, true);
+    markdownToHtml(".card-note", true, true, true);
 </script>
 {% endblock body_scripts %}

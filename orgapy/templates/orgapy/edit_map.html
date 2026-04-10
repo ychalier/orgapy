@@ -3,7 +3,7 @@
 
 {% block title %}{% block subtitle %}Edit {% if map %}'{{ map.title }}'{% else %}map{% endif %} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block main_content %}
+{% block column_main %}
 
 <div class="card">
     <h2>{% block form_title %}Edit map{% endblock %}</h2>
@@ -53,7 +53,7 @@
         </div>
     </form>
 </div>
-{% endblock main_content %}
+{% endblock column_main %}
 
 {% block body_scripts %}
 {{ block.super }}

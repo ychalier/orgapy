@@ -14,7 +14,7 @@
 <script src="{% static 'orgapy/js/notally.js' %}"></script>
 {% endblock %}
 
-{% block main_content %}
+{% block column_main %}
 
 {% if notes %}
 Imported {{ notes|length }} note{{ notes|length|pluralize }}.
@@ -56,4 +56,4 @@ Imported {{ notes|length }} note{{ notes|length|pluralize }}.
 
 {% endif %}
 
-{% endblock main_content %}
+{% endblock column_main %}

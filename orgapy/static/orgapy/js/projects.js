@@ -114,23 +114,25 @@ class Project {
         var self = this;
         const dialog = create(this.container, "dialog");
         dialog.setAttribute("closedby", "any");
-        const dialogHeader = create(dialog, "div", "dialog-header");
-        const noteTitle = create(dialogHeader, "b");
-        if (this.note != null) noteTitle.textContent = this.note.title;
-        const actionButtons = create(dialogHeader, "span", "action-buttons");
-        const noteLink = create(actionButtons, "a", "action-button");
-        noteLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i>`;
-        if (this.note != null) noteLink.href = this.note.url;
-        const noteEditLink = create(actionButtons, "a", "action-button");
-        noteEditLink.innerHTML = `<i class="ri-pencil-fill"></i>`;
-        if (this.note != null) noteEditLink.href = this.note.url + "/edit";
-        const noteClear = create(actionButtons, "span", "action-button");
-        noteClear.innerHTML = `<i class="ri-delete-bin-line"></i>`;
-        const noteIframe = create(dialog, "iframe", "dialog-body");
+        const card = create(dialog, "div", "card");
+        //const dialogHeader = create(dialog, "div", "dialog-header");
+        //const noteTitle = create(dialog, "h2", "card-title");
+        //if (this.note != null) noteTitle.textContent = this.note.title;
+        const noteIframe = create(card, "iframe", "plain");
         if (this.note != null) noteIframe.src = this.note.url + "/standalone";
         noteIframe.width = 400;
         noteIframe.height = 400;
+        const actionButtons = create(card, "div", "card-actions");
+        const noteLink = create(actionButtons, "a", "button");
+        noteLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i><span>Go to note</span>`;
+        if (this.note != null) noteLink.href = this.note.url;
+        const noteEditLink = create(actionButtons, "a", "button");
+        noteEditLink.innerHTML = `<i class="ri-pencil-fill"></i><span>Edit note</span>`;
+        if (this.note != null) noteEditLink.href = this.note.url + "/edit";
+        const noteClear = create(actionButtons, "span", "button button-danger");
+        noteClear.innerHTML = `<i class="ri-close-line"></i><span>Unbind from project</span>`;
 
+        //TODO: move this elsewhere
         function openNoteInput() {
             const noteTitleInputContainer = create(null, "div", "project-note-input");
             const noteTitleInput = create(noteTitleInputContainer, "input");
@@ -183,7 +185,7 @@ class Project {
         if (this.note == null) openNoteInput();
 
         noteClear.addEventListener("click", clearNote);
-        noteTitle.addEventListener("click", openNoteInput);
+        //noteTitle.addEventListener("click", openNoteInput);
         dialog.showModal();
     }
 
@@ -694,11 +696,6 @@ function inflateProjects(container) {
     projectIndices.sort((a, b) => projects[a].rank - projects[b].rank);
     projectIndices.forEach(projectId => {
         container.appendChild(projects[projectId].create());
-    });
-    dragRank(container, ".project", (ordering, permutation) => {
-        setTimeout(() => {saveProjectRanks(container, ordering)}, 300);
-    }, {
-        dragAllowed: (element) => { return !element.classList.contains("editing"); }
     });
 }
 

@@ -11,7 +11,7 @@
 <script src="{% static 'orgapy/js/mood.js' %}"></script>
 {% endblock head %}
 
-{% block main_content %}
+{% block column_main %}
 
 {% if pending_mood_logs %}
 {% include 'orgapy/partials/mood_log_forms.html' %}
@@ -30,4 +30,4 @@
     </div>
 </div>
 
-{% endblock main_content %}
+{% endblock column_main %}

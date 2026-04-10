@@ -363,9 +363,8 @@ const TOAST_LONG = 3500;
 const TOAST_SHORT = 2000;
 
 function toast(message, duration) {
-    let snackbar = document.getElementById("snackbar");
     snackbar.textContent = message;
-    snackbar.className = "show";
+    snackbar.classList.add("show");
     setTimeout(function() {
         snackbar.classList.add("hide");
         setTimeout(function() {

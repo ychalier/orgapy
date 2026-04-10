@@ -23,24 +23,10 @@ function createToc(contentContainer, tocContainer) {
 
 function bindSaveNoteButtons() {
 
-    const primaryForm = document.getElementById("form-note-edit-primary");
-    const secondaryForm = document.getElementById("form-note-edit-secondary");
-    
-    function mergeForms() {        
-        ["pinned", "public", "hidden"].forEach(name => {
-            const primaryInput = primaryForm.querySelector(`input[name=${name}]`);
-            const secondaryInput = secondaryForm.querySelector(`input[name=${name}]`);
-            if (secondaryInput.checked) {
-                primaryInput.setAttribute("checked", "");
-            } else {
-                primaryInput.removeAttribute("checked");
-            }
-        });
-    }
-    
+    const form = document.getElementById("form-note-edit-primary");
+        
     function saveNoteAndExit() {
-        mergeForms();
-        primaryForm.submit();
+        form.submit();
     }
     document.getElementById("btn-save-note-exit").addEventListener("click", saveNoteAndExit);
     document.getElementById("btn-save-note-exit-menu").addEventListener("click", saveNoteAndExit);
@@ -51,9 +37,8 @@ function bindSaveNoteButtons() {
     buttonSaveNoteContinue.addEventListener("click", (event) => {
         event.preventDefault();
         buttonSaveNoteContinue.setAttribute("disabled", "");
-        mergeForms();
-        const formdata = new FormData(primaryForm);
-        fetch(primaryForm.action, {method: primaryForm.method, body: formdata}).then(res => {
+        const formdata = new FormData(form);
+        fetch(form.action, {method: form.method, body: formdata}).then(res => {
             if (res.status == 200) {
                 toast("Saved!", 600);
                 document.querySelector("input[name=modification]").value = new Date() / 1000;

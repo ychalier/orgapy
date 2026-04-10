@@ -139,6 +139,7 @@ function openDialogTaskForm(task=null) {
     let dialog = document.getElementById("dialogTaskForm");
     dialog.querySelector("form").reset();
     if (task != null) {
+        dialog.querySelector("h2").textContent = "Edit task";
         dialog.querySelector("input[name='id']").value = task.id;
         dialog.querySelector("input[name='title']").value = task.title;
         dialog.querySelector("input[name='start_date']").value = task.startDate.toISOString().substring(0, 10);
@@ -157,6 +158,7 @@ function openDialogTaskForm(task=null) {
         dialog.querySelector("input[name='save']").style.display = "unset";
         dialog.querySelector("input[name='delete']").style.display = "unset";
     } else {
+        dialog.querySelector("h2").textContent = "Create task";
         dialog.querySelector("input[name='start_date']").value = (new Date()).toISOString().substring(0, 10);
         dialog.querySelector("input[name='add']").style.display = "unset";
         dialog.querySelector("input[name='save']").style.display = "none";
@@ -203,20 +205,20 @@ function inflateTasks() {
 }
 
 function openDialogExploreTasks() {
-    const dialog = document.getElementById("dialogExploreTasks");
-    const tasksContainer = dialog.querySelector(".tasks");
-    tasksContainer.innerHTML = "";
+    tasksTable.innerHTML = "";
     fetch(URL_API + "?action=list-tasks&limit=365").then(res => res.json()).then(data => {
         data.tasks.forEach(task => {
-            const taskElement = create(tasksContainer, "li");
-            taskElement.textContent = `${task.title} (${new Date(task.due_date).toLocaleDateString("fr-FR", {weekday: "long", day: "numeric", month: "short"})})`;
-            taskElement.addEventListener("click", () => {
-                dialog.close();
+            const tr = create(tasksTable, "tr");
+            create(tr, "td").textContent = task.title;
+            create(tr, "td").textContent = dtf(new Date(task.start_date), "YYYY-mm-dd");
+            create(tr, "td").textContent = task.due_date == null ? "-" : dtf(new Date(task.due_date), "YYYY-mm-dd");
+            tr.onclick = () => {
+                dialogExploreTasks.close();
                 openDialogTaskForm(new Task(task));
-            });
+            };
         });
     });
-    dialog.showModal();
+    dialogExploreTasks.showModal();
 }
 
 window.addEventListener("load", () => {

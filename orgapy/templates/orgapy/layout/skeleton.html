@@ -29,7 +29,7 @@
     {% block artworks %}{% endblock artworks %}
     <div class="columns">
         <div class="column-spacer"></div>
-        <main class="column-main">
+        <main class="column column-main">
             <nav class="navbar">
                 <div class="row">
                     <a href="{% url 'orgapy:projects' %}" class="button {% if active == 'projects' %}active{% endif %}" title="Projects">{% if active == 'projects' %}Projects{% else %}<i class="ri-briefcase-line"></i>{% endif %}</a>
@@ -81,13 +81,12 @@
                     </div>
                 </div>
             </nav>
-            {% block main_content %}{% endblock main_content %}
+            {% block column_main %}{% endblock column_main %}
         </main>
-        <div class="column-side"><div id="rightColumnContainer">{% block right_column %}{% endblock right_column %}</div></div>
+        <div class="column-side"><div class="column column-side-sticky">{% block column_side %}{% endblock column_side %}</div></div>
     </div>
     {% endblock body %}
-    <div id="snackbar"></div>
-    {% block body_bottom %}{% endblock body_bottom %}
+    <div id="snackbar" class="snackbar"></div>
     {% block body_scripts %}{% endblock body_scripts %}
     {% block body_scrips_minimized %}
     <script>

@@ -4,7 +4,7 @@
         {% if page %}
             <a class="button {% if page == paginator.active %}active{% endif %}" href="?page={{ page }}{{ paginator.attr_string }}">{{ page }}</a>
         {% else %}
-            <span>…</span>
+            <button disabled>…</button>
         {% endif %}
     {% endfor %}
 </div>

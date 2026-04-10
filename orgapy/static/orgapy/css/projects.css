@@ -1,31 +1,9 @@
-/**
- * Projects
- */
-
-.projects {
-    display: flex;
-    flex-direction: column;
-}
-
-.projects + .card {
-    margin-top: .4rem;
-}
-
-.projects-withtitle:has(div)::before {
-    content: "Projects";
-    font-weight: bold;
-    font-size: larger;
-    display: block;
-    margin-bottom: .8rem;
-}
-
 .project {
     position: relative;
     box-sizing: border-box;
-    background: #101010;
-    margin-bottom: .4rem;
+    background: var(--bg-primary);
     width: 100%;
-    border: 1px solid black;
+    border: 1px solid var(--border-primary);
     border-radius: .4rem;
 }
 
@@ -49,6 +27,7 @@
 }
 
 .project-header {
+    box-sizing: border-box;
     padding: .8rem;
     width: 100%;
     display: flex;
@@ -69,15 +48,15 @@
 }
 
 .project-note {
-    color: white;
     cursor: pointer;
 }
 
 .project-note + .project-title {
-    color: #888;
+    color: var(--text-muted);
 }
 
 .project-status {
+    box-sizing: border-box;
     width: 1.8rem;
     overflow: hidden;
     text-overflow: "";
@@ -87,7 +66,7 @@
     font-size: small;
     padding: .1rem .2rem;
     border-radius: .2rem;
-    background: #303030;
+    background: var(--bg-secondary);
     cursor: pointer;
 }
 
@@ -104,7 +83,7 @@
     padding: 0 .8rem;
     overflow-y: hidden;
     transition: .2s ease;
-    background: #303030;
+    background: var(--bg-secondary);
     border-radius: .4rem;
     min-height: 0;
 }
@@ -148,9 +127,10 @@
     flex-grow: 1;
 }
 
-.project-note + .project-title-input {
+/*.project-note + .project-title-input {
     color: #888;
 }
+    */
 
 .project-checklist-item-input {
     font-family: "Fira Code", monospace;
@@ -194,6 +174,7 @@
 
 /* TODO: Generalize with smde dropdown */
 
+/* TODO: use searchbar component */
 .project-note-input {
     position: relative;
    
@@ -229,8 +210,4 @@
 .project-note-results > div:hover {
     background: #00000040;
     border-radius: .2rem;
-}
-
-details:has(#noteProjects):not(:has(div.project)) {
-    display: none;
 }

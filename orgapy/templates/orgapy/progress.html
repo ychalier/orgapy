@@ -9,7 +9,7 @@
 <script src="{% static 'orgapy/js/progress.js' %}"></script>
 {% endblock head %}
 
-{% block main_content %}
+{% block column_main %}
 
 <header class="card">
     <h1>{% if dt_filter %}{{ dt_start | date }}{% if dt_start != dt_end %} — {{ dt_end | date }}{% endif %}{% else %}{{ year }} Progress{% endif %}</h1>
@@ -52,7 +52,7 @@
     <a class="button" href="{% url 'orgapy:create_progress_log' %}"><i class="ri-add-line"></i> Create Log</a>
 </p>
 
-{% endblock main_content %}
+{% endblock column_main %}
 
 {% if counter %}
 {% block body_scripts %}

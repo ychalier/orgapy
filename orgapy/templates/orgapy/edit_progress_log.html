@@ -9,7 +9,7 @@
 <script src="{% static 'orgapy/js/progress.js' %}"></script>
 {% endblock %}
 
-{% block main_content %}
+{% block column_main %}
 
 <form action="{% url 'orgapy:save_progress_log' %}" method="post">
     {% csrf_token %}
@@ -40,4 +40,4 @@
     </header>
 </form>
 
-{% endblock main_content %}
+{% endblock column_main %}

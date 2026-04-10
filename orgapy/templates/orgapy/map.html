@@ -16,7 +16,7 @@
 <script src="{% static 'orgapy/js/maps.js' %}"></script>
 {% endblock head %}
 
-{% block main_content %}
+{% block column_main %}
 
 <div class="map-layout{% if request.GET.embed == '1' %} embedded{% endif %}" map-id="{{map.id}}">
     <div class="map-dashboard"></div>

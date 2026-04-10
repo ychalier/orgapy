@@ -334,52 +334,55 @@ function fetchObjectives() {
 }
 
 function openDialogObjectiveForm(objective=null) {
-    const dialog = document.getElementById("dialogObjectiveForm");
-    dialog.querySelector("form").reset();
+    dialogObjectiveForm.querySelector("form").reset();
     if (objective != null) {
-        dialog.querySelector("input[name='id']").value = objective.id;
-        dialog.querySelector("input[name='name']").value = objective.name;
-        dialog.querySelector("input[name='flexible']").checked = objective.flexible;
-        dialog.querySelector("input[name='period']").value = objective.period;
-        dialog.querySelector("input[name='add']").style.display = "none";
+        dialogObjectiveForm.querySelector("h2").textContent = "Edit objective";
+        dialogObjectiveForm.querySelector("input[name='id']").value = objective.id;
+        dialogObjectiveForm.querySelector("input[name='name']").value = objective.name;
+        dialogObjectiveForm.querySelector("input[name='flexible']").checked = objective.flexible;
+        dialogObjectiveForm.querySelector("input[name='period']").value = objective.period;
+        dialogObjectiveForm.querySelector("input[name='add']").style.display = "none";
         if (objective.archived) {
-            dialog.querySelector("input[name='archive']").value = "Unarchive";
+            dialogObjectiveForm.querySelector("input[name='archive']").value = "Unarchive";
         } else {
-            dialog.querySelector("input[name='archive']").value = "Archive";
+            dialogObjectiveForm.querySelector("input[name='archive']").value = "Archive";
         }
-        dialog.querySelector("input[name='save']").style.display = "unset";
-        dialog.querySelector("input[name='delete']").style.display = "unset";
-        dialog.querySelector("input[name='completion']").style.display = "unset";
+        dialogObjectiveForm.querySelector("input[name='save']").style.display = "unset";
+        dialogObjectiveForm.querySelector("input[name='archive']").style.display = "unset";
+        dialogObjectiveForm.querySelector("input[name='delete']").style.display = "unset";
+        dialogObjectiveForm.querySelector("input[name='completion']").style.display = "unset";
     } else {
-        dialog.querySelector("input[name='flexible']").removeAttribute("checked");
-        dialog.querySelector("input[name='period']").value = 1;
-        dialog.querySelector("input[name='add']").style.display = "unset";
-        dialog.querySelector("input[name='archive']").style.display = "none";
-        dialog.querySelector("input[name='save']").style.display = "none";
-        dialog.querySelector("input[name='delete']").style.display = "none";
-        dialog.querySelector("input[name='completion']").style.display = "none";
+        dialogObjectiveForm.querySelector("h2").textContent = "Create objective";
+        dialogObjectiveForm.querySelector("input[name='flexible']").removeAttribute("checked");
+        dialogObjectiveForm.querySelector("input[name='period']").value = 1;
+        dialogObjectiveForm.querySelector("input[name='add']").style.display = "unset";
+        dialogObjectiveForm.querySelector("input[name='archive']").style.display = "none";
+        dialogObjectiveForm.querySelector("input[name='save']").style.display = "none";
+        dialogObjectiveForm.querySelector("input[name='delete']").style.display = "none";
+        dialogObjectiveForm.querySelector("input[name='completion']").style.display = "none";
     }
-    dialog.showModal();
+    dialogObjectiveForm.showModal();
 }
 
 function openDialogCompletionForm(objective, timestamp=null) {
-    const dialog = document.getElementById("dialogCompletionForm");
-    dialog.querySelector("form").reset();
-    dialog.querySelector("input[name='id']").value = objective.id;
+    dialogCompletionForm.querySelector("form").reset();
+    dialogCompletionForm.querySelector("input[name='id']").value = objective.id;
     if (timestamp != null) {
-        dialog.querySelector("input[name='timestamp']").value = timestamp;
+        dialogCompletionForm.querySelector("h2").textContent = "Edit completion";
+        dialogCompletionForm.querySelector("input[name='timestamp']").value = timestamp;
         let tsDate = new Date(timestamp * 1000);
-        dialog.querySelector("input[name='date']").value = dtf(tsDate, "YYYY-mm-dd");
-        dialog.querySelector("input[name='time']").value = dtf(tsDate, "HH:MM:SS");
-        dialog.querySelector("input[name='add']").style.display = "none";
-        dialog.querySelector("input[name='save']").style.display = "unset";
-        dialog.querySelector("input[name='delete']").style.display = "unset";
+        dialogCompletionForm.querySelector("input[name='date']").value = dtf(tsDate, "YYYY-mm-dd");
+        dialogCompletionForm.querySelector("input[name='time']").value = dtf(tsDate, "HH:MM:SS");
+        dialogCompletionForm.querySelector("input[name='add']").style.display = "none";
+        dialogCompletionForm.querySelector("input[name='save']").style.display = "unset";
+        dialogCompletionForm.querySelector("input[name='delete']").style.display = "unset";
     } else {
-        dialog.querySelector("input[name='add']").style.display = "unset";
-        dialog.querySelector("input[name='save']").style.display = "none";
-        dialog.querySelector("input[name='delete']").style.display = "none";
+        dialogCompletionForm.querySelector("h2").textContent = "Add completion";
+        dialogCompletionForm.querySelector("input[name='add']").style.display = "unset";
+        dialogCompletionForm.querySelector("input[name='save']").style.display = "none";
+        dialogCompletionForm.querySelector("input[name='delete']").style.display = "none";
     }
-    dialog.showModal();
+    dialogCompletionForm.showModal();
 }
 
 window.addEventListener("load", () => {

@@ -194,6 +194,13 @@ def view_edit(request: HttpRequest, active: str, object_id: str) -> HttpResponse
 @permission_required("orgapy.change_note")
 @permission_required("orgapy.change_sheet")
 @permission_required("orgapy.change_map")
+def view_toggle_hidden(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
+    return toggle_object_attribute(request, active, object_id, "hidden")
+
+
+@permission_required("orgapy.change_note")
+@permission_required("orgapy.change_sheet")
+@permission_required("orgapy.change_map")
 def view_toggle_pin(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
     return toggle_object_attribute(request, active, object_id, "pinned")
 
@@ -398,6 +405,11 @@ def view_delete_note(request: HttpRequest, object_id: str) -> HttpResponse:
 
 
 @permission_required("orgapy.change_note")
+def view_toggle_note_hidden(request: HttpRequest, object_id: str) -> HttpResponse:
+    return view_toggle_hidden(request, "notes", object_id)
+
+
+@permission_required("orgapy.change_note")
 def view_toggle_note_pin(request: HttpRequest, object_id: str) -> HttpResponse:
     return view_toggle_pin(request, "notes", object_id)
 
@@ -528,6 +540,11 @@ def view_delete_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 
 
 @permission_required("orgapy.change_sheet")
+def view_toggle_sheet_hidden(request: HttpRequest, object_id: str) -> HttpResponse:
+    return view_toggle_hidden(request, "sheets", object_id)
+
+
+@permission_required("orgapy.change_sheet")
 def view_toggle_sheet_pin(request: HttpRequest, object_id: str) -> HttpResponse:
     return view_toggle_pin(request, "sheets", object_id)
 
@@ -624,6 +641,11 @@ def view_delete_map(request: HttpRequest, object_id: str) -> HttpResponse:
     if "next" in request.GET:
         return redirect(request.GET["next"])
     return redirect("orgapy:maps")
+
+
+@permission_required("orgapy.change_map")
+def view_toggle_map_hidden(request: HttpRequest, object_id: str) -> HttpResponse:
+    return view_toggle_hidden(request, "maps", object_id)
 
 
 @permission_required("orgapy.change_map")
