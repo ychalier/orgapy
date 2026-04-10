@@ -70,7 +70,9 @@
     --border-danger: #dc143c;
     --bg-danger: #311b20;
 
-    --text-gold: #ffd700;
+    --gold: #ffd700;
+    --warning: #e65400;
+    --success: #30b041;
 }
 
 /***** BODY *******************************************************************/
@@ -462,6 +464,17 @@ img.artwork {
     z-index: -1;
     opacity: 0.3;
     image-rendering: crisp-edges;
+}
+
+/***** MINITITLE **************************************************************/
+
+.minititle {
+    font-size: small;
+    font-weight: bold;
+}
+
+summary.minititle::marker {
+    content: none;
 }
 
 /***** TOGGLE SWITCH **********************************************************/
@@ -955,7 +968,7 @@ dialog > .card > .card-actions {
 }
 
 .gold {
-    color: var(--text-gold);
+    color: var(--gold);
 }
 
 .x-hint {
@@ -973,11 +986,8 @@ dialog > .card > .card-actions {
     width: fit-content;
 }
 
-.minititle {
-    font-size: small;
-    font-weight: bold;
-}
-
-summary.minititle::marker {
-    content: none;
+.ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }

@@ -1,25 +1,18 @@
-
 #tasks {
     line-height: 1.6;
 }
 
 .task-overdue {
-    color: #e65400;
+    color: var(--warning);
 }
 
 .task-button-complete {
-    margin-right: .3rem;
-    height: 19px;
-    width: 19px;
-    border-radius: .2rem;
-    background: #303030;
+    margin-right: .2rem;
+    width: 1.18rem;
+    height: 1.18rem;
     padding: 0;
 }
 
-.task-button-complete i {
+.task-button-complete:not(:hover) i {
     visibility: hidden;
-}
-
-.task-button-complete:hover i {
-    visibility: visible;
 }

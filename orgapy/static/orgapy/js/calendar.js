@@ -17,22 +17,22 @@ class CalendarEvent {
     }
 
     inflate(container) {
-        let element = create(container, "div", "event")
-        let dotWrapper = create(element, "div", "event-dot-wrapper dropdown");
+        let element = create(container, "div", "row")
+        let dotWrapper = create(element, "div", "dropdown");
         create(dotWrapper, "a", "event-dot dropdown-toggle").tabIndex = 0;
         if (this.over) {
-            element.classList.add("event-over");
+            element.classList.add("muted");
         }
         if (this.hasTime) {
-            create(element, "div", "event-time").textContent = dtf(this.dtstart, "HH:MM");
+            create(element, "div").textContent = dtf(this.dtstart, "HH:MM");
         }
-        create(element, "div", "event-title").textContent = this.title;
-        if (this.location != null) {
+        create(element, "div", "ellipsis").textContent = this.title;
+        if (this.location != null && this.location.length > 0) {
             element.title = this.location;
         }
         let eventActionsList = create(dotWrapper, "ul", "menu");
         let eventDeleteListItem = create(eventActionsList, "li", "menu-item");
-        let eventDeleteButton = create(eventDeleteListItem, "a");
+        let eventDeleteButton = create(eventDeleteListItem, "a", "button-danger");
         eventDeleteButton.innerHTML = `<i class="ri-delete-bin-line"></i> Delete`;
         eventDeleteButton.title = "Delete";
         var self = this;
@@ -97,12 +97,14 @@ function inflateEvents() {
     let dates = [...Object.keys(days)];
     dates.sort();
     dates.forEach(date => {
-        let dateElement = create(container, "div", "minititle");
+        const details = create(container, "details");
+        details.setAttribute("open", "");
+        const summary = create(details, "summary", "minititle");
         let dt = new Date(date);
-        dateElement.textContent = dt.toLocaleDateString(dt.locales, {weekday: "long", day: "numeric", month: "short"});
+        summary.textContent = dt.toLocaleDateString(dt.locales, {weekday: "long", day: "numeric", month: "short"});
         days[date].sort((a, b) => a.dtstart - b.dtstart);
         days[date].forEach((event) => {
-            event.inflate(container);
+            event.inflate(details);
         });
     });
 
