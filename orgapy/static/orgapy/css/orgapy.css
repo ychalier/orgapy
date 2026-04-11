@@ -61,6 +61,7 @@
     --accent-hover: #c5e8ff;
     --border-accent: #55bbff;
     --bg-accent: #1e313e;
+    --bg-selection: #2781be;
     
     --text: #f0f0f0;
     --text-dark: #000000;
@@ -68,11 +69,15 @@
     
     --text-danger: #f16581;
     --border-danger: #dc143c;
-    --bg-danger: #311b20;
+    --bg-danger: #5d343d;
 
     --gold: #ffd700;
     --warning: #e65400;
     --success: #30b041;
+}
+
+::selection {
+    background-color: var(--bg-selection);
 }
 
 /***** BODY *******************************************************************/
@@ -238,6 +243,13 @@ input[type=submit] {
     white-space: nowrap;
     width: fit-content;
     flex-shrink: 0;
+    position: relative;
+}
+
+button:focus,
+.button:focus,
+input[type=submit]:focus {
+    outline: none;
 }
 
 button:hover,
@@ -285,6 +297,7 @@ button span,
     background: none;
     border: none;
     padding: 0;
+    color: var(--accent);
 }
 
 .button-inline:hover {
@@ -324,6 +337,20 @@ button span,
     padding: .1rem .2rem;
 }
 
+.button-badge {
+    box-sizing: border-box;
+    display: inline-block;
+    position: absolute;
+    margin: 0 !important;
+    width: 0;
+    top: 0;
+    right: 0;
+    background: none;
+    color: inherit;
+    font-size: x-small;
+    text-align: center;
+}
+
 /***** LABELS *****************************************************************/
 
 .label {
@@ -341,20 +368,20 @@ button span,
     padding-bottom: 0;
 }
 
-.label-badge {
-    box-sizing: border-box;
-    position: absolute;
-    top: -.2rem;
-    right: -.1rem;
-    background: none;
-    color: inherit;
-    font-size: x-small;
-    text-align: center;
+button.label,
+.button.label {
+    border: none;
 }
 
 .label-grey {
     background-color: hsl(204, 0%, 18%);
     color: hsl(204, 0%, 78%);
+}
+
+a.label-grey:hover,
+button.label-grey:hover {
+    background-color: hsl(204, 0%, 18%);
+    color: hsl(204, 0%, 88%);
 }
 
 .label-red,
@@ -363,14 +390,34 @@ button span,
     color: hsl(0, 100%, 78%);
 }
 
+a.label-red:hover,
+button.label-red:hover,
+a.label.error:hover,
+button.label.error:hover {
+    background-color: hsl(0, 34%, 18%);
+    color: hsl(0, 100%, 88%);
+}
+
 .label-pink {
     background-color: hsl(288, 35%, 18%);
     color: hsl(288, 100%, 78%);
 }
 
+a.label-pink:hover,
+button.label-pink:hover {
+    background-color: hsl(288, 35%, 18%);
+    color: hsl(288, 100%, 88%);
+}
+
 .label-purple {
     background-color: hsl(255, 35%, 18%);
     color: hsl(255, 100%, 78%);
+}
+
+a.label-purple:hover,
+button.label-purple:hover {
+    background-color: hsl(255, 35%, 18%);
+    color: hsl(255, 100%, 88%);
 }
 
 /***** CODE *******************************************************************/
@@ -568,21 +615,35 @@ input:checked+.toggle-slider+.toggle-text {
 
 /***** SEARCH *****************************************************************/
 
+/* TODO: integrate nicely with note-pin, smde-dropdown, project note */
+/* TODO: fix border radius */
+/* TODO: fix outline */
+
 .search {
+    box-sizing: border-box;
     position: relative;
+    
+    
 }
 
 .search-bar {
     display: flex;
-    border: 1px solid var(--border-secondary);
     overflow: hidden;
     border-radius: .2rem;
+    border: 1px solid var(--border-secondary);
 }
 
+.search-bar:has(+*:not(:empty)) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/*
 .search:has(.search-suggestions:not(:empty)) .search-bar {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
 }
+*/
 
 .search-input,
 .search-button {
@@ -591,7 +652,7 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 .search-input:focus {
-    outline: none;
+    outline: none !important;
 }
 
 .search-icon {
@@ -609,6 +670,18 @@ input:checked+.toggle-slider+.toggle-text {
     visibility: visible;
 }
 
+.search-pin {
+    width: 100%;
+    border: none;
+    border-radius: 0;
+    text-align: left;
+    background-color: var(--bg-accent);
+    color: var(--accent);
+    border-left: 1px solid var(--border-secondary);
+    border-right: 1px solid var(--border-secondary);
+    border-bottom: 1px solid var(--border-secondary);
+}
+
 .menu.search-suggestions {
     box-sizing: border-box;
     width: 100%;
@@ -616,15 +689,12 @@ input:checked+.toggle-slider+.toggle-text {
     left: 0;
     bottom: 0;
     transform: translateY(calc(100% - 1px));
+    /*border: 1px solid var(--bg-secondary);*/
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+    /*border-radius: 0;*/
     box-shadow: none;
     overflow: hidden;
-}
-
-.menu.search-suggestions .menu-item * {
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 #searchButton {
@@ -819,10 +889,11 @@ input:checked+.toggle-slider+.toggle-text {
     list-style: none;
     box-shadow: 0 0 4px black;
     z-index: 2;
+    border: 1px solid var(--border-secondary);
 }
 
-.menu:has(.menu-item) {
-    border: 1px solid var(--border-secondary);
+.menu:empty {
+    border: none;
 }
 
 .menu-item {
@@ -848,6 +919,8 @@ input:checked+.toggle-slider+.toggle-text {
     width: 100%;
     text-align: left;
     border-radius: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .menu hr {
@@ -899,15 +972,10 @@ dialog {
     box-sizing: border-box;
     color: var(--text);
     background: none;
-    /*background: var(--bg-primary);*/
-    /*border: 1px solid var(--border-primary);*/
     border: none;
-    /*border-radius: .4rem;*/
-    
     width: 36rem;
     padding: 0;
     height: fit-content;
-    /*padding: 0 .8rem;*/
     overflow: visible;
 }
 
@@ -916,29 +984,13 @@ dialog::backdrop {
     opacity: 0.4;
 }
 
+dialog:focus {
+    outline: none;
+}
+
 dialog > .card {
     box-shadow: 0 0 2px black;
 }
-
-/*
-dialog:has(.card) {
-    border: none;
-    padding: 0;
-}
-
-dialog > .card {
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    border-radius: 0;
-}
-
-dialog > .card > .card-actions {
-    width: 100%;
-    margin-top: 0;
-    left: 0;
-}
-*/
 
 /***** UTILITY CLASSES ********************************************************/
 

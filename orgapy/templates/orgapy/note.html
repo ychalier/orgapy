@@ -50,13 +50,15 @@
 
 {% block column_side %}
 <div class="card">
-    <b class="card-header">Contents</b>
-    <div id="toc" class="card-body"></div>
+    <div class="card-body col">
+        <b>Contents</b>
+        <div id="toc" class="col"></div>
+    </div>
 </div>
 <div class="col">
     <div class="row">
         <button id="btn-add-project" class="button-primary" title="Add project"><i class="ri-add-line"></i> Create project</button>
-        <a class="button button-primary {% if note.archived_projects_count == 0 %}disabled{% endif %}" href="{% url 'orgapy:projects_all' %}?note={{ note.id }}&status=AR"><i class="ri-briefcase-line"></i> View archived ({{ note.archived_projects_count }})</a>
+        <a class="button button-primary {% if note.archived_projects_count == 0 %}disabled{% endif %}" href="{% url 'orgapy:projects' %}?note={{ note.id }}&status=AR"><i class="ri-briefcase-line"></i> View archived ({{ note.archived_projects_count }})</a>
     </div>
     <div id="noteProjects" class="col"></div>
 </div>

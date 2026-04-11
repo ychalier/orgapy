@@ -172,7 +172,7 @@ function openSmdeDropdown(cmInstance, word) {
     closeSmdeDropdown();
     
     // Create and position the dropdown itself
-    const dropdown = create(document.body, "div", "smde-dropdown");
+    const dropdown = create(document.body, "div", "smde-dropdown search");
     const cursor = cmInstance.getCursor();
     const line = cmInstance.getLine(cursor.line);
     let iStart = cursor.ch;
@@ -214,9 +214,11 @@ function openSmdeDropdown(cmInstance, word) {
     const iEnd = iStart + match.length;
 
     // Highlight text node
+
+    const textAreaContainer = document.querySelector(".CodeMirror");
     for (let i = iStart; i < iEnd; i++) {
         const bounds = getCharPosition(span, i - spanCharOffset);
-        const highlight = create(document.body, "div", "smde-highlight");
+        const highlight = create(textAreaContainer, "div", "smde-highlight");
         highlight.style.top = bounds.top + "px";
         highlight.style.left = bounds.left + "px";
         highlight.style.width = bounds.width + "px";
@@ -230,25 +232,23 @@ function openSmdeDropdown(cmInstance, word) {
         cmInstance.replaceRange(`@${objectTypeKey}/${newId}`, replaceFrom, replaceTo, origin);
     }
 
-    const searchbar = create(dropdown, "input", "smde-dropdown-searchbar");
+    const searchbar = create(create(dropdown, "div", "search-bar"), "input", "search-input");
 
     // Set pinned value
     if (objectId != undefined) {
-        const pinned = create(dropdown, "div", "smde-dropdown-pinned");
-        const pinnedSpan = create(pinned, "span");
-        const pinnedButton = create(pinned, "i", "ri-close-line");
+        const pinnedButton = create(dropdown, "button", "search-pin");
         fetch(URL_API + `?action=reference&${objectType}=${objectId}`).then(res => res.json()).then(data => {
             const result = data.results[0];
             if (result.error == null) {
-                pinnedSpan.textContent = result.title;
+                pinnedButton.innerHTML = `${result.title} <i class="ri-close-line"></i>`;
             } else {
-                pinnedSpan.textContent = result.error;
+                pinnedButton.textContent = result.error;
             }
         });
         pinnedButton.addEventListener("click", () => { setObjectId("", "interlink-reset") });
     }
 
-    const results = create(dropdown, "div", "smde-dropdown-results");
+    const results = create(dropdown, "ul", "search-suggestions menu");
 
     bindDocumentInput(searchbar, objectType, results, (entry) => {
         if (entry == null) {
@@ -275,7 +275,7 @@ function openSmdeDropdown(cmInstance, word) {
 }
 
 function closeSmdeDropdown() {
-    document.querySelectorAll("div.smde-dropdown, div.smde-highlight").forEach(remove);
+    document.querySelectorAll(".smde-dropdown, .smde-highlight").forEach(remove);
 }
 
 function onCmCursorActivity(cmInstance) {

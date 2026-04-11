@@ -5,257 +5,66 @@
 
 {% block head %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/calendar.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/tasks.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/mood.css' %}" />
-<script>
-    const URL_ADMIN_PROJECT_CHANGE = "{% url 'admin:orgapy_project_changelist' %}";
-    const URL_ORGAPY_NOTE = "{% url 'orgapy:note' object_id='objectId' %}";
-    const OBJECTIVE_START_HOURS = {{ settings.objective_start_hours }};
-    const MOOD_ACTIVITIES = [{% for label, emoji in settings.mood_activities_list %}{label:"{{ label }}",emoji:"{{ emoji }}"},{% endfor %}];
-</script>
-<script src="{% static 'orgapy/js/dragrank.js' %}"></script>
-<script src="{% static 'orgapy/js/calendar.js' %}"></script>
-<script src="{% static 'orgapy/js/tasks.js' %}"></script>
-<script src="{% static 'orgapy/js/objectives.js' %}"></script>
 <script src="{% static 'orgapy/js/projects.js' %}"></script>
-<script src="{% static 'orgapy/js/mood.js' %}"></script>
 {% endblock head %}
+
+{% block menu %}
+<li class="menu-item"><a href="{% url 'orgapy:projects' %}"><i class="ri-briefcase-line"></i> All Projects</a></li>
+<hr>
+{{ block.super }}
+{% endblock menu %}
 
 {% block column_main %}
 
 <div class="card">
     <div class="card-body">
-        <div id="events" class="coll"></div>
+        <div class="minititle" style="display: inline-block">filters</div>
+        {% if request.GET.status or request.GET.note %}
+            {% if request.GET.note %}<span class="label label-inline">@note/{{ request.GET.note }}</span>{% endif %}
+            {% if request.GET.status == 'AC' %}<span class="label label-inline">ACTIVE</span>{% endif %}
+            {% if request.GET.status == 'IN' %}<span class="label label-inline label-grey">INACTIVE</span>{% endif %}
+            {% if request.GET.status == 'AR' %}<span class="label label-inline label-purple">ARCHIVED</span>{% endif %}
+            {% if request.GET.status == 'FU' %}<span class="label label-inline label-pink">FUTURE</span>{% endif %}
+            <a href="?" class="label label-inline label-grey"><i class="ri-close-line"></i> Clear</a>
+        {% else %}
+        <a href="?status=AC" class="label label-inline">ACTIVE</a>
+        <a href="?status=IN" class="label label-inline label-grey">INACTIVE</a>
+        <a href="?status=AR" class="label label-inline label-purple">ARCHIVED</a>
+        <a href="?status=FU" class="label label-inline label-pink">FUTURE</a>
+        {% endif %}
     </div>
 </div>
 
-{% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
-
-{% if settings.beach_mode %}
-<div class="card">
-    <h2 class="card-header">🏖️ Beach Mode On 🌞</h2>
-    <p>
-        Tasks, objectives and projects are hidden.
-    </p>
-    <p>
-        <span class="hint">Change this in <a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}">settings</a>.</span>
-    </p>
+{% if projects %}
+<div class="card card-lines">
+    {% for project in projects %}
+    <div class="line dropdown" project-id="{{ project.id }}">
+        <span class="project-status label label-inline {% if project.status == 'FU' %}label-pink{% elif project.status == 'IN' %}label-grey{% elif project.status == 'AR' %}label-purple{% endif %}" status="{{ project.status }}">{{ project.get_status_display | upper }}</span>
+        <span class="project-badge{% if project.items_count == 0 %} empty{% elif project.all_completed %} done{% endif %}" {% if project.items_count > 0 and not project.all_completed %}style="background: linear-gradient(90deg,rgba(37, 135, 50, 1){{ project.progress }}%,rgb(48, 48, 48) {{ project.progress }}%)"{% endif %}>{{ project.completed_items_count }}/{{ project.items_count }}</span>
+        <a class="link-hidden" href="{{ project.get_absolute_url }}" title="{{ project.reference }}">{{ project.reference }}</a>
+        <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
+        <ul class="menu">
+            <li class="menu-item"><a href="{% url 'orgapy:delete_project' object_id=project.id %}" message="Please confirm deletion of '{{ project.reference }}'" class="button-danger link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+        </ul>
+    </div>
+    {% endfor %}
+    {% include 'orgapy/partials/pagination.html' %}
 </div>
 {% else %}
+{% block empty %}
 <div class="card">
-    <div class="card-body">
-        <div id="tasks" class="coll"></div>
-    </div>
+    <p>Nothing found 😔</p>
 </div>
-
-<div id="objectives-card" class="card hidden">
-    <div id="objgraph-wrapper" class="objgraph-wrapper"></div>
-</div>
-
-<div id="projects" class="projects coll"></div>
+{% endblock empty %}
 {% endif %}
 
-<dialog id="dialogObjectiveForm" closedby="any">
-    <form class="card">
-        {% csrf_token %}
-        <input hidden name="id" />
-        <h2 class="card-header">Create objective</h2>
-        <div class="card-body colll">
-            <div>
-                <label for="input-objective-name">Name</label>
-                <input required minlength="1" name="name" type="text" id="input-objective-name" />
-            </div>
-            <div>
-                <label cfor="input-objective-period">Period (days)</label>
-                <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" />
-            </div>
-            <div>
-                <label for="input-objective-flexible" class="toggle">
-                    <input name="flexible" type="checkbox" id="input-objective-flexible" />
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-text">Flexible</span>
-                </label>
-            </div>
-        </div>
-        <div class="card-actions">
-            <input type="submit" name="add" value="Add"/>
-            <input type="submit" name="save" value="Save"/>
-            <input type="submit" name="archive" value="Archive"/>
-            <input type="submit" name="completion" value="Add completion"/>
-            <input type="submit" class="button-danger" name="delete" value="Delete"/>
-        </div>
-    </form>
-</dialog>
-
-<dialog id="dialogCompletionForm" closedby="any">
-    <form class="card">
-        {% csrf_token %}
-        <input hidden name="id" />
-        <input hidden name="timestamp" />
-        <h2 class="card-header">Add completion</h2>
-        <div class="card-body colll">
-            <div>
-                <label>Date</label>
-                <input type="date" name="date" />
-            </div>
-            <div>
-                <label>Time</label>
-                <input type="time" name="time" step="1" />
-            </div>
-        </div>
-        <div class="card-actions">
-            <input type="submit" name="add" value="Add"/>
-            <input type="submit" name="save" value="Save"/>
-            <input type="submit" class="button-danger" name="delete" value="Delete"/>
-        </div>
-    </form>
-</dialog>
-
-<dialog id="dialogExploreTasks" closedby="any">
-    <div class="card">
-        <h2 class="card-header">Tasks</h2>
-        <div class="card-body">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Start</th>
-                        <th>Due</th>
-                    </tr>
-                </thead>
-                <tbody id="tasksTable"></tbody>
-            </table>
-        </div>
-        <form class="card-actions" method="dialog">
-            <button>Close</button>
-        </form>
-    </div>
-</dialog>
-
-<dialog id="dialogAddEvent" closedby="any">
-    <div class="card">
-        <h2 class="card-header">Create event</h2>
-        <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event" class="card-body colll">
-            {% csrf_token %}
-            <div>
-                <label>Calendar</label>
-                <select class="form-select" name="calendarid"></select>
-            </div>
-            <div>
-                <label>Title</label>
-                <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
-            </div>
-            <div>
-                <label class="toggle">
-                    <input type="checkbox" name="allday" />
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-text">All Day</span>
-                </label>
-            </div>
-            <div>
-                <label>Date start</label>
-                <span class="actionbar">
-                    <input name="dtstart-date" type="date" />
-                    <input name="dtstart-time" type="time" />
-                </span>
-            </div>
-            <div>
-                <label>Date end</label>
-                <span class="actionbar">
-                    <input name="dtend-date" type="date" />
-                    <input name="dtend-time" type="time" />
-                </span>
-            </div>
-            <div>
-                <label>Location</label>
-                <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
-            </div>
-        </form>
-        <div class="card-actions">
-            <button id="btn-add-event">Add</button>
-            <button onclick="dialogAddEvent.close()">Cancel</button>
-        </div>
-    </div>
-</dialog>
-
-<dialog id="dialogTaskForm" closedby="any">
-    <form class="card">
-        <h2 class="card-header">Create task</h2>
-        {% csrf_token %}
-        <input name="id" hidden />
-        <div class="card-body colll">
-            <div>
-                <label>Title</label>
-                <input name="title" type="text" placeholder="Housework, Call X, …" />
-            </div>
-            <div>
-                <label>Date start</label>
-                <input name="start_date" type="date" />
-            </div>
-            <div>
-                <label>Date due</label>
-                <input name="due_date" type="date" />
-            </div>
-            <div>
-                <label>Recurring mode</label>
-                <select class="form-select" name="recurring_mode">
-                    <option value="ON" selected>Once</option>
-                    <option value="DY">Daily</option>
-                    <option value="WK">Weekly</option>
-                    <option value="MN">Monthly</option>
-                    <option value="YR">Yearly</option>
-                </select>
-            </div>
-            <div>
-                <label>Recurring period</label>
-                <input name="recurring_period" type="number" />
-            </div>
-        </div>
-        <div class="card-actions">
-            <input type="submit" name="add" value="Add" />
-            <input type="submit" name="save" value="Save" />
-            <input type="submit" class="button-danger" name="delete" value="Delete" />
-        </div>
-    </form>
-</dialog>
-
-{% endblock column_main %}
-
-{% block menu_create %}
-<li class="menu-item"><button id="tasks-add"><i class="ri-checkbox-circle-line"></i> Task</button></li>
-<li class="menu-item"><button id="btn-objective-create"><i class="ri-focus-2-line"></i> Objective</button></li>
-<li class="menu-item"><button id="btn-project-create"><i class="ri-briefcase-line"></i> Project</button></li>
-<li class="menu-item"><button id="events-add"><i class="ri-calendar-line"></i> Event</button></li>
-<hr>
-{{ block.super }}
-{% endblock menu_create %}
-
-{% block menu %}
-<li class="menu-item"><button id="tasks-explore"><i class="ri-search-line"></i> Explore Tasks</button></li>
-<li class="menu-item"><button id="events-refresh"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
-<li class="menu-item"><a href="{% url 'orgapy:projects_all' %}"><i class="ri-briefcase-line"></i> All Projects</a></li>
-<hr>
-{{ block.super }}
-{% endblock menu %}
-
-{% block body_scripts %}
-{{ block.super }}
 <script>
-    markdownToHtml(".markdown", true);
-    window.addEventListener("load", () => {
-        window.addEventListener("click", clearContextMenus);
-        const projectsContainer = document.getElementById("projects");
-        document.getElementById("btn-project-create").addEventListener("click", () => {
-            onButtonProjectCreate(projectsContainer, null, false);
+    document.querySelectorAll(".project-status").forEach(statusSpan => {
+        statusSpan.addEventListener("click", () => {
+            openProjectStatusDialog(statusSpan, statusSpan.parentElement.getAttribute("project-id"));
         });
-        fetchProjects(projectsContainer,
-            noteId=null,
-            forceExpand=false,
-            statusFilter="AC",
-            projectId=null);
     });
 </script>
-{% endblock body_scripts %}
+
+{% endblock column_main %}

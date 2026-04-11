@@ -26,21 +26,23 @@ Imported {{ notes|length }} note{{ notes|length|pluralize }}.
 </div>
 {% else %}
 <div class="card">
-    <h1>Import Notally Backup</h1>
-    <p>
-        In Notally, go to <i>Settings</i>, then <i>Export Backup</i>.
-        This create a ZIP archive you can upload here.
-        Behind the scene, the archive contains a SQLite database.
-    </p>
-    <h2>Select File</h2>
-    <input type="file" id="input-db" accept=".zip, application/zip, application/x-zip-compressed" />
-    <h2>Select Notes</h2>
-    <div id="selection">
-        –
+    <h1 class="card-header">Import Notally Backup</h1>
+    <div class="card-body">
+        <div>
+            In Notally, go to <i>Settings</i>, then <i>Export Backup</i>.
+            This create a ZIP archive you can upload here.
+            Behind the scene, the archive contains a SQLite database.
+        </div>
+        <h2>Select File</h2>
+        <input type="file" id="input-db" accept=".zip, application/zip, application/x-zip-compressed" />
+        <h2>Select Notes</h2>
+        <div id="selection">
+            –
+        </div>
     </div>
-    <p>
+    <div class="card-actions">
         <button id="button-import" disabled>Import</button>
-    </p>
+    </div>
 </div>
 
 <form id="form-import" method="post" action="{% url 'orgapy:notally' %}">

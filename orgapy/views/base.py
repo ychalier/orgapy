@@ -39,7 +39,7 @@ from .utils import (
 
 def view_landing(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
-        return redirect("orgapy:projects")
+        return redirect("orgapy:home")
     return redirect("orgapy:about")
 
 
@@ -52,12 +52,12 @@ def view_about(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.view_project")
-def view_projects(request: HttpRequest) -> HttpResponse:
+def view_home(request: HttpRequest) -> HttpResponse:
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
     settings = get_or_create_settings(request.user)
     pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
-    return render(request, "orgapy/projects.html", {
+    return render(request, "orgapy/home.html", {
         "settings": settings,
         "pending_mood_logs": pending_mood_logs,
         "active": "projects",
@@ -65,7 +65,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.view_project")
-def view_projects_all(request: HttpRequest) -> HttpResponse:
+def view_projects(request: HttpRequest) -> HttpResponse:
     note_filter = request.GET.get("note")
     status_filter = request.GET.get("status")
     query = Project.objects.filter(user=request.user)
@@ -81,7 +81,7 @@ def view_projects_all(request: HttpRequest) -> HttpResponse:
     paginator = Paginator(query, page_size)
     page = request.GET.get("page")
     projects = paginator.get_page(page)
-    return render(request, "orgapy/projects_all.html", {
+    return render(request, "orgapy/projects.html", {
         "projects": projects,
         "paginator": pretty_paginator(projects),
         "active": "projects",
@@ -105,7 +105,7 @@ def view_delete_project(request: HttpRequest, object_id: str) -> HttpResponse:
     project.delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
-    return redirect("orgapy:projects")
+    return redirect("orgapy:home")
 
 
 # OBJECTS AND CATEGORIES #######################################################
@@ -114,8 +114,8 @@ def view_delete_project(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.view_note")
 @permission_required("orgapy.view_sheet")
 @permission_required("orgapy.view_map")
-def view_search(request: HttpRequest) -> HttpResponse:
-    return view_documents_mixed(request, "orgapy/search.html")
+def view_documents(request: HttpRequest) -> HttpResponse:
+    return view_documents_mixed(request, "orgapy/documents.html")
 
 
 @permission_required("orgapy.view_category")

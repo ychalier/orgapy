@@ -115,9 +115,6 @@ class Project {
         const dialog = create(this.container, "dialog");
         dialog.setAttribute("closedby", "any");
         const card = create(dialog, "div", "card");
-        //const dialogHeader = create(dialog, "div", "dialog-header");
-        //const noteTitle = create(dialog, "h2", "card-header");
-        //if (this.note != null) noteTitle.textContent = this.note.title;
         const noteIframe = create(card, "iframe", "plain");
         if (this.note != null) noteIframe.src = this.note.url + "/standalone";
         noteIframe.width = 400;
@@ -132,49 +129,6 @@ class Project {
         const noteClear = create(actionButtons, "span", "button button-danger");
         noteClear.innerHTML = `<i class="ri-close-line"></i><span>Unbind from project</span>`;
 
-        //TODO: move this elsewhere
-        function openNoteInput() {
-            const noteTitleInputContainer = create(null, "div", "project-note-input");
-            const noteTitleInput = create(noteTitleInputContainer, "input");
-            noteTitleInput.type = "search";
-            let currentId = null;
-            let currentTitle = null;
-            let currentUrl = null;
-            if (self.note != null) {
-                noteTitleInput.value = self.note.title;
-                currentId = self.note.id;
-                currentTitle = self.note.title;
-                currentUrl = self.note.url;
-            }
-            const results = create(noteTitleInputContainer, "div", "project-note-results");
-            bindDocumentInput(noteTitleInput, "note", results, (entry) => {
-                if (entry != null) {
-                    currentId = entry.id;
-                    currentTitle = entry.title;
-                    currentUrl = entry.url;
-                }
-                noteTitleInputContainer.replaceWith(noteTitle);
-                if (currentTitle != null) {
-                    noteTitle.textContent = currentTitle;
-                }
-                if (currentUrl != null) {
-                    noteLink.href = currentUrl;
-                    noteIframe.src = currentUrl + "/standalone";
-                }
-                if (currentId != null && currentTitle != null && currentUrl != null) {
-                    self.note = {
-                        id: currentId,
-                        title: currentTitle,
-                        url: currentUrl
-                    }
-                }
-                self.inflateHeader();
-                self.save();
-            });
-            noteTitle.replaceWith(noteTitleInputContainer);
-            noteTitleInput.focus();
-        }
-
         function clearNote() {
             if (confirm(`Unbind '${self.note.title}' from this project?`)) {
                 dialog.close();
@@ -185,7 +139,6 @@ class Project {
         if (this.note == null) openNoteInput();
 
         noteClear.addEventListener("click", clearNote);
-        //noteTitle.addEventListener("click", openNoteInput);
         dialog.showModal();
     }
 
@@ -216,14 +169,6 @@ class Project {
                 currentTitle = entry.title;
                 currentUrl = entry.url;
             }
-            //noteTitleInputContainer.replaceWith(noteTitle);
-            //if (currentTitle != null) {
-            //    noteTitle.textContent = currentTitle;
-            //}
-            //if (currentUrl != null) {
-            //    noteLink.href = currentUrl;
-            //    noteIframe.src = currentUrl + "/standalone";
-            //}
             if (currentId != null && currentTitle != null && currentUrl != null) {
                 self.note = {
                     id: currentId,
@@ -236,28 +181,8 @@ class Project {
             dialog.close();
         });
 
-
         dialog.showModal();
-        input.focus();
-
-
-        // const card = create(dialog, "div", "card");
-        // //const dialogHeader = create(dialog, "div", "dialog-header");
-        // //const noteTitle = create(dialog, "h2", "card-header");
-        // //if (this.note != null) noteTitle.textContent = this.note.title;
-        // const noteIframe = create(card, "iframe", "plain");
-        // if (this.note != null) noteIframe.src = this.note.url + "/standalone";
-        // noteIframe.width = 400;
-        // noteIframe.height = 400;
-        // const actionButtons = create(card, "div", "card-actions");
-        // const noteLink = create(actionButtons, "a", "button");
-        // noteLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i><span>Go to note</span>`;
-        // if (this.note != null) noteLink.href = this.note.url;
-        // const noteEditLink = create(actionButtons, "a", "button");
-        // noteEditLink.innerHTML = `<i class="ri-pencil-fill"></i><span>Edit note</span>`;
-        // if (this.note != null) noteEditLink.href = this.note.url + "/edit";
-        // const noteClear = create(actionButtons, "span", "button button-danger");
-        // noteClear.innerHTML = `<i class="ri-close-line"></i><span>Unbind from project</span>`;
+        input.focus();       
     }
 
     openStatusDialog() {
@@ -807,12 +732,16 @@ function onButtonProjectCreate(container, note, forceExpand) {
 }
 
 function openProjectStatusDialog(statusSpan, projectId, onSuccess=null) {
-    const dialog = create(document.body, "dialog", "dialog-card row");
+    const dialog = create(document.body, "dialog");
     dialog.setAttribute("closedby", "any");
+    const card = create(dialog, "div", "card");
+    create(card, "b", "card-header").textContent = "Set project status";
+    const cardBody = create(card, "div", "card-body");
+    const row = create(cardBody, "div", "row");
     const currentStatus = statusSpan.getAttribute("status");
     for (const [value, name, labelClass] of [["AC", "ACTIVE", ""], ["IN", "INACTIVE", "label-grey"], ["AR", "ARCHIVED", "label-purple"], ["FU", "FUTURE", "label-pink"]]) {
         if (value == currentStatus) continue;
-        const option = create(dialog, "span", "label " + labelClass);
+        const option = create(row, "button", "label " + labelClass);
         option.textContent = name;
         option.addEventListener("click", () => {
             dialog.close();
