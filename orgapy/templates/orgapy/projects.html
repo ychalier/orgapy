@@ -27,15 +27,16 @@
 {% block column_main %}
 
 <div class="card">
-    <!-- TODO: group days with details/summary elements -->
-    <div id="events" class="coll"></div>
+    <div class="card-body">
+        <div id="events" class="coll"></div>
+    </div>
 </div>
 
 {% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
 
 {% if settings.beach_mode %}
 <div class="card">
-    <h2>🏖️ Beach Mode On 🌞</h2>
+    <h2 class="card-header">🏖️ Beach Mode On 🌞</h2>
     <p>
         Tasks, objectives and projects are hidden.
     </p>
@@ -45,7 +46,9 @@
 </div>
 {% else %}
 <div class="card">
-    <div id="tasks" class="coll"></div>
+    <div class="card-body">
+        <div id="tasks" class="coll"></div>
+    </div>
 </div>
 
 <div id="objectives-card" class="card hidden">
@@ -56,155 +59,166 @@
 {% endif %}
 
 <dialog id="dialogObjectiveForm" closedby="any">
-    <form>
+    <form class="card">
         {% csrf_token %}
         <input hidden name="id" />
-        <h2>Create objective</h2>
-        <p>
-            <label for="input-objective-name">Name</label>
-            <input required minlength="1" name="name" type="text" id="input-objective-name" />
-        </p>
-        <p>
-            <label cfor="input-objective-period">Period (days)</label>
-            <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" />
-        </p>
-        <p>
-            <label for="input-objective-flexible" class="toggle">
-                <input name="flexible" type="checkbox" id="input-objective-flexible" />
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">Flexible</span>
-            </label>
-        </p>
-        <p class="row">
+        <h2 class="card-header">Create objective</h2>
+        <div class="card-body colll">
+            <div>
+                <label for="input-objective-name">Name</label>
+                <input required minlength="1" name="name" type="text" id="input-objective-name" />
+            </div>
+            <div>
+                <label cfor="input-objective-period">Period (days)</label>
+                <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" />
+            </div>
+            <div>
+                <label for="input-objective-flexible" class="toggle">
+                    <input name="flexible" type="checkbox" id="input-objective-flexible" />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">Flexible</span>
+                </label>
+            </div>
+        </div>
+        <div class="card-actions">
             <input type="submit" name="add" value="Add"/>
             <input type="submit" name="save" value="Save"/>
             <input type="submit" name="archive" value="Archive"/>
             <input type="submit" name="completion" value="Add completion"/>
             <input type="submit" class="button-danger" name="delete" value="Delete"/>
-        </p>
+        </div>
     </form>
 </dialog>
 
 <dialog id="dialogCompletionForm" closedby="any">
-    <form>
+    <form class="card">
         {% csrf_token %}
         <input hidden name="id" />
         <input hidden name="timestamp" />
-        <h2>Add completion</h2>
-        <p>
-            <label>Date</label>
-            <input type="date" name="date" />
-        </p>
-        <p>
-            <label>Time</label>
-            <input type="time" name="time" step="1" />
-        </p>
-        <p class="row">
+        <h2 class="card-header">Add completion</h2>
+        <div class="card-body colll">
+            <div>
+                <label>Date</label>
+                <input type="date" name="date" />
+            </div>
+            <div>
+                <label>Time</label>
+                <input type="time" name="time" step="1" />
+            </div>
+        </div>
+        <div class="card-actions">
             <input type="submit" name="add" value="Add"/>
             <input type="submit" name="save" value="Save"/>
             <input type="submit" class="button-danger" name="delete" value="Delete"/>
-        </p>
+        </div>
     </form>
 </dialog>
 
 <dialog id="dialogExploreTasks" closedby="any">
-    <h2>Tasks</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Start</th>
-                <th>Due</th>
-            </tr>
-        </thead>
-        <tbody id="tasksTable"></tbody>
-    </table>
-    <!--<ul class="tasks"></ul>-->
-    <form method="dialog">
-        <p><button>Close</button></p>
-    </form>
+    <div class="card">
+        <h2 class="card-header">Tasks</h2>
+        <div class="card-body">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Start</th>
+                        <th>Due</th>
+                    </tr>
+                </thead>
+                <tbody id="tasksTable"></tbody>
+            </table>
+        </div>
+        <form class="card-actions" method="dialog">
+            <button>Close</button>
+        </form>
+    </div>
 </dialog>
 
 <dialog id="dialogAddEvent" closedby="any">
-    <h2>Create event</h2>
-    <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event">
-        {% csrf_token %}
-        <p>
-            <label>Calendar</label>
-            <select class="form-select" name="calendarid"></select>
-        </p>
-        <p>
-            <label>Title</label>
-            <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
-        </p>
-        <p>
-            <label class="toggle">
-                <input type="checkbox" name="allday" />
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">All Day</span>
-            </label>
-        </p>
-        <p>
-            <label>Date start</label>
-            <span class="actionbar">
-                <input name="dtstart-date" type="date" />
-                <input name="dtstart-time" type="time" />
-            </span>
-        </p>
-        <p>
-            <label>Date end</label>
-            <span class="actionbar">
-                <input name="dtend-date" type="date" />
-                <input name="dtend-time" type="time" />
-            </span>
-        </p>
-        <p>
-            <label>Location</label>
-            <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
-        </p>
-    </form>
-    <p class="row">
-        <button id="btn-add-event" class="button-accent">Add</button>
-        <button onclick="dialogAddEvent.close()">Cancel</button>
-    </p>
+    <div class="card">
+        <h2 class="card-header">Create event</h2>
+        <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event" class="card-body colll">
+            {% csrf_token %}
+            <div>
+                <label>Calendar</label>
+                <select class="form-select" name="calendarid"></select>
+            </div>
+            <div>
+                <label>Title</label>
+                <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
+            </div>
+            <div>
+                <label class="toggle">
+                    <input type="checkbox" name="allday" />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">All Day</span>
+                </label>
+            </div>
+            <div>
+                <label>Date start</label>
+                <span class="actionbar">
+                    <input name="dtstart-date" type="date" />
+                    <input name="dtstart-time" type="time" />
+                </span>
+            </div>
+            <div>
+                <label>Date end</label>
+                <span class="actionbar">
+                    <input name="dtend-date" type="date" />
+                    <input name="dtend-time" type="time" />
+                </span>
+            </div>
+            <div>
+                <label>Location</label>
+                <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
+            </div>
+        </form>
+        <div class="card-actions">
+            <button id="btn-add-event">Add</button>
+            <button onclick="dialogAddEvent.close()">Cancel</button>
+        </div>
+    </div>
 </dialog>
 
 <dialog id="dialogTaskForm" closedby="any">
-    <h2 class="dialog-title">Create task</h2>
-    <form>
+    <form class="card">
+        <h2 class="card-header">Create task</h2>
         {% csrf_token %}
         <input name="id" hidden />
-        <p>
-            <label>Title</label>
-            <input name="title" type="text" placeholder="Housework, Call X, …" />
-        </p>
-        <p>
-            <label>Date start</label>
-            <input name="start_date" type="date" />
-        </p>
-        <p>
-            <label>Date due</label>
-            <input name="due_date" type="date" />
-        </p>
-        <p>
-            <label>Recurring mode</label>
-            <select class="form-select" name="recurring_mode">
-                <option value="ON" selected>Once</option>
-                <option value="DY">Daily</option>
-                <option value="WK">Weekly</option>
-                <option value="MN">Monthly</option>
-                <option value="YR">Yearly</option>
-            </select>
-        </p>
-        <p>
-            <label>Recurring period</label>
-            <input name="recurring_period" type="number" />
-        </p>
-        <p class="row">
+        <div class="card-body colll">
+            <div>
+                <label>Title</label>
+                <input name="title" type="text" placeholder="Housework, Call X, …" />
+            </div>
+            <div>
+                <label>Date start</label>
+                <input name="start_date" type="date" />
+            </div>
+            <div>
+                <label>Date due</label>
+                <input name="due_date" type="date" />
+            </div>
+            <div>
+                <label>Recurring mode</label>
+                <select class="form-select" name="recurring_mode">
+                    <option value="ON" selected>Once</option>
+                    <option value="DY">Daily</option>
+                    <option value="WK">Weekly</option>
+                    <option value="MN">Monthly</option>
+                    <option value="YR">Yearly</option>
+                </select>
+            </div>
+            <div>
+                <label>Recurring period</label>
+                <input name="recurring_period" type="number" />
+            </div>
+        </div>
+        <div class="card-actions">
             <input type="submit" name="add" value="Add" />
             <input type="submit" name="save" value="Save" />
             <input type="submit" class="button-danger" name="delete" value="Delete" />
-        </p>
+        </div>
     </form>
 </dialog>
 

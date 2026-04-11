@@ -23,11 +23,13 @@
 {% block column_main %}
 
 <header class="card">
-    <h1 class="card-title">{% if note.title %}{{note.title}}{% else %}<i>Untitled</i>{% endif %}</h1>
-    <div class="col">
-        <div class="muted"><i class="ri-calendar-line"></i> Created on <time>{{ note.date_creation | date:"Y-m-d" }}</time>{% if note.date_creation.date != note.date_modification.date %}, edited on <time>{{ note.date_modification | date:"Y-m-d" }}</time>{% endif %}</div>
-        <div><i class="ri-hashtag"></i> {% if note.categories.all %}{% for category in note.categories.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{{ category.get_absolute_url }}">{{ category.name | title }}</a>{% endfor %}{% else %}<a href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>{% endif %}</div>
-        {% if note.referenced_in.all %}<div><i class="ri-links-line"></i> {% for ref in note.referenced_in.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{% url 'orgapy:note' ref.id %}"> {{ ref.title }}</a>{% endfor %}</div>{% endif %}
+    <h1 class="card-header">{% if note.title %}{{note.title}}{% else %}<i>Untitled</i>{% endif %}</h1>
+    <div class="card-body">
+        <div class="col">
+            <div class="muted"><i class="ri-calendar-line"></i> Created on <time>{{ note.date_creation | date:"Y-m-d" }}</time>{% if note.date_creation.date != note.date_modification.date %}, edited on <time>{{ note.date_modification | date:"Y-m-d" }}</time>{% endif %}</div>
+            <div><i class="ri-hashtag"></i> {% if note.categories.all %}{% for category in note.categories.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{{ category.get_absolute_url }}">{{ category.name | title }}</a>{% endfor %}{% else %}<a href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>{% endif %}</div>
+            {% if note.referenced_in.all %}<div><i class="ri-links-line"></i> {% for ref in note.referenced_in.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{% url 'orgapy:note' ref.id %}"> {{ ref.title }}</a>{% endfor %}</div>{% endif %}
+        </div>
     </div>
     {% if not readonly %}
     <div class="card-actions">
@@ -42,14 +44,14 @@
     {% endif %}
 </header>
 
-<div id="cardNote" class="card card-note">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div>
+<div id="cardNote" class="card"><div class="card-note">{% if note.content %}{{ note.content | safe }}{% else %}This note has no content.{% endif %}</div></div>
 
 {% endblock column_main %}
 
 {% block column_side %}
 <div class="card">
-    <b class="card-title">Contents</b>
-    <div id="toc"></div>
+    <b class="card-header">Contents</b>
+    <div id="toc" class="card-body"></div>
 </div>
 <div class="col">
     <div class="row">

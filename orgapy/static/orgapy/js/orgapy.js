@@ -522,14 +522,13 @@ function setupCategoryInput() {
             } else {
                 element.textContent = categoryIdOrName;
             }
-            const icon = document.createElement("i");
-            icon.classList.add("ri-close-line");
-            element.appendChild(icon);
-            icon.addEventListener("click", () => {
+            create(element, "i", "ri-close-line");
+            element.onclick = (e) => {
+                e.preventDefault();
                 categoriesInputHidden.value = categoriesInputHidden.value.replace(categoryIdOrName, "");
                 cleanInputHiddenValue();
                 updateCategories();
-            });
+            }
         }
     }
 
@@ -557,12 +556,9 @@ function setupCategoryInput() {
         categoriesSuggestionsItems.innerHTML = "";
         if (candidates.length > 0) {
             for (const categoryName of candidates) {
-                const element = document.createElement("div");
+                const element = create(create(categoriesSuggestionsItems, "li", "menu-item"), "button");
                 element.textContent = categoryName;
-                element.addEventListener("click", () => {
-                    submitCategoryName(categoryName);
-                });
-                categoriesSuggestionsItems.appendChild(element);
+                element.onclick = () => {submitCategoryName(categoryName)};
             }
         }
     }
@@ -720,7 +716,7 @@ function bindDocumentInput(searchInput, objectType, resultsContainer, callback) 
             entries = {};
             for (const entry of data.results) {
                 entries[entry.id] = entry;
-                const result = create(resultsContainer, "div");
+                const result = create(create(resultsContainer, "li", "menu-item"), "button");
                 result.textContent = entry.title;
                 result.setAttribute("object-id", entry.id);
                 result.addEventListener("click", () => {

@@ -12,9 +12,9 @@
 {% endblock head %}
 
 {% block column_main %}
-<h1>Groceries</h1>
 <div class="card">
-    <form action="" method="post">
+    <h1 class="card-header">Groceries</h1>
+    <form class="card-body" action="" method="post">
         {% csrf_token %}
         {% for section in request.user.settings.groceries.sections %}
         <b>{{ section.label }}</b>
@@ -26,6 +26,5 @@
         {% endfor %}
         <button class="button-accent" type="submit">Create list</button>
     </form>
-    <br>
 </div>
 {% endblock column_main %}

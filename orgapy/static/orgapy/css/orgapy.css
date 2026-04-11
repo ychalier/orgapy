@@ -573,14 +573,13 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 .search-bar {
-    width: 14rem;
     display: flex;
     border: 1px solid var(--border-secondary);
     overflow: hidden;
     border-radius: .2rem;
 }
 
-.search:has(.search-suggestion) .search-bar {
+.search:has(.search-suggestions:not(:empty)) .search-bar {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
 }
@@ -611,14 +610,21 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 .menu.search-suggestions {
-    width: 14rem;
+    box-sizing: border-box;
+    width: 100%;
     position: absolute;
     left: 0;
     bottom: 0;
-    transform: translateY(100%);
+    transform: translateY(calc(100% - 1px));
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     box-shadow: none;
+    overflow: hidden;
+}
+
+.menu.search-suggestions .menu-item * {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #searchButton {
@@ -671,6 +677,10 @@ input:checked+.toggle-slider+.toggle-text {
     background-color: var(--accent-hover);
 }
 
+.navbar .search-bar {
+    width: 14rem;
+}
+
 /***** LINE *******************************************************************/
 
 .line {
@@ -681,11 +691,6 @@ input:checked+.toggle-slider+.toggle-text {
     padding: .4rem 1rem .4rem .4rem;
     flex-wrap: wrap;
     gap: .4rem;
-}
-
-.card-lines > .line:first-child {
-    border-top-left-radius: .2rem;
-    border-top-right-radius: .2rem;
 }
 
 .line:nth-child(even) {
@@ -752,28 +757,30 @@ input:checked+.toggle-slider+.toggle-text {
 /***** CARDS ******************************************************************/
 
 .card {
-    padding: .8rem;
+    /*padding: .8rem;*/
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--border-primary);
     background-color: var(--bg-primary);
     border-radius: .4rem;
 }
 
-.card-lines {
-    display: flex;
-    flex-direction: column;
-    padding: 0;
+.card-header {
+    margin: 0;
+    padding: .8rem;
 }
 
-.card:has(.card-actions) {
-    padding-bottom: 0;
+.card-body {
+    padding: 0 .8rem .8rem .8rem;
+}
+
+.card-body:first-child {
+    padding-top: .8rem;
 }
 
 .card-actions {
     display: flex;
-    position: relative;
-    left: -.8rem;
-    width: calc(100% + 1.6rem);
-    margin-top: .8rem;
+    background: var(--bg-primary-alt);
     border-top: 1px solid var(--border-secondary);
     border-bottom-left-radius: .4rem;
     border-bottom-right-radius: .4rem;
@@ -781,29 +788,18 @@ input:checked+.toggle-slider+.toggle-text {
     overflow: hidden;
 }
 
-.card-lines .card-actions {
-    left: 0;
-    margin-top: 0;
-    width: 100%;
-}
-
 .card-actions button,
-.card-actions .button {
+.card-actions .button,
+.card-actions input[type=submit] {
     border: none;
     border-radius: 0;
+    padding: .6rem;
 }
 
 .card-actions button:not(:hover),
-.card-actions .button:not(:hover) {
+.card-actions .button:not(:hover),
+.card-actions input[type=submit]:not(:hover) {
     background: none;
-}
-
-.card-title {
-    margin: 0 0 .8rem 0;
-}
-
-.card-lines .card-title {
-    margin: .8rem;
 }
 
 /***** MENUS AND DROPDOWNS ****************************************************/
@@ -902,19 +898,29 @@ input:checked+.toggle-slider+.toggle-text {
 dialog {
     box-sizing: border-box;
     color: var(--text);
-    background: var(--bg-primary);
-    border: 1px solid var(--border-primary);
-    border-radius: .4rem;
-    box-shadow: 0 0 2px black;
+    background: none;
+    /*background: var(--bg-primary);*/
+    /*border: 1px solid var(--border-primary);*/
+    border: none;
+    /*border-radius: .4rem;*/
+    
     width: 36rem;
-    padding: 0 .8rem;
+    padding: 0;
+    height: fit-content;
+    /*padding: 0 .8rem;*/
+    overflow: visible;
 }
 
 dialog::backdrop {
     background: black;
-    opacity: 0.8;
+    opacity: 0.4;
 }
 
+dialog > .card {
+    box-shadow: 0 0 2px black;
+}
+
+/*
 dialog:has(.card) {
     border: none;
     padding: 0;
@@ -932,6 +938,7 @@ dialog > .card > .card-actions {
     margin-top: 0;
     left: 0;
 }
+*/
 
 /***** UTILITY CLASSES ********************************************************/
 
@@ -944,7 +951,8 @@ dialog > .card > .card-actions {
 }
 
 .col,
-.coll {
+.coll,
+.colll {
     display: flex;
     flex-direction: column;
     gap: .2rem;
@@ -952,6 +960,10 @@ dialog > .card > .card-actions {
 
 .coll {
     gap: .4rem;
+}
+
+.colll {
+    gap: .8rem;
 }
 
 .hidden {

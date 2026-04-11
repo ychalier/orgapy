@@ -116,7 +116,7 @@ class Project {
         dialog.setAttribute("closedby", "any");
         const card = create(dialog, "div", "card");
         //const dialogHeader = create(dialog, "div", "dialog-header");
-        //const noteTitle = create(dialog, "h2", "card-title");
+        //const noteTitle = create(dialog, "h2", "card-header");
         //if (this.note != null) noteTitle.textContent = this.note.title;
         const noteIframe = create(card, "iframe", "plain");
         if (this.note != null) noteIframe.src = this.note.url + "/standalone";
@@ -187,6 +187,77 @@ class Project {
         noteClear.addEventListener("click", clearNote);
         //noteTitle.addEventListener("click", openNoteInput);
         dialog.showModal();
+    }
+
+    openNoteInputDialog() {
+        var self = this;
+        const dialog = create(this.container, "dialog");
+        dialog.setAttribute("closedby", "any");
+        const card = create(dialog, "div", "card");
+        create(card, "h2", "card-header").textContent = "Bind note";
+        const cardBody = create(card, "div", "card-body");
+        const container = create(cardBody, "div", "search");
+        const bar = create(container, "div", "search-bar");
+        const input = create(bar, "input", "search-input");
+        const suggestions = create(container, "ul", "search-suggestions menu");
+
+        let currentId = null;
+        let currentTitle = null;
+        let currentUrl = null;
+        if (this.note != null) {
+            input.value = this.note.title;
+            currentId = this.note.id;
+            currentTitle = this.note.title;
+            currentUrl = this.note.url;
+        }
+        bindDocumentInput(input, "note", suggestions, (entry) => {
+            if (entry != null) {
+                currentId = entry.id;
+                currentTitle = entry.title;
+                currentUrl = entry.url;
+            }
+            //noteTitleInputContainer.replaceWith(noteTitle);
+            //if (currentTitle != null) {
+            //    noteTitle.textContent = currentTitle;
+            //}
+            //if (currentUrl != null) {
+            //    noteLink.href = currentUrl;
+            //    noteIframe.src = currentUrl + "/standalone";
+            //}
+            if (currentId != null && currentTitle != null && currentUrl != null) {
+                self.note = {
+                    id: currentId,
+                    title: currentTitle,
+                    url: currentUrl
+                }
+            }
+            self.inflateHeader();
+            self.save();
+            dialog.close();
+        });
+
+
+        dialog.showModal();
+        input.focus();
+
+
+        // const card = create(dialog, "div", "card");
+        // //const dialogHeader = create(dialog, "div", "dialog-header");
+        // //const noteTitle = create(dialog, "h2", "card-header");
+        // //if (this.note != null) noteTitle.textContent = this.note.title;
+        // const noteIframe = create(card, "iframe", "plain");
+        // if (this.note != null) noteIframe.src = this.note.url + "/standalone";
+        // noteIframe.width = 400;
+        // noteIframe.height = 400;
+        // const actionButtons = create(card, "div", "card-actions");
+        // const noteLink = create(actionButtons, "a", "button");
+        // noteLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i><span>Go to note</span>`;
+        // if (this.note != null) noteLink.href = this.note.url;
+        // const noteEditLink = create(actionButtons, "a", "button");
+        // noteEditLink.innerHTML = `<i class="ri-pencil-fill"></i><span>Edit note</span>`;
+        // if (this.note != null) noteEditLink.href = this.note.url + "/edit";
+        // const noteClear = create(actionButtons, "span", "button button-danger");
+        // noteClear.innerHTML = `<i class="ri-close-line"></i><span>Unbind from project</span>`;
     }
 
     openStatusDialog() {
@@ -464,7 +535,7 @@ class Project {
             addContextMenuOption(menu, "ri-input-field", "Set title", () => {self.inflateTitleInput(self.container.querySelector(".project-header .project-title"))});
         }
         if (this.note == null) {
-            addContextMenuOption(menu, "ri-sticky-note-line", "Bind note", () => {self.openNoteDialog()});
+            addContextMenuOption(menu, "ri-sticky-note-line", "Bind note", () => {self.openNoteInputDialog()});
         } else {
             addContextMenuOption(menu, "ri-sticky-note-line", "Unbind note", () => {self.unbindNote()});
         }

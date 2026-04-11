@@ -77,7 +77,7 @@ def view_projects_all(request: HttpRequest) -> HttpResponse:
     if status_filter is not None:
         query = query.filter(status=status_filter)
     query = query.order_by("-date_modification")
-    page_size = 24
+    page_size = 25
     paginator = Paginator(query, page_size)
     page = request.GET.get("page")
     projects = paginator.get_page(page)
@@ -696,7 +696,7 @@ def view_progress(request: HttpRequest, year: int | str | None = None) -> HttpRe
     except ValueError:
         raise BadRequest()
 
-    page_size = 24
+    page_size = 25
     objects = ProgressLog.objects.filter(user=request.user).filter(dt__range=[dt_start, dt_end + datetime.timedelta(days=1)]).order_by("-dt")
     paginator = Paginator(objects, page_size)
     page = request.GET.get("page")

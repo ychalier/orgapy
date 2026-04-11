@@ -6,16 +6,14 @@
 {% block content_title %}{% endblock content_title %}
 
 {% if objects %}
-<div class="card card-lines">
-    {% for obj in objects %}
-    {% include 'orgapy/partials/object_list_item.html' %}
-    {% endfor %}
+<div class="card">
+    {% for obj in objects %}{% include 'orgapy/partials/object_list_item.html' %}{% endfor %}
     {% include 'orgapy/partials/pagination.html' %}
 </div>
 {% else %}
 {% block empty %}
 <div class="card">
-    Nothing found 😔
+    <div class="card-body">Nothing found 😔</div>
 </div>
 {% endblock empty %}
 {% endif %}

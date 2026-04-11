@@ -6,7 +6,7 @@
 {% block column_main %}
 
 <header class="card card-lines">
-    <h1 class="card-title">Categories</h1>
+    <h1 class="card-header">Categories</h1>
     {% for special, count in specials.items %}
     <div class="line gold">
         <span class="label {% if count == 0 %}label-grey{% endif %}">{{ count }}</span>

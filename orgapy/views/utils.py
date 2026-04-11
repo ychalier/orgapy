@@ -246,7 +246,7 @@ def render_documents(
         documents: QuerySet[DocumentT] | list[Note | Sheet | Map],
         template_name: str,
         attrs: dict,
-        page_size: int = 24,
+        page_size: int = 25,
         **kwargs):
     mixed = isinstance(documents, list)
     paginator = Paginator(documents, page_size)

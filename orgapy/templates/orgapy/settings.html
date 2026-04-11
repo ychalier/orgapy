@@ -4,131 +4,135 @@
 {% block title %}{% block subtitle %}Settings &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block column_main %}
-<header class="card">
+<div class="card">
 
-    <h1 class="card-title">Settings</h1>
+    <h1 class="card-header">Settings</h1>
 
-    <h2>General</h2>
+    <div class="card-body">
 
-    <form action="{% url 'orgapy:settings' %}" method="post">
-        {% csrf_token %}
-        <input hidden type="text" name="ref" value="{{ request.GET.ref }}" />
-        <p>
-            <label for="input-objective-start-hours">Objective Start Hours</label>
-            <input id="input-objective-start-hours" type="number" name="objective_start_hours" value="{{ settings.objective_start_hours }}" min="0" max="23" step="1" />
-        </p>
-        <p>
-            <label for="input-lookahead">Calendar Lookahead (in days)</label>
-            <input id="input-lookahead" type="number" name="calendar_lookahead" value="{{ settings.calendar_lookahead }}" min="0" />
-        </p>
-        <p>
-            <label for="input-trash-period">Trash Period (in days)</label>
-            <input id="input-trash-period" type="number" name="trash_period" value="{{ settings.trash_period }}" min="0" />
-            <span class="hint">Documents in trash for longer than this value will be destroyed.</span>
-        </p>
-        <p>
-            <label for="input-mood-hours">Mood Log Hours</label>
-            <input id="input-mood-hours" type="number" name="mood_log_hours" value="{{ settings.mood_log_hours }}" min="0" max="23" step="1" />
-        </p>
-        <p>
-            <label for="input-mood-lookback">Mood Log Lookback (days)</label>
-            <input id="input-mood-lookback" type="number" name="mood_log_lookback_days" value="{{ settings.mood_log_lookback_days }}" min="0" step="1" />
-        </p>
-        <p>
-            <label for="input-mood-activities">Mood Activities</label>
-            <textarea id="input-mood-activities" name="mood_activities" rows="5">{{ settings.mood_activities}}</textarea>
-            <span class="hint">Write one activity per line. Each line contains a label and an emoji, separated by a space.</span>
-        </p>
-        <p>
-            <label for="input-groceries">Groceries</label>
-            <textarea id="input-groceries" name="groceries_data" rows="5">{% if settings.groceries_data %}{{ settings.groceries_data }}{% endif %}</textarea>
-            <span class="hint">JSON data for the grocery app.</span>
-        </p>
-        <p>
-            <label class="toggle">
-                <input type="checkbox" name="beach_mode" {% if settings.beach_mode %}checked{% endif %} />
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">🏖️ Beach Mode</span>
-            </label>
-            <span class="hint">Hide tasks, objectives and projects from homepage.</span>
-        </p>
-        <button>Save</button>
-    </form>
+        <h2>General</h2>
 
-    <h2>Notification Subscriptions</h2>
+        <form action="{% url 'orgapy:settings' %}" method="post">
+            {% csrf_token %}
+            <input hidden type="text" name="ref" value="{{ request.GET.ref }}" />
+            <p>
+                <label for="input-objective-start-hours">Objective Start Hours</label>
+                <input id="input-objective-start-hours" type="number" name="objective_start_hours" value="{{ settings.objective_start_hours }}" min="0" max="23" step="1" />
+            </p>
+            <p>
+                <label for="input-lookahead">Calendar Lookahead (in days)</label>
+                <input id="input-lookahead" type="number" name="calendar_lookahead" value="{{ settings.calendar_lookahead }}" min="0" />
+            </p>
+            <p>
+                <label for="input-trash-period">Trash Period (in days)</label>
+                <input id="input-trash-period" type="number" name="trash_period" value="{{ settings.trash_period }}" min="0" />
+                <span class="hint">Documents in trash for longer than this value will be destroyed.</span>
+            </p>
+            <p>
+                <label for="input-mood-hours">Mood Log Hours</label>
+                <input id="input-mood-hours" type="number" name="mood_log_hours" value="{{ settings.mood_log_hours }}" min="0" max="23" step="1" />
+            </p>
+            <p>
+                <label for="input-mood-lookback">Mood Log Lookback (days)</label>
+                <input id="input-mood-lookback" type="number" name="mood_log_lookback_days" value="{{ settings.mood_log_lookback_days }}" min="0" step="1" />
+            </p>
+            <p>
+                <label for="input-mood-activities">Mood Activities</label>
+                <textarea id="input-mood-activities" name="mood_activities" rows="5">{{ settings.mood_activities}}</textarea>
+                <span class="hint">Write one activity per line. Each line contains a label and an emoji, separated by a space.</span>
+            </p>
+            <p>
+                <label for="input-groceries">Groceries</label>
+                <textarea id="input-groceries" name="groceries_data" rows="5">{% if settings.groceries_data %}{{ settings.groceries_data }}{% endif %}</textarea>
+                <span class="hint">JSON data for the grocery app.</span>
+            </p>
+            <p>
+                <label class="toggle">
+                    <input type="checkbox" name="beach_mode" {% if settings.beach_mode %}checked{% endif %} />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">🏖️ Beach Mode</span>
+                </label>
+                <span class="hint">Hide tasks, objectives and projects from homepage.</span>
+            </p>
+            <button>Save</button>
+        </form>
 
-    <button class="button-accent" id="subscribe-button">Subscribe</button>
+        <h2>Notification Subscriptions</h2>
 
-    {% if subscriptions %}
-    <ul>
-    {% for sub in subscriptions %}
-        <li><span class="editable" action="rename-subscription" object_id="{{ sub.id }}">{% if sub.name %}{{ sub.name }}{% else %}<i>Unamed</i>{% endif %}</span> ({{ sub.created_at }}) <a class="button button-slim button-danger link-confirm" href="{% url 'orgapy:delete_subscription' sub.id %}" message="Please confirm you want to delete this push subscription. You also have to unsubscribe from your browser!">Delete</a></li>
-    {% endfor %}
-    </ul>
-    {% else %}
-    <p>You have no subscription.</p>
-    {% endif %}
+        <button class="button-accent" id="subscribe-button">Subscribe</button>
 
-    <h2>Calendars</h2>
+        {% if subscriptions %}
+        <ul>
+        {% for sub in subscriptions %}
+            <li><span class="editable" action="rename-subscription" object_id="{{ sub.id }}">{% if sub.name %}{{ sub.name }}{% else %}<i>Unamed</i>{% endif %}</span> ({{ sub.created_at }}) <a class="button button-slim button-danger link-confirm" href="{% url 'orgapy:delete_subscription' sub.id %}" message="Please confirm you want to delete this push subscription. You also have to unsubscribe from your browser!">Delete</a></li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <p>You have no subscription.</p>
+        {% endif %}
 
-    {% for calendar in calendars %}
-    <form action="{% url 'orgapy:calendar_form' %}" method="post" class="card-block">
-        <p>
-            <label>Name</label>
-            <input type="text" name="name" value="{{ calendar.calendar_name }}" />
-        </p>
-        {% csrf_token %}
-        <input type="hidden" name="id" value="{{ calendar.id }}" />
-        <p>
-            <label>URL</label>
-            <input type="url" name="url" value="{{ calendar.url }}" />
-        </p>
-        <p>
-            <label>Username</label>
-            <input type="text" name="username" value="{{ calendar.username }}" />
-        </p>
-        <p>
-            <label>Password</label>
-            <input type="password" name="password" value="{{ calendar.password }}" />
-        </p>
-        <p>
-            <label>Sync Period</label>
-            <input type="number" name="sync_period" value="{{ calendar.sync_period }}" min="0"/>
-        </p>
-        <div class="row">
-            <input type="submit" name="save" value="Save" />
-            <input class="button-danger submit-confirm" name="delete" type="submit" value="Delete" />
-        </div>
-    </form>
-    <br>
-    {% endfor %}
+        <h2>Calendars</h2>
 
-    <form action="{% url 'orgapy:calendar_form' %}" method="post" class="card-block">
-        <p>
-            <label>Name</label>
-            <input type="text" name="name" placeholder="Work, Birthdays, …" />
-        </p>
-        {% csrf_token %}
-        <p>
-            <label>URL</label>
-            <input type="url" name="url" placeholder="https://example.org" />
-        </p>
-        <p>
-            <label>Username</label>
-            <input type="text" name="username" placeholder="Username" />
-        </p>
-        <p>
-            <label>Password</label>
-            <input type="password" name="password" placeholder="Password" />
-        </p>
-        <p>
-            <label>Sync Period</label>
-            <input type="number" name="sync_period" value="86400" min="0" placeholder="86400" />
-        </p>
-        <button>Create</button>
-    </form>
+        {% for calendar in calendars %}
+        <form action="{% url 'orgapy:calendar_form' %}" method="post" class="card-block">
+            <p>
+                <label>Name</label>
+                <input type="text" name="name" value="{{ calendar.calendar_name }}" />
+            </p>
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ calendar.id }}" />
+            <p>
+                <label>URL</label>
+                <input type="url" name="url" value="{{ calendar.url }}" />
+            </p>
+            <p>
+                <label>Username</label>
+                <input type="text" name="username" value="{{ calendar.username }}" />
+            </p>
+            <p>
+                <label>Password</label>
+                <input type="password" name="password" value="{{ calendar.password }}" />
+            </p>
+            <p>
+                <label>Sync Period</label>
+                <input type="number" name="sync_period" value="{{ calendar.sync_period }}" min="0"/>
+            </p>
+            <div class="row">
+                <input type="submit" name="save" value="Save" />
+                <input class="button-danger submit-confirm" name="delete" type="submit" value="Delete" />
+            </div>
+        </form>
+        <br>
+        {% endfor %}
 
-</header>
+        <form action="{% url 'orgapy:calendar_form' %}" method="post" class="card-block">
+            <p>
+                <label>Name</label>
+                <input type="text" name="name" placeholder="Work, Birthdays, …" />
+            </p>
+            {% csrf_token %}
+            <p>
+                <label>URL</label>
+                <input type="url" name="url" placeholder="https://example.org" />
+            </p>
+            <p>
+                <label>Username</label>
+                <input type="text" name="username" placeholder="Username" />
+            </p>
+            <p>
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Password" />
+            </p>
+            <p>
+                <label>Sync Period</label>
+                <input type="number" name="sync_period" value="86400" min="0" placeholder="86400" />
+            </p>
+            <button>Create</button>
+        </form>
+
+    </div>
+
+</div>
 {% endblock column_main %}
 
 {% block body_scripts %}
