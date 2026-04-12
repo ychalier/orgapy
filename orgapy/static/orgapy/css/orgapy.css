@@ -48,7 +48,7 @@
     --bg-page: #1f2d38; /* 1f2d38 */ /* 373839*/
     
     --bg-primary: #101010; 
-    --bg-primary-alt: #202020; /* striped lines */
+    --bg-primary-alt: #181818; /* striped lines */
     --bg-primary-hover: #304350;
     --border-primary: #000000;
 
@@ -61,10 +61,11 @@
     --accent-hover: #c5e8ff;
     --border-accent: #55bbff;
     --bg-accent: #1e313e;
-    --bg-selection: #2781be;
+    --bg-selection: #103a57; /* 103a57 2781be */
     
     --text: #f0f0f0;
     --text-dark: #000000;
+    --text-dim: #444444;
     --text-muted: #888888;
     
     --text-danger: #f16581;
@@ -72,8 +73,9 @@
     --bg-danger: #5d343d;
 
     --gold: #ffd700;
-    --warning: #e65400;
-    --success: #30b041;
+    --mark: #ffff00;
+    --warning: #ff6e1a; /*ff6e1a e65400*/
+    --success: #4bce5c; /*4bce5c 30b041*/
 }
 
 ::selection {
@@ -905,6 +907,7 @@ input:checked+.toggle-slider+.toggle-text {
     list-style: none;
     box-shadow: 0 0 4px black;
     z-index: 2;
+    line-height: 1;
     border: 1px solid var(--border-secondary);
 }
 
@@ -980,6 +983,8 @@ input:checked+.toggle-slider+.toggle-text {
 .menu .menu {
     top: 0;
     left: 100%;
+    max-height: 320px;
+    overflow-y: auto;
 }
 
 /***** DIALOGS ****************************************************************/
@@ -1183,6 +1188,10 @@ dialog > .card {
 
 .gold {
     color: var(--gold);
+}
+
+.dim {
+    color: var(--text-dim);
 }
 
 .x-hint {

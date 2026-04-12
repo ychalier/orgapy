@@ -1,13 +1,7 @@
-* {
-    --sheet-color-background: #101010;
-    --sheet-color-border: #555;
-    --sheet-color-head-background: #202020;
-    --sheet-color-head-hover-background: hsl(0, 0%, 0%);
-    --sheet-color-selected-background: #103a57;
-    --sheet-color-selected-border: #8ed2ff;
-    --sheet-color-filtered-text: #53dcd7;
-    --sheet-color-filtered-background: #122f31;
-    --sheet-color-filtered-border: #122f31;
+:root {
+    --filtered-text: #53dcd7;
+    --filtered-background: #122f31;
+    --filtered-border: #122f31;
 }
 
 .sheet {
@@ -15,21 +9,7 @@
     width: 100%;
     height: 100%;
     overflow: auto;
-    background: #101010;
-}
-
-.sheet-embedded {
-    position: unset;
-    border: 1px solid #555;
-    max-height: 500px;
-}
-
-.sheet-embedded .sheet-head {
-    top: 0;
-}
-
-.sheet-embedded .sheet-body {
-    padding-top: 0;
+    background: var(--bg-primary);
 }
 
 .sheet-toolbar {
@@ -40,7 +20,7 @@
     display: flex;
     height: 32px;
     width: 100%;
-    background: #202020;
+    background: var(--bg-primary-alt);
     line-height: 32px;
     gap: .4rem;
     padding: 0 .4rem;
@@ -52,69 +32,44 @@
     gap: .4rem;
 }
 
+.sheet-toolbar-primary {
+    flex-shrink: 0;
+}
+
 .sheet-toolbar-secondary {
     overflow: auto;
+    flex-shrink: 1;
 }
 
 .sheet-toolbar-secondary * {
     white-space: nowrap;
 }
 
-.sheet-toolbar-buttons {
-    display: flex;
-    gap: .2rem;
-    align-items: center;
-}
-
-.sheet-toolbar a.button-inline,
-.sheet-toolbar button {
+.sheet-toolbar-buttons > button,
+.sheet-toolbar-buttons > .button {
     display: block;
-    color: inherit;
-    text-align: center;
-    border-radius: .2rem;
-    background: #555;
-    border: 1px solid #888;
-    width: 24px;
-    height: 24px;
-    line-height: 24px;
     padding: 0;
-    margin: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    line-height: 1.5rem;
+    text-align: center;
 }
 
-.sheet-toolbar .menu button {
-    border: none;
-    display: inline-block;
-    background: none;
-    width: 100%;
-    height: unset;
-    text-align: left;
-}
-
-.sheet-toolbar-buttons > a.button-inline:hover,
-.sheet-toolbar-buttons > button:hover {
-    background-color: #303030;
-    border-color: #555;
-}
-
-.sheet-title {
-    color: white;
-}
-
-.sheet-toolbar a.reference {
+.sheet-toolbar .label {
     position: relative;
     line-height: normal;
     height: fit-content;
-    top: .3em;
+    top: .3rem;
 }
 
 .sheet-head {
     position: sticky;
     top: 32px;
     z-index: 2;
-    background: #303030;
+    background: var(--bg-secondary);
     height: fit-content;
-    border-top: 1px solid var(--sheet-color-border);
-    border-bottom: 1px solid var(--sheet-color-border);
+    border-top: 1px solid var(--border-secondary);
+    border-bottom: 1px solid var(--border-secondary);
 }
 
 .sheet-body {
@@ -127,11 +82,10 @@
 
 .sheet-row {
     display: flex;
-    /*width: fit-content;*/
 }
 
 .sheet-row:nth-child(even) .sheet-cell:not(.sheet-cell-head) {
-    background: #181818;
+    background: var(--bg-primary-alt);
 }
 
 .sheet-row.hidden {
@@ -139,19 +93,18 @@
 }
 
 .sheet-row.hidden + .sheet-row:not(.hidden) {
-    border-top: 3px solid var(--sheet-color-filtered-border);
+    border-top: 3px solid var(--filtered-border);
 }
 
 .sheet-cell {
     position: relative;
     padding: 0;
-    /*border: 1px solid var(--sheet-color-border);*/
-    outline: 1px solid var(--sheet-color-border);
+    outline: 1px solid var(--border-secondary);
     cursor: cell;
     white-space: nowrap;
     overflow: hidden;
     font-size: 14px;
-    background: var(--sheet-color-background);
+    background: var(--bg-primary);
     flex-grow: 0;
     flex-shrink: 0;
     /*user-select: none;*/ /* Removed as it blocked pasting events before first click (maybe a focus issue?) */
@@ -169,27 +122,23 @@
     overflow: hidden;
 }
 
-.sheet-cell-content b {
-    color: white;
-}
-
 .sheet-cell-head {
     width: 42px;
     position: sticky;
     left: 0;
     z-index: 1;
-    border-left: 1px solid var(--sheet-color-border);
+    border-left: 1px solid var(--border-secondary);
 }
 
 .sheet-row-head .sheet-cell,
 .sheet-cell-head {
     text-align: center;
-    background-color: #303030;
+    background-color: var(--bg-secondary);
     cursor: default;
 }
 
 .selected {
-    background: var(--sheet-color-selected-background) !important;
+    background: var(--bg-selection) !important;
 }
 
 .sheet-cell-input {
@@ -206,6 +155,7 @@
     resize: none;
     line-height: 1;
     color: inherit;
+    border-radius: 0;
 }
 
 .sheet-cell-input:focus {
@@ -236,77 +186,6 @@
     z-index: 2;
 }
 
-.context-menu {
-    visibility: hidden;
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    background: var(--sheet-color-head-background);
-    border: 1px solid var(--sheet-color-border);
-    box-shadow: 0 2px 6px 2px rgba(60, 64, 67, .15);
-    border-radius: .2rem;
-    z-index: 3;
-    user-select: none;
-}
-
-.context-menu.active {
-    visibility: visible;
-}
-
-.context-menu-item {
-    padding: .4rem .8rem;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.context-menu-item:hover {
-    background-color: var(--sheet-color-head-hover-background);
-}
-
-.context-menu-item input[type=checkbox] {
-    width: fit-content;
-}
-
-.context-submenu {
-    position: relative;
-}
-
-.context-submenu-title::after {
-    content: "❭";
-    float: right;
-    height: 0;
-    line-height: 19px;
-}
-
-.context-submenu-container {
-    visibility: hidden;
-    position: absolute;
-    top: 0;
-    right: 0;
-    transform: translateX(100%);
-    background: var(--sheet-color-head-background);
-    border: 1px solid var(--sheet-color-border);
-    box-shadow: 0 2px 6px 2px rgba(60, 64, 67, .15);
-    z-index: 4;
-    max-height: 320px;
-    max-width: 200px;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.context-submenu:hover>.context-submenu-container {
-    visibility: visible;
-}
-
-.context-submenu-container input[type="checkbox"] {
-    margin: 0 .3rem 0 0;
-}
-
-.context-submenu-container .context-menu-item {
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
-
 .sheet-cell-top-left {
     cursor: cell !important;
 }
@@ -320,51 +199,18 @@
     transform: translate(-50%, -50%);
 }
 
-/*TODO: remove
-.sheet-column-sort {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: .5rem;
-    cursor: pointer;
-}
-
-.sheet-column-sort::after {
-    visibility: hidden;
-    display: block;
-    content: "❭";
-    font-weight: normal;
-    position: relative;
-    opacity: 50%;
-    top: .3rem;
-    transform: rotate(90deg);
-    line-height: 0;
-}
-
-.sheet-column-sort.ascending::after {
-    visibility: visible;
-}
-
-.sheet-column-sort.descending::after {
-    visibility: visible;
-    transform: rotate(-90deg);
-}
-*/
-
 .sheet-column-name {
     overflow: hidden;
     text-overflow: ellipsis;
-    color: white;
     user-select: none;
 }
 
 .sheet-cell.filtered .sheet-column-name {
-    color: var(--sheet-color-filtered-text);
+    color: var(--filtered-text);
 }
 
 .sheet-cell.filtered {
-    background-color: var(--sheet-color-filtered-background);
+    background-color: var(--filtered-background);
 }
 
 .sheet-column-name-input {
@@ -426,27 +272,24 @@
 }
 
 .highlight-accent {
-    background: #ffff00;
+    background: var(--mark);
 }
 
 .highlight-success {
-    background: #4bce5c;
+    background: var(--success);
 }
 
 .highlight-error {
-    background: #ff6e1a;
+    background: var(--warning);
 }
 
 .highlight+.sheet-cell-content {
-    color: black;
+    color: var(--text-dark);
 }
 
 .script-textarea {
-    font-family: monospace;
+    font-family: "Fira Code", monospace;
     resize: vertical;
-    padding: 1rem;
-    background: #303030;
-    color: white;
 }
 
 .sheet-shrink .sheet-cell {
@@ -459,86 +302,4 @@
 
 .sheet-shrink .sheet-cell-input {
     padding: 5px 2px 2px 2px;
-}
-
-.sheet.fullscreen::before {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: #222;
-    width: 100%;
-    height: 100%;
-    content: "";
-}
-
-.sheet.fullscreen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    padding: 1em;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.sheet.fullscreen .sheet-toolbar,
-.sheet.sheet.fullscreen .sheet-table {
-    z-index: 2;
-}
-
-body.fullscreen header {
-    position: sticky;
-    top: 0;
-    left: 0;
-    width: 100%;
-}
-
-.sheet-tab:not(.active) {
-    display: none;
-}
-
-.sheet-tabs-titles {
-    display: flex;
-    flex-direction: row;
-    padding-bottom: .4rem;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    max-width: 100%;
-}
-
-.sheet-tab-title {
-    background: #0f0f0f;
-    height: 32px;
-    border-radius: .4rem;
-    cursor: pointer;
-    padding: 0 .4rem;
-    line-height: 32px;
-    margin-right: .2rem;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-.sheet-tab-title:hover {
-    background: #888;
-}
-
-.sheet-tab-title.active {
-    background: white;
-    color: black;
-}
-
-.markdown .sheet {
-    height: auto;
-}
-
-.text-gold {
-    color: #ffd700;
-}
-
-.text-dark {
-    color: #444444;
 }

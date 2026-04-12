@@ -1350,12 +1350,12 @@ class ColumnTypeStars extends ColumnType {
 
     formatHtml(value) {
         return safeFormat(value, x => {
-            let html = `<span class="text-gold">`;
+            let html = `<span class="gold">`;
             const y = parseInt(x);
             for (let i = 0; i < y; i++) {
                 html += "★";
             }
-            html += `</span><span class="text-dark">`;
+            html += `</span><span class="dim">`;
             for (let i = 0; i < 3 - y; i++) {
                 html += "☆";
             }
@@ -1435,7 +1435,7 @@ class ContextMenu {
     }
 
     setup() {
-        this.container = create(document.body, "div", "context-menu");
+        this.container = create(document.body, "ul", "contextmenu menu");
         var self = this;
         window.addEventListener("click", () => {
             self.close();
@@ -1448,7 +1448,7 @@ class ContextMenu {
     }
 
     addItem(label, callback) {
-        let element = create(this.container, "div", "context-menu-item");
+        let element = create(create(this.container, "li", "menu-item"), "button");
         element.innerHTML = label;
         var self = this;
         element.addEventListener("click", () => {
@@ -1459,13 +1459,13 @@ class ContextMenu {
         return element;
     }
 
-    add_menu(label) {
-        let wrapper = create(this.container, "div", "context-menu-item context-submenu");
-        let item = create(wrapper, "span", "context-submenu-title");
+    addMenu(label) {
+        let wrapper = create(create(this.container, "li", "menu-item"), "div", "dropdown");
+        let item = create(wrapper, "div", "dropdown-toggle");
         item.innerHTML = label;
-        let menu = create(wrapper, "div", "context-submenu-container");
+        let menu = create(wrapper, "ul", "menu");
         menu.addItem = (label, callback) => {
-            let element = create(menu, "div", "context-menu-item");
+            let element = create(create(menu, "li", "menu-item"), "button");
             element.innerHTML = label;
             element.addEventListener("click", (event) => {
                 event.stopPropagation();
@@ -1479,7 +1479,7 @@ class ContextMenu {
     open(x, y) {
         let width = 0;
         let height = 0;
-        this.container.querySelectorAll(".context-menu > .context-menu-item").forEach(item => {
+        this.container.querySelectorAll(".contextmenu > .menu-item").forEach(item => {
             let bounds = item.getBoundingClientRect();
             width = Math.max(width, bounds.width);
             height += bounds.height;
@@ -1974,7 +1974,7 @@ class Sheet {
     openColumnContextMenu(x, y, j) {
         this.contextMenu.reset();
         var self = this;
-        let type_menu = this.contextMenu.add_menu("Type");
+        let type_menu = this.contextMenu.addMenu("Type");
         COLUMN_TYPES.forEach(ctype => {
             let el = type_menu.addItem(ctype.LABEL, () => {
                 self.setColumnType(j, ctype.ID);
@@ -1989,11 +1989,11 @@ class Sheet {
         });
         let values = Array.from(this.getValueSet(j));
         if (values.length < MAX_DIFFERENT_VALUES_FOR_FILTERS) {
-            let filter_menu = this.contextMenu.add_menu("Filter");
+            let filter_menu = this.contextMenu.addMenu("Filter");
             values.sort();
             values.splice(0, 0, null);
             filter_menu.addItem(`Reset`, () => {
-                const valueEls = filter_menu.querySelectorAll(".context-menu-item");
+                const valueEls = filter_menu.querySelectorAll(".menu-item");
                 values.forEach((value, i) => {
                     valueEls[i + 2].querySelector("input").checked = true;
                     self.setFilterState(j, value, false);
@@ -2001,7 +2001,7 @@ class Sheet {
                 self.updateFilters();
             });
             filter_menu.addItem(`Uncheck All`, () => {
-                const valueEls = filter_menu.querySelectorAll(".context-menu-item");
+                const valueEls = filter_menu.querySelectorAll(".menu-item");
                 values.forEach((value, i) => {
                     valueEls[i + 2].querySelector("input").checked = false;
                     self.setFilterState(j, value, true);
@@ -2879,16 +2879,18 @@ class Sheet {
         var self = this;
         const dialog = create(document.body, "dialog");
         dialog.setAttribute("closedby", "any");
-        create(dialog, "h3").textContent = "Script";
-        create(dialog, "div").textContent = "Write script formula, one per line";
-        const textarea = create(create(dialog, "p"), "textarea", "script-textarea");
+        const card = create(dialog, "div", "card");
+        create(card, "h2", "card-header").textContent = "Script";
+        const cardBody = create(card, "div", "card-body");
+        create(cardBody, "div").textContent = "Write script formula, one per line";
+        const textarea = create(create(cardBody, "p"), "textarea", "script-textarea");
         textarea.addEventListener("keydown", (event) => {
             event.stopPropagation();
         });
         if (this.script != null) {
             textarea.value = this.script.string;
         }
-        const bottomRow = create(dialog, "div", "row");
+        const bottomRow = create(card, "div", "card-actions");
         const buttonCancel = create(bottomRow, "button");
         buttonCancel.textContent = "Cancel";
         buttonCancel.addEventListener("click", () => {
