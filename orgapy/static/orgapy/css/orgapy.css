@@ -225,6 +225,14 @@ textarea:disabled {
     pointer-events: none;
 }
 
+.input-inline {
+    display: block;
+    border: none;
+    background: none;
+    padding: 0;
+    font-weight: inherit;
+}
+
 /***** BUTTONS ****************************************************************/
 
 button,
@@ -615,15 +623,14 @@ input:checked+.toggle-slider+.toggle-text {
 
 /***** SEARCH *****************************************************************/
 
-/* TODO: integrate nicely with note-pin, smde-dropdown, project note */
-/* TODO: fix border radius */
-/* TODO: fix outline */
-
 .search {
     box-sizing: border-box;
     position: relative;
-    
-    
+    border-radius: .2rem;
+}
+
+.search:has(.search-input:focus) {
+    outline: 1px solid var(--accent);
 }
 
 .search-bar {
@@ -637,13 +644,6 @@ input:checked+.toggle-slider+.toggle-text {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
 }
-
-/*
-.search:has(.search-suggestions:not(:empty)) .search-bar {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-}
-*/
 
 .search-input,
 .search-button {
@@ -680,6 +680,12 @@ input:checked+.toggle-slider+.toggle-text {
     border-left: 1px solid var(--border-secondary);
     border-right: 1px solid var(--border-secondary);
     border-bottom: 1px solid var(--border-secondary);
+    border-bottom-left-radius: .2rem;
+    border-bottom-right-radius: .2rem;
+}
+
+.search-pin:has(+*:not(:empty)) {
+    border-radius: 0;
 }
 
 .menu.search-suggestions {
@@ -689,10 +695,8 @@ input:checked+.toggle-slider+.toggle-text {
     left: 0;
     bottom: 0;
     transform: translateY(calc(100% - 1px));
-    /*border: 1px solid var(--bg-secondary);*/
     border-top-left-radius: 0;
     border-top-right-radius: 0;
-    /*border-radius: 0;*/
     box-shadow: none;
     overflow: hidden;
 }

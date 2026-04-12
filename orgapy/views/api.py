@@ -6,7 +6,7 @@ import dateutil.relativedelta
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
-from django.db.models import Max, Q
+from django.db.models import Max, Q, QuerySet
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 
@@ -72,6 +72,14 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_save_map(request)
         case "suggestions":
             return api_suggestions(request)
+        case "suggestions-notes":
+            return api_suggestions_notes(request)
+        case "suggestions-sheets":
+            return api_suggestions_sheets(request)
+        case "suggestions-maps":
+            return api_suggestions_maps(request)
+        case "suggestions-categories":
+            return api_suggestions_categories(request)
         case "progress":
             return api_progress(request)
         case "search":
@@ -727,6 +735,19 @@ def api_save_map(request: HttpRequest) -> JsonResponse:
     })
 
 
+def make_suggestions_response(results: list[Category | Note | Sheet | Map] | QuerySet[Category] | QuerySet[Note] | QuerySet[Sheet] | QuerySet[Map]) -> JsonResponse:
+    return JsonResponse({
+        "results": [
+            {
+                "id": result.id,
+                "title": result.title,
+                "url": result.get_absolute_url()
+            }
+            for result in results
+        ]
+    })
+
+
 @permission_required("orgapy.view_note")
 @permission_required("orgapy.view_sheet")
 @permission_required("orgapy.view_map")
@@ -744,17 +765,35 @@ def api_suggestions(request: HttpRequest) -> JsonResponse:
                 results += Sheet.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
             if (object_type is None or object_type == "map") and request.user.has_perm("orgapy.view_map"):
                 results += Map.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
-    data = {
-        "results": [
-            {
-                "id": result.id,
-                "title": result.title,
-                "url": result.get_absolute_url()
-            }
-            for result in results
-        ]
-    }
-    return JsonResponse(data)
+    return make_suggestions_response(results)
+
+
+@permission_required("orgapy.view_note")
+def api_suggestions_notes(request: HttpRequest) -> JsonResponse:
+    query = request.GET.get("q", "").strip()
+    results = Note.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
+    return make_suggestions_response(results)
+
+
+@permission_required("orgapy.view_sheet")
+def api_suggestions_sheets(request: HttpRequest) -> JsonResponse:
+    query = request.GET.get("q", "").strip()
+    results = Sheet.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
+    return make_suggestions_response(results)
+
+
+@permission_required("orgapy.view_map")
+def api_suggestions_maps(request: HttpRequest) -> JsonResponse:
+    query = request.GET.get("q", "").strip()
+    results = Map.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
+    return make_suggestions_response(results)
+
+
+@permission_required("orgapy.view_category")
+def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
+    query = request.GET.get("q", "").strip()
+    results = Category.objects.filter(user=request.user, name__startswith=query)[:5]
+    return make_suggestions_response(results)
 
 
 @permission_required("orgapy.view_progress_counter")

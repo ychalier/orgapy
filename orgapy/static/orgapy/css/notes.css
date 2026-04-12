@@ -63,15 +63,6 @@
 
 /***** NOTE FORM **************************************************************/
 
-.note-form-title {
-    display: block;
-    font-size: 2rem;
-    font-weight: bold;
-    padding: 0;
-    border: none;
-    background: none;
-}
-
 .note-form-content {
     display: block;
     padding: .8rem;

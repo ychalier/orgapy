@@ -5,60 +5,44 @@
 
 {% block column_main %}
 
-<div class="card">
-    <h2>{% block form_title %}Edit map{% endblock %}</h2>
-    <form id="form-note-edit" action="{% url 'orgapy:save_map' %}" method="post">
-        {% csrf_token %}
-        {% if map %}<input type="hidden" name="id" value="{{map.id}}" />{% endif %}
-        <input hidden type="text" name="modification" value="{% if map %}{{ map.date_modification.timestamp }}{% endif %}" />
-        {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}" />{% endif %}
-        <p>
-            <label for="input-title">Title</label>
-            <input id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ map.title }}{% endif %}" />
-        </p>
-        <div>
-            <label for="categories-input-new">Categories</label>
-            <div id="categories-input">
-                <input id="categories-input-hidden" type="hidden" name="categories" value="{% for category in map.categories.all %}{% if not forloop.first %};{% endif %}{{ category.id }}{% endfor %}" />
-                <div id="categories-input-current"></div>
-                <div id="categories-suggestions">
-                    <input id="categories-input-new" type="text" placeholder="new category" />
-                    <div id="categories-suggestions-items"></div>
+<form id="form-note-edit" action="{% url 'orgapy:save_map' %}" method="post">
+    {% csrf_token %}
+    {% if map %}<input type="hidden" name="id" value="{{map.id}}" />{% endif %}
+    <input hidden type="text" name="modification" value="{% if map %}{{ map.date_modification.timestamp }}{% endif %}" />
+    {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}" />{% endif %}
+    <div class="card">
+        <h1 class="card-header">
+            <input class="input-inline" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ map.title }}{% endif %}" />
+        </h1>
+        <div class="card-body colll">
+            {% include 'orgapy/partials/categories_input.html' with obj=map %}
+            <div class="col">
+                <div>
+                    <label class="toggle">
+                        <input type="checkbox" name="public" {% if map.public %}checked{% endif %} />
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">Public</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="toggle">
+                        <input type="checkbox" name="pinned" {% if map.pinned %}checked{% endif %} />
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">Pinned</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="toggle">
+                        <input type="checkbox" name="hidden" {% if map.hidden %}checked{% endif %} />
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">Hidden</span>
+                    </label>
                 </div>
             </div>
         </div>
-        <p>
-            <label class="toggle">
-                <input type="checkbox" name="public" {% if map.public %}checked{% endif %} />
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">Public</span>
-            </label>
-        </p>
-        <p>
-            <label class="toggle">
-                <input type="checkbox" name="pinned" {% if map.pinned %}checked{% endif %} />
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">Pinned</span>
-            </label>
-        </p>
-        <p>
-            <label class="toggle">
-                <input type="checkbox" name="hidden" {% if map.hidden %}checked{% endif %} />
-                <span class="toggle-slider"></span>
-                <span class="toggle-text">Hidden</span>
-            </label>
-        </p>
-        <div class="row">
+        <div class="card-actions">
             <button>Save</button>
         </div>
-    </form>
-</div>
+    </div>
+</form>
 {% endblock column_main %}
-
-{% block body_scripts %}
-{{ block.super }}
-<script>
-    const CATEGORIES = [{% for category in categories %}{% if not forloop.first %}, {% endif %}{name: "{{ category.name }}", id: {{ category.id }}}{% endfor %}];
-    setupCategoryInput();
-</script>
-{% endblock body_scripts %}

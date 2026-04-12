@@ -317,11 +317,8 @@ def view_notes(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.add_note")
 def view_create_note(request: HttpRequest) -> HttpResponse:
-    categories = Category.objects.filter(user=request.user)
     return render(request, "orgapy/create_note.html", {
-        "categories": categories,
-        "note_category_ids": {},
-        "active": "notes",
+        "active": "notes"
     })
 
 
@@ -374,12 +371,8 @@ def view_note_standalone(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.change_note")
 def view_edit_note(request: HttpRequest, object_id: str) -> HttpResponse:
     note = find_user_object(Note, "id", object_id, request.user)
-    categories = Category.objects.filter(user=request.user).order_by("name")
-    selected_category_ids = [category.id for category in note.categories.all()]
     return render(request, "orgapy/edit_note.html", {
         "note": note,
-        "categories": categories,
-        "selected_category_ids": selected_category_ids,
         "active": "notes",
     })
 
@@ -510,12 +503,8 @@ def view_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.change_sheet")
 def view_edit_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
     sheet = find_user_object(Sheet, "id", object_id, request.user)
-    categories = Category.objects.filter(user=request.user).order_by("name")
-    selected_category_ids = [category.id for category in sheet.categories.all()]
     return render(request, "orgapy/edit_sheet.html", {
         "sheet": sheet,
-        "categories": categories,
-        "selected_category_ids": selected_category_ids,
         "active": "sheets",
     })
 
@@ -582,12 +571,8 @@ def view_create_map(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.change_map")
 def view_edit_map(request: HttpRequest, object_id: str) -> HttpResponse:
     mmap = find_user_object(Map, "id", object_id, request.user)
-    categories = Category.objects.filter(user=request.user).order_by("name")
-    selected_category_ids = [category.id for category in mmap.categories.all()]
     return render(request, "orgapy/edit_map.html", {
         "map": mmap,
-        "categories": categories,
-        "selected_category_ids": selected_category_ids,
         "active": "maps",
     })
 

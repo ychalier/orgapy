@@ -66,88 +66,105 @@ function apiPost(action, body, onSuccess=null) {
     fetchApi(URL_API + "?action=" + action, "post", formData, onSuccess);
 }
 
-function bindSearchbarClearIcon(searchbar) {
-    window.addEventListener("load", () => {
-        const input = searchbar.querySelector(".search-input");
-        const icon = searchbar.querySelector(".search-icon");
-        const suggestionsContainer = searchbar.querySelector(".search-suggestions");
-        icon.addEventListener("click", () => {
-            input.value = "";
-            input.focus();
-            if (suggestionsContainer != null) {
-                suggestionsContainer.innerHTML = "";
-            }
-        });
-    });
-}
+function bindSearch(searchEl, apiAction, inflateMenuItem, onElementClick) {
 
-function bindSearchbarSuggestions(searchbar, apiAction) {
-    window.addEventListener("load", () => {
-        const input = searchbar.querySelector(".search-input");
-        const container = searchbar.querySelector(".search-suggestions");
-        var selected = null;
-        var results;
-        var elements = [];
-        input.addEventListener("input", () => {
-            const query = input.value.trim();
-            fetch(URL_API + `?action=${apiAction}&q=${encodeURIComponent(query)}`).then(res => res.json()).then(data => {
-                results = data.results;
-                container.innerHTML = "";
-                selected = null;
-                elements = [];
-                for (const [i, entry] of results.entries()) {
-                    const li = create(null, "li", "menu-item search-suggestion");
-                    const element = create(li, "a");
-                    elements.push(li);
-                    container.appendChild(li);
-                    element.href = entry.url;
-                    element.innerHTML = `<mark>${ entry.title.slice(0, query.length) }</mark>${ entry.title.slice(query.length) }`;
-                    li.addEventListener("mouseenter", () => {
-                        selected = i;
-                        element.classList.add("hover");
-                    });
-                    li.addEventListener("mouseleave", () => {
-                        selected = null;
-                        element.classList.remove("hover");
-                    });
-                }
-            });
-        });
-        input.addEventListener("keydown", (event) => {
-            if (event.key == "Enter") {
-                if (selected != null) {
-                    event.preventDefault();
-                    window.location.href = results[selected].url;
-                }
-            } else if (event.key == "ArrowDown" && results.length > 0) {
-                event.preventDefault();
-                if (selected == null) {
-                    selected = 0;
-                } else {
-                    selected = Math.min(selected + 1, results.length - 1);
-                }
-                container.querySelectorAll(".hover").forEach(element => {
-                    element.classList.remove("hover");
+    const searchInput = searchEl.querySelector(".search-input");
+    const suggestionsContainer = searchEl.querySelector(".search-suggestions");
+
+    var clearedAt = new Date();
+    var fetchedAt = clearedAt;
+
+    const clear = () => {
+        searchInput.value = "";
+        searchInput.focus();
+        if (suggestionsContainer != null){
+            suggestionsContainer.innerHTML = "";
+        }
+        clearedAt = new Date();
+    }
+
+    const clearIcon = searchEl.querySelector(".search-icon");
+    if (clearIcon != null) {
+        clearIcon.onclick = () => {
+            clear();
+        }
+    }
+
+    var selected = null;
+    var results;
+    var lines = [];
+
+    searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim();
+        fetchedAt = new Date();
+        fetch(URL_API + `?action=${apiAction}&q=${encodeURIComponent(query)}`).then(res => res.json()).then(data => {
+            if (clearedAt >= fetchedAt) return;
+            results = data.results;
+            suggestionsContainer.innerHTML = "";
+            selected = null;
+            lines = [];
+            for (const [i, entry] of results.entries()) {
+                const li = create(suggestionsContainer, "li", "menu-item");
+                lines.push(li);
+                inflateMenuItem({container: li, entry: entry, query: query});
+                li.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    onElementClick(entry);
                 });
-                elements[selected].classList.add("hover");
-            } else if (event.key == "ArrowUp" && results.length > 0) {
-                event.preventDefault();
-                if (selected == null) {
-                    selected = results.length - 1;
-                } else if (selected == 0) {
+                li.addEventListener("mouseenter", () => {
+                    selected = i;
+                    lines.forEach(line => line.classList.remove("hover"));
+                    li.classList.add("hover");
+                });
+                li.addEventListener("mouseleave", () => {
                     selected = null;
-                } else {
-                    selected = Math.max(0, selected - 1);
-                }
-                container.querySelectorAll(".hover").forEach(element => {
-                    element.classList.remove("hover");
+                    li.classList.remove("hover");
                 });
-                if (selected != null) {
-                    elements[selected].classList.add("hover");
-                }
             }
         });
     });
+
+    searchInput.addEventListener("keydown", (e) => {
+        if (e.key == "Enter") {
+            if (selected != null) {
+                e.preventDefault();
+                e.stopPropagation();
+                onElementClick(results[selected]);
+            }
+        } else if (e.key == "ArrowDown" && results.length > 0) {
+            e.preventDefault();
+            if (selected == null) {
+                selected = 0;
+            } else {
+                selected = Math.min(selected + 1, results.length - 1);
+            }
+            lines.forEach(line => line.classList.remove("hover"));
+            lines[selected].classList.add("hover");
+        } else if (e.key == "ArrowUp" && results.length > 0) {
+            e.preventDefault();
+            if (selected == null) {
+                selected = results.length - 1;
+            } else if (selected == 0) {
+                selected = null;
+            } else {
+                selected = Math.max(0, selected - 1);
+            }
+            lines.forEach(line => line.classList.remove("hover"));
+            if (selected != null) {
+                lines[selected].classList.add("hover");
+            }
+        } else if (e.key == "Escape") {
+            e.preventDefault();
+            if (searchInput.value == "") {
+                onElementClick(null);
+            } else {
+                clear();
+            }
+        }
+    });
+
+    return { searchInput, suggestionsContainer, clear };
+
 }
 
 function markdownToHtmlFancy(element, useKatex=false, embed=false) {
@@ -487,126 +504,88 @@ function bindSearchButton(form, button) {
     });
 }
 
-function setupCategoryInput() {
-    const categoryIndex = {};
-    const categoryReverseIndex = {};
-    for (const category of CATEGORIES) {
-        categoryIndex[category.id] = category.name;
-        categoryReverseIndex[category.name] = category.id;
+function setupCategoryInput(container) {
+
+    const currentContainer = container.querySelector(".categories-input-current");
+    const searchInput = container.querySelector(".search-input");
+    var categories;
+
+    function parseHiddenValue() {
+        const value = container.querySelector("input[type=hidden]").value;
+        categories = new Set();
+        for (const part of value.split(";")) {
+            if (part.length > 0) {
+                categories.add(part);
+            }
+        }
     }
+
+    function formatHiddenValue() {
+        container.querySelector("input[type=hidden]").value = Array.from(categories).join(";");
+    }
+
+    function updateCurrentContainer() {
+        currentContainer.innerHTML = "";
+        for (const category of categories) {
+            const element = create(currentContainer, "button", "button-accent");
+            element.innerHTML = `${category} <i class="ri-close-line"></i>`;
+            element.onclick = (e) => {
+                e.preventDefault();
+                popCategory(category);
+            }
+        }
+    }
+
+    function update() {
+        formatHiddenValue();
+        updateCurrentContainer();
+        searchObject.clear();
+    }
+
+    function popCategory(category) {
+        categories.delete(category);
+        update()
+    }
+
+    function pushCategory(category) {
+        categories.add(category);
+        update()
+    }
+
+    parseHiddenValue();
+    updateCurrentContainer();
+
+    const searchObject = bindSearch(container, "suggestions-categories", (state) => {
+        const element = create(state.container, "button");
+        element.textContent = state.entry.title.slice(1);
+        return element;
+    }, (entry) => {
+        pushCategory(entry.title.slice(1));
+    });
 
     const inputEndChars = " ,;";
 
-    function readInputHiddenValues() {
-        const baseValues = categoriesInputHidden.value.trim().split(";");
-        const newValues = [];
-        for (const v of baseValues) {
-            if (v.trim() != "" && !newValues.includes(v.trim())) {
-                newValues.push(v.trim());
-            }
-        }
-        return newValues;
-    }
-
-    function cleanInputHiddenValue() {
-        categoriesInputHidden.value = readInputHiddenValues().join(";");
-    }
-
-    function updateCategories() {
-        categoriesInputCurrent.innerHTML = "";
-        for (const categoryIdOrName of readInputHiddenValues()) {
-            const element = create(null, "button", "button-accent");
-            categoriesInputCurrent.appendChild(element);
-            if (categoryIdOrName in categoryIndex) {
-                element.textContent = categoryIndex[categoryIdOrName];
-            } else {
-                element.textContent = categoryIdOrName;
-            }
-            create(element, "i", "ri-close-line");
-            element.onclick = (e) => {
-                e.preventDefault();
-                categoriesInputHidden.value = categoriesInputHidden.value.replace(categoryIdOrName, "");
-                cleanInputHiddenValue();
-                updateCategories();
-            }
-        }
-    }
-
-    function getSuggestions(prefix) {
-        if (prefix == "") return [];
-        const currentCategoryNames = [];
-        for (const categoryIdOrName of readInputHiddenValues()) {
-            if (categoryIdOrName in categoryIndex) {
-                currentCategoryNames.push(categoryIndex[categoryIdOrName]);
-            } else {
-                currentCategoryNames.push(categoryIdOrName);
-            }
-        }
-        const candidates = [];
-        for (const categoryName in categoryReverseIndex) {
-            if (categoryName.startsWith(prefix) && !currentCategoryNames.includes(categoryName)) {
-                candidates.push(categoryName);
-            }
-        }
-        return candidates;
-    }
-
-    function updateSuggestions(prefix) {
-        const candidates = getSuggestions(prefix);
-        categoriesSuggestionsItems.innerHTML = "";
-        if (candidates.length > 0) {
-            for (const categoryName of candidates) {
-                const element = create(create(categoriesSuggestionsItems, "li", "menu-item"), "button");
-                element.textContent = categoryName;
-                element.onclick = () => {submitCategoryName(categoryName)};
-            }
-        }
-    }
-
-    function submitCategoryName(categoryName) {
-        let valueToAppend;
-        if (categoryName in categoryReverseIndex) {
-            valueToAppend = categoryReverseIndex[categoryName];
-        } else {
-            valueToAppend = categoryName;
-        }
-        categoriesInputHidden.value = [...readInputHiddenValues(), valueToAppend].join(";");
-        cleanInputHiddenValue();
-        categoriesInputNew.value = "";
-        updateCategories();
-        updateSuggestions();
-        categoriesInputNew.focus();
-    }
-
-    categoriesInputNew.addEventListener("input", () => {
-        const value = categoriesInputNew.value.toLowerCase().trimStart();
+    searchInput.addEventListener("input", () => {
+        const value = searchInput.value;
         if (inputEndChars.includes(value.charAt(value.length - 1))) {
-            const categoryName = value.substring(0, value.length - 1);
-            submitCategoryName(categoryName);
-        } else {
-            updateSuggestions(value.trim());
+            const category = value.substring(0, value.length - 1).trim();
+            if (category.length > 0) {
+                pushCategory(category);
+            }
         }
     });
 
-    categoriesInputNew.addEventListener("keydown", (event) => {
-        if (event.key == "Tab") {
-            event.preventDefault();
-            const candidates = getSuggestions(categoriesInputNew.value.toLowerCase().trim());
-            if (candidates.length == 1) {
-                submitCategoryName(candidates[0]);
+    searchInput.addEventListener("keydown", (e) => {
+        if (e.key == "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+            const value = searchInput.value.trim();
+            if (value.length > 0) {
+                pushCategory(value);
             }
-            return false;
-        } else if (event.key == "Enter") {
-            const value = categoriesInputNew.value.toLowerCase().trim();
-            event.preventDefault();
-            if (value != "") {
-                submitCategoryName(value);
-            }
-            return false;
         }
     });
 
-    updateCategories();
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -691,102 +670,7 @@ function askUserToSubscribeToNotifications(serviceWorkerUrl, publicKeyBase64) {
     }
 }
 
-function bindDocumentInput(searchInput, objectType, resultsContainer, callback) {
-
-    let resultCount = 0;
-    let selectedResult = -1;
-    let entries = {};
-
-    function updateSelectedResult() {
-        Array.from(resultsContainer.children).forEach((result, i) => {
-            if (i == selectedResult) {
-                result.classList.add("active");
-            } else {
-                result.classList.remove("active");
-            }
-        });
-    }
-
-    searchInput.addEventListener("input", (event) => {
-        const query = searchInput.value.trim();
-        fetch(URL_API + `?action=suggestions&q=${query}&t=${objectType}`).then(res => res.json()).then(data => {
-            resultsContainer.innerHTML = "";
-            resultCount = data.results.length;
-            selectedResult = -1;
-            entries = {};
-            for (const entry of data.results) {
-                entries[entry.id] = entry;
-                const result = create(create(resultsContainer, "li", "menu-item"), "button");
-                result.textContent = entry.title;
-                result.setAttribute("object-id", entry.id);
-                result.addEventListener("click", () => {
-                    callback(entry);
-                });
-            }
-        });
-    });
-
-    searchInput.addEventListener("keydown", (event) => {
-        if (event.key == "ArrowDown") {
-            event.preventDefault();
-            if (selectedResult < resultCount-1) {
-                selectedResult++;
-                updateSelectedResult();
-            }
-        } else if (event.key == "ArrowUp") {
-            event.preventDefault();
-            if (selectedResult > 0) {
-                selectedResult--;
-                updateSelectedResult();
-            }
-        } else if (event.key == "Enter") {
-            event.preventDefault();
-            if (selectedResult != undefined && selectedResult >= 0 && selectedResult < resultsContainer.children.length) {
-                callback(entries[resultsContainer.children[selectedResult].getAttribute("object-id")]);
-            } else {
-                callback(null);
-            }
-        } else if (event.key == "Escape") {
-            callback(null);
-        }
-    });
-
-}
-
-const RIGHT_COLUMN_RELAYOUT_THRESHOLD = 800;
-
-function onResize() {
-    const rightColumnTarget = document.getElementById("rightColumnTarget");
-    if (rightColumnTarget != null) {
-        const targetHasContent = rightColumnTarget.innerHTML.trim() != "";
-        const sourceHasContent = rightColumnContainer.innerHTML.trim() != "";
-        if (!(targetHasContent ^ sourceHasContent)) {
-            console.warn("Nothing to move");
-            return;
-        }
-        const targetShouldHaveContent = window.innerWidth <= RIGHT_COLUMN_RELAYOUT_THRESHOLD;
-        if (targetShouldHaveContent && !targetHasContent) {
-            Array.from(rightColumnContainer.children).forEach(el => {
-                rightColumnTarget.appendChild(rightColumnContainer.removeChild(el));
-            });
-            rightColumnTarget.querySelectorAll("details").forEach(details => {
-                details.removeAttribute("open");
-            });
-        } else if (targetHasContent && !targetShouldHaveContent) {
-            Array.from(rightColumnTarget.children).forEach(el => {
-                rightColumnContainer.appendChild(rightColumnTarget.removeChild(el));
-            });
-            rightColumnContainer.querySelectorAll("details").forEach(details => {
-                details.setAttribute("open", true);
-            });            
-        }
-    }
-}
-
-window.addEventListener("resize", onResize);
-
 window.addEventListener("load", () => {
-    onResize();
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {
             event.preventDefault();

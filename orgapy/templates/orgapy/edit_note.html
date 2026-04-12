@@ -28,9 +28,9 @@
     {% endif %}
     <input hidden type="text" name="modification" value="{% if note %}{{ note.date_modification.timestamp }}{% endif %}" />
     <header class="card">
-        <div class="card-header">
-            <input class="note-form-title" id="input-title" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
-        </div>
+        <h1 class="card-header">
+            <input class="input-inline" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ note.title }}{% endif %}" />
+        </h1>
         <div class="card-body">{% include 'orgapy/partials/categories_input.html' with obj=note %}</div>
         <div class="card-actions">
             <button id="btn-save-note-exit"><i class="ri-save-line"></i> Save</button>
@@ -45,7 +45,6 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    const CATEGORIES = [{% for category in categories %}{% if not forloop.first %}, {% endif %}{name: "{{ category.name }}", id: {{ category.id }}}{% endfor %}];
     if (window.innerWidth > 800) {
         const simplemde = new SimpleMDE({
             element: document.getElementById("input-content"),
@@ -76,7 +75,6 @@
     } else {
         document.getElementById("input-content").style.height = (window.innerHeight - 290) + "px";
     }
-    setupCategoryInput();
     bindSaveNoteButtons();
 </script>
 {% endblock body_scripts %}

@@ -150,9 +150,8 @@ class Project {
         create(card, "h2", "card-header").textContent = "Bind note";
         const cardBody = create(card, "div", "card-body");
         const container = create(cardBody, "div", "search");
-        const bar = create(container, "div", "search-bar");
-        const input = create(bar, "input", "search-input");
-        const suggestions = create(container, "ul", "search-suggestions menu");
+        const input = create(create(container, "div", "search-bar"), "input", "search-input");
+        create(container, "ul", "search-suggestions menu");
 
         let currentId = null;
         let currentTitle = null;
@@ -163,7 +162,12 @@ class Project {
             currentTitle = this.note.title;
             currentUrl = this.note.url;
         }
-        bindDocumentInput(input, "note", suggestions, (entry) => {
+
+        bindSearch(container, "suggestions-notes", (state) => {
+            const element = create(state.container, "button");
+            element.textContent = state.entry.title;
+            return element;
+        }, (entry) => {
             if (entry != null) {
                 currentId = entry.id;
                 currentTitle = entry.title;

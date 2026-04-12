@@ -1,6 +1,6 @@
 function createToc(contentContainer, tocContainer) {    
     function removeToc() {
-        remove(tocContainer.parentElement);
+        remove(tocContainer.parentElement.parentElement);
     }
     let bounds = contentContainer.getBoundingClientRect();
     if (bounds.height <= 0.8 * window.innerHeight) {
@@ -236,10 +236,11 @@ function openSmdeDropdown(cmInstance, word) {
 
     // Set pinned value
     if (objectId != undefined) {
-        const pinnedButton = create(dropdown, "button", "search-pin");
+        const pinnedButton = create(dropdown, "button", "search-pin ellipsis");
         fetch(URL_API + `?action=reference&${objectType}=${objectId}`).then(res => res.json()).then(data => {
             const result = data.results[0];
             if (result.error == null) {
+                pinnedButton.title = result.title;
                 pinnedButton.innerHTML = `${result.title} <i class="ri-close-line"></i>`;
             } else {
                 pinnedButton.textContent = result.error;
@@ -248,9 +249,13 @@ function openSmdeDropdown(cmInstance, word) {
         pinnedButton.addEventListener("click", () => { setObjectId("", "interlink-reset") });
     }
 
-    const results = create(dropdown, "ul", "search-suggestions menu");
+    create(dropdown, "ul", "search-suggestions menu");
 
-    bindDocumentInput(searchbar, objectType, results, (entry) => {
+    bindSearch(dropdown, `suggestions-${objectType}s`, (state) => {
+        const element = create(state.container, "button");
+        element.textContent = state.entry.title;
+        return element;
+    }, (entry) => {
         if (entry == null) {
             unfocusSmdeDropdown();
         } else {

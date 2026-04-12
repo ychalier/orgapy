@@ -97,9 +97,20 @@
     {% block body_scrips_minimized %}
     <script>
         bindDropdown(document.getElementById("menu-dropdown"));
-        bindSearchbarClearIcon(searchForm);
+        bindSearch(
+            searchForm,
+            "suggestions",
+            (state) => {
+                const element = create(state.container, "a");
+                element.href = state.entry.url;
+                element.innerHTML = `<mark>${ state.entry.title.slice(0, state.query.length) }</mark>${ state.entry.title.slice(state.query.length) }`;
+                return element;
+            },
+            (entry) => {
+                if (entry != null) window.location.href = entry.url;
+            }
+        );
         bindSearchButton(searchForm, searchButton);
-        bindSearchbarSuggestions(searchForm, "suggestions");
     </script>
     {% endblock %}
 </body>
