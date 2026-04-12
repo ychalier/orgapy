@@ -48,10 +48,6 @@
     text-decoration: underline;
 }
 
-.card-note .task-list-item input {
-    width: auto;
-}
-
 .card-note .task-list-item:has(input:checked) {
     color: var(--text-muted);
     text-decoration: line-through;

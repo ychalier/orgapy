@@ -3,16 +3,13 @@
 
 {% block title %}{{ category | title }} &mid; {{ block.super }}{% endblock title %}
 
-{% block head %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/specials/journal.css' %}" />
-{% endblock head %}
-
 {% block column_main %}
 
 <header class="card">
-    <h1>{{ category | title }}</h1>
-    <div id="journal"></div>
+    <h1 class="card-header">{{ category | title }}</h1>
+    <div class="card-body">
+        <div id="journal" class="calendar"></div>
+    </div>
 </header>
 
 <script src="{% static 'orgapy/js/specials/journal.js' %}"></script>

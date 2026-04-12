@@ -204,6 +204,10 @@ textarea {
     width: 100%;
 }
 
+input[type=checkbox] {
+    width: unset;
+}
+
 input:not(input[type=checkbox]):focus,
 select:focus,
 textarea:focus {
@@ -530,6 +534,14 @@ img.artwork {
 
 summary.minititle::marker {
     content: none;
+}
+
+/***** CHECKLIST **************************************************************/
+
+ul.checklist {
+    line-height: 1.6;
+    padding-left: 0;
+    list-style: none;
 }
 
 /***** TOGGLE SWITCH **********************************************************/
@@ -994,6 +1006,140 @@ dialog:focus {
 
 dialog > .card {
     box-shadow: 0 0 2px black;
+}
+
+/***** CALENDAR ***************************************************************/
+
+.calendar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    --cellsize: 14px;
+}
+
+.calendar--weekly {
+    --cellsize: .56rem;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: .4rem;
+    align-items: baseline;
+    gap: .4rem;
+}
+
+.calendar-year {
+    width: 3rem;
+    font-weight: bold;
+    font-size: large;
+    text-align: center;
+    user-select: none;
+}
+
+.calendar-button {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.calendar-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-row {
+    display: flex;
+    align-items: center;
+}
+
+.calendar-day-number {
+    writing-mode: sideways-lr;
+    width: var(--cellsize);
+    margin: 1px;
+    line-height: 12px;
+    font-size: small;
+}
+
+.calendar-day-number:first-child,
+.calendar-month-name {
+    text-align: right;
+    width: 28px;
+    margin-right: 2px;
+    font-size: small;
+}
+
+.calendar-day {
+    width: var(--cellsize);
+    height: var(--cellsize);
+    margin: 1px;
+    background: #161b22;
+    border-radius: .125rem;
+}
+
+.calendar-day.disabled {
+    background: none;
+}
+
+.calendar-day.filled-1 {
+    cursor: pointer;
+    /*background-color: #39d353;*/
+    background-color: #0e4429;
+}
+
+.calendar-day.filled-2 {
+    cursor: pointer;
+    /*background-color: #83d941;*/
+    background-color: #006d32;
+}
+
+.calendar-day.filled-3 {
+    cursor: pointer;
+    /*background-color: #b5eb64;*/
+    background-color: #26a641;
+}
+
+.calendar-day.filled-4 {
+    cursor: pointer;
+    /*background-color: #e6f590;*/
+    background-color: #39d353;
+}
+
+.calendar-day.filled-5 {
+    cursor: pointer;
+    /*background-color: #feffe2;*/
+    background-color: #1ef141;
+}
+
+.calendar-day.filled-more {
+    cursor: pointer;
+    background-color: #feffe2;
+    /*background-color: #ffffff;*/
+    /*outline: 1px solid red;*/
+}
+
+.calendar-popover {
+    position: absolute;
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    padding: .4rem;
+    border-radius: .4rem;
+    border: 1px solid var(--border-secondary);
+    transform: translateX(-50%);
+    max-width: min(100%, 12rem);
+}
+
+@media (max-width: 600px) {
+
+    .calendar {
+        height: 600px;
+    }
+    
+    .calendar-body {
+        transform: rotate(90deg) translateX(160px);
+    }
+
 }
 
 /***** UTILITY CLASSES ********************************************************/

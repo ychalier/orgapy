@@ -6,7 +6,7 @@
 <header class="card">
     <h1 class="card-header">{{ category.name | title }}</h1>
     <div class="card-actions">
-        <a class="button" href="{% url 'orgapy:edit_category' object_id=category.id %}" title="Rename"><i class="ri-pencil-fill"></i> Rename</a>
+        <a class="button" href="{% url 'orgapy:edit_category' object_id=category.id %}" title="Rename"><i class="ri-pencil-fill"></i> Edit</a>
         <a class="button button-danger link-confirm" message="Are you sure to delete '{{ category.name }}'?" href="{% url 'orgapy:delete_category' object_id=category.id %}" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a>
     </div>
 </header>

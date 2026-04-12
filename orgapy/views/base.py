@@ -162,6 +162,7 @@ def view_edit_category(request: HttpRequest, object_id: str) -> HttpResponse:
                 if len(new_name) > 0:
                     category.name = new_name.lower()
                     category.save()
+                return redirect("orgapy:category", name=category.name)
             return render(request, "orgapy/edit_category.html", {
                 "category": category,
             })

@@ -798,13 +798,22 @@ def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.view_progress_counter")
 def api_progress(request: HttpRequest) -> HttpResponse:
-    year = request.GET.get("year", str(datetime.datetime.now().year)).strip()
-    query = ProgressCounter.objects.filter(user=request.user, year=int(year))
-    try:
-        counter = query.get()
-    except ProgressCounter.DoesNotExist:
-        raise Http404()
-    return HttpResponse(counter.data, content_type="application/json")
+    data = {}
+    for log in ProgressLog.objects.filter(user=request.user).order_by("dt"):
+        data.setdefault(log.dt.year, {})
+        key = log.dt.strftime("%Y-%m-%d")
+        data[log.dt.year].setdefault(key, [])
+        data[log.dt.year][key].append({
+            "title": log.description
+        })
+    return JsonResponse(data)
+    #year = request.GET.get("year", str(datetime.datetime.now().year)).strip()
+    #query = ProgressCounter.objects.filter(user=request.user, year=int(year))
+    #try:
+    #    counter = query.get()
+    #except ProgressCounter.DoesNotExist:
+    #    raise Http404()
+    #return HttpResponse(counter.data, content_type="application/json")
 
 
 @permission_required("orgapy.view_note")

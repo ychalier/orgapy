@@ -670,6 +670,196 @@ function askUserToSubscribeToNotifications(serviceWorkerUrl, publicKeyBase64) {
     }
 }
 
+/**
+ *
+ * @param {HTMLElement} container
+ * @param {Object} data Map[Year, Map[Day, Array[Elements]]
+ * @param {Object} options { currentYear, showHeader, weekly, relative }
+ */
+function inflateCalendar(container, data, options) {
+
+    if (options == undefined) options = {};
+    if (!("currentYear" in options)) options.currentYear = null;
+    if (!("showHeader" in options)) options.showHeader = true;
+    if (!("weekly" in options)) options.weekly = false;
+    if (!("relative" in options)) options.relative = false;
+
+    const minYear = Math.min(...Object.keys(data));
+    const maxYear = Math.max(...Object.keys(data));
+
+    const months = ["jan.", "feb.", "mar.", "apr.", "may", "june", "july", "aug.", "sep.", "oct.", "nov.", "dec."];
+
+    function inflateYear(currentYear) {
+
+        const yearData = data[currentYear];
+
+        container.innerHTML = "";
+        container.classList.add("calendar");
+        if (options.weekly) {
+            container.classList.add("calendar--weekly");
+        } else {
+            container.classList.remove("calendar--weekly");
+        }
+
+        if (options.showHeader) {
+
+            const header = create(container, "div", "calendar-header");
+
+            const prevButton = create(header, "button", "calendar-button");
+            prevButton.textContent = "‹";
+            prevButton.title = currentYear - 1;
+            if (currentYear == minYear) {
+                prevButton.setAttribute("disabled", "");
+            } else {
+                prevButton.addEventListener("click", () => {inflateYear(currentYear - 1);});
+            }
+
+            create(header, "span", "calendar-year").textContent = currentYear;
+
+            const nextButton = create(header, "button", "calendar-button");
+            nextButton.textContent = "›";
+            nextButton.title = currentYear + 1;
+            if (currentYear == maxYear) {
+                nextButton.setAttribute("disabled", "");
+            } else {
+                nextButton.addEventListener("click", () => {inflateYear(currentYear + 1);});
+            }
+            
+            const toggleWeeklyButton = create(header, "button", "button-inline");
+            toggleWeeklyButton.textContent = "❖";
+            toggleWeeklyButton.title = "Toggle weekly view";
+            toggleWeeklyButton.addEventListener("click", () => {
+                options.weekly = !options.weekly;
+                inflateYear(currentYear);
+            });
+
+        }
+
+        const body = create(container, "div", "calendar-body");
+        const cells = [];
+
+        if (options.weekly) {
+            const dateStart = new Date(currentYear, 0, 1);
+            const weekdayOffset = (dateStart.getDay() + 6) % 7;
+            const daysInYear = (currentYear % 4 == 0 && currentYear % 100 != 0) || currentYear % 400 == 0 ? 366 : 365;
+            const weekCount = Math.ceil((daysInYear + weekdayOffset) / 7);
+            const rows = [];
+            for (let i = 0; i < 7; i++) {
+                rows.push(create(body, "div", "calendar-row"));
+            }
+            for (let j = 0; j < weekCount; j++) {
+                for (let i = 0; i < 7; i++) {
+                    cells.push(create(rows[i], "div", "calendar-day"));
+                }
+            }
+            for (let i = 0; i < weekdayOffset; i++) cells[i].classList.add("disabled");
+            for (let i = daysInYear + weekdayOffset; i < cells.length; i++) cells[i].classList.add("disabled");
+            for (let i = weekdayOffset; i < daysInYear + weekdayOffset; i++) {
+                const dt = new Date(dateStart);
+                dt.setDate(dt.getDate() + i - weekdayOffset);
+                const key = dtf(dt, "YYYY-mm-dd");
+                cells[i].setAttribute("date", key);
+            }
+        } else {
+            const dt = new Date(currentYear, 0, 1);
+            const firstRow = create(body, "div", "calendar-row");
+            for (let i = 0; i <= 31; i++) {
+                const cell = create(firstRow, "div", "calendar-day-number");
+                if (i > 0) {
+                    cell.textContent = i;
+                }
+            }
+            let monthRow = null;
+            while (dt.getFullYear() == currentYear) {
+                if (dt.getDate() == 1) {
+                    monthRow = create(body, "div", "calendar-row");
+                    create(monthRow, "div", "calendar-month-name").textContent = months[dt.getMonth()];
+                }
+                const dayCell = create(monthRow, "div", "calendar-day");
+                const key = dtf(dt, "YYYY-mm-dd");
+                dayCell.setAttribute("date", key);
+                cells.push(dayCell);
+                dt.setDate(dt.getDate() + 1);
+            }
+        }
+
+        let maxValue = -1;
+        if (options.relative) {
+            for (let i = 0; i < cells.length; i++) {
+                const key = cells[i].getAttribute("date");
+                if (key in yearData) {
+                    maxValue = Math.max(maxValue, yearData[key].length);
+                }
+            }
+        }
+
+        for (let i = 0; i < cells.length; i++) {
+            const dayCell = cells[i];
+            const key = dayCell.getAttribute("date");
+            if (key in yearData) {
+                let value = yearData[key].length;
+                if (options.relative) {
+                    value = Math.ceil(5 * value / maxValue);
+                }
+                if (value > 5) {
+                    dayCell.classList.add("filled-more");
+                } else {
+                    dayCell.classList.add(`filled-${value}`);
+                }
+                if ("href" in yearData[key][0]) {
+                    dayCell.addEventListener("click", () => {
+                        window.location.href = yearData[key][0].href;
+                    });
+                }
+                let popover;
+                let shouldClose = false;
+                function showPopover() {
+                    document.querySelectorAll(".calendar-popover").forEach(remove);
+                    popover = create(document.body, "div", "calendar-popover");
+                    popover.addEventListener("mouseenter", () => {
+                        shouldClose = false;
+                    });
+                    popover.addEventListener("mouseleave", () => {
+                        shouldClose = true;
+                        setTimeout(closePopover, 100);
+                    });
+                    const cellBounds = dayCell.getBoundingClientRect();
+                    popover.style.left = (cellBounds.left + cellBounds.width/2) + "px";
+                    popover.style.top = (cellBounds.top + cellBounds.height) + "px";
+                    create(popover, "span", "hint").textContent = key;
+                    for (const obj of yearData[key]) {
+                        const objEl = create(popover, "a", "ellipsis link-hidden");
+                        objEl.textContent = obj.title;
+                        objEl.href = obj.href;
+                    }
+                }
+                function closePopover() {
+                    if (popover == null) return;
+                    if (!shouldClose) return;
+                    try {
+                        document.body.removeChild(popover);
+                    } catch { // popover could have already been deleted by showPopover
+                        //pass
+                    }
+                    popover = null;
+                }
+                dayCell.addEventListener("mouseenter", () => {
+                    shouldClose = false;
+                    showPopover();
+                });
+                dayCell.addEventListener("mouseleave", () => {
+                    shouldClose = true;
+                    setTimeout(closePopover, 100);
+                });
+            }
+        }
+
+    }
+
+    inflateYear(options.currentYear != null ? options.currentYear : (new Date()).getFullYear());
+
+}
+
 window.addEventListener("load", () => {
     document.querySelectorAll(".link-confirm").forEach(link => {
         link.addEventListener("click", (event) => {

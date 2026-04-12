@@ -1,24 +1,25 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %} #{{ category.name }} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% block subtitle %}Edit '#{{ category.name }}' &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
 {% block column_main %}
 
-<header class="card">
-    <h1>#{{ category.name }}</h1>
-</header>
+<form method="post" action="">
+    {% csrf_token %}
+    <div class="card">
+        <h1 class="card-header">
+            <input class="input-inline" type="text" name="name" value="{{ category.name }}" placeholder="Name" />
+        </h1>
+        <div class="card-body">{{ category.count }} object(s) have this tag.</div>
+        <div class="card-actions">
+            <button>Save</button>
+        </div>
+    </div>
+</form>
 
-<div class="card">
-    <p>{{ category.count }} object(s) have this tag.</p>
-    <form method="post" action="">
-        {% csrf_token %}
-        <p>
-            <label for="input-name">Name</label>
-            <input id="input-name" type="text" name="name" value="{{ category.name }}" placeholder="Category name" />
-        </p>
-        <button>Save</button>
-    </form>
-</div>
+<script>
+    document.querySelector("h1 input").focus();
+</script>
 
 {% endblock column_main %}

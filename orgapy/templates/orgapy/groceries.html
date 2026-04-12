@@ -2,29 +2,24 @@
 {% load static %}
 {% block title %}{% block subtitle %}Groceries &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
 
-{% block head %}
-{{ block.super }}
-<style>
-    input[type=checkbox] {
-        width: unset;
-    }
-</style>
-{% endblock head %}
-
 {% block column_main %}
-<div class="card">
-    <h1 class="card-header">Groceries</h1>
-    <form class="card-body" action="" method="post">
-        {% csrf_token %}
-        {% for section in request.user.settings.groceries.sections %}
-        <b>{{ section.label }}</b>
-        <ul>
-            {% for item in section.items %}
-            <li><label><input type="checkbox" name="{{ section.label }};{{ item.label }}" />{{ item.label }}</label></li>
+<form action="" method="post">
+    {% csrf_token %}
+    <div class="card">
+        <h1 class="card-header">Groceries</h1>
+        <div class="card-body">
+            {% for section in request.user.settings.groceries.sections %}
+            <h2>{{ section.label }}</h2>
+            <ul class="checklist">
+                {% for item in section.items %}
+                <li><label><input type="checkbox" name="{{ section.label }};{{ item.label }}" />{{ item.label }}</label></li>
+                {% endfor %}
+            </ul>
             {% endfor %}
-        </ul>
-        {% endfor %}
-        <button class="button-accent" type="submit">Create list</button>
-    </form>
-</div>
+        </div>
+        <div class="card-actions">
+            <button class="button-accent" type="submit">Create list</button>
+        </div>
+    </div>
+</form>
 {% endblock column_main %}

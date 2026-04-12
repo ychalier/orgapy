@@ -449,7 +449,7 @@ class Calendar(models.Model):
         with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
             principal = client.principal()
             for calendar in principal.calendars():
-                assert isinstance(calendar, caldav.Calendar)
+                assert isinstance(calendar, caldav.Calendar) # type: ignore
                 if calendar.name != self.calendar_name:
                     continue
                 event = calendar.event_by_url(href)
