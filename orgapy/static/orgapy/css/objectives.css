@@ -10,10 +10,10 @@
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    background: #101010;
+    background: var(--bg-primary);
     border-radius: .4rem;
     padding: .4rem .4rem .8rem .4rem;
-    border: 1px solid black;
+    border: 1px solid var(--border-primary);
 }
 
 .objgraph-head {
@@ -48,9 +48,9 @@
     content: " ";
     height: 10px;
     top: 3px;
-    background: #888;
+    background: var(--border-secondary);
     border-radius: .2rem;
-} 
+}
 
 .objgraph-head-week::before {
     background: white;
@@ -64,13 +64,13 @@
     left: 0px;
     top: -.4rem;
     content: "";
-    background: #c7c7c780;
+    background: var(--bg-primary-hover);
     width: 32px;
     height: 500px;
 }
 
 .objgraph-head-today::after {
-    background: #8ed2ff80;;
+    background: var(--bg-accent);
 }
 
 .objgraph-objective {
@@ -115,15 +115,15 @@
 }
 
 .objgraph-slot button.early {
-    background: #8CCD94;
+    background: #8ccd94;
 }
 
 .objgraph-slot button.early:hover {
-    background: rgb(195, 255, 202);
+    background: #c3ffca;
 }
 
 .objgraph-slot button.late {
-    background: #E69D73;
+    background: #e69d73;
 }
 
 .objgraph-slot button.late:hover {
@@ -134,18 +134,14 @@
     position: absolute;
     left: .4rem;
     line-height: 1.6;
-    background: #000000;
+    background: var(--bg-primary);
     padding: 0 .4rem;
     border-radius: .4rem;
     cursor: default;
 }
 
-.objgraph-name.archived {
-    background: #00000080;
-    border-color: rgb(17, 17, 73);
-}
-
 .objgraph-completion {
+    box-sizing: border-box;
     position: absolute;
     height: 100%;
     width: 4px;
@@ -170,11 +166,11 @@
 }
 
 .bg-error {
-    background: #ff6e1a;
+    background: var(--warning);
 }
 
 .bg-success {
-    background: #4bce5c;
+    background: var(--success);
 }
 
 .bg-cooldown {
@@ -182,20 +178,9 @@
 }
 
 .bg-future {
-    background: #303030;
+    background: var(--bg-secondary);
 }
 
 .bg-future-complete {
     background: #2e6f36;
-}
-
-.objective-popover {
-    display: flex;
-    flex-direction: column;
-    padding: .4rem;
-    border-radius: .2rem;
-    background: #101010;
-    border: 1px solid black;
-    position: relative;
-    z-index: inherit;
 }
