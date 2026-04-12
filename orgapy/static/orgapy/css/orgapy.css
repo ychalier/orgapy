@@ -970,6 +970,16 @@ input:checked+.toggle-slider+.toggle-text {
     text-overflow: ellipsis;
 }
 
+.menu-item:first-child > * {
+    border-top-left-radius: .2rem;
+    border-top-right-radius: .2rem;
+}
+
+.menu-item:last-child > * {
+    border-bottom-left-radius: .2rem;
+    border-bottom-right-radius: .2rem;
+}
+
 .menu hr {
     width: 100%;
     margin: 0;
@@ -1007,7 +1017,6 @@ input:checked+.toggle-slider+.toggle-text {
     line-height: .8rem;
 }
 
-/* TODO: In JavaScript menu handling, position submenu according the available space */
 .menu .menu {
     top: 0;
     left: 100%;
