@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}Edit {% if sheet %}'{{ sheet.title }}'{% else %}sheet{% endif %} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}Edit {% if sheet %}'{{ sheet.title }}'{% else %}sheet{% endif %}{% endblock title %}
 
 {% block column_main %}
 

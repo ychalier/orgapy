@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}Mood &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}Mood tracker{% endblock title %}
 
 {% block head %}
 {{ block.super }}
@@ -12,7 +12,7 @@
 {% block column_main %}
 {% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
 <div class="card">
-    <h1 class="card-header">Mood Tracker</h1>
+    <h1 class="card-header">Mood tracker</h1>
     <div class="card-body">
         <div id="moodCalendar"></div>
     </div>

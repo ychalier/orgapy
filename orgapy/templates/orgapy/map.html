@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/fullscreen.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}{% if map.title %}{{map.title}}{% else %}Untitled{% endif %} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}{% if map.title %}{{map.title}}{% else %}Untitled{% endif %}{% endblock title %}
 
 {% block head %}
 {{ block.super }}

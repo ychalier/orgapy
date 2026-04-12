@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}{% block subtitle %}Edit {% if note %}'{{ note.title }}'{% else %}note{% endif %} &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
+{% block title %}Edit {% if note %}'{{ note.title }}'{% else %}note{% endif %}{% endblock title %}
 
 {% block head %}
 {{ block.super }}

@@ -1,12 +1,6 @@
 {% extends "orgapy/layout/objects.html" %}
 
-{% block title %}{% block subtitle %}Notes &mid; {% endblock subtitle %}{{ block.super }}{% endblock title %}
-
-{% block menu %}
-<li class="menu-item"><a href="{% url 'orgapy:notally' %}"><i class="ri-upload-line"></i> Notally</a></li>
-<hr>
-{{ block.super }}
-{% endblock menu %}
+{% block title %}Notes{% endblock title %}
 
 {% block empty %}
 <div class="card">
