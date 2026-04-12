@@ -10,9 +10,6 @@
 <script src="{% static 'orgapy/dependencies/leaflet.js' %}"></script>
 <script src="{% static 'orgapy/dependencies/Leaflet.Editable.js' %}"></script>
 <script src="{% static 'orgapy/dependencies/Path.Drag.js' %}"></script>
-<script>
-    const URL_IMAGE_CROSSHAIR = "{% static 'orgapy/remixicon/crosshair-line.png' %}";
-</script>
 <script src="{% static 'orgapy/js/maps.js' %}"></script>
 {% endblock head %}
 
@@ -25,7 +22,7 @@
 
 {% if not readonly and map.referenced_in %}
 <template id="template-refs">
-    <div class="map-refs">
+    <div class="map-refs row">
         {% for ref in map.referenced_in.all %}
         <a class="reference label" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
         {% endfor %}

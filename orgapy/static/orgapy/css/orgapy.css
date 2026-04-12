@@ -84,6 +84,10 @@
 
 /***** BODY *******************************************************************/
 
+html {
+    height: 100%;
+}
+
 body {
     padding: 0;
     margin: 0;
@@ -93,6 +97,7 @@ body {
 
 body.fullscreen {
     background-color: var(--bg-primary);
+    height: 100%;
 }
 
 /***** COLUMNS ****************************************************************/
@@ -234,6 +239,7 @@ textarea:disabled {
 .input-inline {
     display: block;
     border: none;
+    border-radius: inherit;
     background: none;
     padding: 0;
     font-weight: inherit;
@@ -633,6 +639,27 @@ input:checked+.toggle-slider+.toggle-text {
     border-top-right-radius: .2rem;
     border-bottom-right-radius: .2rem;
     border-right: none;
+}
+
+.actionbar--vertical {
+    flex-direction: column;
+}
+
+.actionbar--vertical > * {
+    border-radius: 0 !important;
+    border-right: none;
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.actionbar > *:first-child {
+    border-bottom-left-radius: 0;
+    border-top-right-radius: .2rem;
+}
+
+.actionbar > *:last-child {
+    border-top-right-radius: 0;
+    border-bottom-left-radius: .2rem;
+    border-bottom: none;
 }
 
 /***** SEARCH *****************************************************************/
@@ -1174,7 +1201,7 @@ dialog > .card {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .muted {
@@ -1213,4 +1240,8 @@ dialog > .card {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.invert {
+    filter: invert();
 }

@@ -202,6 +202,7 @@ function createMapButton(container, title, iconClass, callback) {
         event.stopPropagation();
         callback();
     });
+    button.addEventListener("dblclick", (event) => {event.stopPropagation()});
     return button;
 }
 
@@ -265,10 +266,11 @@ const preventDefaultAndStopPropagation = (e) => {e.preventDefault(); e.stopPropa
 L.Control.Zoom = L.Control.extend({
     onAdd: function(map) {
         const container = L.DomUtil.create("div");
-        container.classList.add("button-group-vertical");
+        container.classList.add("actionbar")
+        container.classList.add("actionbar--vertical");
 
         const buttonZoomIn = create(container, "button");
-        buttonZoomIn.textContent = "✚";
+        buttonZoomIn.innerHTML = `<i class="ri-add-line"></i>`;
         buttonZoomIn.addEventListener("click", (event) => {
             event.preventDefault();
             map.zoomIn();
@@ -277,7 +279,7 @@ L.Control.Zoom = L.Control.extend({
         buttonZoomIn.ondblclick = preventDefaultAndStopPropagation;
 
         const buttonZoomOut = create(container, "button");
-        buttonZoomOut.textContent = "━";
+        buttonZoomOut.innerHTML = `<i class="ri-subtract-line"></i>`;
         buttonZoomOut.addEventListener("click", (event) => {
             event.preventDefault();
             map.zoomOut();
@@ -297,7 +299,7 @@ L.control.zoom = function(opts) {
 L.Control.MyLocation = L.Control.extend({
     onAdd: function(map) {
         const container = L.DomUtil.create("div");
-        container.classList.add("button-group-vertical");
+        container.classList.add("actionbar");
 
         var active = false;
         var marker;
@@ -346,7 +348,7 @@ L.control.mylocation = function(opts) {
 L.Control.Home = L.Control.extend({
     onAdd: function(map) {
         const container = L.DomUtil.create("div");
-        container.classList.add("button-group-vertical");
+        container.classList.add("actionbar");
 
         function trigger() {
             const layers = [];
@@ -515,7 +517,7 @@ class Feature {
         createMapButton(buttons, "Edit", "ri-pencil-fill", () => {self.inflatePopupEdit(container)});
         const toggleButton = createMapButton(buttons, "Toggle edition", "ri-drag-move-2-line", () => {self.toggleEdition()});
         if (this.editing) {
-            toggleButton.classList.add("locked");
+            toggleButton.classList.add("invert");
         }
         createMapButton(buttons, "Duplicate", "ri-file-copy-2-line", () => {self.duplicate()});
         createMapButton(buttons, "Delete", "ri-delete-bin-line", () => {self.removeFromLayer()});
@@ -530,7 +532,7 @@ class Feature {
 
         const header = create(wrapper, "div", "feature-popup-header");
 
-        const labelInput = create(header, "input", "feature-label");
+        const labelInput = create(header, "input", "feature-label input-inline");
         labelInput.value = this.properties.label;
         inputsValues.label = labelInput;
 
@@ -543,11 +545,11 @@ class Feature {
             if (RESERVERD_PROPERTIES.has(property)) continue;
             let tr = create(table, "div", "feature-property");
             let cellProperty = create(tr, "div", "feature-property-label");
-            let inputLabel = create(cellProperty, "input");
+            let inputLabel = create(cellProperty, "input", "input-inline");
             inputLabel.value = property;
             inputsLabels[property] = inputLabel;
             let cellValue = create(tr, "div", "feature-property-value");
-            let inputValue = create(cellValue, "input");
+            let inputValue = create(cellValue, "input", "input-inline");
             inputValue.value = this.properties[property];
             inputsValues[property] = inputValue;
             let cellButtons = create(tr, "div", "feature-property-buttons");
@@ -591,12 +593,12 @@ class Feature {
             let property = `Property ${addedPropertiesCounter}`;
             let tr = create(table, "div", "feature-property");
             let cellProperty = create(tr, "div", "feature-property-label");
-            let inputLabel = create(cellProperty, "input");
+            let inputLabel = create(cellProperty, "input", "input-inline");
             inputLabel.placeholder = "Label";
             inputLabel.value = "";
             inputsLabels[property] = inputLabel;
             let cellValue = create(tr, "div", "feature-property-value");
-            let inputValue = create(cellValue, "input");
+            let inputValue = create(cellValue, "input", "input-inline");
             inputValue.placeholder = "Value";
             inputValue.value = "";
             inputsValues[property] = inputValue;
@@ -763,7 +765,7 @@ class Feature {
             this.layer.featuresContainer.appendChild(this.panelElement);
         }
         const hasLabel = this.properties.label != undefined && this.properties.label != "";
-        create(this.panelElement, "span", "map-feature-label").innerHTML = hasLabel ? this.properties.label : "<i>&lt;null&gt;</i>";
+        create(this.panelElement, "span", "map-feature-label ellipsis").innerHTML = hasLabel ? this.properties.label : "<i>&lt;null&gt;</i>";
         if (!this.layer.map.readonly) {
             const buttons = create(this.panelElement, "span", "map-feature-buttons");
             createMapButton(buttons, "Move up", "ri-arrow-up-line", () => {self.moveUp()});
@@ -1282,7 +1284,7 @@ class Layer {
 L.Control.Draw = L.Control.extend({
     onAdd: function(map) {
         const container = L.DomUtil.create("div");
-        container.classList.add("button-group-horizontal");
+        container.classList.add("actionbar");
         var self = this;
         const ctrl = self.options.controller;
         createMapButton(container, "Add marker", "ri-map-pin-line", () => {ctrl.startMarker()});
@@ -1302,7 +1304,7 @@ L.control.draw = function(opts) {
 L.Control.TileProvider = L.Control.extend({
     onAdd: function(map) {
         const container = L.DomUtil.create("div");
-        container.classList.add("button-group-horizontal");
+        container.classList.add("actionbar");
         var self = this;
         const ctrl = self.options.controller;
         const selectBaseMap = create(container, "select", "map-provider-select");
@@ -1357,9 +1359,9 @@ function addContextMenuOption(menu, iconClass, label, callback) {
     let option = menu.appendChild(document.createElement("li"));
     option.classList.add("menu-item");
     if (iconClass == null) {
-        create(option, "span").textContent = label;
+        create(option, "button").textContent = label;
     } else {
-        create(option, "span").innerHTML = `<i class="${iconClass}"></i> ${label}`;
+        create(option, "button").innerHTML = `<i class="${iconClass}"></i> ${label}`;
     }
     option.addEventListener("click", () => {
         callback();
@@ -1588,13 +1590,13 @@ class Map {
         if (!this.readonly) {
             const prevButton = create(header, "a", "link-hidden");
             prevButton.innerHTML = `<i class="ri-map-2-line"></i>`;
-            prevButton.href = "../maps";
+            prevButton.href = "../../documents";
         }
 
         if (this.readonly) {
             create(header, "span", "map-title").textContent = this.title;
         } else {
-            const titleInput = create(header, "input", "map-title");
+            const titleInput = create(header, "input", "map-title input-inline");
             titleInput.placeholder = "Title";
             titleInput.value = this.title;
             titleInput.oninput = () => {
@@ -1616,11 +1618,12 @@ class Map {
             }
         }
 
-        const searchForm = create(this.dashboardContainer, "form", "search-form");
-        const searchInput = create(searchForm, "input");
+        const searchWrapper = create(this.dashboardContainer, "form", "search");
+        const searchForm = create(searchWrapper, "div", "search-bar");
+        const searchInput = create(searchForm, "input", "search-input");
         searchInput.type = "search";
         searchInput.placeholder = "Search feature or location";
-        const searchButton = create(searchForm, "button");
+        const searchButton = create(searchForm, "button", "search-button");
         searchButton.innerHTML = `<i class="ri-search-line"></i>`;
         searchButton.title = "Search";
         searchInput.oninput = () => {
@@ -1632,10 +1635,10 @@ class Map {
         }
 
         const layersButtons = create(this.dashboardContainer, "div", "row");
-        const expandAllButton = create(layersButtons, "button", "button-slim");
+        const expandAllButton = create(layersButtons, "button", "button-slim hint");
         expandAllButton.textContent = "Expand all";
         expandAllButton.onclick = () => {self.expandAllLayers()};
-        const collapseAllButton = create(layersButtons, "button", "button-slim");
+        const collapseAllButton = create(layersButtons, "button", "button-slim hint");
         collapseAllButton.textContent = "Collapse all";
         collapseAllButton.onclick = () => {self.collapseAllLayers()};
 
@@ -1649,7 +1652,7 @@ class Map {
         }
 
         const footer = create(this.dashboardContainer, "div", "map-footer");
-        create(footer, "div", "map-coordinates");
+        create(footer, "div", "map-coordinates hint");
         this.updateMapCoordinates();
         this.leafletMap.addEventListener("move", () => {self.updateMapCoordinates()});
 
@@ -1863,12 +1866,12 @@ class Map {
             this.layers.forEach(layer => {
                 layer.enableEdit();
             });
-            toggleButton.classList.add("locked");
+            toggleButton.classList.add("invert");
         } else {
             this.layers.forEach(layer => {
                 layer.disableEdit();
             });
-            toggleButton.classList.remove("locked");
+            toggleButton.classList.remove("invert");
             this.onChange("edit-feature");
         }
     }
@@ -1942,11 +1945,11 @@ class Dialog {
 
     open() {
         var self = this;
-        document.querySelectorAll(".dialog").forEach(remove);
-        this.element = create(document.body, "div", "dialog");
-        this.overlay = create(this.element, "span", "dialog-overlay");
-        this.overlay.addEventListener("click", () => { self.close(); });
-        this.container = create(this.element, "div", "dialog-container card");
+        document.querySelectorAll("dialog").forEach(remove);
+        this.element = create(document.body, "dialog");
+        this.element.setAttribute("closedby", "any");
+        this.container = create(this.element, "div", "card");
+        this.element.showModal();
     }
 
     close() {
@@ -1965,10 +1968,11 @@ class ImportGeojsonDialog extends Dialog {
     open() {
         var self = this;
         super.open();
-        let title = create(this.container, "div", "dialog-title");
+        const form = create(this.container, "form");
+        let title = create(form, "h2", "card-header");
         title.textContent = "Import GeoJson";
-        let form = create(this.container, "form");
-        let input = create(create(form, "p"), "input");
+        let body = create(form, "form", "card-body");
+        let input = create(create(body, "p"), "input");
         input.type = "file";
         input.accept = ".json, .geojson";
         input.required = true;
@@ -1980,12 +1984,12 @@ class ImportGeojsonDialog extends Dialog {
             }
             self.close();
         });
-        const buttons = create(form, "div", "row");
-        let importAdd = create(buttons, "input", "button button-accent");
+        const buttons = create(form, "div", "card-actions");
+        let importAdd = create(buttons, "input", "active");
         importAdd.type = "submit";
         importAdd.name = "add";
         importAdd.value = "Add";
-        let importReplace = create(buttons, "input", "button button-accent");
+        let importReplace = create(buttons, "input", "active");
         importReplace.type = "submit";
         importReplace.name = "replace";
         importReplace.value = "Replace";
@@ -2011,11 +2015,11 @@ class LayerStyleDialog extends Dialog {
     open() {
         var self = this;
         super.open();
-        const title = create(this.container, "div", "dialog-title");
+        const title = create(this.container, "h2", "card-header");
         title.textContent = "Edit Layer Style";
         const layer = this.map.getSelectedLayer();
 
-        const styleForm = createStyleForm(this.container, {
+        const styleForm = createStyleForm(create(this.container, "div", "card-body"), {
             strokeColor: orDefault(layer.mostCommonPropertyValue("strokeColor"), DEFAULT_STROKE_COLOR),
             strokeWidth: orDefault(layer.mostCommonPropertyValue("strokeWidth"), DEFAULT_STROKE_WIDTH),
             fillColor: orDefault(layer.mostCommonPropertyValue("fillColor"), DEFAULT_FILL_COLOR),
@@ -2024,8 +2028,8 @@ class LayerStyleDialog extends Dialog {
         });
         styleForm.classList.add("style-form-dialog");
 
-        const buttons = create(this.container, "div", "row");
-        const saveButton = create(buttons, "button", "button-accent");
+        const buttons = create(this.container, "div", "card-actions");
+        const saveButton = create(buttons, "button", "active");
         saveButton.textContent = "Save";
         saveButton.addEventListener("click", (event) => {
             event.preventDefault();
@@ -2065,11 +2069,11 @@ class MoveFeatureDialog extends Dialog {
     open() {
         var self = this;
         super.open();
-        let title = create(this.container, "div", "dialog-title");
+        const form = create(this.container, "form");
+        let title = create(form, "h2", "card-header");
         title.textContent = "Move Feature to another Layer";
-        let form = create(this.container, "form");
-        form.style.flexDirection = "column";
-        let group = create(form, "p");
+        const body = create(form, "div", "card-body");
+        let group = create(body, "p");
         create(group, "label", "form-label").textContent = "Destination Layer";
         let select = create(group, "select");
         this.map.layers.forEach(layer => {
@@ -2080,8 +2084,8 @@ class MoveFeatureDialog extends Dialog {
             }
             option.textContent = layer.label;
         });
-        let buttons = create(form, "div", "row");
-        let moveButton = create(buttons, "button", "button-accent");
+        let buttons = create(form, "div", "card-actions");
+        let moveButton = create(buttons, "button", "active");
         moveButton.textContent = "Move";
         let cancelButton = create(buttons, "button");
         cancelButton.textContent = "Cancel";
