@@ -744,7 +744,8 @@ def make_suggestions_response(results: list[Category | Note | Sheet | Map] | Que
             {
                 "id": result.id,
                 "title": result.title,
-                "url": result.get_absolute_url()
+                "url": result.get_absolute_url(),
+                "active": getattr(result, "active", None)
             }
             for result in results
         ]
