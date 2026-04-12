@@ -15,6 +15,7 @@ function createToc(contentContainer, tocContainer) {
     tocContainer.innerHTML = "";
     titles.forEach(title => {
         let anchor = tocContainer.appendChild(document.createElement("a"));
+        anchor.tabIndex = 3;
         anchor.classList.add("link-hidden");
         anchor.textContent = title.textContent;
         anchor.href = `#${title.id}`;

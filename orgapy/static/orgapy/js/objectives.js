@@ -261,6 +261,7 @@ function inflateObjgraphObjective(objgraphBody, objectiveId, index) {
             + (DAYW - 2 * OBJECTIVE_COMPLETION_OFFSET - OBJECTIVE_COMPLETION_WIDTH) * (offsetInDays - Math.floor(offsetInDays))
             + OBJECTIVE_COMPLETION_OFFSET;
         domCompletion.style.left = completionOffset + "px";
+        domCompletion.tabIndex = -1;
         domCompletion.addEventListener("click", (event) => {
             openDialogCompletionForm(obj, ts);
         });

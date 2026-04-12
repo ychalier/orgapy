@@ -19,6 +19,15 @@
     user-select: none;
     position: relative;
     overflow: hidden;
+    border-radius: .4rem;
+}
+
+.project:has(.project-header:focus-visible) {
+    outline: 1px solid var(--accent);
+}
+
+.project-header:focus {
+    outline: none;
 }
 
 .project-note,

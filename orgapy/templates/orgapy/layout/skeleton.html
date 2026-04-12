@@ -30,15 +30,15 @@
         <main class="column column-main">
             <nav class="navbar">
                 <div class="row">
-                    <a href="{% url 'orgapy:home' %}" class="button"><i class="ri-home-line"></i> Home</a>
-                    <a href="{% url 'orgapy:documents' %}" class="button"><i class="ri-file-copy-2-line"></i> Documents</a>
+                    <a href="{% url 'orgapy:home' %}" class="button" tabindex="2"><i class="ri-home-line"></i> Home</a>
+                    <a href="{% url 'orgapy:documents' %}" class="button" tabindex="2"><i class="ri-file-copy-2-line"></i> Documents</a>
                 </div>
                 <div class="row">
                     <form id="searchForm" class="search" action="{% url 'orgapy:documents' %}" method="get">
                         <div class="search-bar">
                             <input class="search-input" autocomplete="off" type="search" name="query" placeholder="Search" tabindex="1" value="{% if query %}{{query}}{% endif %}" />
                             <i class="search-icon ri-close-line"></i>
-                            <button class="search-button"><i class="ri-search-line"></i></button>
+                            <button class="search-button" tabindex="-1"><i class="ri-search-line"></i></button>
                         </div>
                         <ul class="search-suggestions menu"></ul>
                     </form>

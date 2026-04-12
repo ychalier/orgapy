@@ -195,6 +195,21 @@ a:hover {
     text-decoration: underline;
 }
 
+a:focus-visible {
+    outline: 1px solid var(--accent);
+}
+
+/***** DETAILS ****************************************************************/
+
+summary {
+    width: fit-content;
+    user-select: none;
+}
+
+summary:focus-visible {
+    outline: 1px solid var(--accent);
+}
+
 /***** FORMS, INPUTS **********************************************************/
 
 input,
@@ -266,17 +281,15 @@ input[type=submit] {
     position: relative;
 }
 
+button:hover,
+.button:hover,
+input[type=submit]:hover,
 button:focus,
 .button:focus,
 input[type=submit]:focus {
-    outline: none;
-}
-
-button:hover,
-.button:hover,
-input[type=submit]:hover {
     color: var(--text);
     background-color: var(--bg-secondary-hover);
+    outline: none;
 }
 
 button:disabled,
@@ -779,7 +792,8 @@ input:checked+.toggle-slider+.toggle-text {
     border-color: var(--bg-primary);
 }
 
-.navbar .button:hover {
+.navbar .button:hover,
+.navbar .button:focus {
     background-color: var(--bg-primary-hover);
     border-color: var(--border-primary);
 }
@@ -829,6 +843,16 @@ input:checked+.toggle-slider+.toggle-text {
 
 .line .dropdown-toggle:hover {
     color: var(--text);
+}
+
+.line:first-child {
+    border-top-left-radius: .4rem;
+    border-top-right-radius: .4rem;
+}
+
+.line:last-child {
+    border-bottom-left-radius: .4rem;
+    border-bottom-right-radius: .4rem;
 }
 
 /***** SNACKBAR ***************************************************************/
@@ -911,9 +935,9 @@ input:checked+.toggle-slider+.toggle-text {
     padding: .6rem;
 }
 
-.card-actions button:not(:hover),
-.card-actions .button:not(:hover),
-.card-actions input[type=submit]:not(:hover) {
+.card-actions button:not(:hover,:focus),
+.card-actions .button:not(:hover,:focus),
+.card-actions input[type=submit]:not(:hover,:focus) {
     background: none;
 }
 

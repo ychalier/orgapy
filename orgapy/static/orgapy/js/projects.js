@@ -246,11 +246,6 @@ class Project {
             badge.style.background = `linear-gradient(90deg,rgba(37, 135, 50, 1)${progress}%,rgb(48, 48, 48) ${progress + 1}%)`
         }
         badge.innerHTML = `<i class="ri-checkbox-circle-line"></i> ${completed}/${total}`;
-        badge.addEventListener("dblclick", (e) => {
-            e.stopPropagation();
-            self.openStatusDialog();
-            return false;
-        })
 
         if (this.note != null) {
             const noteSpan = create(header, "span", "project-note");
@@ -269,7 +264,9 @@ class Project {
             return false;
         });
 
+        header.tabIndex = 0;
         header.addEventListener("click", (event) => { if (!self.forceExpand) self.toggleExpanded(); });
+        header.addEventListener("keydown", (event) => { if (!self.forceExpand && event.key == "Enter") self.toggleExpanded(); });
         header.addEventListener("dblclick", (event) => { self.inflateTitleInput(title); });
         header.addEventListener("mouseenter", (event) => {
             self.container.querySelector(".project-body").classList.add("glimpse");
@@ -333,6 +330,7 @@ class Project {
             let checklistItem = create(checklist, "div", "project-checklist-item");
             let checkbox = create(checklistItem, "input");
             checkbox.type = "checkbox";
+            checkbox.tabIndex = -1;
             let label = create(checklistItem, "label");
             label.innerHTML = markdownConverter.makeHtml(item.text).slice(3, -4); // slice to remove <p> tag
             if (item.state) {
@@ -381,6 +379,7 @@ class Project {
             const buttonAddItem = create(buttons, "button", "project-button");
             buttonAddItem.title = title;
             buttonAddItem.innerHTML = `<i class="${iconClass}"></i> ${label}`;
+            buttonAddItem.tabIndex = -1;
             buttonAddItem.addEventListener("click", (event) => {
                 event.stopPropagation();
                 onClick();
@@ -437,6 +436,7 @@ class Project {
         } else {
             body.innerHTML = "";
         }
+        body.tabIndex = -1;
         body.className = "project-body";
         this.inflateChecklist(body);
         this.updateExpansion();
