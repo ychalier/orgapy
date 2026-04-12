@@ -157,6 +157,11 @@
     overflow: hidden;
     user-select: none;
     display: flex;
+    gap: .2rem;
+}
+
+.map-feature i {
+    color: var(--text-muted);
 }
 
 .map-feature-label {

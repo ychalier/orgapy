@@ -764,6 +764,14 @@ class Feature {
         } else {
             this.layer.featuresContainer.appendChild(this.panelElement);
         }
+        const icon = create(this.panelElement, "i");
+        if (this.geometry.type == "Point" || this.geometry.type == "MultiPoint") {
+            icon.className = "ri-map-pin-line";
+        } else if (this.geometry.type == "LineString" || this.geometry.type == "MultiLineString") {
+            icon.className = "ri-route-line";
+        } else {
+            icon.className = "ri-shape-line";
+        }
         const hasLabel = this.properties.label != undefined && this.properties.label != "";
         create(this.panelElement, "span", "map-feature-label ellipsis").innerHTML = hasLabel ? this.properties.label : "<i>&lt;null&gt;</i>";
         if (!this.layer.map.readonly) {
