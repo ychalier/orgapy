@@ -6,29 +6,44 @@
 {% block head %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'orgapy/css/mood.css' %}" />
-<script>
-    const MOOD_ACTIVITIES = [{% for label, emoji in settings.mood_activities_list %}{label:"{{ label }}",emoji:"{{ emoji }}"},{% endfor %}];
-</script>
 <script src="{% static 'orgapy/js/mood.js' %}"></script>
 {% endblock head %}
 
 {% block column_main %}
-
-{% if pending_mood_logs %}
-{% include 'orgapy/partials/mood_log_forms.html' %}
-{% endif %}
-
+{% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
 <div class="card">
-    <div class="mood-table-wrapper">
-        <table class="mood-table">
-            <thead>
-                <tr><th>Date</th><th>Mood</th><th>Energy</th><th>Health</th><th>Stress</th><th>Activities</th><th></th></tr>
-            </thead>
-            <tbody>
-                {% for log in logs %}<tr><td class="ha">{{ log.date | date:'M-d' }}</td><td class="ha"><span class="{{ log.mood_classname }}"></span></td><td class="ha"><span class="{{ log.energy_classname }}"></span></td><td class="ha"><span class="{{ log.health_classname }}"></span></td><td class="ha"><span class="{{ log.stress_classname }}"></span></td><td>{{ log.activities_display }}</td><td class="row"><a title="Edit" href="{% url 'admin:orgapy_moodlog_change' log.id %}" class="button button-accent button-slim"><i class="ri-pencil-fill"></i></a><a href="{% url 'orgapy:delete_mood_log' log.id %}?next={{ request.get_full_path | urlencode }}" class="button button-danger button-slim link-confirm" message="Please confirm deletion of {{ log.date }} log" title="Delete"><i class="ri-delete-bin-line"></i></a></td></tr>{% endfor %}
-            </tbody>
-        </table>
+    <h1 class="card-header">Mood Tracker</h1>
+    <div class="card-body">
+        <div id="moodCalendar"></div>
     </div>
 </div>
-
+<script>
+    fetch(URL_API + `?action=list-mood-logs`).then(res => res.json()).then(data => {
+        inflateCalendar(moodCalendar, data, {
+            key: "level",
+            classname: "mood-palette",
+            inflatePopover: (popover, entries) => {
+                const entry = entries[0];
+                create(popover, "span").textContent = entry.label;
+                const col = create(popover, "div", "coll");
+                const trackers = create(col, "div", "actionbar");
+                create(trackers, "button", "mood-tracker " + entry.mood).title = "Mood";
+                create(trackers, "button", "mood-tracker " + entry.energy).title = "Energy";
+                create(trackers, "button", "mood-tracker " + entry.health).title = "Health";
+                create(trackers, "button", "mood-tracker " + entry.stress).title = "Stress";
+                if (entry.activities != "") {
+                    create(col, "div").textContent = entry.activities;
+                }
+                const buttons = create(col, "div", "actionbar");
+                const editButton = create(buttons, "a", "button");
+                editButton.href = entry.editUrl;
+                editButton.innerHTML = `<i class="ri-pencil-fill"></i>`;
+                const deleteButton = create(buttons, "a", "button button-danger");
+                deleteButton.href = entry.deleteUrl;
+                deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i>`;
+                bindLinkConfirm(deleteButton);
+            }
+        });
+    });
+</script>
 {% endblock column_main %}

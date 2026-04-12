@@ -44,10 +44,10 @@
 
 :root {
     font-family: "Fira Sans", sans-serif;
-    
+
     --bg-page: #1f2d38; /* 1f2d38 */ /* 373839*/
-    
-    --bg-primary: #101010; 
+
+    --bg-primary: #101010;
     --bg-primary-alt: #181818; /* striped lines */
     --bg-primary-hover: #304350;
     --border-primary: #000000;
@@ -56,18 +56,18 @@
     --bg-secondary-alt: #404040;
     --bg-secondary-hover: #555555;
     --border-secondary: #505050;
-    
+
     --accent: #8ed2ff;
     --accent-hover: #c5e8ff;
     --border-accent: #55bbff;
     --bg-accent: #1e313e;
     --bg-selection: #103a57; /* 103a57 2781be */
-    
+
     --text: #f0f0f0;
     --text-dark: #000000;
     --text-dim: #444444;
     --text-muted: #888888;
-    
+
     --text-danger: #f16581;
     --border-danger: #dc143c;
     --bg-danger: #5d343d;
@@ -310,7 +310,7 @@ button span,
     .button span {
         display: none;
     }
-    
+
 }
 
 .button-inline {
@@ -936,6 +936,7 @@ input:checked+.toggle-slider+.toggle-text {
     z-index: 2;
     line-height: 1;
     border: 1px solid var(--border-secondary);
+    user-select: none;
 }
 
 .menu:empty {
@@ -1003,7 +1004,7 @@ input:checked+.toggle-slider+.toggle-text {
     content: "❭";
     float: right;
     height: 0;
-    line-height: 1.2rem;
+    line-height: .8rem;
 }
 
 /* TODO: In JavaScript menu handling, position submenu according the available space */
@@ -1047,6 +1048,17 @@ dialog > .card {
     flex-direction: column;
     align-items: center;
     --cellsize: 14px;
+    --level-0: #161b22;
+    --level-1: #0E4429; /* #39d353 */
+    --level-2: #07582D; /* #83d941 */
+    --level-3: #006D32; /* #b5eb64 */
+    --level-4: #138A3A; /* #e6f590 */
+    --level-5: #26A641; /* #feffe2 */
+    --level-6: #30BD4A; /* #feffe2 */
+    --level-7: #39D353; /* #feffe2 */
+    --level-8: #2CE24A; /* #feffe2 */
+    --level-9: #1EF141; /* #feffe2 */
+    --level-more: #feffe2; /* #ffffff */
 }
 
 .calendar--weekly {
@@ -1104,7 +1116,7 @@ dialog > .card {
     width: var(--cellsize);
     height: var(--cellsize);
     margin: 1px;
-    background: #161b22;
+    background: var(--level-0); /*#161b22*/
     border-radius: .125rem;
 }
 
@@ -1112,42 +1124,16 @@ dialog > .card {
     background: none;
 }
 
-.calendar-day.filled-1 {
-    cursor: pointer;
-    /*background-color: #39d353;*/
-    background-color: #0e4429;
-}
-
-.calendar-day.filled-2 {
-    cursor: pointer;
-    /*background-color: #83d941;*/
-    background-color: #006d32;
-}
-
-.calendar-day.filled-3 {
-    cursor: pointer;
-    /*background-color: #b5eb64;*/
-    background-color: #26a641;
-}
-
-.calendar-day.filled-4 {
-    cursor: pointer;
-    /*background-color: #e6f590;*/
-    background-color: #39d353;
-}
-
-.calendar-day.filled-5 {
-    cursor: pointer;
-    /*background-color: #feffe2;*/
-    background-color: #1ef141;
-}
-
-.calendar-day.filled-more {
-    cursor: pointer;
-    background-color: #feffe2;
-    /*background-color: #ffffff;*/
-    /*outline: 1px solid red;*/
-}
+.calendar-day.filled-1 {background-color: var(--level-1)}
+.calendar-day.filled-2 {background-color: var(--level-2)}
+.calendar-day.filled-3 {background-color: var(--level-3)}
+.calendar-day.filled-4 {background-color: var(--level-4)}
+.calendar-day.filled-5 {background-color: var(--level-5)}
+.calendar-day.filled-6 {background-color: var(--level-6)}
+.calendar-day.filled-7 {background-color: var(--level-7)}
+.calendar-day.filled-8 {background-color: var(--level-8)}
+.calendar-day.filled-9 {background-color: var(--level-9)}
+.calendar-day.filled-more {background-color: var(--level-more)}
 
 .calendar-popover {
     position: absolute;
@@ -1162,12 +1148,17 @@ dialog > .card {
     max-width: min(100%, 12rem);
 }
 
+.calendar-popover button,
+.calendar-popover .button {
+    background-color: var(--bg-secondary-alt);
+}
+
 @media (max-width: 600px) {
 
     .calendar {
         height: 600px;
     }
-    
+
     .calendar-body {
         transform: rotate(90deg) translateX(160px);
     }

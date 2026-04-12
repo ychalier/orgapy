@@ -683,11 +683,26 @@ function inflateCalendar(container, data, options) {
     if (!("showHeader" in options)) options.showHeader = true;
     if (!("weekly" in options)) options.weekly = false;
     if (!("relative" in options)) options.relative = false;
+    if (!("key" in options)) options.key = null;
+    if (!("classname" in options)) options.classname = null;
+    if (!("inflatePopover" in options)) options.inflatePopover = (popover, entries) => {
+        for (const entry of entries) {
+            let el;
+            if ("href" in entry) {
+                el = create(popover, "a", "ellipsis link-hidden");
+                el.href = entry.href;
+            } else {
+                el = create(popover, "span", "ellipsis");
+            }
+            el.textContent = entry.title;
+        }
+    }
 
     const minYear = Math.min(...Object.keys(data));
     const maxYear = Math.max(...Object.keys(data));
 
     const months = ["jan.", "feb.", "mar.", "apr.", "may", "june", "july", "aug.", "sep.", "oct.", "nov.", "dec."];
+    const levels = 10; // 0 to 9 included, and "more"
 
     function inflateYear(currentYear) {
 
@@ -699,6 +714,9 @@ function inflateCalendar(container, data, options) {
             container.classList.add("calendar--weekly");
         } else {
             container.classList.remove("calendar--weekly");
+        }
+        if (options.classname != null) {
+            container.classList.add(options.classname);
         }
 
         if (options.showHeader) {
@@ -788,7 +806,13 @@ function inflateCalendar(container, data, options) {
             for (let i = 0; i < cells.length; i++) {
                 const key = cells[i].getAttribute("date");
                 if (key in yearData) {
-                    maxValue = Math.max(maxValue, yearData[key].length);
+                    let value = 0;
+                    if (options.key == null) {
+                        value = yearData[key].length;
+                    } else if (yearData[key].length > 0) {
+                        value = yearData[key][0][options.key];
+                    }
+                    maxValue = Math.max(maxValue, value);
                 }
             }
         }
@@ -797,11 +821,16 @@ function inflateCalendar(container, data, options) {
             const dayCell = cells[i];
             const key = dayCell.getAttribute("date");
             if (key in yearData) {
-                let value = yearData[key].length;
-                if (options.relative) {
-                    value = Math.ceil(5 * value / maxValue);
+                let value = 0;
+                if (options.key == null) {
+                    value = yearData[key].length;
+                } else if (yearData[key].length > 0) {
+                    value = yearData[key][0][options.key];
                 }
-                if (value > 5) {
+                if (options.relative) {
+                    value = Math.ceil(levels * value / maxValue);
+                }
+                if (value > levels) {
                     dayCell.classList.add("filled-more");
                 } else {
                     dayCell.classList.add(`filled-${value}`);
@@ -827,11 +856,7 @@ function inflateCalendar(container, data, options) {
                     popover.style.left = (cellBounds.left + cellBounds.width/2) + "px";
                     popover.style.top = (cellBounds.top + cellBounds.height) + "px";
                     create(popover, "span", "hint").textContent = key;
-                    for (const obj of yearData[key]) {
-                        const objEl = create(popover, "a", "ellipsis link-hidden");
-                        objEl.textContent = obj.title;
-                        objEl.href = obj.href;
-                    }
+                    options.inflatePopover(popover, yearData[key]);
                 }
                 function closePopover() {
                     if (popover == null) return;
@@ -860,19 +885,21 @@ function inflateCalendar(container, data, options) {
 
 }
 
+function bindLinkConfirm(link) {
+    link.onclick = (e) => {
+        e.preventDefault();
+        let message = link.getAttribute("message");
+        if (message == null) {
+            message = "This can not be undone. Please confirm your decision.";
+        }
+        if (confirm(message)) {
+            window.location.href = link.href;
+        }
+    };
+}
+
 window.addEventListener("load", () => {
-    document.querySelectorAll(".link-confirm").forEach(link => {
-        link.addEventListener("click", (event) => {
-            event.preventDefault();
-            let message = link.getAttribute("message");
-            if (message == null) {
-                message = "This can not be undone. Please confirm your decision.";
-            }
-            if (confirm(message)) {
-                window.location.href = link.href;
-            }
-        });
-    });
+    document.querySelectorAll(".link-confirm").forEach(bindLinkConfirm);
     document.querySelectorAll(".submit-confirm").forEach(input => {
         input.addEventListener("click", (event) => {
             event.preventDefault();

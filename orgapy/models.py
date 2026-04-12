@@ -666,3 +666,11 @@ class MoodLog(models.Model):
     @property
     def activities_display(self) -> str:
         return self.activities.replace(",", " ")
+    
+    @property
+    def overall(self) -> int:
+        return self.mood + self.energy + self.health + self.stress - 4
+    
+    @property
+    def label(self) -> str:
+        return ["-", "Devastated", "Very bad", "Bad", "Not Great", "Neutral", "Good", "Very good", "Excellent"][self.overall]

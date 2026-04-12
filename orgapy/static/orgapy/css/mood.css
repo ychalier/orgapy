@@ -1,94 +1,126 @@
-.ha {
-    text-align: center;
-}
-
-.mood-log-form {
-    user-select: none;
-}
-
-.mood-log-form + .mood-log-form {
-    margin-top: .2rem;
-}
-
-.mood-log-form>div {
+.moodlog-bar {
     display: flex;
-    gap: .8rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-secondary);
     align-items: center;
-}
-
-.mood-log-form-trackers,
-.mood-log-form-activities {
-    display: flex;
-    gap: .2rem;
-    align-items: baseline;
-}
-
-.mood-log-form-activities {
-    flex-grow: 1;
-    overflow: auto;
-}
-
-.mood-activity {
-    opacity: .33;
-}
-
-.mood-activity.active {
-    opacity: 1;
-}
-
-.mood-log-form button {
-    padding: 0 .1rem;
     border-radius: .2rem;
-    font-size: small;
-    border-color: #6b9fc2;
-    color: #6b9fc2;
-    cursor: pointer;
+    padding: 0 0 0 .4rem;
+    height: 2rem;
+    width: fit-content;
 }
 
-.mood-table-wrapper {
-    overflow: auto;
+.moodlog-bar:has(input:focus) {
+    outline: 1px solid var(--accent);
 }
 
-.mood-table th,
-.mood-table td {
-    white-space: nowrap;
-    flex-wrap: nowrap;
-    padding-left: .2rem;
+.moodlog-date {
+    width: 2.8rem;
+    flex-shrink: 0;
 }
 
-.mood-table th:first-child,
-.mood-table td:first-child {
-    padding-left: 0;
-}
-
-@media (max-width: 800px) {
-
-    .mood-table th:not(:first-child) {
-        writing-mode: sideways-lr;
-    }
-
-}
-
-.mood-good,
-.mood-neutral,
-.mood-bad {
-    display: inline-block;
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: .2rem;
-    background-color: white;
-    box-shadow: 0 0 4px black;
+.moodlog-tracker {
+    width: 2rem;
+    height: 100%;
+    border-radius: 0;
+    border-top: none;
+    border-bottom: none;
+    border-right: none;
     cursor: pointer;
 }
 
 .mood-good {
-    background-color: #f9fac3;
+    --bg-secondary: #f9fac3;
+    --bg-secondary-alt: #f9fac3;
+    --bg-secondary-hover: #f9fac3;
 }
 
 .mood-neutral {
-    background-color: #f39a48;
+    --bg-secondary: #f39a48;
+    --bg-secondary-alt: #f39a48;
+    --bg-secondary-hover: #f39a48;
 }
 
 .mood-bad {
-    background-color: #eb0a62;
+    --bg-secondary: #eb0a62;
+    --bg-secondary-alt: #eb0a62;
+    --bg-secondary-hover: #eb0a62;
+}
+
+.moodlog-activities-wrapper {
+    position: relative;
+    height: 100%;
+    width: 10rem;
+}
+
+.moodlog-activities {
+    border-top: none;
+    border-bottom: none;
+    border-radius: 0;
+    background-color: var(--bg-secondary-alt);
+    height: 100%;
+    width: 10rem;
+}
+
+.moodlog-activities:focus {
+    outline: none !important;
+}
+
+.moodlog-activities-suggestions {
+    visibility: hidden;
+    display: flex;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    gap: .2rem;
+    width: 10rem;
+    padding: .4rem;
+    background: var(--bg-secondary-alt);
+    position: absolute;
+    bottom: 0;
+    transform: translateY(100%);
+    border: 1px solid var(--border-secondary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    border-bottom-left-radius: .2rem;
+    border-bottom-right-radius: .2rem;
+    z-index: 1;
+}
+
+.moodlog-activities-suggestions:hover,
+.moodlog-activities:focus + .moodlog-activities-suggestions {
+    visibility: visible;
+}
+
+.moodlog-activities-suggestions button {
+    cursor: pointer;
+    border: none;
+    padding: .2rem;
+    border-radius: .2rem;
+}
+
+.moodlog-activities-suggestions button:not(:hover) {
+    background: none;
+}
+
+.moodlog-submit {
+    border: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    height: 100%;
+}
+
+.mood-palette {
+    --level-0: #212121;
+    --level-1: #582497;
+    --level-2: #ac02d7;
+    --level-3: #fe0169;
+    --level-4: #f06752;
+    --level-5: #ee9c46;
+    --level-6: #e7ad66;
+    --level-7: #f1ef8a;
+    --level-8: #feebda;
+}
+
+.mood-tracker {
+    display: block;
+    width: 1.6rem;
+    height: 1.6rem;
 }

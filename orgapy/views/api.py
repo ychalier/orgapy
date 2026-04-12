@@ -9,6 +9,7 @@ from django.core.exceptions import PermissionDenied, BadRequest
 from django.db.models import Max, Q, QuerySet
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
+from django.urls import reverse
 
 from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective, PushSubscription, MoodLog
 from ..utils import parse_dt, parse_date
@@ -90,6 +91,8 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_rename_subscription(request)
         case "create-mood-log":
             return api_create_mood_log(request)
+        case "list-mood-logs":
+            return api_list_mood_logs(request)
         case _:
             raise BadRequest()
 
@@ -807,13 +810,6 @@ def api_progress(request: HttpRequest) -> HttpResponse:
             "title": log.description
         })
     return JsonResponse(data)
-    #year = request.GET.get("year", str(datetime.datetime.now().year)).strip()
-    #query = ProgressCounter.objects.filter(user=request.user, year=int(year))
-    #try:
-    #    counter = query.get()
-    #except ProgressCounter.DoesNotExist:
-    #    raise Http404()
-    #return HttpResponse(counter.data, content_type="application/json")
 
 
 @permission_required("orgapy.view_note")
@@ -887,10 +883,32 @@ def api_create_mood_log(request: HttpRequest) -> JsonResponse:
             energy=int(request.POST["energy"]),
             health=int(request.POST["health"]),
             stress=int(request.POST["stress"]),
-            activities=request.POST["activities"])
+            activities=request.POST["activities"].strip().strip(","))
     except ValueError:
         raise BadRequest()
     except KeyError:
         raise BadRequest()
 
     return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.view_mood_log")
+def api_list_mood_logs(request: HttpRequest) -> JsonResponse:
+    data = {}
+    for log in MoodLog.objects.filter(user=request.user).order_by("date"):
+        data.setdefault(log.date.year, {})
+        key = log.date.strftime("%Y-%m-%d")
+        data[log.date.year].setdefault(key, [])
+        data[log.date.year][key].append({
+            "level": log.overall,
+            "mood": log.mood_classname,
+            "energy": log.energy_classname,
+            "health": log.health_classname,
+            "stress": log.stress_classname,
+            "activities": log.activities_display,
+            "editUrl": reverse("admin:orgapy_moodlog_change", args=[log.id]),
+            "deleteUrl": reverse("orgapy:delete_mood_log", args=[log.id]),
+            "label": log.label,
+
+        })
+    return JsonResponse(data)
