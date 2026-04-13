@@ -4,15 +4,11 @@
 {% block title %}Quotes{% endblock title %}
 
 {% block column_main %}
-
-<header class="card">
-    <h1>Quotes</h1>
-</header>
-
-<div id="quotes" class="card"></div>
-
+<div class="card">
+    <h1 class="card-header">Quotes</h1>
+    <div class="card-body" id="quotes"></div>
+</div>
 <script src="{% static 'orgapy/js/specials/quote.js' %}"></script>
-
 {% endblock column_main %}
 
 {% block artworks %}

@@ -61,6 +61,12 @@
     height: auto;
 }
 
+.card-note hr {
+    width: 100%;
+    border-top: none;
+    border-color: var(--border-secondary);
+}
+
 /***** NOTE FORM **************************************************************/
 
 .note-form-content {

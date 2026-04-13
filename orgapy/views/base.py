@@ -385,7 +385,7 @@ def view_export_note(request: HttpRequest, object_id: str) -> HttpResponse:
     """View to export a note's content as Markdown"""
     note = find_user_object(Note, "id", object_id, request.user)
     markdown = note.title + "\n\n" + note.content
-    response = HttpResponse(content=markdown, content_type="text/markdown")
+    response = HttpResponse(content=markdown, content_type="text/markdown; charset=utf-8")
     response["Content-Disposition"] = "inline; filename=\"{}.md\"".format(slugify(note.title))
     return response
 
