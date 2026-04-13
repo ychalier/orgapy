@@ -1,4 +1,4 @@
-var objectives = null;
+//var objectives = null;
 var isInitialScroll = true;
 const DAYW = 32; // Day width in pixels
 
@@ -44,38 +44,6 @@ function daysDiff(a, b) {
     return Math.round((utc2 - utc1) / 1000 / 3600 / 24);
 }
 
-function inflateObjgraphHead(objgraph) {
-    let objgraphHead = create(objgraph, "div", "objgraph-head");
-    objgraphHead.addEventListener("dblclick", () => {
-        resetObjgraphScroll();
-    });
-    let yearStart = getYearStart();
-    let today = new Date();
-    const year = TODAY.getFullYear();
-    const daysInYear = ((year % 4 === 0 && year % 100 > 0) || year % 400 == 0) ? 366 : 365;
-    for (let i = 0; i < daysInYear; i++) {
-        let day = (new Date(yearStart));
-        day.setDate(yearStart.getDate() + i);
-        let objgraphDay = create(objgraphHead, "div", "objgraph-head-day");
-        objgraphDay.style.left = (i * DAYW) + "px";
-        objgraphDay.title = day.toLocaleDateString(day.locales, {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-        });
-        if (day.getDate() == 1) {
-            objgraphDay.textContent = day.toLocaleDateString(day.locales, {month: "short"});
-        }
-        if (day.getDay() == 1) {
-            objgraphDay.classList.add("objgraph-head-week");
-        }
-        if (day.getDate() == today.getDate() && day.getMonth() == today.getMonth()) {
-            objgraphDay.classList.add("objgraph-head-today");
-        }
-    }
-}
-
 class Slot {
 
     constructor(start, length, state, early=false, late=false) {
@@ -93,7 +61,7 @@ class Slot {
 }
 
 class Objective {
-    
+
     constructor(data) {
         this.id = data.id;
         this.name = data.name;
@@ -154,7 +122,7 @@ class Objective {
                         cut = true;
                         dateEnd = TODAY;
                     }
-                } 
+                }
             }
             let completed = i < n && completions[i] < dateEnd;
             let state = SLOT_STATE_MISSED;
@@ -193,110 +161,27 @@ class Objective {
 
 }
 
-function saveObjectiveHistory(objectiveId) {
+function saveObjectiveHistory(objectiveId, objectiveHistory, onSubmit) {
     apiPost("edit-objective-history",
         {
             objective_id: objectiveId,
-            objective_history: JSON.stringify(objectives[objectiveId].history)
+            objective_history: JSON.stringify(objectiveHistory)
         },
         () => {
-            toast("Saved objective histoyr!", 600);
+            toast("Saved objective history", 600);
+            onSubmit();
         }
     );
 }
 
-function onObjectiveCheck(objectiveId) {
-    let obj = objectives[objectiveId];
-    let ts = Math.floor((new Date()).getTime() / 1000);
-    obj.history.push(ts);
-    saveObjectiveHistory(objectiveId);
-    createObjgraph();
+function onObjectiveCheck(objective, onSubmit) {
+    const ts = Math.floor((new Date()).getTime() / 1000);
+    objective.history.push(ts);
+    saveObjectiveHistory(objective.id, objective.history, onSubmit);
 }
 
-function inflateObjgraphObjective(objgraphBody, objectiveId, index) {
-    let domObj = create(objgraphBody, "div", "objgraph-objective");
-    let obj = objectives[objectiveId];
-    let slots = obj.getSlots();
-    slots.forEach(slot => {
-        if (dayOffset(slot.start) + DAYW * slot.length < 0) return;
-        let domSlot = create(domObj, "div", "objgraph-slot");
-        domSlot.style.width = `${DAYW * slot.length}px`;
-        domSlot.style.left = `${dayOffset(slot.start)}px`;
-        let domSlotBackground = create(domSlot, "div", "objgraph-slot-background");
-        if (slot.state == SLOT_STATE_COMPLETE) {
-            domSlotBackground.classList.add("bg-success");
-        } else if (slot.state == SLOT_STATE_MISSED) {
-            domSlotBackground.classList.add("bg-error");
-        } else if (slot.state == SLOT_STATE_COOLDOWN) {
-            if (slot.early) {
-                domSlotBackground.classList.add("bg-future-complete");
-            } else {
-                domSlotBackground.classList.add("bg-cooldown");
-            }
-        } else if (slot.state == SLOT_STATE_FUTURE) {
-            domSlotBackground.classList.add("bg-future");
-        } else if (slot.state == SLOT_STATE_FUTURE_COMPLETE) {
-            domSlotBackground.classList.add("bg-future-complete");
-        } else if (slot.state == SLOT_STATE_BUTTON) {
-            let domButtonCheck = create(domSlotBackground, "button");
-            if (slot.early) {
-                domButtonCheck.classList.add("early");
-            } else if (slot.late) {
-                domButtonCheck.classList.add("late");
-            }
-            domButtonCheck.innerHTML = `<i class="ri-check-line"></i>`;
-            domButtonCheck.addEventListener("click", () => {
-                onObjectiveCheck(objectiveId);
-            });
-        }
-    });
-    obj.history.forEach(ts => {
-        const offsetInDays = (ts * 1000 - getYearStart()) / DAYMS;
-        if (offsetInDays < 0) return;
-        let domCompletion = create(domObj, "div", "objgraph-completion");
-        domCompletion.title = (new Date(ts * 1000)).toLocaleString();
-        const OBJECTIVE_COMPLETION_WIDTH = 4;
-        const OBJECTIVE_COMPLETION_OFFSET = 4;
-        const completionOffset = Math.floor(offsetInDays) * DAYW
-            + (DAYW - 2 * OBJECTIVE_COMPLETION_OFFSET - OBJECTIVE_COMPLETION_WIDTH) * (offsetInDays - Math.floor(offsetInDays))
-            + OBJECTIVE_COMPLETION_OFFSET;
-        domCompletion.style.left = completionOffset + "px";
-        domCompletion.tabIndex = -1;
-        domCompletion.addEventListener("click", (event) => {
-            openDialogCompletionForm(obj, ts);
-        });
-    });
-    let domName = create(objgraphBody, "div", "objgraph-name popover popover-bottom");
-    if (obj.archived) {
-        domName.classList.add("archived");
-    }
-    domName.textContent = obj.name;
-    domName.style.top = ((index + 1) * 32 + 1) + "px";
-    domName.addEventListener("click", (event) => {
-        openDialogObjectiveForm(obj);
-    });
-
-}
-
-function inflateObjgraphBody(objgraph) {
-    let objgraphBody = create(objgraph, "div", "objgraph-body");
-    let i = 0;
-    for (let objectiveId in objectives) {
-        inflateObjgraphObjective(objgraphBody, objectiveId, i);
-        i++;
-    }
-    if ([...Object.keys(objectives)].length == 0) {
-        objgraphBody.textContent = "No objective";
-        objgraphBody.style.position = "absolute";
-        objgraphBody.style.left = "50%";
-        objgraphBody.style.transform = "translateX(-50%)";
-        objgraph.style.paddingBottom = "24px";
-    }
-}
-
-function resetObjgraphScroll() {
-    let container = document.getElementById("objgraph-wrapper");
-    let target = dayOffset(new Date()) - 0.5 * container.getBoundingClientRect().width;
+function resetObjectivesScroll(container) {
+    const target = dayOffset(new Date()) - 0.5 * container.getBoundingClientRect().width;
     if (isInitialScroll) {
         container.scrollLeft = target;
         isInitialScroll = false;
@@ -305,100 +190,160 @@ function resetObjgraphScroll() {
     }
 }
 
-function createObjgraph() {
-    let container = document.getElementById("objgraph-wrapper");
-    if (container == null) {
-        console.log("Could not find objgraph container");
-        return;
+function inflateObjective(container, objective, rowIndex, objectiveDialog, completionDialog) {
+
+    function inflateObjectiveElement(element) {
+
+        element.innerHTML = "";
+        
+        const slots = objective.getSlots();
+        slots.forEach(slot => {
+            if (dayOffset(slot.start) + DAYW * slot.length < 0) return;
+            const slotEl = create(element, "div", "objective-slot");
+            slotEl.style.width = `${DAYW * slot.length}px`;
+            slotEl.style.left = `${dayOffset(slot.start)}px`;
+            const slotBgEl = create(slotEl, "div", "objective-slot-bg");
+            if (slot.state == SLOT_STATE_COMPLETE) {
+                slotBgEl.classList.add("bg-success");
+            } else if (slot.state == SLOT_STATE_MISSED) {
+                slotBgEl.classList.add("bg-error");
+            } else if (slot.state == SLOT_STATE_COOLDOWN) {
+                if (slot.early) {
+                    slotBgEl.classList.add("bg-future-complete");
+                } else {
+                    slotBgEl.classList.add("bg-cooldown");
+                }
+            } else if (slot.state == SLOT_STATE_FUTURE) {
+                slotBgEl.classList.add("bg-future");
+            } else if (slot.state == SLOT_STATE_FUTURE_COMPLETE) {
+                slotBgEl.classList.add("bg-future-complete");
+            } else if (slot.state == SLOT_STATE_BUTTON) {
+                const buttonCheck = create(slotBgEl, "button");
+                if (slot.early) {
+                    buttonCheck.classList.add("early");
+                } else if (slot.late) {
+                    buttonCheck.classList.add("late");
+                }
+                buttonCheck.innerHTML = `<i class="ri-check-line"></i>`;
+                buttonCheck.addEventListener("click", () => {
+                    onObjectiveCheck(objective, () => {
+                        inflateObjectiveElement(element);
+                    });
+                });
+            }
+        });
+
+        objective.history.forEach(ts => {
+            const offsetInDays = (ts * 1000 - getYearStart()) / DAYMS;
+            if (offsetInDays < 0) return;
+            const completionEl = create(element, "div", "objective-completion");
+            completionEl.title = (new Date(ts * 1000)).toLocaleString();
+            const OBJECTIVE_COMPLETION_WIDTH = 4;
+            const OBJECTIVE_COMPLETION_OFFSET = 4;
+            const completionOffset = Math.floor(offsetInDays) * DAYW
+                + (DAYW - 2 * OBJECTIVE_COMPLETION_OFFSET - OBJECTIVE_COMPLETION_WIDTH) * (offsetInDays - Math.floor(offsetInDays))
+                + OBJECTIVE_COMPLETION_OFFSET;
+            completionEl.style.left = completionOffset + "px";
+            completionEl.tabIndex = -1;
+            completionEl.addEventListener("click", (event) => {
+                openCompletionDialog(completionDialog, objective.id, objective.name, objective.history, ts);
+            });
+        });
     }
-    if (Object.keys(objectives).length == 0) {
-        container.parentElement.classList.add("hidden");
-    } else {
-        container.parentElement.classList.remove("hidden");
+
+    const element = create(container, "div", "objective");
+    inflateObjectiveElement(element);
+
+    const nameEl = create(container, "button", "objective-name");
+    if (objective.archived) {
+        nameEl.classList.add("archived");
     }
-    container.innerHTML = "";
-    let objgraph = create(container, "div", "objgraph");
-    inflateObjgraphHead(objgraph);
-    inflateObjgraphBody(objgraph);
-    resetObjgraphScroll();
+    nameEl.textContent = objective.name;
+    nameEl.style.top = ((rowIndex + 1) * 32) + "px";
+    nameEl.addEventListener("click", (event) => {
+        openObjectiveDialog(objectiveDialog, objective);
+    });
+
 }
 
-function fetchObjectives() {
-    const showArchived = (new URLSearchParams(window.location.search)).get("archivedObjectives") == "1";
+function inflateObjectives(container, objectives, objectiveDialog, completionDialog) {
+    container.innerHTML = "";
+
+    container = create(container, "div", "objectives-container");
+
+    const header = create(container, "div", "objectives-header");
+    header.ondblclick = () => {resetObjectivesScroll(container)};
+    const yearStart = getYearStart();
+    const year = TODAY.getFullYear();
+    const daysInYear = ((year % 4 === 0 && year % 100 > 0) || year % 400 == 0) ? 366 : 365;
+    for (let i = 0; i < daysInYear; i++) {
+        const day = (new Date(yearStart));
+        day.setDate(yearStart.getDate() + i);
+        const dayEl = create(header, "div", "objectives-header-day");
+        dayEl.style.left = (i * DAYW) + "px";
+        dayEl.title = day.toLocaleDateString(day.locales, {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+        if (day.getDate() == 1) {
+            dayEl.textContent = day.toLocaleDateString(day.locales, {month: "short"});
+        }
+        if (day.getDay() == 1) {
+            dayEl.classList.add("objectives-header-week");
+        }
+        if (day.getDate() == TODAY.getDate() && day.getMonth() == TODAY.getMonth()) {
+            dayEl.classList.add("objectives-header-today");
+        }
+    }
+
+    const body = create(container, "div", "objectives-body");
+    let i = 0;
+    for (const objectiveId in objectives) {
+        inflateObjective(body, objectives[objectiveId], i, objectiveDialog, completionDialog);
+        i++;
+    }
+
+    if ([...Object.keys(objectives)].length == 0) {
+        body.textContent = "No objective";
+        body.style.position = "absolute";
+        body.style.left = "50%";
+        body.style.transform = "translateX(-50%)";
+        body.style.paddingBottom = "24px";
+    }
+
+    resetObjectivesScroll(container);
+}
+
+function fetchAndInflateObjectives(container, showArchived, objectiveDialog, completionDialog) {
+    isInitialScroll = true;
     fetch(URL_API + `?action=list-objectives${showArchived ? "&archived=1" : ""}`).then(res => res.json()).then(data => {
-        objectives = {};
+        const objectives = {};
         data.objectives.forEach(data => {
             objectives[data.id] = new Objective(data);
         });
-        createObjgraph();
+        inflateObjectives(container, objectives, objectiveDialog, completionDialog);
     });
 }
 
-function openDialogObjectiveForm(objective=null) {
-    dialogObjectiveForm.querySelector("form").reset();
-    if (objective != null) {
-        dialogObjectiveForm.querySelector("h2").textContent = "Edit objective";
-        dialogObjectiveForm.querySelector("input[name='id']").value = objective.id;
-        dialogObjectiveForm.querySelector("input[name='name']").value = objective.name;
-        dialogObjectiveForm.querySelector("input[name='flexible']").checked = objective.flexible;
-        dialogObjectiveForm.querySelector("input[name='period']").value = objective.period;
-        dialogObjectiveForm.querySelector("input[name='add']").style.display = "none";
-        if (objective.archived) {
-            dialogObjectiveForm.querySelector("input[name='archive']").value = "Unarchive";
-        } else {
-            dialogObjectiveForm.querySelector("input[name='archive']").value = "Archive";
-        }
-        dialogObjectiveForm.querySelector("input[name='save']").style.display = "unset";
-        dialogObjectiveForm.querySelector("input[name='archive']").style.display = "unset";
-        dialogObjectiveForm.querySelector("input[name='delete']").style.display = "unset";
-        dialogObjectiveForm.querySelector("input[name='completion']").style.display = "unset";
-    } else {
-        dialogObjectiveForm.querySelector("h2").textContent = "Create objective";
-        dialogObjectiveForm.querySelector("input[name='flexible']").removeAttribute("checked");
-        dialogObjectiveForm.querySelector("input[name='period']").value = 1;
-        dialogObjectiveForm.querySelector("input[name='add']").style.display = "unset";
-        dialogObjectiveForm.querySelector("input[name='archive']").style.display = "none";
-        dialogObjectiveForm.querySelector("input[name='save']").style.display = "none";
-        dialogObjectiveForm.querySelector("input[name='delete']").style.display = "none";
-        dialogObjectiveForm.querySelector("input[name='completion']").style.display = "none";
-    }
-    dialogObjectiveForm.showModal();
-}
-
-function openDialogCompletionForm(objective, timestamp=null) {
-    dialogCompletionForm.querySelector("form").reset();
-    dialogCompletionForm.querySelector("input[name='id']").value = objective.id;
-    if (timestamp != null) {
-        dialogCompletionForm.querySelector("h2").textContent = "Edit completion";
-        dialogCompletionForm.querySelector("input[name='timestamp']").value = timestamp;
-        let tsDate = new Date(timestamp * 1000);
-        dialogCompletionForm.querySelector("input[name='date']").value = dtf(tsDate, "YYYY-mm-dd");
-        dialogCompletionForm.querySelector("input[name='time']").value = dtf(tsDate, "HH:MM:SS");
-        dialogCompletionForm.querySelector("input[name='add']").style.display = "none";
-        dialogCompletionForm.querySelector("input[name='save']").style.display = "unset";
-        dialogCompletionForm.querySelector("input[name='delete']").style.display = "unset";
-    } else {
-        dialogCompletionForm.querySelector("h2").textContent = "Add completion";
-        dialogCompletionForm.querySelector("input[name='add']").style.display = "unset";
-        dialogCompletionForm.querySelector("input[name='save']").style.display = "none";
-        dialogCompletionForm.querySelector("input[name='delete']").style.display = "none";
-    }
-    dialogCompletionForm.showModal();
-}
-
-window.addEventListener("load", () => {
-    dialogObjectiveForm.querySelector("form").addEventListener("submit", (event) => {
+function bindObjectiveDialog(dialog, completionDialog, onSubmit) {
+    bindCompletionDialog(completionDialog, onSubmit);
+    const form = dialog.querySelector("form");
+    form.onsubmit = (event) => {
         event.preventDefault();
-        dialogObjectiveForm.close();
+        dialog.close();
         if (event.submitter.name == "completion") {
-            let objective_id = parseInt(event.target.querySelector("input[name='id']").value);
-            openDialogCompletionForm(objectives[objective_id]);
+            const objectiveId = parseInt(event.target.querySelector("input[name='id']").value);
+            const objectiveName = event.target.querySelector("input[name='name']").value;
+            const objectiveHistory = JSON.parse(event.target.querySelector("input[name='history']").value);
+            openCompletionDialog(completionDialog, objectiveId, objectiveName, objectiveHistory);
             return;
         }
         if (event.submitter.name == "archive") {
             const objectiveId = parseInt(event.target.querySelector("input[name='id']").value);
-            const archived = objectives[objectiveId].archived;
-            const prefix = archived ? "un" : ""; 
+            const archived = event.target.querySelector("input[name='archived']").value == "on";
+            const prefix = archived ? "un" : "";
             const url = `${URL_API}?action=${prefix}archive-objective`;
             const formData = new FormData(event.target, event.submitter);
             formData.append("objective_id", objectiveId);
@@ -408,7 +353,7 @@ window.addEventListener("load", () => {
                 } else {
                     toast("Archived!", 600);
                 }
-                fetchObjectives();
+                onSubmit();
             });
             return;
         }
@@ -425,40 +370,94 @@ window.addEventListener("load", () => {
                 url += "delete-objective";
                 break;
         }
-        let formData = new FormData(event.target, event.submitter);
+        const formData = new FormData(event.target, event.submitter);
         fetchApi(url, "post", formData, () => {
             toast("Saved!", 600);
-            fetchObjectives();
+            onSubmit();
         });
-    });
-    
-    document.getElementById("btn-objective-create").addEventListener("click", (event) => {
-        openDialogObjectiveForm();
-    });
+    };
+}
 
-    dialogCompletionForm.querySelector("form").addEventListener("submit", (event) => {
+function bindCompletionDialog(dialog, onSubmit) {
+    const form = dialog.querySelector("form");
+    form.onsubmit = (event) => {
         event.preventDefault();
-        dialogCompletionForm.close();
-        if (event.submitter.name == "delete" && !confirm(`Are you sure you want to delete this completion?`)) return;        
-        let objectiveId = parseInt(event.target.querySelector("input[name='id']").value);
-        let originalTs = parseInt(event.target.querySelector("input[name='timestamp']").value);
-        let obj = objectives[objectiveId];
+        dialog.close();
+        if (event.submitter.name == "delete" && !confirm(`Are you sure you want to delete this completion?`)) return;
+        const objectiveId = parseInt(event.target.querySelector("input[name='id']").value);
+        const originalTs = parseInt(event.target.querySelector("input[name='timestamp']").value);
+        const history = JSON.parse(event.target.querySelector("input[name='history']").value);
         if (event.submitter.name == "delete") {
-            obj.history.splice(obj.history.indexOf(originalTs), 1);
+            history.splice(history.indexOf(originalTs), 1);
         } else {
-            let newDate = event.target.querySelector("input[name='date']").value;
-            let newTime = event.target.querySelector("input[name='time']").value;
-            let newTs = Math.floor((new Date(newDate + "T" + newTime).getTime()) / 1000);
+            const newDate = event.target.querySelector("input[name='date']").value;
+            const newTime = event.target.querySelector("input[name='time']").value;
+            const newTs = Math.floor((new Date(newDate + "T" + newTime).getTime()) / 1000);
             if (event.submitter.name == "add") {
-                obj.history.push(newTs);
+                history.push(newTs);
             } else if (event.submitter.name == "save") {
-                obj.history[obj.history.indexOf(originalTs)] = newTs;
+                history[history.indexOf(originalTs)] = newTs;
             }
-            obj.history.sort();
+            history.sort();
         }
-        saveObjectiveHistory(objectiveId);
-        createObjgraph();
-    });
+        saveObjectiveHistory(objectiveId, history, onSubmit);
+    };
+}
 
-    fetchObjectives();
-})
+function openObjectiveDialog(dialog, objective=null) {
+    dialog.querySelector("form").reset();
+    if (objective != null) {
+        dialog.querySelector("h2").textContent = "Edit objective";
+        dialog.querySelector("input[name='id']").value = objective.id;
+        dialog.querySelector("input[name='history']").value = JSON.stringify(objective.history);
+        dialog.querySelector("input[name='archived']").value = objective.archived ? "on" : "off";
+        dialog.querySelector("input[name='name']").value = objective.name;
+        dialog.querySelector("input[name='flexible']").checked = objective.flexible;
+        dialog.querySelector("input[name='period']").value = objective.period;
+        dialog.querySelector("input[name='add']").style.display = "none";
+        if (objective.archived) {
+            dialog.querySelector("input[name='archive']").value = "Unarchive";
+        } else {
+            dialog.querySelector("input[name='archive']").value = "Archive";
+        }
+        dialog.querySelector("input[name='save']").style.display = "unset";
+        dialog.querySelector("input[name='archive']").style.display = "unset";
+        dialog.querySelector("input[name='delete']").style.display = "unset";
+        dialog.querySelector("input[name='completion']").style.display = "unset";
+    } else {
+        dialog.querySelector("h2").textContent = "Create objective";
+        dialog.querySelector("input[name='id']").value = "";
+        dialog.querySelector("input[name='history']").value = "[]";
+        dialog.querySelector("input[name='archived']").value = "off";
+        dialog.querySelector("input[name='flexible']").removeAttribute("checked");
+        dialog.querySelector("input[name='period']").value = 1;
+        dialog.querySelector("input[name='add']").style.display = "unset";
+        dialog.querySelector("input[name='archive']").style.display = "none";
+        dialog.querySelector("input[name='save']").style.display = "none";
+        dialog.querySelector("input[name='delete']").style.display = "none";
+        dialog.querySelector("input[name='completion']").style.display = "none";
+    }
+    dialog.showModal();
+}
+
+function openCompletionDialog(dialog, objectiveId, objectiveName, objectiveHistory, timestamp=null) {
+    dialog.querySelector("form").reset();
+    dialog.querySelector("input[name='id']").value = objectiveId;
+    dialog.querySelector("input[name='history'").value = JSON.stringify(objectiveHistory);
+    if (timestamp != null) {
+        dialog.querySelector("h2").innerHTML = `Edit completion of <em>${objectiveName}</em>`;
+        dialog.querySelector("input[name='timestamp']").value = timestamp;
+        const tsDate = new Date(timestamp * 1000);
+        dialog.querySelector("input[name='date']").value = dtf(tsDate, "YYYY-mm-dd");
+        dialog.querySelector("input[name='time']").value = dtf(tsDate, "HH:MM:SS");
+        dialog.querySelector("input[name='add']").style.display = "none";
+        dialog.querySelector("input[name='save']").style.display = "unset";
+        dialog.querySelector("input[name='delete']").style.display = "unset";
+    } else {
+        dialog.querySelector("h2").innerHTML = `Add completion to <em>${objectiveName}</em>`;
+        dialog.querySelector("input[name='add']").style.display = "unset";
+        dialog.querySelector("input[name='save']").style.display = "none";
+        dialog.querySelector("input[name='delete']").style.display = "none";
+    }
+    dialog.showModal();
+}

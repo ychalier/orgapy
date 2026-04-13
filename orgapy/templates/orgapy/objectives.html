@@ -1,0 +1,30 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}Objectives{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
+<script>
+    const OBJECTIVE_START_HOURS = {{ settings.objective_start_hours }};
+</script>
+<script src="{% static 'orgapy/js/objectives.js' %}"></script>
+{% endblock head %}
+
+{% block column_main %}
+<div class="card card-lines">
+    <h1 class="card-header">Objectives</h1>
+    <div class="card-actions">
+        <button id="buttonCreateObjective"><i class="ri-add-line"></i> Create</button>
+    </div>
+</div>
+<div id="objectivesContainer" class="objectives"></div>
+{% include 'orgapy/partials/objective_dialogs.html' %}
+<script>
+    const f = () => {fetchAndInflateObjectives(objectivesContainer, true, dialogObjective, dialogCompletion)};
+    bindObjectiveDialog(dialogObjective, dialogCompletion, f);
+    f();
+    buttonCreateObjective.onclick = () => {openObjectiveDialog(dialogObjective)};
+</script>
+{% endblock column_main %}

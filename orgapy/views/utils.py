@@ -103,8 +103,8 @@ def compare_checklists(user: LoggedUser, reference: str, before: str | None, aft
 def compare_objective_histories(user: LoggedUser, name: str, before: str | None, after: str | None):
     if before is None or after is None:
         return
-    history_before = json.loads(before)
-    history_after = json.loads(after)
+    history_before = json.loads(before) if before else []
+    history_after = json.loads(after) if after else []
     for _ in range(len(history_after) - len(history_before)):
         ProgressLog.objects.create(
             user=user,

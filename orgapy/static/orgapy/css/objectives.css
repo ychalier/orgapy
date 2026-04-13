@@ -1,37 +1,35 @@
-
-#objectives-card {
-    border: none;
+.objectives {
     position: relative;
-    padding: 0;
     overflow: hidden;
+    border: 1px solid var(--border-primary);
+    border-radius: .4rem;
 }
 
-.objgraph-wrapper {
+.objectives-container {
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
     background: var(--bg-primary);
     border-radius: .4rem;
     padding: .4rem .4rem .8rem .4rem;
-    border: 1px solid var(--border-primary);
 }
 
-.objgraph-head {
+.objectives-header {
     margin-bottom: .4rem;
     user-select: none;
 }
 
-.objgraph-head {
+.objectives-header {
     position: relative;
     height: 16px;
 }
 
-.objgraph-objective {
+.objectives-objective {
     display: flex;
     flex-direction: row;
 }
 
-.objgraph-head-day {
+.objectives-header-day {
     position: absolute;
     box-sizing: border-box;
     width: 32px;
@@ -41,7 +39,7 @@
     text-align: center;
 }
 
-.objgraph-head-day::before {
+.objectives-header-day::before {
     position: absolute;
     left: -1px;
     width: 2px;
@@ -52,14 +50,14 @@
     border-radius: .2rem;
 }
 
-.objgraph-head-week::before {
+.objectives-header-week::before {
     background: white;
     height: 16px;
     top: 0;
 }
 
-.objgraph-head-day:hover::after,
-.objgraph-head-today::after {
+.objectives-header-day:hover::after,
+.objectives-header-today::after {
     position: absolute;
     left: 0px;
     top: -.4rem;
@@ -69,16 +67,16 @@
     height: 500px;
 }
 
-.objgraph-head-today::after {
+.objectives-header-today::after {
     background: var(--bg-accent);
 }
 
-.objgraph-objective {
+.objective {
     position: relative;
     height: 32px;
 }
 
-.objgraph-slot {
+.objective-slot {
     position: absolute;
     box-sizing: border-box;
     flex-shrink: 0;
@@ -86,10 +84,9 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
-    /*overflow: hidden;*/
 }
 
-.objgraph-slot-background {
+.objective-slot-bg {
     margin: 1px;
     width: 100%;
     display: flex;
@@ -98,7 +95,7 @@
     border-radius: .2rem;
 }
 
-.objgraph-slot button {
+.objective-slot button {
     border: none;
     color: black;
     cursor: pointer;
@@ -109,41 +106,43 @@
     border-radius: .2rem;
 }
 
-.objgraph-slot button:hover {
+.objective-slot button:hover {
     background: #fff;
 }
 
-.objgraph-slot button.early {
+.objective-slot button.early {
     background: #8ccd94;
 }
 
-.objgraph-slot button.early:hover {
+.objective-slot button.early:hover {
     background: #c3ffca;
 }
 
-.objgraph-slot button.late {
+.objective-slot button.late {
     background: #e69d73;
 }
 
-.objgraph-slot button.late:hover {
+.objective-slot button.late:hover {
     background: #ffc8a8;
 }
 
-.objgraph-slot button:focus-visible {
+.objective-slot button:focus-visible {
     outline: 1px solid var(--accent);
 }
 
-.objgraph-name {
+.objective-name {
     position: absolute;
     left: .4rem;
-    line-height: 1.6;
-    background: var(--bg-primary);
-    padding: 0 .4rem;
-    border-radius: .4rem;
-    cursor: default;
+    padding: .2rem .4rem;
 }
 
-.objgraph-completion {
+.objective-name.archived {
+    --bg-secondary: #111149;
+    --bg-secondary-hover: #13137d;
+    --border-secondary: #111149;
+}
+
+.objective-completion {
     box-sizing: border-box;
     position: absolute;
     height: 100%;
@@ -155,7 +154,7 @@
     cursor: help;
 }
 
-.objgraph-completion::after {
+.objective-completion::after {
     display: block;
     content: " ";
     background: #389b45;
@@ -164,7 +163,7 @@
     opacity: 0;
 }
 
-.objgraph:hover .objgraph-completion::after {
+.objectives:hover .objective-completion::after {
     opacity: 1;
 }
 
@@ -181,7 +180,7 @@
 }
 
 .bg-future {
-    background: var(--bg-secondary);
+    background: #222;
 }
 
 .bg-future-complete {

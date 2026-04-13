@@ -34,12 +34,12 @@
 {% if settings.beach_mode %}
 <div class="card">
     <h2 class="card-header">🏖️ Beach Mode On 🌞</h2>
-    <p>
-        Tasks, objectives and projects are hidden.
-    </p>
-    <p>
-        <span class="hint">Change this in <a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}">settings</a>.</span>
-    </p>
+    <div class="card-body">
+        <p>
+            Tasks, objectives and projects are hidden.<br>
+            <span class="hint">Change this in <a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}">settings</a>.</span>
+        </p>
+    </div>
 </div>
 {% else %}
 <div class="card">
@@ -47,69 +47,9 @@
         <div id="tasksContainer" class="coll"></div>
     </div>
 </div>
-
-<div id="objectives-card" class="card hidden" tabindex="-1">
-    <div id="objgraph-wrapper" class="objgraph-wrapper" tabindex="-1"></div>
-</div>
-
+<div id="objectivesContainer" class="objectives" tabindex="-1"></div>
 <div id="projectsContainer" class="projects coll" tabindex="-1"></div>
 {% endif %}
-
-<dialog id="dialogObjectiveForm" closedby="any">
-    <form class="card">
-        {% csrf_token %}
-        <input hidden name="id" />
-        <h2 class="card-header">Create objective</h2>
-        <div class="card-body colll">
-            <div>
-                <label for="input-objective-name">Name</label>
-                <input required minlength="1" name="name" type="text" id="input-objective-name" />
-            </div>
-            <div>
-                <label cfor="input-objective-period">Period (days)</label>
-                <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" />
-            </div>
-            <div>
-                <label for="input-objective-flexible" class="toggle">
-                    <input name="flexible" type="checkbox" id="input-objective-flexible" />
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-text">Flexible</span>
-                </label>
-            </div>
-        </div>
-        <div class="card-actions">
-            <input type="submit" name="add" value="Add"/>
-            <input type="submit" name="save" value="Save"/>
-            <input type="submit" name="archive" value="Archive"/>
-            <input type="submit" name="completion" value="Add completion"/>
-            <input type="submit" class="button-danger" name="delete" value="Delete"/>
-        </div>
-    </form>
-</dialog>
-
-<dialog id="dialogCompletionForm" closedby="any">
-    <form class="card">
-        {% csrf_token %}
-        <input hidden name="id" />
-        <input hidden name="timestamp" />
-        <h2 class="card-header">Add completion</h2>
-        <div class="card-body colll">
-            <div>
-                <label>Date</label>
-                <input type="date" name="date" />
-            </div>
-            <div>
-                <label>Time</label>
-                <input type="time" name="time" step="1" />
-            </div>
-        </div>
-        <div class="card-actions">
-            <input type="submit" name="add" value="Add"/>
-            <input type="submit" name="save" value="Save"/>
-            <input type="submit" class="button-danger" name="delete" value="Delete"/>
-        </div>
-    </form>
-</dialog>
 
 <dialog id="dialogAddEvent" closedby="any">
     <div class="card">
@@ -157,11 +97,12 @@
     </div>
 </dialog>
 {% include 'orgapy/partials/task_dialog.html' %}
+{% include 'orgapy/partials/objective_dialogs.html' %}
 {% endblock column_main %}
 
 {% block menu_create %}
 <li class="menu-item"><button id="buttonCreateTask"><i class="ri-task-line"></i> Task</button></li>
-<li class="menu-item"><button id="btn-objective-create"><i class="ri-focus-2-line"></i> Objective</button></li>
+<li class="menu-item"><button id="buttonCreateObjective"><i class="ri-focus-2-line"></i> Objective</button></li>
 <li class="menu-item"><button id="buttonCreateProject"><i class="ri-briefcase-line"></i> Project</button></li>
 <li class="menu-item"><button id="events-add"><i class="ri-calendar-line"></i> Event</button></li>
 <hr>
@@ -180,6 +121,12 @@
 bindTaskDialog(dialogTask, () => { fetchAndInflateTasks(tasksContainer) });
 fetchAndInflateTasks(tasksContainer, dialogTask);
 buttonCreateTask.onclick = () => {openTaskDialog(dialogTask);}
+
+const f = () => {fetchAndInflateObjectives(objectivesContainer, false, dialogObjective, dialogCompletion)};
+bindObjectiveDialog(dialogObjective, dialogCompletion, f);
+f();
+buttonCreateObjective.onclick = () => {openObjectiveDialog(dialogObjective)};
+
 markdownToHtml(".markdown", true);
 window.addEventListener("click", clearContextMenus);
 buttonCreateProject.onclick = () => {onButtonProjectCreate(projectsContainer, null, false)};

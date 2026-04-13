@@ -281,12 +281,18 @@ input[type=submit] {
     position: relative;
 }
 
-button:hover,
-.button:hover,
-input[type=submit]:hover,
 button:focus,
 .button:focus,
 input[type=submit]:focus {
+    outline: none !important;
+}
+
+button:hover,
+.button:hover,
+input[type=submit]:hover,
+button:focus-visible,
+.button:focus-visible,
+input[type=submit]:focus-visible {
     color: var(--text);
     background-color: var(--bg-secondary-hover);
     outline: none;

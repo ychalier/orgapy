@@ -81,5 +81,6 @@ urlpatterns = [
     path("trash/destroy", views.view_destroy_all, name="destroy_all"),
     path("groceries", views.view_groceries, name="groceries"),
     path("tasks", views.view_tasks, name="tasks"),
+    path("objectives", views.view_objectives, name="objectives"),
     path("api", api, name="api"),
 ]

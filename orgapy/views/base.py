@@ -21,7 +21,8 @@ from ..models import (
     PushSubscription,
     Project,
     MoodLog,
-    Task)
+    Task,
+    Objective)
 
 from .utils import (
     ConflictError,
@@ -928,4 +929,17 @@ def view_tasks(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/tasks.html", {
         "tasks": tasks,
         "paginator": pretty_paginator(tasks)
+    })
+
+
+# OBJECTIVES ###################################################################
+
+@permission_required("orgapy.view_objective")
+def view_objectives(request: HttpRequest) -> HttpResponse:
+    if isinstance(request.user, AnonymousUser):
+        raise PermissionDenied()
+    objectives = Objective.objects.filter(user=request.user)
+    return render(request, "orgapy/objectives.html", {
+        "objectives": objectives,
+        "settings": get_or_create_settings(request.user),
     })
