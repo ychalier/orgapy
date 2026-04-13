@@ -5,6 +5,10 @@
     border-radius: .4rem;
 }
 
+.objectives:has(.objectives-body:empty) {
+    display: none;
+}
+
 .objectives-container {
     width: 100%;
     overflow-x: auto;

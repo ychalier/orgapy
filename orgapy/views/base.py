@@ -62,7 +62,7 @@ def view_home(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/home.html", {
         "settings": settings,
         "pending_mood_logs": pending_mood_logs,
-        "active": "projects",
+        "active": "home",
     })
 
 

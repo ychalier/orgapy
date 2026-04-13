@@ -253,6 +253,7 @@ def render_documents(
     page = request.GET.get("page")
     objects = paginator.get_page(page)
     return render(request, template_name, {
+        "active": "documents",
         "mixed": mixed,
         "objects": objects,
         "query": attrs.get("query", ""),

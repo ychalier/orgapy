@@ -305,13 +305,7 @@ function inflateObjectives(container, objectives, objectiveDialog, completionDia
         i++;
     }
 
-    if ([...Object.keys(objectives)].length == 0) {
-        body.textContent = "No objective";
-        body.style.position = "absolute";
-        body.style.left = "50%";
-        body.style.transform = "translateX(-50%)";
-        body.style.paddingBottom = "24px";
-    }
+    if ([...Object.keys(objectives)].length == 0) {}
 
     resetObjectivesScroll(container);
 }
