@@ -254,6 +254,12 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
+    
+    @property
+    def overdue(self) -> bool:
+        if self.due_date is None:
+            return False
+        return timezone.now().date() > self.due_date
 
 
 class Quote(models.Model):

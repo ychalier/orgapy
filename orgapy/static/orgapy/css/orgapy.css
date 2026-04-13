@@ -417,6 +417,17 @@ button.label-grey:hover {
     color: hsl(204, 0%, 88%);
 }
 
+.label-success {
+    background-color: hsl(120, 35%, 18%);
+    color: hsl(120, 100%, 78%);
+}
+
+a.label-success:hover,
+button.label-success:hover {
+    background-color: hsl(120, 35%, 18%);
+    color: hsl(120, 100%, 88%);
+}
+
 .label-red,
 .label.error {
     background-color: hsl(0, 34%, 18%);

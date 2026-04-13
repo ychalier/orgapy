@@ -468,9 +468,6 @@ class Project {
         } else {
             addContextMenuOption(menu, "ri-sticky-note-line", "Unbind note", () => {self.unbindNote()});
         }
-        addContextMenuOption(menu, "ri-pencil-fill", "Edit in admin", () => {
-            window.location.href = URL_ADMIN_PROJECT_CHANGE + this.id;
-        });
         addContextMenuOption(menu, "ri-checkbox-circle-line", "Status", () => {self.openStatusDialog()});
         const option = addContextMenuOption(menu, "ri-delete-bin-line", "Delete", () => {self.delete()});
         option.querySelector("button").classList.add("button-danger");

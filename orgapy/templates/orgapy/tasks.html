@@ -1,0 +1,55 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}Tasks{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<script src="{% static 'orgapy/js/tasks.js' %}"></script>
+{% endblock head %}
+
+{% block menu_create %}
+<li class="menu-item"><button id="buttonCreateTask"><i class="ri-task-line"></i> Task</button></li>
+<hr>
+{{ block.super }}
+{% endblock menu_create %}
+
+{% block column_main %}
+
+<div class="card card-lines">
+    <h1 class="card-header">Tasks</h1>
+    {% for task in tasks %}
+    <div class="line task" task-id="{{ task.id }}" task-title="{{ task.title }}" task-start="{{ task.start_date | date:"Y-m-d" }}" task-due="{{ task.due_date | date:"Y-m-d"  }}" task-mode="{{ task.recurring_mode }}" task-period="{{ task.recurring_period }}">
+        {% if task.completed %}
+        <span class="label label-success"><i class="ri-checkbox-circle-line"></i> {{ task.date_completion | date }}</span>
+        {% elif task.due_date %}
+        <span class="label {% if task.overdue %}label-red{% endif %}"><i class="ri-calendar-schedule-line"></i> {{ task.due_date | date }}</span>
+        {% endif %}
+        {% if task.recurring_mode != 'ON' %}<i class="ri-refresh-line" title="{{task.get_recurring_mode_display}}, {{ task.recurring_period }}"></i>{% endif %}
+        <span>{{ task.title }}</span>
+        <a class="dropdown-toggle" tabindex="0"><i class="ri-more-2-fill"></i></a>
+    </div>
+    {% endfor %}
+    {% include 'orgapy/partials/pagination.html' %}
+</div>
+
+{% include 'orgapy/partials/task_dialog.html' %}
+
+<script>
+bindTaskDialog(dialogTask, () => {window.location.reload()});
+buttonCreateTask.onclick = () => {openTaskDialog(dialogTask);}
+for (const taskEl of document.querySelectorAll(".task")) {
+    const dueDateString = taskEl.getAttribute("task-due");
+    const task = {
+        id: parseInt(taskEl.getAttribute("task-id")),
+        title: taskEl.getAttribute("task-title"),
+        startDate: new Date(taskEl.getAttribute("task-start")),
+        dueDate: dueDateString == "" ? null : new Date(dueDateString),
+        recurringMode: taskEl.getAttribute("task-mode"),
+        recurringPeriod: parseFloat(taskEl.getAttribute("task-period")),
+    }
+    taskEl.querySelector("a.dropdown-toggle").onclick = () => {openTaskDialog(dialogTask, task)}
+}
+</script>
+
+{% endblock column_main %}

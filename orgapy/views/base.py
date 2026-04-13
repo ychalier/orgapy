@@ -20,7 +20,8 @@ from ..models import (
     Calendar,
     PushSubscription,
     Project,
-    MoodLog)
+    MoodLog,
+    Task)
 
 from .utils import (
     ConflictError,
@@ -911,3 +912,20 @@ def view_groceries(request: HttpRequest) -> HttpResponse:
         note.categories.add(cat)
         return redirect("orgapy:note", object_id=note.id)
     return render(request, "orgapy/groceries.html", {})
+
+
+# TASKS ########################################################################
+
+@permission_required("orgapy.view_task")
+def view_tasks(request: HttpRequest) -> HttpResponse:
+
+    page_size = 23
+    objects = Task.objects.filter(user=request.user).order_by("completed", "-date_completion", "-due_date")
+    paginator = Paginator(objects, page_size)
+    page = request.GET.get("page")
+    tasks = paginator.get_page(page)
+
+    return render(request, "orgapy/tasks.html", {
+        "tasks": tasks,
+        "paginator": pretty_paginator(tasks)
+    })

@@ -80,5 +80,6 @@ urlpatterns = [
     path("trash/restore", views.view_restore_all, name="restore_all"),
     path("trash/destroy", views.view_destroy_all, name="destroy_all"),
     path("groceries", views.view_groceries, name="groceries"),
+    path("tasks", views.view_tasks, name="tasks"),
     path("api", api, name="api"),
 ]

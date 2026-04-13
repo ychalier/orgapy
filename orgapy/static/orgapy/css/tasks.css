@@ -1,5 +1,9 @@
-#tasks {
+#tasksContainer {
     line-height: 1.6;
+}
+
+.card:has(#tasksContainer:empty) {
+    display: none;
 }
 
 .task-overdue {

@@ -11,8 +11,6 @@
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/mood.css' %}" />
 <script>
-    const URL_ADMIN_PROJECT_CHANGE = "{% url 'admin:orgapy_project_changelist' %}";
-    const URL_ORGAPY_NOTE = "{% url 'orgapy:note' object_id='objectId' %}";
     const OBJECTIVE_START_HOURS = {{ settings.objective_start_hours }};
 </script>
 <script src="{% static 'orgapy/js/dragrank.js' %}"></script>
@@ -46,7 +44,7 @@
 {% else %}
 <div class="card">
     <div class="card-body">
-        <div id="tasks" class="coll"></div>
+        <div id="tasksContainer" class="coll"></div>
     </div>
 </div>
 
@@ -54,7 +52,7 @@
     <div id="objgraph-wrapper" class="objgraph-wrapper" tabindex="-1"></div>
 </div>
 
-<div id="projects" class="projects coll" tabindex="-1"></div>
+<div id="projectsContainer" class="projects coll" tabindex="-1"></div>
 {% endif %}
 
 <dialog id="dialogObjectiveForm" closedby="any">
@@ -113,27 +111,6 @@
     </form>
 </dialog>
 
-<dialog id="dialogExploreTasks" closedby="any">
-    <div class="card">
-        <h2 class="card-header">Tasks</h2>
-        <div class="card-body">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Start</th>
-                        <th>Due</th>
-                    </tr>
-                </thead>
-                <tbody id="tasksTable"></tbody>
-            </table>
-        </div>
-        <form class="card-actions" method="dialog">
-            <button>Close</button>
-        </form>
-    </div>
-</dialog>
-
 <dialog id="dialogAddEvent" closedby="any">
     <div class="card">
         <h2 class="card-header">Create event</h2>
@@ -179,61 +156,19 @@
         </div>
     </div>
 </dialog>
-
-<dialog id="dialogTaskForm" closedby="any">
-    <form class="card">
-        <h2 class="card-header">Create task</h2>
-        {% csrf_token %}
-        <input name="id" hidden />
-        <div class="card-body colll">
-            <div>
-                <label>Title</label>
-                <input name="title" type="text" placeholder="Housework, Call X, …" />
-            </div>
-            <div>
-                <label>Date start</label>
-                <input name="start_date" type="date" />
-            </div>
-            <div>
-                <label>Date due</label>
-                <input name="due_date" type="date" />
-            </div>
-            <div>
-                <label>Recurring mode</label>
-                <select class="form-select" name="recurring_mode">
-                    <option value="ON" selected>Once</option>
-                    <option value="DY">Daily</option>
-                    <option value="WK">Weekly</option>
-                    <option value="MN">Monthly</option>
-                    <option value="YR">Yearly</option>
-                </select>
-            </div>
-            <div>
-                <label>Recurring period</label>
-                <input name="recurring_period" type="number" />
-            </div>
-        </div>
-        <div class="card-actions">
-            <input type="submit" name="add" value="Add" />
-            <input type="submit" name="save" value="Save" />
-            <input type="submit" class="button-danger" name="delete" value="Delete" />
-        </div>
-    </form>
-</dialog>
-
+{% include 'orgapy/partials/task_dialog.html' %}
 {% endblock column_main %}
 
 {% block menu_create %}
-<li class="menu-item"><button id="tasks-add"><i class="ri-checkbox-circle-line"></i> Task</button></li>
+<li class="menu-item"><button id="buttonCreateTask"><i class="ri-task-line"></i> Task</button></li>
 <li class="menu-item"><button id="btn-objective-create"><i class="ri-focus-2-line"></i> Objective</button></li>
-<li class="menu-item"><button id="btn-project-create"><i class="ri-briefcase-line"></i> Project</button></li>
+<li class="menu-item"><button id="buttonCreateProject"><i class="ri-briefcase-line"></i> Project</button></li>
 <li class="menu-item"><button id="events-add"><i class="ri-calendar-line"></i> Event</button></li>
 <hr>
 {{ block.super }}
 {% endblock menu_create %}
 
 {% block menu %}
-<li class="menu-item"><button id="tasks-explore"><i class="ri-search-line"></i> Explore Tasks</button></li>
 <li class="menu-item"><button id="events-refresh"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
 <hr>
 {{ block.super }}
@@ -242,18 +177,16 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    markdownToHtml(".markdown", true);
-    window.addEventListener("load", () => {
-        window.addEventListener("click", clearContextMenus);
-        const projectsContainer = document.getElementById("projects");
-        document.getElementById("btn-project-create").addEventListener("click", () => {
-            onButtonProjectCreate(projectsContainer, null, false);
-        });
-        fetchProjects(projectsContainer,
-            noteId=null,
-            forceExpand=false,
-            statusFilter="AC",
-            projectId=null);
-    });
+bindTaskDialog(dialogTask, () => { fetchAndInflateTasks(tasksContainer) });
+fetchAndInflateTasks(tasksContainer, dialogTask);
+buttonCreateTask.onclick = () => {openTaskDialog(dialogTask);}
+markdownToHtml(".markdown", true);
+window.addEventListener("click", clearContextMenus);
+buttonCreateProject.onclick = () => {onButtonProjectCreate(projectsContainer, null, false)};
+fetchProjects(projectsContainer,
+    noteId=null,
+    forceExpand=false,
+    statusFilter="AC",
+    projectId=null);
 </script>
 {% endblock body_scripts %}

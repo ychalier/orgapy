@@ -497,13 +497,11 @@ def api_add_task(request: HttpRequest) -> JsonResponse:
     if task_recurring_mode is None:
         raise BadRequest()
     task_recurring_period = request.POST.get("recurring_period")
-    if task_recurring_period is None:
-        raise BadRequest()
     try:
         task_start_date = parse_date(task_start_date)
         if task_due_date is not None:
             task_due_date = parse_date(task_due_date)
-        task_recurring_period = None if task_recurring_period.strip() == "" else int(task_recurring_period)
+        task_recurring_period = None if (task_recurring_period is None or task_recurring_period.strip() == "") else int(task_recurring_period)
     except:
         raise BadRequest()
     Task.objects.create(
