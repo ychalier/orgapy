@@ -450,22 +450,30 @@ function bindDropdown(dropdown) {
 
     toggle.addEventListener("focusin", () => {
         isToggleFocused = true;
-        const padding = 2;
         menu.style.position = "absolute";
         menu.style.zIndex = 9999;
+        const dropdownBounds = dropdown.getBoundingClientRect();
         const toggleBounds = toggle.getBoundingClientRect();
         const menuBounds = menu.getBoundingClientRect();
-        const fitsUnder = (toggleBounds.bottom - toggleBounds.height / 2) + padding + menuBounds.height <= window.innerHeight;
-        const baseLeft = toggleBounds.left;
-        const maxLeft = screen.width - padding - menuBounds.width;
-        const left = Math.max(padding, Math.min(baseLeft, maxLeft));
-        menu.style.left = left + "px";
-        if (fitsUnder) {
-            menu.style.top = ((toggleBounds.bottom - toggleBounds.height / 2) + padding + window.scrollY) + "px";
+        if (toggleBounds.bottom + menuBounds.height <= window.innerHeight) {
+            // fits under, thus placing under
+            menu.style.top = (toggleBounds.top - dropdownBounds.top + toggleBounds.height) + "px";
+            menu.style.bottom = "unset";
         } else {
-            menu.style.top = (toggleBounds.top - padding - menuBounds.height + window.scrollY) + "px";
+            // placing above
+            menu.style.top = "unset";
+            menu.style.bottom = (dropdownBounds.bottom - toggleBounds.bottom + toggleBounds.height) + "px";
         }
-        document.body.prepend(menu);
+        if (toggleBounds.left + menuBounds.width <= window.innerWidth) {
+            console.log(toggleBounds.left, menuBounds.width, window.innerWidth);
+            // align to the left
+            menu.style.left = (toggleBounds.left - dropdownBounds.left) + "px";
+            menu.style.right = "unset";
+        } else {
+            // align to the right
+            menu.style.left = "unset";
+            menu.style.right = (dropdownBounds.right - toggleBounds.right) + "px";
+        }
     });
 
     toggle.addEventListener("focusout", (event) => {

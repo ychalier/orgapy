@@ -1052,7 +1052,7 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 .menu-item .dropdown-toggle::after {
-    content: "❭";
+    content: ">";
     float: right;
     height: 0;
     line-height: .8rem;

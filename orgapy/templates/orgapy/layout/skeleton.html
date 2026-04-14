@@ -43,7 +43,7 @@
                         <ul class="search-suggestions menu"></ul>
                     </form>
                     <button id="searchButton"><i class="ri-search-line"></i></button>
-                    <div id="menu-dropdown" class="dropdown">
+                    <div class="dropdown">
                         <a class="button dropdown-toggle" tabindex="0"><i class="ri-menu-line"></i></a>
                         <ul class="menu">
                             {% block menu %}
@@ -96,33 +96,33 @@
     {% block body_scripts %}{% endblock body_scripts %}
     {% block body_scrips_minimized %}
     <script>
-        bindDropdown(document.getElementById("menu-dropdown"));
-        bindSearch(
-            searchForm,
-            "suggestions",
-            (state) => {
-                const element = create(state.container, "a");
-                element.href = state.entry.url;
-                let prefix = "";
-                switch (state.entry.active) {
-                    case "notes":
-                        prefix = `<i class="ri-sticky-note-line"></i> `;
-                        break;
-                    case "sheets":
-                        prefix = `<i class="ri-table-line"></i> `;
-                        break;
-                    case "maps":
-                        prefix = `<i class="ri-map-2-line"></i> `;
-                        break;
-                }
-                element.innerHTML = `${prefix}<mark>${ state.entry.title.slice(0, state.query.length) }</mark>${ state.entry.title.slice(state.query.length) }`;
-                return element;
-            },
-            (entry) => {
-                if (entry != null) window.location.href = entry.url;
-            }
-        );
-        bindSearchButton(searchForm, searchButton);
+document.querySelectorAll(".dropdown").forEach(bindDropdown);
+bindSearch(
+    searchForm,
+    "suggestions",
+    (state) => {
+        const element = create(state.container, "a");
+        element.href = state.entry.url;
+        let prefix = "";
+        switch (state.entry.active) {
+            case "notes":
+                prefix = `<i class="ri-sticky-note-line"></i> `;
+                break;
+            case "sheets":
+                prefix = `<i class="ri-table-line"></i> `;
+                break;
+            case "maps":
+                prefix = `<i class="ri-map-2-line"></i> `;
+                break;
+        }
+        element.innerHTML = `${prefix}<mark>${ state.entry.title.slice(0, state.query.length) }</mark>${ state.entry.title.slice(state.query.length) }`;
+        return element;
+    },
+    (entry) => {
+        if (entry != null) window.location.href = entry.url;
+    }
+);
+bindSearchButton(searchForm, searchButton);
     </script>
     {% endblock %}
 </body>
