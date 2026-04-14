@@ -41,6 +41,7 @@ class CalendarEvent {
                 self.delete();
             }
         });
+        bindDropdown(dotWrapper);
     }
 
     delete() {
@@ -82,11 +83,7 @@ function fetchEvents(force=false) {
 function inflateEvents() {
     let container = document.getElementById("events");
     container.innerHTML = "";
-    
-    if (events.length == 0) {
-        remove(container.parentElement);
-    }
-    
+
     let days = {};
     events.forEach(event => {
         if (!(event.day in days)) {

@@ -49,7 +49,7 @@
 .moodlog-activities-wrapper {
     position: relative;
     height: 100%;
-    width: 10rem;
+    flex-shrink: 1;
 }
 
 .moodlog-activities {
@@ -58,7 +58,7 @@
     border-radius: 0;
     background-color: var(--bg-secondary-alt);
     height: 100%;
-    width: 10rem;
+    width: 100%;
 }
 
 .moodlog-activities:focus {
@@ -71,7 +71,7 @@
     box-sizing: border-box;
     flex-wrap: wrap;
     gap: .2rem;
-    width: 10rem;
+    width: 100%;
     padding: .4rem;
     background: var(--bg-secondary-alt);
     position: absolute;

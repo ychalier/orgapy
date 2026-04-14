@@ -394,92 +394,97 @@ function toast(message, duration) {
 
 function bindDropdown(dropdown) {
 
-    var isToggleFocused = false;
-    var isElementFocused = false;
-    var isMenuHovered = false;
     var hideTimeout = null;
 
     const toggle = dropdown.querySelector(".dropdown-toggle");
     const menu = dropdown.querySelector(".menu");
+    const isMainMenu = !dropdown.parentElement.classList.contains("menu-item"); 
+    const delay = 10;
 
-    function hideDropdown(timeout=1) {
-        hideTimeout = setTimeout(() => {
-            dropdown.appendChild(menu);
-        }, timeout);
-    }
-
-    menu.querySelectorAll("a, button").forEach(element => {
-        function onActiveIn() {
-            if (hideTimeout != null) {
-                clearTimeout(hideTimeout);
-                hideTimeout = null;
-            }
-            isElementFocused = true;
-        }
-        function onActiveOut() {
-            isElementFocused = false;
-            if (!isToggleFocused && !isMenuHovered && hideTimeout == null) {
-                hideDropdown();
-            }
-        }
-        element.addEventListener("mousedown", onActiveIn);
-        element.addEventListener("mouseup", onActiveOut);
-        element.addEventListener("touchstart", onActiveIn);
-        element.addEventListener("touchend", onActiveOut);
-        element.addEventListener("click", () => {
-            if (hideTimeout == null) {
-                hideDropdown(1);
-            }
-        });
-    });
-
-    menu.addEventListener("mouseenter", () => {
-        isMenuHovered = true;
-        if (hideTimeout != null) {
-            clearTimeout(hideTimeout);
-            hideTimeout = null;
-        }
-    });
-
-    menu.addEventListener("mouseleave", () => {
-        isMenuHovered = false;
-        if (!isToggleFocused && !isElementFocused) {
-            hideDropdown();
-        }
-    });
-
-    toggle.addEventListener("focusin", () => {
-        isToggleFocused = true;
-        menu.style.position = "absolute";
+    function showMenu() {
+        menu.style.position = "fixed";
+        menu.style.width = "fit-content";
         menu.style.zIndex = 9999;
+        menu.classList.add("show");
+
         const dropdownBounds = dropdown.getBoundingClientRect();
         const toggleBounds = toggle.getBoundingClientRect();
         const menuBounds = menu.getBoundingClientRect();
-        if (toggleBounds.bottom + menuBounds.height <= window.innerHeight) {
-            // fits under, thus placing under
-            menu.style.top = (toggleBounds.top - dropdownBounds.top + toggleBounds.height) + "px";
-            menu.style.bottom = "unset";
-        } else {
-            // placing above
-            menu.style.top = "unset";
-            menu.style.bottom = (dropdownBounds.bottom - toggleBounds.bottom + toggleBounds.height) + "px";
+
+        menu.classList.remove("show");
+
+        if (hideTimeout != null) {
+            clearTimeout(hideTimeout);
         }
-        if (toggleBounds.left + menuBounds.width <= window.innerWidth) {
-            console.log(toggleBounds.left, menuBounds.width, window.innerWidth);
-            // align to the left
-            menu.style.left = (toggleBounds.left - dropdownBounds.left) + "px";
-            menu.style.right = "unset";
+
+        if (isMainMenu) {
+            if (toggleBounds.bottom + menuBounds.height <= window.innerHeight) {
+                // fits under, thus placing under
+                menu.style.top = (toggleBounds.top + toggleBounds.height) + "px";
+                menu.style.bottom = "unset";
+            } else {
+                // placing above
+                menu.style.top = "unset";
+                menu.style.top = (toggleBounds.top - menuBounds.height) + "px";
+            }
+            if (toggleBounds.left + menuBounds.width <= window.innerWidth) {
+                // align to the left
+                menu.style.left = toggleBounds.left + "px";
+                menu.style.right = "unset";
+            } else {
+                // align to the right
+                menu.style.left = "unset";
+                menu.style.right = (window.innerWidth - toggleBounds.right) + "px";
+            }
         } else {
-            // align to the right
-            menu.style.left = "unset";
-            menu.style.right = (dropdownBounds.right - toggleBounds.right) + "px";
+            menu.style.top = toggleBounds.top + "px";
+            if (dropdownBounds.right + menuBounds.width <= window.innerWidth) {
+                menu.style.left = (dropdownBounds.left + dropdownBounds.width) + "px";
+                menu.style.right = "unset";
+            } else {
+                // align to the right
+                menu.style.left = "unset";
+                menu.style.left = (dropdownBounds.left - menuBounds.width) + "px";
+            }
+        }
+        menu.classList.add("show");
+        toggle.classList.add("active");
+        document.body.appendChild(menu);
+    }
+
+    function hideMenu() {
+        if (hideTimeout != null) {
+            clearTimeout(hideTimeout);
+        }
+        hideTimeout = setTimeout(() => {
+            hideTimeout = null;
+            menu.classList.remove("show");
+            toggle.classList.remove("active");
+            dropdown.appendChild(menu);
+        }, delay);
+    }
+
+    dropdown.addEventListener("focusin", showMenu);
+    dropdown.addEventListener("focusout", (e) => {
+        const next = e.relatedTarget;
+        if (!dropdown.contains(next) && !menu.contains(next)) {
+            hideMenu();
         }
     });
 
-    toggle.addEventListener("focusout", (event) => {
-        isToggleFocused = false;
-        if (!isElementFocused && !isMenuHovered) {
-            hideDropdown();
+    menu.addEventListener("click", (e) => {
+        const item = e.target.closest("a, button");
+        if (item && !item.closest(".dropdown-toggle")) {
+            hideMenu();
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (
+            !dropdown.contains(e.target) &&
+            !menu.contains(e.target)
+        ) {
+            hideMenu();
         }
     });
 
@@ -750,7 +755,7 @@ function inflateCalendar(container, data, options) {
             } else {
                 nextButton.addEventListener("click", () => {inflateYear(currentYear + 1);});
             }
-            
+
             const toggleWeeklyButton = create(header, "button", "button-inline");
             toggleWeeklyButton.textContent = "❖";
             toggleWeeklyButton.title = "Toggle weekly view";

@@ -1057,7 +1057,6 @@ class Layer {
                 button.innerHTML = `<i class="${iconClass}"></i> ${title}`;
                 button.title = title;
                 button.addEventListener("click", (event) => {
-                    event.stopPropagation();
                     callback();
                 });
             }

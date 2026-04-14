@@ -30,7 +30,6 @@ function bindSaveNoteButtons() {
         form.submit();
     }
     document.getElementById("btn-save-note-exit").addEventListener("click", saveNoteAndExit);
-    document.getElementById("btn-save-note-exit-menu").addEventListener("click", saveNoteAndExit);
 
     const buttonSaveNoteContinue = document.getElementById("btn-save-note-continue");
     if (buttonSaveNoteContinue == null) return;

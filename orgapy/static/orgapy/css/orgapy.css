@@ -847,15 +847,18 @@ input:checked+.toggle-slider+.toggle-text {
     background: var(--bg-primary-hover);
 }
 
-.line .dropdown-toggle {
+.line .dropdown {
     position: absolute;
     right: 0;
     top: 0;
     height: 100%;
     display: flex;
     align-items: center;
-    color: var(--text-muted);
     cursor: pointer;
+}
+
+.line .dropdown-toggle {
+    color: var(--text-muted);
 }
 
 .line .dropdown-toggle:hover {
@@ -978,6 +981,9 @@ input:checked+.toggle-slider+.toggle-text {
     line-height: 1;
     border: 1px solid var(--border-secondary);
     user-select: none;
+    max-width: 32rem;
+    max-height: 50vh;
+    overflow-y: auto;
 }
 
 .menu:empty {
@@ -1011,6 +1017,10 @@ input:checked+.toggle-slider+.toggle-text {
     text-overflow: ellipsis;
 }
 
+.dropdown-toggle:focus-visible {
+    outline: 1px solid var(--accent);
+}
+
 .menu-item:first-child > * {
     border-top-left-radius: .2rem;
     border-top-right-radius: .2rem;
@@ -1034,16 +1044,9 @@ input:checked+.toggle-slider+.toggle-text {
 
 .dropdown > .menu {
     display: none;
-    left: 0;
-    position: absolute;
-    top: 100%;
-    width: fit-content;
 }
 
-.dropdown.active .menu,
-.dropdown .dropdown-toggle:focus+.menu,
-.dropdown .menu:hover,
-.menu-item .dropdown-toggle:hover+.menu {
+.dropdown > .menu.show {
     display: flex;
 }
 
@@ -1056,13 +1059,6 @@ input:checked+.toggle-slider+.toggle-text {
     float: right;
     height: 0;
     line-height: .8rem;
-}
-
-.menu .menu {
-    top: 0;
-    left: 100%;
-    max-height: 320px;
-    overflow-y: auto;
 }
 
 /***** DIALOGS ****************************************************************/

@@ -9,12 +9,6 @@
 <script src="{% static 'orgapy/js/projects.js' %}"></script>
 {% endblock head %}
 
-{% block menu %}
-<li class="menu-item"><a href="{% url 'orgapy:projects' %}"><i class="ri-briefcase-line"></i> All Projects</a></li>
-<hr>
-{{ block.super }}
-{% endblock menu %}
-
 {% block column_main %}
 
 <div class="card">
@@ -39,14 +33,16 @@
 {% if projects %}
 <div class="card card-lines">
     {% for project in projects %}
-    <div class="line dropdown" project-id="{{ project.id }}">
+    <div class="line" project-id="{{ project.id }}">
         <span class="project-status label label-inline {% if project.status == 'FU' %}label-pink{% elif project.status == 'IN' %}label-grey{% elif project.status == 'AR' %}label-purple{% endif %}" status="{{ project.status }}">{{ project.get_status_display | upper }}</span>
         <span class="project-badge{% if project.items_count == 0 %} empty{% elif project.all_completed %} done{% endif %}" {% if project.items_count > 0 and not project.all_completed %}style="background: linear-gradient(90deg,rgba(37, 135, 50, 1){{ project.progress }}%,rgb(48, 48, 48) {{ project.progress }}%)"{% endif %}>{{ project.completed_items_count }}/{{ project.items_count }}</span>
         <a class="link-hidden" href="{{ project.get_absolute_url }}" title="{{ project.reference }}">{{ project.reference }}</a>
-        <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
-        <ul class="menu">
-            <li class="menu-item"><a href="{% url 'orgapy:delete_project' object_id=project.id %}" message="Please confirm deletion of '{{ project.reference }}'" class="button-danger link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
-        </ul>
+        <div class="dropdown">
+            <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
+            <ul class="menu">
+                <li class="menu-item"><a href="{% url 'orgapy:delete_project' object_id=project.id %}" message="Please confirm deletion of '{{ project.reference }}'" class="button-danger link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+            </ul>
+        </div>
     </div>
     {% endfor %}
     {% include 'orgapy/partials/pagination.html' %}

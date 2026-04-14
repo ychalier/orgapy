@@ -1438,7 +1438,7 @@ class ContextMenu {
         this.container = create(document.body, "ul", "contextmenu menu");
         var self = this;
         window.addEventListener("click", () => {
-            self.close();
+           self.close();
         });
     }
 
@@ -1451,7 +1451,8 @@ class ContextMenu {
         let element = create(create(this.container, "li", "menu-item"), "button");
         element.innerHTML = label;
         var self = this;
-        element.addEventListener("click", () => {
+        element.addEventListener("click", (event) => {
+            //event.stopPropagation();
             self.close();
             callback(element);
             return false;
@@ -1462,7 +1463,11 @@ class ContextMenu {
     addMenu(label) {
         let wrapper = create(create(this.container, "li", "menu-item"), "div", "dropdown");
         let item = create(wrapper, "div", "dropdown-toggle");
+        item.tabIndex = 0;
         item.innerHTML = label;
+        item.addEventListener("click", (event) => {
+            event.stopPropagation();
+        })
         let menu = create(wrapper, "ul", "menu");
         menu.addItem = (label, callback) => {
             let element = create(create(menu, "li", "menu-item"), "button");
@@ -1473,6 +1478,7 @@ class ContextMenu {
             });
             return element;
         }
+        bindDropdown(wrapper);
         return menu;
     }
     

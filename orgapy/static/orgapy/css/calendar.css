@@ -1,3 +1,7 @@
+.card:has(#events:empty) {
+    display: none;
+}
+
 #events {
     line-height: 1.6;
 }
