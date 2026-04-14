@@ -2798,11 +2798,13 @@ class Sheet {
         var self = this;
         const dialog = create(document.body, "dialog");
         dialog.setAttribute("closedby", "any");
-        create(dialog, "h3").textContent = "Sort rows";
-        const table = create(create(dialog, "table"), "tbody");
+        const card = create(dialog, "div", "card");
+        create(card, "h2", "card-header").textContent = "Sort rows";
+        const cardBody = create(card, "div", "card-body");
+        const table = create(cardBody, "div", "col");
         for (let k = 0; k < MAX_SORT_KEYS; k++) {
-            const tr = create(table, "tr");
-            const columnSelect = create(create(tr, "td"), "select");
+            const tr = create(table, "div", "row");
+            const columnSelect = create(create(tr, "div"), "select");
             columnSelect.name = "column";
             const nullOption = create(columnSelect, "option");
             nullOption.value = "none";
@@ -2813,7 +2815,7 @@ class Sheet {
                 option.textContent = self.columnNames[jPrime];
             }
             columnSelect.value = k == 0 ? j : "none";
-            const orderingSelect = create(create(tr, "td"), "select");
+            const orderingSelect = create(create(tr, "div"), "select");
             orderingSelect.name = "ordering";
             for (const orderingValue of ["ascending", "descending"]) {
                 const option = create(orderingSelect, "option");
@@ -2822,16 +2824,16 @@ class Sheet {
             }
             orderingSelect.value = "ascending";
         }
-        const bottomRow = create(dialog, "div", "row");
+        const bottomRow = create(card, "div", "card-actions");
+        const buttonSort = create(bottomRow, "button", "active");
+        buttonSort.textContent = "Sort";
         const buttonCancel = create(bottomRow, "button");
         buttonCancel.textContent = "Cancel";
         buttonCancel.onclick = () => {dialog.close()};
-        const buttonSort = create(bottomRow, "button");
-        buttonSort.textContent = "Sort";
         dialog.showModal();
         buttonSort.onclick = () => {
             const orderingKeys = [];
-            for (const tr of table.querySelectorAll("tr")) {
+            for (const tr of table.querySelectorAll("div.row")) {
                 const columnSelect = tr.querySelector("select[name='column']");
                 const orderingSelect = tr.querySelector("select[name='ordering']");
                 if (columnSelect.value != "none") {
