@@ -138,7 +138,6 @@ def api_create_project(request: HttpRequest) -> JsonResponse:
         user=request.user,
         rank=int(max_rank) + 1
     )
-    # TODO: handle title & note
     return JsonResponse({"success": True, "project": project.to_json_dict()})
 
 

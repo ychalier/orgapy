@@ -1048,7 +1048,7 @@ class Layer {
             const buttonsDropdown = create(summary, "span", "dropdown");
 
             const moreButton = create(buttonsDropdown, "a", "button-inline dropdown-toggle");
-            moreButton.innerHTML = ` <i class="ri-more-2-fill"></i>`;
+            moreButton.innerHTML = `<i class="ri-more-2-fill"></i>`;
             moreButton.tabIndex = 0;
 
             const buttonsMenu = create(buttonsDropdown, "ul", "menu");

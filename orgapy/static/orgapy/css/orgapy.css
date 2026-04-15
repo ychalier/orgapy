@@ -341,6 +341,7 @@ button span,
     background: none;
     border: none;
     padding: 0;
+    border-radius: .2rem;
     color: var(--accent);
 }
 
@@ -838,7 +839,7 @@ input:checked+.toggle-slider+.toggle-text {
     border-bottom-left-radius: .2rem;
 }
 
-.search:has(.search-input:focus) {
+.input-categories .search:has(.search-input:focus) {
     outline: none;
 }
 
@@ -869,16 +870,16 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 .navbar .button:hover,
-.navbar .button:focus {
+.navbar .button:not(.dropdown-toggle):focus {
     background-color: var(--bg-primary-hover);
     border-color: var(--border-primary);
 }
 
-.navbar .button.active {
+.navbar .button:not(.dropdown-toggle).active {
     border-color: var(--border-accent);
 }
 
-.navbar .button.active:hover {
+.navbar .button:not(.dropdown-toggle).active:hover {
     background-color: var(--accent-hover);
 }
 
@@ -1088,6 +1089,10 @@ input:checked+.toggle-slider+.toggle-text {
     border-radius: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.dropdown-toggle.active {
+    background: var(--bg-secondary-hover);
 }
 
 .dropdown-toggle:focus-visible {
