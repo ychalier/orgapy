@@ -191,13 +191,13 @@ def view_document_list(
         type_filter: Literal["notes", "sheets", "maps"] | None = None,
         status_filter: Literal["public", "hidden", "deleted", "projects"] | None = None,
         category_filters: str | None = None,
-        sort_key: Literal["creation", "modification", "access", "deletion"] | None = "modification",
+        sort_key: Literal["creation", "modification", "access", "deletion", "title"] | None = "modification",
         page_size: int | None = None,
         kwargs: dict[str, Any] = {},
     ) -> HttpResponse:
     """
     Filter, sort and render a list of documents.
-    
+
     Args:
         request: The incoming HttpRequest from an authenticated user
         template_name: Path to an HTML template.
@@ -257,7 +257,7 @@ def view_document_list(
 
     if sort_key is None:
         s = request.GET.get("sort")
-        sort_key = s if s in ["creation", "modification", "access"] else None # type: ignore
+        sort_key = s if s in ["creation", "modification", "access", "deletion", "title"] else None # type: ignore
     if sort_key:
         attrs["sort"] = sort_key
 
@@ -313,8 +313,13 @@ def view_document_list(
         documents += list(qs)
 
     if sort_key:
-        real_sort_key = "date_" + sort_key
-        documents.sort(key=lambda doc: (doc.pinned, getattr(doc, real_sort_key), doc.date_access), reverse=True)
+        if sort_key == "title":
+            real_sort_key = sort_key
+            documents.sort(key=lambda doc: doc.title)
+        else:
+            real_sort_key = "date_" + sort_key
+            documents.sort(key=lambda doc: getattr(doc, real_sort_key), reverse=True)
+    documents.sort(key=lambda doc: doc.pinned, reverse=True)
 
     paginator = Paginator(documents, page_size)
     page = request.GET.get("page")

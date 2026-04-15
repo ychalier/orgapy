@@ -116,7 +116,7 @@ def view_delete_project(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.view_sheet")
 @permission_required("orgapy.view_map")
 def view_documents(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/documents.html")
+    return view_document_list(request, "orgapy/documents.html", sort_key=None)
 
 
 @permission_required("orgapy.view_category")
