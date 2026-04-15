@@ -1004,6 +1004,7 @@ input:checked+.toggle-slider+.toggle-text {
     border-bottom-right-radius: .4rem;
     align-items: center;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .card-actions button,
@@ -1018,6 +1019,19 @@ input:checked+.toggle-slider+.toggle-text {
 .card-actions .button:not(:hover,:focus),
 .card-actions input[type=submit]:not(:hover,:focus) {
     background: none;
+}
+
+.card--nobottom {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+}
+
+.card-actions--standalone {
+    border-left: 1px solid var(--border-primary);
+    border-right: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--border-primary);
+    z-index: 2;
 }
 
 /***** MENUS AND DROPDOWNS ****************************************************/
