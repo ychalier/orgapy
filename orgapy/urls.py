@@ -19,7 +19,6 @@ urlpatterns = [
     path("notes", views.view_notes, name="notes"),
     path("notes/create", views.view_create_note, name="create_note"),
     path("notes/save", views.view_save_note, name="save_note"),
-    path("notes/notally", views.view_notally, name="notally"),
     path("notes/<object_id>", views.view_note, name="note"),
     path("notes/<object_id>/edit", views.view_edit_note, name="edit_note"),
     path("notes/<object_id>/raw", views.view_export_note, name="export_note"),

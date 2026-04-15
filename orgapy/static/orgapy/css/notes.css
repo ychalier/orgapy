@@ -142,22 +142,6 @@
     }
 }
 
-/* TODO: refactor */
-/***** NOTALLY ****************************************************************/
-
-.raw-note input[type=checkbox] {
-    width: fit-content;
-}
-
-.raw-note:has(input[type=checkbox]:checked) {
-    outline: 1px solid #6b9fc2;
-}
-
-.raw-note .note-content {
-    max-height: 3.6em;
-    overflow: hidden;
-}
-
 /***** SimpleMDE DROPDOWN EXTENSION *******************************************/
 
 .smde-dropdown {
