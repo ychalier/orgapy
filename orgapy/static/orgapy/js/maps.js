@@ -501,8 +501,23 @@ class Feature {
         const header = create(wrapper, "div", "feature-popup-header");
         const label = create(header, "span", "feature-label");
         label.textContent = this.properties.label;
-        const layerLabel = create(header, "span", "feature-layer-label");
+        const subtitle = create(header, "span");
+        const layerLabel = create(subtitle, "span", "feature-layer-label");
         layerLabel.textContent = this.layer.label;
+        const geometrySpan = create(subtitle, "span", "feature-geometry");
+        const length = this.getLength();
+        if (length >= 0) {
+            if (length < 1000) {
+                geometrySpan.textContent = Math.round(length) + " m";
+            } else if (length < 20000) {
+                geometrySpan.textContent = (length / 1000).toFixed(1) + " km";
+            } else {
+                geometrySpan.textContent = (length / 1000).toFixed(0) + " km";
+            }
+        } else {
+            const center = this.getCenter();
+            geometrySpan.textContent = `${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
+        }
         const table = create(create(wrapper, "div", "feature-properties-wrapper"), "div", "feature-properties");
         for (let property in this.properties) {
             if (RESERVERD_PROPERTIES.has(property)) continue;
@@ -856,6 +871,34 @@ class Feature {
         if (this.mapElement != null) {
             this.mapElement.remove();
             this.mapElement = null;
+        }
+    }
+
+    getLength() {
+        if (this.geometry.type == "Point" || this.geometry.type == "MultiPoint") {
+            return -1;
+        } else if (this.geometry.type == "LineString" || this.geometry.type == "MultiLineString") {
+            try {
+                const latlngs = this.mapElement.getLatLngs();
+                let totalDistance = 0;
+                for (let i = 0; i < latlngs.length - 1; i++) {
+                    totalDistance += latlngs[i].distanceTo(latlngs[i + 1]);
+                }
+                return totalDistance; // in meters
+            } catch {
+                return -1;
+            }
+        } else {
+            try {
+                const latlngs = this.mapElement.getLatLngs()[0];
+                let totalDistance = 0;
+                for (let i = 0; i < latlngs.length - 1; i++) {
+                    totalDistance += latlngs[i].distanceTo(latlngs[i + 1]);
+                }
+                return totalDistance; // in meters
+            } catch {
+                return 0;
+            }
         }
     }
 

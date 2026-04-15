@@ -228,6 +228,15 @@
     font-style: italic;
 }
 
+.feature-geometry::before {
+    content: " ";
+}
+
+.feature-geometry {
+    font-size: small;
+    color: var(--text-muted);
+}
+
 .feature-properties-wrapper {
     max-height: min(500px, 40vh);
     overflow: auto;
