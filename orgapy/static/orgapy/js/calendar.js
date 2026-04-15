@@ -16,10 +16,10 @@ class CalendarEvent {
         this.over = new Date() >= this.dtend;
     }
 
-    inflate(container) {
-        let element = create(container, "div", "row")
-        let dotWrapper = create(element, "div", "dropdown");
-        create(dotWrapper, "a", "event-dot dropdown-toggle").tabIndex = 0;
+    inflate(container, deleteCallback) {
+        const element = create(container, "div", "row")
+        const dropdown = create(element, "div", "dropdown");
+        create(dropdown, "a", "event-dot dropdown-toggle").tabIndex = 0;
         if (this.over) {
             element.classList.add("muted");
         }
@@ -30,40 +30,38 @@ class CalendarEvent {
         if (this.location != null && this.location.length > 0) {
             element.title = this.location;
         }
-        let eventActionsList = create(dotWrapper, "ul", "menu");
-        let eventDeleteListItem = create(eventActionsList, "li", "menu-item");
-        let eventDeleteButton = create(eventDeleteListItem, "a", "button-danger");
-        eventDeleteButton.innerHTML = `<i class="ri-delete-bin-line"></i> Delete`;
-        eventDeleteButton.title = "Delete";
+        const menu = create(dropdown, "ul", "menu");
+        const deleteButton = create(create(menu, "li", "menu-item"), "a", "button-danger");
+        deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i> Delete`;
         var self = this;
-        eventDeleteButton.addEventListener("click", () => {
+        deleteButton.onclick = (e) => {
             if (confirm(`Are you sure you want to delete the event '${this.title}'?`) == true) {
-                self.delete();
+                self.delete(deleteCallback);
             }
-        });
-        bindDropdown(dotWrapper);
+        }
+        bindDropdown(dropdown, 100);
     }
 
-    delete() {
+    delete(callback) {
         apiPost("delete-calendar", {href: this.url, calendarid: this.calendarId}, () => {
             toast("Event deleted", 600);
-            fetchEvents(false);
+            callback();
         });
     }
 }
 
-function fetchEvents(force=false) {
+function fetchEvents(eventsContainer, refreshButton, force=false) {
     let url = URL_API + "?action=list-calendars";
     if (force) {
         url = `${url}&force=1`;
     }
     fetch(url).then(res => res.json()).then(data => {
-        let calendarInputEvents = dialogAddEvent.querySelector("select[name='calendarid']");
+        const calendarInputEvents = dialogAddEvent.querySelector("select[name='calendarid']"); //WARN: dialogAddEvent may not exist
         calendarInputEvents.innerHTML = "";
         calendars = {};
         data.calendars.forEach(calendar => {
             calendars[calendar.id] = calendar;
-            let option = create(calendarInputEvents, "option");
+            const option = create(calendarInputEvents, "option");
             option.value = calendar.id;
             option.textContent = calendar.name;
         });
@@ -72,17 +70,17 @@ function fetchEvents(force=false) {
         data.events.forEach(event => {
             events.push(new CalendarEvent(event));
         });
-        inflateCalendar();
+        inflateCalendar(eventsContainer, refreshButton);
     }).catch(err => {
         events = [];
         syncDate = null;
-        inflateCalendar();
+        inflateCalendar(eventsContainer, refreshButton);
     });
 }
 
-function inflateEvents() {
-    let container = document.getElementById("events");
-    container.innerHTML = "";
+function inflateEvents(eventsContainer, refreshButton) {
+    
+    eventsContainer.innerHTML = "";
 
     let days = {};
     events.forEach(event => {
@@ -94,27 +92,29 @@ function inflateEvents() {
     let dates = [...Object.keys(days)];
     dates.sort();
     dates.forEach(date => {
-        const details = create(container, "details");
+        const details = create(eventsContainer, "details");
         details.setAttribute("open", "");
         const summary = create(details, "summary", "minititle");
-        let dt = new Date(date);
+        const dt = new Date(date);
         summary.textContent = dt.toLocaleDateString(dt.locales, {weekday: "long", day: "numeric", month: "short"});
         days[date].sort((a, b) => a.dtstart - b.dtstart);
         days[date].forEach((event) => {
-            event.inflate(details);
+            event.inflate(details, () => {
+                fetchEvents(eventsContainer, refreshButton, false);
+            });
         });
     });
 
 }
 
-function inflateSync() {
+function inflateSync(refreshButton) {
     if (syncDate == null) return;
-    document.getElementById("events-refresh").title = "Last synchronization: " + new Date(syncDate).toLocaleString();
+    refreshButton.title = "Last synchronization: " + new Date(syncDate).toLocaleString();
 }
 
-function inflateCalendar() {
-    inflateEvents();
-    inflateSync();
+function inflateCalendar(eventsContainer, refreshButton) {
+    inflateEvents(eventsContainer, refreshButton);
+    inflateSync(refreshButton);
 }
 
 function onAllDayInputChange() {
@@ -128,35 +128,28 @@ function onAllDayInputChange() {
     }
 }
 
-window.addEventListener("load", () => {
-    document.getElementById("btn-add-event").addEventListener("click", () => {
-        let form = document.getElementById("form-add-event");
-        let formData = new FormData(form);
-        dialogAddEvent.close()
-        fetchApi(form.action, form.method, formData, () => {
-            toast("Event added", 600);
-            if (document.getElementById("events") == null) {
-                window.location.reload();
-            } else {
-                fetchEvents(false);
-            }
-        });
-    });
-
-    document.getElementById("events-refresh").addEventListener("click", () => {
-        if (document.getElementById("events") == null) {
+function onEventSubmit(eventsContainer, eventForm, refreshButton) {
+    let formData = new FormData(eventForm);
+    dialogAddEvent.close()
+    fetchApi(eventForm.action, eventForm.method, formData, () => {
+        toast("Event added", 600);
+        if (eventsContainer == null) {
             window.location.reload();
         } else {
-            fetchEvents(true);
+            fetchEvents(eventsContainer, refreshButton, false);
         }
     });
+}
 
-    document.getElementById("events-add").addEventListener("click", () => {
-        dialogAddEvent.showModal();
-    });
+function onEventRefresh(eventsContainer, refreshButton) {
+    if (eventsContainer == null) {
+        window.location.reload();
+    } else {
+        fetchEvents(eventsContainer, refreshButton, true);
+    }
+}
 
+window.addEventListener("load", () => {
     dialogAddEvent.querySelector("input[name='allday']").addEventListener("change", onAllDayInputChange);
-
     onAllDayInputChange();
-    fetchEvents(false);
 })

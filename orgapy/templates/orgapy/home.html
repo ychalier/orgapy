@@ -25,7 +25,7 @@
 
 <div class="card">
     <div class="card-body">
-        <div id="events" class="coll"></div>
+        <div id="eventsContainer" class="coll"></div>
     </div>
 </div>
 
@@ -54,7 +54,7 @@
 <dialog id="dialogAddEvent" closedby="any">
     <div class="card">
         <h2 class="card-header">Create event</h2>
-        <form id="form-add-event" method="post" action="{% url 'orgapy:api' %}?action=add-event" class="card-body colll">
+        <form id="eventForm" method="post" action="{% url 'orgapy:api' %}?action=add-event" class="card-body colll">
             {% csrf_token %}
             <div>
                 <label>Calendar</label>
@@ -91,7 +91,7 @@
             </div>
         </form>
         <div class="card-actions">
-            <button id="btn-add-event">Add</button>
+            <button id="buttonSubmitEvent">Add</button>
             <button onclick="dialogAddEvent.close()">Cancel</button>
         </div>
     </div>
@@ -104,13 +104,13 @@
 <li class="menu-item"><button id="buttonCreateTask" tabindex="3"><i class="ri-task-line"></i> Task</button></li>
 <li class="menu-item"><button id="buttonCreateObjective" tabindex="3"><i class="ri-focus-2-line"></i> Objective</button></li>
 <li class="menu-item"><button id="buttonCreateProject" tabindex="3"><i class="ri-briefcase-line"></i> Project</button></li>
-<li class="menu-item"><button id="events-add" tabindex="3"><i class="ri-calendar-line"></i> Event</button></li>
+<li class="menu-item"><button id="buttonCreateEvent" tabindex="3"><i class="ri-calendar-line"></i> Event</button></li>
 <hr>
 {{ block.super }}
 {% endblock menu_create %}
 
 {% block menu %}
-<li class="menu-item"><button id="events-refresh" tabindex="3"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
+<li class="menu-item"><button id="buttonRefreshEvents" tabindex="3"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
 <hr>
 {{ block.super }}
 {% endblock menu %}
@@ -118,6 +118,11 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
+fetchEvents(eventsContainer, false);
+buttonCreateEvent.onclick = () => { dialogAddEvent.showModal() };
+buttonSubmitEvent.onclick = () => { onEventSubmit(eventsContainer, eventForm, buttonRefreshEvents) };
+buttonRefreshEvents.onclick = () => { onEventRefresh(eventsContainer, buttonRefreshEvents) };
+
 bindTaskDialog(dialogTask, () => { fetchAndInflateTasks(tasksContainer) });
 fetchAndInflateTasks(tasksContainer, dialogTask);
 buttonCreateTask.onclick = () => {openTaskDialog(dialogTask);}

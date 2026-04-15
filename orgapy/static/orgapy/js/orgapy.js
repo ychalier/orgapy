@@ -392,14 +392,13 @@ function toast(message, duration) {
     }, duration);
 }
 
-function bindDropdown(dropdown) {
+function bindDropdown(dropdown, delay=10) {
 
     var hideTimeout = null;
 
     const toggle = dropdown.querySelector(".dropdown-toggle");
     const menu = dropdown.querySelector(".menu");
     const isMainMenu = !dropdown.parentElement.classList.contains("menu-item"); 
-    const delay = 10;
 
     function showMenu() {
         menu.style.position = "fixed";
@@ -480,10 +479,7 @@ function bindDropdown(dropdown) {
     });
 
     document.addEventListener("click", (e) => {
-        if (
-            !dropdown.contains(e.target) &&
-            !menu.contains(e.target)
-        ) {
+        if (!dropdown.contains(e.target) && !menu.contains(e.target)) {
             hideMenu();
         }
     });

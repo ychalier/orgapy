@@ -51,10 +51,10 @@
 </div>
 <div class="col">
     <div class="row">
-        <button id="btn-add-project" class="button-primary" title="Add project"><i class="ri-add-line"></i> Create project</button>
+        <button id="buttonAddProject" class="button-primary" title="Add project"><i class="ri-add-line"></i> Create project</button>
         <a class="button button-primary {% if note.archived_projects_count == 0 %}disabled{% endif %}" href="{% url 'orgapy:projects' %}?note={{ note.id }}&status=AR"><i class="ri-briefcase-line"></i> View archived ({{ note.archived_projects_count }})</a>
     </div>
-    <div id="noteProjects" class="col"></div>
+    <div id="projectsContainer" class="col"></div>
 </div>
 {% endblock column_side %}
 
@@ -64,10 +64,9 @@
     markdownToHtml(".card-note", true, true);
     {% if not readonly %}bindWidgets({{ note.id }});{% endif %}
     createToc(cardNote, document.querySelector("#toc"));
-    const projectsDetails = noteProjects.parentElement;
+    const projectsDetails = projectsContainer.parentElement;
     window.addEventListener("load", () => {
-        const projectsContainer = document.getElementById("noteProjects");
-        document.getElementById("btn-add-project").addEventListener("click", () => {
+        buttonAddProject.addEventListener("click", () => {
             projectsDetails.setAttribute("open", true);
             onButtonProjectCreate(projectsContainer, {
                 id: "{{ note.id }}",

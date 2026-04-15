@@ -22,21 +22,18 @@ function createToc(contentContainer, tocContainer) {
     });
 }
 
-function bindSaveNoteButtons() {
-
-    const form = document.getElementById("form-note-edit-primary");
+function bindSaveNoteButtons(form, buttonSaveExit, buttonSaveContinue) {
         
     function saveNoteAndExit() {
         form.submit();
     }
-    document.getElementById("btn-save-note-exit").addEventListener("click", saveNoteAndExit);
+    buttonSaveExit.addEventListener("click", saveNoteAndExit);
 
-    const buttonSaveNoteContinue = document.getElementById("btn-save-note-continue");
-    if (buttonSaveNoteContinue == null) return;
-    buttonSaveNoteContinue.setAttribute("disabled", "");
-    buttonSaveNoteContinue.addEventListener("click", (event) => {
+    if (buttonSaveContinue == null) return;
+    buttonSaveContinue.setAttribute("disabled", "");
+    buttonSaveContinue.addEventListener("click", (event) => {
         event.preventDefault();
-        buttonSaveNoteContinue.setAttribute("disabled", "");
+        buttonSaveContinue.setAttribute("disabled", "");
         const formdata = new FormData(form);
         fetch(form.action, {method: form.method, body: formdata}).then(res => {
             if (res.status == 200) {
@@ -51,7 +48,7 @@ function bindSaveNoteButtons() {
     });
     document.querySelectorAll("input,textarea").forEach(input => {
         input.addEventListener("input", () => {
-            buttonSaveNoteContinue.removeAttribute("disabled");
+            buttonSaveContinue.removeAttribute("disabled");
         });
     });
 }

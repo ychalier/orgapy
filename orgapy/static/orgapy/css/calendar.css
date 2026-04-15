@@ -1,8 +1,8 @@
-.card:has(#events:empty) {
+.card:has(#eventsContainer:empty) {
     display: none;
 }
 
-#events {
+#eventsContainer {
     line-height: 1.6;
 }
 

@@ -13,7 +13,7 @@
 
 {% block column_main %}
 
-<form id="form-note-edit-primary" action="{% url 'orgapy:save_note' %}" method="post">
+<form id="noteForm" action="{% url 'orgapy:save_note' %}" method="post">
     {% csrf_token %}
     {% if note %}
     <input type="hidden" name="id" value="{{note.id}}">
@@ -28,11 +28,11 @@
         </h1>
         <div class="card-body">{% include 'orgapy/partials/categories_input.html' with obj=note %}</div>
         <div class="card-actions">
-            <button id="btn-save-note-exit"><i class="ri-save-line"></i> Save</button>
-            {% block save_and_continue %}<button id="btn-save-note-continue"><i class="ri-save-line"></i> Save and continue</button>{% endblock %}
+            <button id="buttonSaveExit"><i class="ri-save-line"></i> Save</button>
+            {% block save_and_continue %}<button id="buttonSaveContinue"><i class="ri-save-line"></i> Save and continue</button>{% endblock %}
         </div>
     </header>
-    <textarea class="note-form-content" id="input-content" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
+    <textarea class="note-form-content" id="noteContentInput" name="content" placeholder="Write content using Markdown">{{ note.content }}</textarea>
 </form>
 
 {% endblock column_main %}
@@ -42,13 +42,13 @@
 <script>
     if (window.innerWidth > 800) {
         const simplemde = new SimpleMDE({
-            element: document.getElementById("input-content"),
+            element: noteContentInput,
             autoDownloadFontAwesome: false,
             autofocus: true,
             autosave: false,
             forceSync: true, // ?
             indentWithTabs: false,
-            initialValue: document.getElementById("input-content").value,
+            initialValue: noteContentInput.value,
             lineWrapping: true,
             status: false,
             toolbar: false,
@@ -61,15 +61,14 @@
         });
         simplemde.codemirror.on("cursorActivity", onCmCursorActivity);
         simplemde.codemirror.on("change", () => {
-            const btnSaveNoteContinue = document.getElementById("btn-save-note-continue");
-            if (btnSaveNoteContinue != null) btnSaveNoteContinue.removeAttribute("disabled");
+            if (buttonSaveContinue != null) buttonSaveContinue.removeAttribute("disabled");
         });
         window.addEventListener("load", () => {
             simplemde.codemirror.refresh();
         });
     } else {
-        document.getElementById("input-content").style.height = (window.innerHeight - 290) + "px";
+        noteContentInput.style.height = (window.innerHeight - 290) + "px";
     }
-    bindSaveNoteButtons();
+    bindSaveNoteButtons(noteForm, buttonSaveExit, buttonSaveContinue);
 </script>
 {% endblock body_scripts %}
