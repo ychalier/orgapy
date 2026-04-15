@@ -1541,37 +1541,30 @@ class Map {
         if (query == "") return;
 
         if (query.match(/^\-?\d+(\.\d+)? *, *\-?\d+(\.\d+)?$/g)) {
-            this.onSearchResult({
-                lat: parseFloat(query.split(",")[0]),
-                lon: parseFloat(query.split(",")[1]),
-                label: "GPS Point"
-            });
+            this.onSearchResult(query.split(",")[0], query.split(",")[1], {label: "GPS Point"});
         } else {
             const url = `https://nominatim.openstreetmap.org/search?q=${encodeURI(query)}&format=jsonv2`;
             fetch(url).then(res => res.json()).then(results => {
                 if (results.length == 0) {
                     alert("No result found");
                     return;
+                } else if (results.length == 1) {
+                    self.onSearchResult(results[0].lat, results[0].lon, {label: results[0].name, address: results[0].display_name});
+                } else {
+                    self.openSearchResultsDialog(query, results);
                 }
-                //TODO?: handle choice between multiple results
-                let bestResult = results[0];
-                self.onSearchResult({
-                    lat: bestResult.lat,
-                    lon: bestResult.lon,
-                    label: bestResult.display_name
-                });
-            });
+            })
         }
 
-        const searchbar = this.dashboardContainer.querySelector("form.search-form input[type=search]");
+        const searchbar = this.dashboardContainer.querySelector("form.search input[type=search]");
         searchbar.value = "";
         this.showAllFeatures();
 
     }
 
-    onSearchResult(result) {
-        const marker = new L.marker([parseFloat(result.lat), parseFloat(result.lon)]);
-        const feature = this.getSelectedLayer().addFeatureFromMapElement(marker, {label: result.label});
+    onSearchResult(latitude, longitude, properties) {
+        const marker = new L.marker([parseFloat(latitude), parseFloat(longitude)]);
+        const feature = this.getSelectedLayer().addFeatureFromMapElement(marker, properties);
         this.leafletMap.panTo(marker.getLatLng());
         feature.mapElement.openPopup();
     }
@@ -1625,18 +1618,19 @@ class Map {
             }
         }
 
-        const searchWrapper = create(this.dashboardContainer, "form", "search");
-        const searchForm = create(searchWrapper, "div", "search-bar");
-        const searchInput = create(searchForm, "input", "search-input");
+        const searchForm = create(this.dashboardContainer, "form", "search");
+        const searchBar = create(searchForm, "div", "search-bar");
+        const searchInput = create(searchBar, "input", "search-input");
         searchInput.type = "search";
         searchInput.placeholder = "Search feature or location";
-        const searchButton = create(searchForm, "button", "search-button");
+        const searchButton = create(searchBar, "button", "search-button");
         searchButton.innerHTML = `<i class="ri-search-line"></i>`;
         searchButton.title = "Search";
         searchInput.oninput = () => {
             self.onSearchFeature(searchInput.value);
         };
         searchForm.onsubmit = (e) => {
+            console.log()
             e.preventDefault();
             self.onSearchSubmit(searchInput.value);
         }
@@ -1901,6 +1895,11 @@ class Map {
         new LayerStyleDialog(this).open();
     }
 
+    openSearchResultsDialog(searchQuery, searchResults) {
+        if (this.readonly) return;
+        new SearchResultsDialog(this, searchQuery, searchResults).open();
+    }
+
     toGeojson() {
         let layerArray = [];
         this.layers.forEach(layer => {
@@ -1950,13 +1949,20 @@ class Dialog {
         this.container = null;
     }
 
-    open() {
+    open(openAsModal=true) {
         var self = this;
         document.querySelectorAll("dialog").forEach(remove);
         this.element = create(document.body, "dialog");
-        this.element.setAttribute("closedby", "any");
+        this.element.onclose = () => {self.close()}
         this.container = create(this.element, "div", "card");
-        this.element.showModal();
+        if (openAsModal) {
+            this.element.setAttribute("closedby", "any");
+            this.element.showModal();
+        } else {
+            this.element.setAttribute("closedby", "closerequest");
+            this.element.classList.add("dialog--bottom");
+            this.element.show();
+        }
     }
 
     close() {
@@ -2119,6 +2125,64 @@ class MoveFeatureDialog extends Dialog {
             srcLayer.deleteFeature(self.featureIndex);
         });
     }
+
+}
+
+class SearchResultsDialog extends Dialog {
+
+    constructor(map, query, results) {
+        super();
+        this.map = map;
+        this.query = query;
+        this.results = results;
+        this.featureGroup = null;
+    }
+
+    open() {
+        var self = this;
+        super.open(false);
+        this.featureGroup = new L.featureGroup().addTo(this.map.leafletMap);
+        create(this.container, "h2", "card-header").textContent = this.query;
+        const body = create(this.container, "div", "card-body search-results");
+        body.style.maxHeight = "9rem";
+        body.style.overflow = "auto";
+        const actions = create(this.container, "div", "card-actions");
+        const closeButton = create(actions, "button");
+        closeButton.textContent = "Close";
+        closeButton.onclick = () => {self.close()};
+        for (const result of this.results) {
+            const resultEl = create(body, "div", "search-result");
+            resultEl.setAttribute("lat", result.lat);
+            resultEl.setAttribute("lon", result.lon);
+            const leftCol = create(resultEl, "div");
+            const selectButton = create(leftCol, "button");
+            selectButton.innerHTML = "<i class='ri-map-pin-line'></i>";
+            const rightCol = create(resultEl, "div", "col");
+            const primaryRow = create(rightCol, "div", "row");
+            create(primaryRow, "span").textContent = result.name;
+            const link = create(primaryRow, "a", "small link-hidden");
+            link.href = `https://www.openstreetmap.org/${result.osm_type}/${result.osm_id}`
+            link.innerHTML = `<i class="ri-arrow-left-up-box-line"></i> OSM`
+            const secondaryRow = create(rightCol, "div", "row hint");
+            create(secondaryRow, "span", "hint").textContent = result.display_name;
+            const marker = new L.Marker([parseFloat(result.lat), parseFloat(result.lon)], {icon: MYLOCATION_ICON});
+            this.featureGroup.addLayer(marker);
+            rightCol.onclick = () => {
+                self.map.leafletMap.flyTo([parseFloat(result.lat), parseFloat(result.lon)], self.map.leafletMap.getZoom(), {duration: 0.3});
+            };
+            selectButton.onclick = (e) => {
+                e.stopPropagation();
+                self.map.onSearchResult(result.lat, result.lon, {label: result.name, address: result.display_name});
+                self.close();
+            };
+        }
+    }
+
+    close() {
+        this.featureGroup?.remove();
+        super.close();
+    }
+
 
 }
 

@@ -359,6 +359,29 @@
     width: 3rem;
 }
 
+/***** SEARCH RESULTS *********************************************************/
+
+.search-results {
+    border-top: 1px solid var(--border-primary);
+    background: var(--bg-primary-alt);
+    padding: .4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.search-result {
+    display: flex;
+    gap: .4rem;
+    padding: .4rem;
+    border-radius: .2rem;
+    cursor: pointer;
+}
+
+.search-result:hover {
+    background-color: var(--bg-primary-hover);
+}
+
 /***** RESPONSIVE LAYOUT ******************************************************/
 
 @media (max-width: 500px) {

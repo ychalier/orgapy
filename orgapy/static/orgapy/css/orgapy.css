@@ -1165,6 +1165,13 @@ dialog > .card {
     box-shadow: 0 0 2px black;
 }
 
+.dialog--bottom {
+    position: fixed;
+    bottom: .8rem;
+    max-width: 100%;
+    z-index: 1001;
+}
+
 /***** CALENDAR ***************************************************************/
 
 .calendar {
@@ -1301,6 +1308,10 @@ dialog > .card {
 
 .row:empty {
     display: none;
+}
+
+.row--nowrap {
+    flex-wrap: nowrap;
 }
 
 .col,
