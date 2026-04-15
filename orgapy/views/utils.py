@@ -1,13 +1,13 @@
 import datetime
 import json
 import re
-from typing import Literal, TypeVar
+from typing import Literal, TypeVar, Any
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Page, Paginator
-from django.db.models import QuerySet, Q
+from django.db.models import Q
 from django.http import HttpRequest, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -184,134 +184,148 @@ def get_or_create_settings(user: LoggedUser) -> Settings:
     return Settings.objects.create(user=user)
 
 
-def select_documents(
+def view_document_list(
         request: HttpRequest,
-        model: type[DocumentT],
-        base: QuerySet[DocumentT] | None = None,
-        **boolattrs: bool,
-        ) -> tuple[QuerySet[DocumentT], dict]:
-    if base is None:
-        documents = model.objects.filter(user=request.user)
-    else:
-        documents = base.filter(user=request.user)
-    attrs = {}
-    query = request.GET.get("query", "")
-    attrs["query"] = query
-    hidden_is_set = False
-    deleted_is_set = False
-    for boolattr in ["hidden", "public", "pinned", "deleted"]:
-        if boolattr in request.GET or boolattr in boolattrs:
-            if boolattr == "hidden":
-                hidden_is_set = True
-            elif boolattr == "deleted":
-                deleted_is_set = True
-            if boolattr in request.GET:
-                filter_value = bool(int(request.GET[boolattr]))
-                query_value = request.GET[boolattr]
-            else:
-                filter_value = boolattrs[boolattr]
-                query_value = str(int(boolattrs[boolattr]))
-            documents = documents.filter(**{boolattr: filter_value})
-            attrs[boolattr] = query_value
-        elif boolattr == query:
-            if boolattr == "hidden":
-                hidden_is_set = True
-            query = query.replace(boolattr, "")
-            documents = documents.filter(**{boolattr: True})
-    if not hidden_is_set:
-        documents = documents.exclude(hidden=True)
-    if not deleted_is_set:
-        documents = documents.exclude(deleted=True)
-    if query:
-        category_pattern = re.compile(r"#([a-zA-Z0-9]+)")
-        spaces_pattern = re.compile(r" +")
-        for name in category_pattern.findall(query):
-            if name == "uncategorized":
-                documents = documents.filter(categories__isnull=True)
-            else:
-                documents = documents.filter(categories__name__exact=name)
-        query = spaces_pattern.sub(" ", category_pattern.sub("", query)).strip()
-        if query:
-            if model == Note:
-                documents = documents.filter(Q(title__icontains=query) | Q(content__icontains=query))
-            elif model == Sheet:
-                documents = documents.filter(Q(title__icontains=query) | Q(data__icontains=query))
-            else:
-                documents = documents.filter(title__icontains=query)
-    return documents, attrs
-
-
-def render_documents(
-        request: HttpRequest,
-        documents: QuerySet[DocumentT] | list[Note | Sheet | Map],
         template_name: str,
-        attrs: dict,
-        page_size: int = 25,
-        **kwargs):
-    mixed = isinstance(documents, list)
+        search_query: str | None = None,
+        type_filter: Literal["notes", "sheets", "maps"] | None = None,
+        status_filter: Literal["public", "hidden", "deleted", "projects"] | None = None,
+        category_filters: str | None = None,
+        sort_key: Literal["creation", "modification", "access", "deletion"] | None = "modification",
+        page_size: int | None = None,
+        kwargs: dict[str, Any] = {},
+    ) -> HttpResponse:
+    """
+    Filter, sort and render a list of documents.
+    
+    Args:
+        request: The incoming HttpRequest from an authenticated user
+        template_name: Path to an HTML template.
+            Must extend layout/objects.html
+        search_query: Text query for filtering document titles or content (for notes and sheets)
+        type_filter: Filter document type.
+            If None, uses GET params.
+        status_filter: Filter document status.
+            If None, uses GET params.
+            If not 'hidden', hidden document will be excluded.
+            If not 'deleted', deleted documents will be excluded.
+            If 'projects', only notes with ongoing (ie. not archived) projects are shown.
+        category_filters: Filter document categories.
+            If None, uses GET params.
+            Specify category names. Multiple names can be passed, separated by semi-colons (;).
+            If multiple names are passed, documents must have all listed categories to be selected.
+            If the name 'uncategorized' is passed, filters documents without any categories.
+        sort_key: Sort documents, in decreasing order.
+            If None, uses GET params.
+            Pinned documents will always appear first.
+        page_size: Number of documents per page.
+        kwargs: Any arguments to be passed to the template.
+    """
+
+    attrs = {}
+
+    if page_size is None:
+        page_size = int(request.GET.get("size", 25))
+    if page_size != 25:
+        attrs["size"] = page_size
+
+    if search_query is None:
+        search_query = request.GET.get("query")
+    if search_query:
+        attrs["query"] = search_query
+
+    if type_filter is None:
+        s = request.GET.get("type")
+        type_filter = s if s in ["notes", "sheets", "maps"] else None # type: ignore
+    if type_filter:
+        attrs["type"] = type_filter
+
+    if status_filter is None:
+        s = request.GET.get("status")
+        status_filter = s if s in ["public", "hidden", "deleted", "projects"] else None # type: ignore
+    if status_filter:
+        attrs["status"] = status_filter
+
+    category_ids: list[int] = []
+    filter_uncategorized = False
+    if category_filters is None:
+        category_filters = request.GET.get("categories")
+    if category_filters:
+        attrs["categories"] = category_filters
+        category_ids = [c.id for c in Category.objects.filter(user=request.user, name__in=category_filters.split(";"))]
+        filter_uncategorized = "uncategorized" in category_filters.split(";")
+
+    if sort_key is None:
+        s = request.GET.get("sort")
+        sort_key = s if s in ["creation", "modification", "access"] else None # type: ignore
+    if sort_key:
+        attrs["sort"] = sort_key
+
+    documents = []
+
+    base_models: list[type[Document]] = []
+    if type_filter is None:
+        base_models = [Note, Sheet, Map]
+    elif type_filter == "notes":
+        base_models = [Note]
+    elif type_filter == "sheets":
+        base_models = [Sheet]
+    elif type_filter == "maps":
+        base_models = [Map]
+
+    category_pattern = re.compile(r"#([a-zA-Z0-9]+)")
+    spaces_pattern = re.compile(r" +")
+
+    for base_model in base_models:
+        qs = base_model.objects.filter(user=request.user)
+        if status_filter == "public":
+            qs = qs.filter(public=True)
+        if status_filter == "hidden":
+            qs = qs.filter(hidden=True)
+        else:
+            qs = qs.filter(hidden=False)
+        if status_filter == "projects":
+            if base_model != Note:
+                continue
+            qs = qs.filter(project__status__in=[Project.ACTIVE, Project.INACTIVE, Project.FUTURE]).distinct()
+        if status_filter == "deleted":
+            qs = qs.filter(deleted=True)
+        else:
+            qs = qs.filter(deleted=False)
+        for category_id in category_ids:
+            qs = qs.filter(categories__in=[category_id])
+        if filter_uncategorized:
+            qs = qs.filter(categories__isnull=True)
+        if search_query:
+            for name in category_pattern.findall(search_query):
+                if name == "uncategorized":
+                    qs = qs.filter(categories__isnull=True)
+                else:
+                    qs = qs.filter(categories__name__exact=name)
+            search_query = spaces_pattern.sub(" ", category_pattern.sub("", search_query)).strip()
+            if search_query:
+                if base_model == Note:
+                    qs = qs.filter(Q(title__icontains=search_query) | Q(content__icontains=search_query))
+                elif base_model == Sheet:
+                    qs = qs.filter(Q(title__icontains=search_query) | Q(data__icontains=search_query))
+                else:
+                    qs = qs.filter(title__icontains=search_query)
+        documents += list(qs)
+
+    if sort_key:
+        real_sort_key = "date_" + sort_key
+        documents.sort(key=lambda doc: (doc.pinned, getattr(doc, real_sort_key), doc.date_access), reverse=True)
+
     paginator = Paginator(documents, page_size)
     page = request.GET.get("page")
     objects = paginator.get_page(page)
     return render(request, template_name, {
         "active": "documents",
-        "mixed": mixed,
         "objects": objects,
         "query": attrs.get("query", ""),
         "paginator": pretty_paginator(objects, **attrs),
         **kwargs
     })
-
-
-def view_documents_single(
-        request: HttpRequest,
-        model: type[DocumentT],
-        template_name: str,
-        active: str,
-        ) -> HttpResponse:
-    documents, attrs = select_documents(request, model)
-    documents = documents.order_by(
-        "-pinned",
-        "-date_modification",
-        "-date_access",
-    )
-    return render_documents(request, documents, template_name, attrs, active=active)
-
-
-def view_documents_mixed(
-        request: HttpRequest,
-        template_name: str,
-        category: Category | Literal["uncategorized"] | Literal["projects"] | None = None,
-        **boolargs: bool) -> HttpResponse:
-    base_notes = base_sheets = base_maps = None
-    if isinstance(category, Category):
-        base_notes = category.notes.all() # type: ignore
-        base_sheets = category.sheets.all() # type: ignore
-        base_maps = category.maps.all() # type: ignore
-        category_arg = category
-    elif category == "uncategorized":
-        base_notes = Note.objects.filter(categories__isnull=True)
-        base_sheets = Sheet.objects.filter(categories__isnull=True)
-        base_maps = Map.objects.filter(categories__isnull=True)
-        category_arg = {
-            "name": "uncategorized",
-            "id": -1
-        }
-    elif category == "projects":
-        base_notes = Note.objects.filter(project__isnull=False)
-        base_sheets = Sheet.objects.none()
-        base_maps = Map.objects.none()
-        category_arg = {
-            "name": "projects",
-            "id": -1
-        }
-    else:
-        category_arg = category
-    notes, attrs = select_documents(request, Note, base_notes, **boolargs)
-    sheets, _ = select_documents(request, Sheet, base_sheets, **boolargs)
-    maps, _ = select_documents(request, Map, base_maps, **boolargs)
-    documents = list(notes) + list(sheets) + list(maps)
-    documents.sort(key=lambda document: (document.pinned, document.date_modification, document.date_access), reverse=True)
-    return render_documents(request, documents, template_name, attrs, category=category_arg)
 
 
 def toggle_object_attribute(request: HttpRequest, active: str, object_id: str, attrname: str) -> HttpResponse:

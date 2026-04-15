@@ -212,6 +212,11 @@ summary:focus-visible {
 
 /***** FORMS, INPUTS **********************************************************/
 
+form:focus,
+form:has(:focus) {
+    outline: none !important;
+}
+
 input,
 select,
 textarea {
@@ -650,6 +655,7 @@ input:checked+.toggle-slider+.toggle-text {
     background-color: var(--bg-secondary);
     width: fit-content;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .actionbar > * {
@@ -658,6 +664,11 @@ input:checked+.toggle-slider+.toggle-text {
     border-top: none;
     border-bottom: none;
     border-color: var(--border-secondary) !important;
+}
+
+.actionbar label {
+    padding: .4rem;
+    color: var(--text-muted);
 }
 
 .actionbar > *:first-child {
@@ -690,6 +701,14 @@ input:checked+.toggle-slider+.toggle-text {
     border-top-right-radius: 0;
     border-bottom-left-radius: .2rem;
     border-bottom: none;
+}
+
+.actionbar :focus {
+    outline: none;
+}
+
+.actionbar:has(:focus) {
+    outline: 1px solid var(--accent);
 }
 
 /***** SEARCH *****************************************************************/
@@ -779,12 +798,52 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 @media (max-width: 800px) {
-    #searchForm {
+    .navbar #searchForm {
         display: none;
     }
-    #searchButton {
+    .navbar #searchButton {
         display: block;
     }
+}
+
+/***** CATEGORIES INPUT *******************************************************/
+
+.input-categories {
+    display: flex;
+    width: fit-content;
+    border-radius: .2rem;
+}
+
+.input-categories-current button {
+    border-radius: 0;
+    border-right: none;
+}
+
+.input-categories-current button:first-child {
+    border-top-left-radius: .2rem;
+    border-bottom-left-radius: .2rem;
+}
+
+.input-categories .search,
+.input-categories .search-bar,
+.input-categories .search-input {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.input-categories .input-categories-current:empty + .search,
+.input-categories .input-categories-current:empty + .search .search-bar,
+.input-categories .input-categories-current:empty + .search .search-input {
+    border-top-left-radius: .2rem;
+    border-bottom-left-radius: .2rem;
+}
+
+.search:has(.search-input:focus) {
+    outline: none;
+}
+
+.input-categories:has(:focus) {
+    outline: 1px solid var(--accent);
 }
 
 /***** NAVBAR *****************************************************************/
@@ -1221,6 +1280,10 @@ dialog > .card {
     width: fit-content;
 }
 
+.row:empty {
+    display: none;
+}
+
 .col,
 .coll,
 .colll {
@@ -1281,4 +1344,8 @@ dialog > .card {
 
 .invert {
     filter: invert();
+}
+
+.small {
+    font-size: small;
 }

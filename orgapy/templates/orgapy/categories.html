@@ -4,7 +4,6 @@
 {% block title %}Categories{% endblock title %}
 
 {% block column_main %}
-
 <div class="card card-lines">
     <h1 class="card-header">Categories</h1>
     {% for special, count in specials.items %}
@@ -13,7 +12,6 @@
         <a class="link-hidden" href="{% url 'orgapy:category' name=special %}">{{ special | capfirst}}</a>
     </div>
     {% endfor %}
-
     {% for category in categories %}
     <div class="line">
         <span class="label {% if category.count == 0 %}label-red{% endif %}">{{ category.count }}</span>
@@ -21,5 +19,4 @@
     </div>
     {% endfor %}
 </div>
-
 {% endblock column_main %}

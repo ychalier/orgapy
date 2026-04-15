@@ -519,7 +519,7 @@ function bindSearchButton(form, button) {
 
 function setupCategoryInput(container) {
 
-    const currentContainer = container.querySelector(".categories-input-current");
+    const currentContainer = container.querySelector(".input-categories-current");
     const searchInput = container.querySelector(".search-input");
     var categories;
 
@@ -573,7 +573,8 @@ function setupCategoryInput(container) {
         element.textContent = state.entry.title.slice(1);
         return element;
     }, (entry) => {
-        pushCategory(entry.title.slice(1));
+        if (entry != null) pushCategory(entry.title.slice(1));
+        searchObject.clear();
     });
 
     const inputEndChars = " ,;";

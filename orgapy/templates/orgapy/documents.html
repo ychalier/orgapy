@@ -1,2 +1,72 @@
 {% extends "orgapy/layout/objects.html" %}
 {% block title %}Documents{% endblock title %}
+{% block search %}{% endblock search %}
+{% block content_title %}
+<form id="searchForm" class="search" action="{% url 'orgapy:documents' %}" method="get">
+    <div class="card">
+        <div class="card-body col">
+            <div class="search">
+                <div class="search-bar">
+                    <input class="search-input" autocomplete="off" type="search" name="query" placeholder="Search" tabindex="1" value="{% if query %}{{query}}{% endif %}" />
+                    <i class="search-icon ri-close-line"></i>
+                    <button class="search-button" tabindex="-1"><i class="ri-search-line"></i></button>
+                </div>
+                <ul class="search-suggestions menu"></ul>
+            </div>
+            <div class="row small">
+                <div class="actionbar">
+                    <label for="selectSearchType">Filter</label>
+                    <select id="selectSearchType" name="type" style="border-right: none">
+                        <option {% if request.GET.type == 'all' %}selected{% endif %} value="all">All types</option>
+                        <option {% if request.GET.type == 'notes' %}selected{% endif %} value="notes">Notes</option>
+                        <option {% if request.GET.type == 'sheets' %}selected{% endif %} value="sheets">Sheets</option>
+                        <option {% if request.GET.type == 'maps' %}selected{% endif %} value="maps">Maps</option>
+                    </select>
+                    <select name="status">
+                        <option {% if request.GET.status == 'any' %}selected{% endif %} value="any">Any status</option>
+                        <option {% if request.GET.status == 'projects' %}selected{% endif %} value="projects">Projects</option>
+                        <option {% if request.GET.status == 'public' %}selected{% endif %} value="public">Public</option>
+                        <option {% if request.GET.status == 'hidden' %}selected{% endif %} value="hidden">Hidden</option>
+                    </select>
+                </div>
+                <div class="actionbar">
+                    <label for="selectSearchSort">Sort by</label>
+                    <select id="selectSearchSort" name="sort">
+                        <option {% if request.GET.sort == 'creation' %}selected{% endif %} value="creation">Creation</option>
+                        <option {% if request.GET.sort == 'modification' or not request.GET.sort %}selected{% endif %} value="modification">Modification</option>
+                        <option {% if request.GET.sort == 'access' %}selected{% endif %} value="access">Access</option>
+                    </select>
+                </div>
+                {% include 'orgapy/partials/categories_input.html' %}
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+bindSearch(
+    searchForm,
+    "suggestions",
+    (state) => {
+        const element = create(state.container, "a");
+        element.href = state.entry.url;
+        let prefix = "";
+        switch (state.entry.active) {
+            case "notes":
+                prefix = `<i class="ri-sticky-note-line"></i> `;
+                break;
+            case "sheets":
+                prefix = `<i class="ri-table-line"></i> `;
+                break;
+            case "maps":
+                prefix = `<i class="ri-map-2-line"></i> `;
+                break;
+        }
+        element.innerHTML = `${prefix}<mark>${ state.entry.title.slice(0, state.query.length) }</mark>${ state.entry.title.slice(state.query.length) }`;
+        return element;
+    },
+    (entry) => {
+        if (entry != null) window.location.href = entry.url;
+    }
+);
+</script>
+{% endblock content_title %}

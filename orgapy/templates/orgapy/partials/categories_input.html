@@ -1,9 +1,9 @@
-<div id="categoriesInput" class="row">
-    <input type="hidden" name="categories" value="{% for category in obj.categories.all %}{% if not forloop.first %};{% endif %}{{ category.name }}{% endfor %}" />
-    <div class="categories-input-current row"></div>
+<div id="categoriesInput" class="input-categories">
+    <input type="hidden" name="categories" value="{% if obj %}{% for category in obj.categories.all %}{% if not forloop.first %};{% endif %}{{ category.name }}{% endfor %}{% elif request.GET.categories %}{{ request.GET.categories }}{% endif %}" />
+    <div class="input-categories-current"></div>
     <div class="search">
         <div class="search-bar">
-            <input type="text" placeholder="category" class="search-input" size="10" autocomplete="off" />
+            <input type="text" placeholder="Category" class="search-input" size="10" autocomplete="off" />
         </div>
         <ul class="search-suggestions menu"></ul>
     </div>

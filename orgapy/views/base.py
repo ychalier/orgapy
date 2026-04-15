@@ -31,8 +31,7 @@ from .utils import (
     save_document_core,
     get_or_create_settings,
     toggle_object_attribute,
-    view_documents_single,
-    view_documents_mixed,
+    view_document_list,
     get_pending_mood_logs)
 
 
@@ -117,7 +116,7 @@ def view_delete_project(request: HttpRequest, object_id: str) -> HttpResponse:
 @permission_required("orgapy.view_sheet")
 @permission_required("orgapy.view_map")
 def view_documents(request: HttpRequest) -> HttpResponse:
-    return view_documents_mixed(request, "orgapy/documents.html")
+    return view_document_list(request, "orgapy/documents.html")
 
 
 @permission_required("orgapy.view_category")
@@ -125,12 +124,10 @@ def view_categories(request: HttpRequest) -> HttpResponse:
     uncategorized = Note.objects.filter(user=request.user, categories__isnull=True).count()\
         + Sheet.objects.filter(user=request.user, categories__isnull=True).count()\
         + Map.objects.filter(user=request.user, categories__isnull=True).count()
-    projects = Note.objects.filter(user=request.user, project__isnull=False).count()
     return render(request, "orgapy/categories.html", {
         "categories": Category.objects.filter(user=request.user),
         "specials": {
-            "uncategorized": uncategorized,
-            "projects": projects,
+            "uncategorized": uncategorized
         },
     })
 
@@ -143,12 +140,14 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
         return render(request, f"orgapy/specials/quote.html", {})
     if name == "all":
         return render(request, f"orgapy/specials/all.html", {})
-    category = "uncategorized"
-    if name == "projects":
-        category = "projects"
-    elif name != "uncategorized":
+    if name == "uncategorized":
+        category = {"id": -1, "name": "uncategorized"}
+    else:
         category = find_user_object(Category, "name", name, request.user)
-    return view_documents_mixed(request, "orgapy/category.html", category)
+    return view_document_list(request,
+        "orgapy/category.html",
+        category_filters=name,
+        kwargs={"category": category})
 
 
 @permission_required("orgapy.change_category")
@@ -271,7 +270,7 @@ def view_restore(request: HttpRequest, active: str, object_id: str) -> HttpRespo
 @permission_required("orgapy.delete_note")
 @permission_required("orgapy.delete_sheet")
 @permission_required("orgapy.delete_map")
-def view_destroy(request: HttpRequest, active: str, object_id: str) -> HttpResponse:    
+def view_destroy(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
     try:
         model = {"notes": Note, "sheets": Sheet, "maps": Map}[active]
     except KeyError:
@@ -287,7 +286,7 @@ def view_destroy(request: HttpRequest, active: str, object_id: str) -> HttpRespo
 @permission_required("orgapy.delete_sheet")
 @permission_required("orgapy.delete_map")
 def view_trash(request: HttpRequest) -> HttpResponse:
-    return view_documents_mixed(request, "orgapy/trash.html", None, deleted=True)
+    return view_document_list(request, "orgapy/trash.html", status_filter="deleted", sort_key="deletion")
 
 
 @permission_required("orgapy.delete_note")
@@ -315,7 +314,7 @@ def view_destroy_all(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_note")
 def view_notes(request: HttpRequest) -> HttpResponse:
-    return view_documents_single(request, Note, "orgapy/notes.html", "notes")
+    return view_document_list(request, "orgapy/notes.html", type_filter="notes")
 
 
 @permission_required("orgapy.add_note")
@@ -461,7 +460,7 @@ def view_notally(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_sheet")
 def view_sheets(request: HttpRequest) -> HttpResponse:
-    return view_documents_single(request, Sheet, "orgapy/sheets.html", "sheets")
+    return view_document_list(request, "orgapy/sheets.html", type_filter="sheets")
 
 
 @permission_required("orgapy.add_sheet")
@@ -561,7 +560,7 @@ def view_destroy_sheet(request, object_id: str) -> HttpResponse:
 
 @permission_required("orgapy.view_map")
 def view_maps(request: HttpRequest) -> HttpResponse:
-    return view_documents_single(request, Map, "orgapy/maps.html", "maps")
+    return view_document_list(request, "orgapy/maps.html", type_filter="maps")
 
 
 @permission_required("orgapy.add_map")
