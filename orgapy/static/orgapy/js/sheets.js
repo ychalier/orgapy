@@ -929,7 +929,6 @@ class Selection {
         this.ranges.forEach(range => {
             range.move(di, dj, keepShape);
         });
-        // TODO: merge ranges!
         this.setFilteredRanges();
         this.set();
         this.checkSheetScroll(di < 0);
@@ -939,7 +938,6 @@ class Selection {
         this.ranges.forEach(range => {
             range.expand(di, dj);
         });
-        // TODO: merge ranges!
         this.setFilteredRanges();
         this.set();
         this.checkSheetScroll(di < 0);
