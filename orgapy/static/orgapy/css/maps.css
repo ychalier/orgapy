@@ -387,7 +387,8 @@
     cursor: pointer;
 }
 
-.search-result:hover {
+.search-result:hover,
+.search-result.hover {
     background-color: var(--bg-primary-hover);
 }
 

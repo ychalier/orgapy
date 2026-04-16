@@ -77,6 +77,13 @@ const MYLOCATION_ICON = L.divIcon({
     iconAnchor: [12, 12],
 });
 
+const SEARCHRESULT_ICON = L.divIcon({
+    className: 'marker-icon',
+    html: `<svg viewBox="0 -2 64 68"><path stroke-width="2" stroke="black" fill="#ff0000" d="M 32.875 0 C 20.75 0 15.3125 9.4375 15.3125 16.6875 C 15.3125 30.398224 32.875 38.023232 32.875 64 C 32.875 38.023232 50.4375 30.398224 50.4375 16.6875 C 50.4375 9.4375 45 0 32.875 0 z "/></svg>`,
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+});
+
 const MARKER_ICONS = {
     "circle": L.divIcon({
         className: 'marker-icon',
@@ -2208,17 +2215,24 @@ class SearchResultsDialog extends Dialog {
             link.innerHTML = `<i class="ri-arrow-left-up-box-line"></i> OSM`
             const secondaryRow = create(rightCol, "div", "row hint");
             create(secondaryRow, "span", "hint").textContent = result.display_name;
-            const marker = new L.Marker([parseFloat(result.lat), parseFloat(result.lon)], {icon: MYLOCATION_ICON});
+            const marker = new L.Marker([parseFloat(result.lat), parseFloat(result.lon)], {icon: SEARCHRESULT_ICON});
             this.featureGroup.addLayer(marker);
             rightCol.onclick = () => {
-                self.map.leafletMap.flyTo([parseFloat(result.lat), parseFloat(result.lon)], self.map.leafletMap.getZoom(), {duration: 0.3});
+                self.map.leafletMap.flyTo([parseFloat(result.lat), parseFloat(result.lon)], Math.max(13, self.map.leafletMap.getZoom()), {duration: 0.3});
             };
             selectButton.onclick = (e) => {
                 e.stopPropagation();
                 self.map.onSearchResult(result.lat, result.lon, {label: result.name, address: result.display_name});
                 self.close();
             };
+            marker.on("click", (e) => {
+                self.map.leafletMap.flyTo([parseFloat(result.lat), parseFloat(result.lon)], Math.max(13, self.map.leafletMap.getZoom()), {duration: 0.3});
+                document.querySelectorAll(".search-result.hover").forEach(el => {el.classList.remove("hover")});
+                resultEl.classList.add("hover");
+                resultEl.scrollIntoView();
+            });
         }
+        this.map.leafletMap.fitBounds(this.featureGroup.getBounds());
     }
 
     close() {
