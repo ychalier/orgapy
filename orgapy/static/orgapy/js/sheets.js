@@ -23,6 +23,7 @@ const CTYPE_DURATION = 10;
 const CTYPE_STARS = 11;
 const CTYPE_MARKDOWN = 12;
 const CTYPE_STATUS = 13;
+const CTYPE_TAGS = 14;
 
 const HIGHLIGHT_NONE = -1;
 const HIGHLIGHT_ACCENT = 0;
@@ -1407,6 +1408,26 @@ class ColumnTypeStatus extends ColumnType {
 
 }
 
+class ColumnTypeTags extends ColumnType {
+
+    static ALIGNEMENT = "aleft";
+    static ID = CTYPE_TAGS;
+    static LABEL = "Tags";
+    static INPUT_TAG = "input";
+    static INPUT_TYPE = "text";
+    static USES_DATALIST = true;
+
+    formatHtml(value) {
+        const parts = value.split(/, ?/gm);
+        const htmlBits = [];
+        for (const part of parts) {
+            htmlBits.push(`<span class="label">${part}</span>`);
+        }
+        return `<span style="display: inline-flex; gap: .2rem">` + htmlBits.join("") + "</span>";
+    }
+
+}
+
 
 const COLUMN_TYPES = [
     ColumnTypeText,
@@ -1423,6 +1444,7 @@ const COLUMN_TYPES = [
     ColumnTypeStars,
     ColumnTypeMarkdown,
     ColumnTypeStatus,
+    ColumnTypeTags,
 ];
 
 
