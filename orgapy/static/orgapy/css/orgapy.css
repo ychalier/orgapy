@@ -869,6 +869,10 @@ input:checked+.toggle-slider+.toggle-text {
     border-color: var(--bg-primary);
 }
 
+.navbar .button.active:hover {
+    color: var(--text);
+}
+
 .navbar .button:hover,
 .navbar .button:not(.dropdown-toggle):focus {
     background-color: var(--bg-primary-hover);
