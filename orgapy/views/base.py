@@ -1,7 +1,5 @@
 import datetime
-import json
 
-from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
@@ -18,7 +16,6 @@ from ..models import (
     ProgressCounter,
     ProgressLog,
     Calendar,
-    PushSubscription,
     Project,
     MoodLog,
     Task,
@@ -237,8 +234,6 @@ def view_delete(request: HttpRequest, active: str, object_id: str) -> HttpRespon
         return view_delete_sheet(request, object_id)
     if active == "maps":
         return view_delete_map(request, object_id)
-    elif active == "subscription":
-        return view_delete_subscription(request, object_id)
     raise BadRequest(f"Unknown environment '{active}'")
 
 
@@ -780,8 +775,6 @@ def view_settings(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/settings.html", {
         "settings": user_settings,
         "calendars": calendars,
-        "subscriptions": PushSubscription.objects.filter(user=request.user),
-        "VAPID_PUBLIC_KEY": settings.VAPID_PUBLIC_KEY,
     })
 
 
@@ -814,13 +807,6 @@ def view_calendar_form(request: HttpRequest) -> HttpResponse:
             calendar_name=request.POST["name"],
             sync_period=int(request.POST["sync_period"]),
         )
-    return redirect("orgapy:settings")
-
-
-@permission_required("orgapy.delete_push_subscription")
-def view_delete_subscription(request: HttpRequest, object_id: str) -> HttpResponse:
-    sub = find_user_object(PushSubscription, "id", object_id, request.user)
-    sub.delete()
     return redirect("orgapy:settings")
 
 

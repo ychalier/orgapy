@@ -598,88 +598,6 @@ function setupCategoryInput(container) {
 
 }
 
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
-
-    const rawData = atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
-
-function bindEditable(editable) {
-    const objectId = editable.getAttribute("object_id");
-    const apiAction = editable.getAttribute("action");
-    var editableText;
-    function rebuildEditable(value) {
-        editable.innerHTML = "";
-        editableText = create(editable, "span", "editable-text");
-        editableText.textContent = value;
-        editableText.addEventListener("click", onEditableTextClick);
-    }
-    function onEditableTextClick() {
-        const currentValue = editable.textContent;
-        const input = document.createElement("input");
-        input.className = "editable-input input-slim";
-        input.size = Math.floor(currentValue.length * 1.1);
-        input.value = currentValue;
-        if (editableText == undefined) throw new Error();
-        editableText.replaceWith(input);
-        input.focus();
-        function submitInput() {
-            let newValue = input.value.trim();
-            if (newValue == "") {
-                rebuildEditable(currentValue);
-            } else {
-                apiPost(apiAction, {id: objectId, value: newValue}, () => {
-                    rebuildEditable(newValue);
-                    toast("Renamed subscription", TOAST_SHORT);
-                });
-            }
-        }
-        input.addEventListener("focusout", submitInput);
-        input.addEventListener("keydown", (event) => {
-            if (event.key == "Enter") {
-                submitInput();
-            }
-        });
-    }
-    const defaultValue = editable.textContent;
-    rebuildEditable(defaultValue);
-}
-
-function askUserToSubscribeToNotifications(serviceWorkerUrl, publicKeyBase64) {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-        navigator.serviceWorker.register(serviceWorkerUrl).then(function(registration) {
-            console.log("Service Worker registered with scope:", registration.scope);
-            Notification.requestPermission().then(async function(permission) {
-                if (permission === "granted") {
-                    console.log("User accepted notifications");
-                    registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(publicKeyBase64)
-                    }).then(function(subscription) {
-                        const body = JSON.stringify(subscription);
-                        apiPost("save-subscription", {"subscription": body}, () => {
-                            window.location.reload();
-                        });
-                    });
-                } else {
-                    console.log("User rejected notifications");
-                }
-            });
-        });
-    } else {
-        console.error("Could not ask user for notifications, not supported");
-    }
-}
-
 /**
  *
  * @param {HTMLElement} container
@@ -934,5 +852,4 @@ window.addEventListener("load", () => {
             }
         });
     });
-    document.querySelectorAll(".editable").forEach(bindEditable);
 });

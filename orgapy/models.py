@@ -603,22 +603,6 @@ class ProgressLog(models.Model):
         return f"{self.dt.year}-{self.dt.month:02d}-{self.dt.day:02d}T{self.dt.hour:02d}:{self.dt.minute:02d}"
 
 
-class PushSubscription(models.Model):
-
-    id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    subscription = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    name = models.CharField(max_length=255, blank=True, null=True)
-
-    class Meta:
-
-        ordering = ["user"]
-
-    def __str__(self):
-        return f"PushSubscription(user={self.user}, name={self.name})"
-
-
 class MoodLog(models.Model):
 
     UNSET = 0

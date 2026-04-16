@@ -11,7 +11,7 @@ from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 from django.urls import reverse
 
-from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective, PushSubscription, MoodLog
+from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective, MoodLog
 from ..utils import parse_dt, parse_date
 from .utils import find_user_object, compare_checklists, compare_objective_histories
 
@@ -85,10 +85,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_progress(request)
         case "search":
             return api_search(request)
-        case "save-subscription":
-            return api_save_subscription(request)
-        case "rename-subscription":
-            return api_rename_subscription(request)
         case "create-mood-log":
             return api_create_mood_log(request)
         case "list-mood-logs":
@@ -844,29 +840,6 @@ def api_search(request: HttpRequest) -> JsonResponse:
                 "active": obj.active,
             })
     return JsonResponse({"objects": objects, "success": True})
-
-
-@permission_required("orgapy.create_push_subscription")
-def api_save_subscription(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    PushSubscription.objects.create(
-        user=request.user,
-        subscription=request.POST.get("subscription", ""))
-    return JsonResponse({"success": True})
-
-
-@permission_required("orgapy.change_push_subscription")
-def api_rename_subscription(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST" or "id" not in request.POST:
-        raise BadRequest()
-    object_id = int(request.POST["id"])
-    sub = find_user_object(PushSubscription, "id", object_id, request.user)
-    new_name = request.POST.get("value")
-    if new_name is not None:
-        sub.name = new_name.strip()
-        sub.save()
-    return JsonResponse({"success": True})
 
 
 @permission_required("orgapy.create_mood_log")

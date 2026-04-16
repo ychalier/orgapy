@@ -21,7 +21,6 @@ dependencies = [
     "Django",
     "caldav",
     "python-dateutil",
-    "pywebpush",
 ]
 
 [project.urls]

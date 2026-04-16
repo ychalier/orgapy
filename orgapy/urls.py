@@ -63,7 +63,6 @@ urlpatterns = [
     path("progress/<year>/export", views.view_progress_export, name="progress_export"),
     path("settings", views.view_settings, name="settings"),
     path("settings/calendar", views.view_calendar_form, name="calendar_form"),
-    path("subscription/<object_id>/delete", views.view_delete_subscription, name="delete_subscription"),
     path("mood", views.view_mood, name="mood"),
     path("mood/<object_id>/delete", views.view_delete_mood_log, name="delete_mood_log"),
     path("<active>/<object_id>/edit", views.view_edit, name="edit"),
