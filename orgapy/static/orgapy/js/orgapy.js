@@ -398,7 +398,7 @@ function bindDropdown(dropdown, delay=10) {
 
     const toggle = dropdown.querySelector(".dropdown-toggle");
     const menu = dropdown.querySelector(".menu");
-    const isMainMenu = !dropdown.parentElement.classList.contains("menu-item"); 
+    const isMainMenu = !dropdown.parentElement.classList.contains("menu-item");
 
     function showMenu() {
         menu.style.position = "fixed";
@@ -634,6 +634,7 @@ function inflateCalendar(container, data, options) {
 
     function inflateYear(currentYear) {
 
+        if (!(currentYear in data)) { data[currentYear] = {} };
         const yearData = data[currentYear];
 
         container.innerHTML = "";
@@ -826,30 +827,27 @@ function bindLinkConfirm(link) {
     };
 }
 
-window.addEventListener("load", () => {
-    document.querySelectorAll(".link-confirm").forEach(bindLinkConfirm);
-    document.querySelectorAll(".submit-confirm").forEach(input => {
-        input.addEventListener("click", (event) => {
-            event.preventDefault();
-            let message = input.getAttribute("message");
-            if (message == null) {
-                message = "This can not be undone. Please confirm your decision.";
+function bindSubmitConfirm(input) {
+    input.addEventListener("click", (event) => {
+        event.preventDefault();
+        let message = input.getAttribute("message");
+        if (message == null) {
+            message = "This can not be undone. Please confirm your decision.";
+        }
+        if (confirm(message)) {
+            let node = input.parentElement;
+            while (node.tagName != "FORM") {
+                node = node.parentElement;
             }
-            if (confirm(message)) {
-                let node = input.parentElement;
-                while (node.tagName != "FORM") {
-                    node = node.parentElement;
-                }
-                const form = node;
-                if (input.hasAttribute("name")) {
-                    const hiddenInput = document.createElement("input");
-                    hiddenInput.type = "hidden";
-                    hiddenInput.name = input.name;
-                    hiddenInput.value = input.value;
-                    form.appendChild(hiddenInput);
-                }
-                form.submit();
+            const form = node;
+            if (input.hasAttribute("name")) {
+                const hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.name = input.name;
+                hiddenInput.value = input.value;
+                form.appendChild(hiddenInput);
             }
-        });
+            form.submit();
+        }
     });
-});
+}

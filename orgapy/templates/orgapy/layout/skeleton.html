@@ -126,6 +126,8 @@ bindSearchButton(searchForm, searchButton);
     {% block body_scrips_minimized %}
     <script>
 document.querySelectorAll(".dropdown").forEach(bindDropdown);
+document.querySelectorAll(".link-confirm").forEach(bindLinkConfirm);
+document.querySelectorAll(".submit-confirm").forEach(bindSubmitConfirm);
     </script>
     {% endblock %}
 </body>

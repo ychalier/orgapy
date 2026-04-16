@@ -155,10 +155,11 @@ body.fullscreen {
     .column-main {
         width: 100%;
         flex-basis: unset;
+        padding: 0 .4rem;
     }
 
     .column-side {
-        padding: .8rem;
+        padding: .8rem .4rem;
         position: unset;
         height: unset;
         overflow: unset;
@@ -1288,14 +1289,24 @@ dialog > .card {
     background-color: var(--bg-secondary-alt);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 800px) {
 
     .calendar {
-        height: 600px;
+        height: 35rem;
     }
 
-    .calendar-body {
-        transform: rotate(90deg) translateX(160px);
+    .calendar .calendar-body {
+        transform: rotate(90deg) translateX(10rem);
+        flex-direction: column-reverse;
+    }
+
+    .calendar--weekly {
+        --cellsize: 1.6rem;
+        height: 94rem;
+    }
+
+    .calendar--weekly .calendar-body {
+        transform: rotate(90deg) translateX(40rem);
     }
 
 }
@@ -1364,10 +1375,6 @@ dialog > .card {
     border: none;
     padding: 0;
     border-radius: 0;
-}
-
-.editable-input {
-    width: fit-content;
 }
 
 .ellipsis {
