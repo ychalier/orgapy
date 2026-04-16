@@ -1,0 +1,48 @@
+.groceries {
+    display: flex;
+    flex-direction: column;
+}
+
+.groceries-section {
+    border-radius: .2rem;
+    padding: .4rem .8rem .8rem .8rem;
+}
+
+.groceries-section:hover:not(:has(.groceries-item:hover)) {
+    background: var(--bg-primary-alt);
+}
+
+.groceries-section-label {
+    font-size: 18pt;
+    font-weight: bold;
+}
+
+.groceries-items {
+    padding-left: 0;
+    list-style: none;
+    margin: 0;
+}
+
+.groceries-item:hover {
+    background: var(--bg-primary-alt);
+    border-radius: .2rem;
+}
+
+.groceries input[type=text] {
+    width: fit-content;
+    background: none;
+    border: none;
+    padding: .2rem 0;
+}
+
+.groceries input[type=checkbox] {
+    margin: 0 .2rem 0 0;
+}
+
+.groceries-item {
+    width: fit-content;
+}
+
+.groceries .button-add-section {
+    margin: .4rem 0 .8rem .8rem;
+}

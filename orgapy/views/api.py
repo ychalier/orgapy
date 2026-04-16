@@ -11,9 +11,9 @@ from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 from django.urls import reverse
 
-from ..models import Category, Note, Sheet, Map, ProgressCounter, ProgressLog, Calendar, Task, Project, Objective, MoodLog
+from ..models import Category, Note, Sheet, Map, ProgressLog, Calendar, Task, Project, Objective, MoodLog
 from ..utils import parse_dt, parse_date
-from .utils import find_user_object, compare_checklists, compare_objective_histories
+from .utils import find_user_object, compare_checklists, compare_objective_histories, get_or_create_settings
 
 
 def api(request: HttpRequest) -> HttpResponse:
@@ -89,6 +89,12 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_create_mood_log(request)
         case "list-mood-logs":
             return api_list_mood_logs(request)
+        case "list-groceries":
+            return api_list_groceries(request)
+        case "save-groceries":
+            return api_save_groceries(request)
+        case "create-groceries-list":
+            return api_create_groceries_list(request)
         case _:
             raise BadRequest()
 
@@ -883,3 +889,66 @@ def api_list_mood_logs(request: HttpRequest) -> JsonResponse:
 
         })
     return JsonResponse(data)
+
+
+@permission_required("orgapy.view_settings")
+def api_list_groceries(request: HttpRequest) -> JsonResponse:
+    if isinstance(request.user, AnonymousUser):
+        raise PermissionDenied()
+    settings = get_or_create_settings(request.user)
+    return JsonResponse(settings.groceries)
+
+
+@permission_required("orgapy.change_settings")
+def api_save_groceries(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        raise BadRequest()
+    if isinstance(request.user, AnonymousUser):
+        raise PermissionDenied()
+    settings = get_or_create_settings(request.user)
+    settings.groceries_data = request.POST.get("groceries")
+    settings.save()
+    return JsonResponse({"success": True})
+
+
+@permission_required("orgapy.change_settings")
+def api_create_groceries_list(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        raise BadRequest()
+    if isinstance(request.user, AnonymousUser):
+        raise PermissionDenied()
+    groceries_data = json.loads(request.POST.get("groceries", "{}"))
+    items: list[tuple[str, str]] = []
+    for section_data in groceries_data.get("sections", []):
+        for item_data in section_data.get("items", []):
+            if item_data.get("checked"):
+                items.append((section_data.get("label", "Unnamed section"), item_data.get("label", "Unnamed item")))
+            item_data["checked"] = False
+
+    settings = get_or_create_settings(request.user)
+    settings.groceries_data = json.dumps(groceries_data)
+    settings.save()
+
+    try:
+        cat = Category.objects.get(user=request.user, name="groceries")
+    except Category.DoesNotExist:
+        cat = Category.objects.create(user=request.user, name="groceries")
+    old_section = None
+    note_content = ""
+    for section_label, item_label in items:
+        if section_label != old_section:
+            note_content += f"\n**{section_label}**\n\n"
+            old_section = section_label
+        note_content += f"- [ ] {item_label}\n"
+    note = Note.objects.create(
+        user=request.user,
+        title=f"Shopping list {datetime.datetime.now().strftime("%b, %d")}",
+        content=note_content.strip(),
+    )
+    note.date_creation = datetime.datetime.now()
+    note.save()
+    note.categories.add(cat)
+    return JsonResponse({
+        "success": True,
+        "next": reverse("orgapy:note", args=[note.id])
+    })

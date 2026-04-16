@@ -581,14 +581,6 @@ summary.minititle::marker {
     content: none;
 }
 
-/***** CHECKLIST **************************************************************/
-
-ul.checklist {
-    line-height: 1.6;
-    padding-left: 0;
-    list-style: none;
-}
-
 /***** TOGGLE SWITCH **********************************************************/
 
 .toggle {

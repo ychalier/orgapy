@@ -2,24 +2,31 @@
 {% load static %}
 {% block title %}Groceries{% endblock title %}
 
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/groceries.css' %}">
+<script src="{% static 'orgapy/js/dragrank.js' %}"></script>
+<script src="{% static 'orgapy/js/groceries.js' %}"></script>
+{% endblock head %}
+
 {% block column_main %}
-<form action="" method="post">
-    {% csrf_token %}
-    <div class="card">
-        <h1 class="card-header">Groceries</h1>
-        <div class="card-body">
-            {% for section in request.user.settings.groceries.sections %}
-            <h2>{{ section.label }}</h2>
-            <ul class="checklist">
-                {% for item in section.items %}
-                <li><label><input type="checkbox" name="{{ section.label }};{{ item.label }}" />{{ item.label }}</label></li>
-                {% endfor %}
-            </ul>
-            {% endfor %}
-        </div>
-        <div class="card-actions">
-            <button class="button-accent" type="submit">Create list</button>
-        </div>
+<div class="card card--nobottom" style="margin-bottom: -.8rem">
+    <h1 class="card-header">Groceries</h1>
+    <div class="card-body">
+        <div class="hint">Check items to put on the list, and click <q>Create list</q> to turn it into a note.</div>
     </div>
-</form>
+</div>
+
+<div class="card-actions card-actions--standalone" style="position: sticky; top: -1px">
+    <button id="createListButton">Create list</button>
+    <button id="saveButton" disabled>Save for later</button>
+</div>
+
+<div class="card">
+    <div id="groceriesContainer" class="groceries"></div>
+</div>
+
+<script>
+    bindGroceries(groceriesContainer, saveButton, createListButton);
+</script>
 {% endblock column_main %}
