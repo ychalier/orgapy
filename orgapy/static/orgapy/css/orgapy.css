@@ -785,21 +785,6 @@ input:checked+.toggle-slider+.toggle-text {
     overflow: hidden;
 }
 
-#searchButton {
-    display: none;
-    border: none;
-    background: none;
-}
-
-@media (max-width: 800px) {
-    .navbar #searchForm {
-        display: none;
-    }
-    .navbar #searchButton {
-        display: block;
-    }
-}
-
 /***** CATEGORIES INPUT *******************************************************/
 
 .input-categories {
@@ -862,7 +847,7 @@ input:checked+.toggle-slider+.toggle-text {
     border-color: var(--bg-primary);
 }
 
-.navbar .button.active:hover {
+.navbar .dropdown-toggle.button.active:hover {
     color: var(--text);
 }
 
@@ -882,6 +867,30 @@ input:checked+.toggle-slider+.toggle-text {
 
 .navbar .search-bar {
     width: 14rem;
+}
+
+.navbar:not(:has(.search-input:focus)) .search-bar:not(:hover) {
+    border-color: var(--bg-primary);
+}
+
+.navbar:not(:has(.search-input:focus)) .search-input,
+.navbar:not(:has(.search-input:focus)) .search-button {
+    background: none;
+}
+
+#navbarSearchButton {
+    display: none;
+    border: none;
+    background: none;
+}
+
+@media (max-width: 800px) {
+    .navbar #navbarSearchForm {
+        display: none;
+    }
+    .navbar #navbarSearchButton {
+        display: block;
+    }
 }
 
 /***** LINE *******************************************************************/
@@ -973,7 +982,6 @@ input:checked+.toggle-slider+.toggle-text {
 /***** CARDS ******************************************************************/
 
 .card {
-    /*padding: .8rem;*/
     display: flex;
     flex-direction: column;
     border: 1px solid var(--border-primary);
