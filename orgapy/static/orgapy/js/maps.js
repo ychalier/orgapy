@@ -213,6 +213,24 @@ function createMapButton(container, title, iconClass, callback) {
     return button;
 }
 
+function computeDistance(latlngs) {
+    let distance = 0;
+    for (let i = 0; i < latlngs.length - 1; i++) {
+        distance += latlngs[i].distanceTo(latlngs[i + 1]);
+    }
+    return distance;
+}
+
+function formatDistance(meters) {
+    if (meters < 1000) {
+        return Math.round(meters) + " m";
+    } else if (meters < 20000) {
+        return (meters / 1000).toFixed(1) + " km";
+    } else {
+        return (meters / 1000).toFixed(0) + " km";
+    }
+}
+
 function createStyleForm(container, initialStyle) {
 
     const form = create(container, "form", "style-form");
@@ -512,15 +530,9 @@ class Feature {
         const layerLabel = create(subtitle, "span", "feature-layer-label");
         layerLabel.textContent = this.layer.label;
         const geometrySpan = create(subtitle, "span", "feature-geometry");
-        const length = this.getLength();
-        if (length >= 0) {
-            if (length < 1000) {
-                geometrySpan.textContent = Math.round(length) + " m";
-            } else if (length < 20000) {
-                geometrySpan.textContent = (length / 1000).toFixed(1) + " km";
-            } else {
-                geometrySpan.textContent = (length / 1000).toFixed(0) + " km";
-            }
+        const distance = this.getDistance();
+        if (distance >= 0) {
+            geometrySpan.textContent = formatDistance(distance);
         } else {
             const center = this.getCenter();
             geometrySpan.textContent = `${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
@@ -881,30 +893,20 @@ class Feature {
         }
     }
 
-    getLength() {
+    getDistance() {
         if (this.geometry.type == "Point" || this.geometry.type == "MultiPoint") {
             return -1;
         } else if (this.geometry.type == "LineString" || this.geometry.type == "MultiLineString") {
             try {
-                const latlngs = this.mapElement.getLatLngs();
-                let totalDistance = 0;
-                for (let i = 0; i < latlngs.length - 1; i++) {
-                    totalDistance += latlngs[i].distanceTo(latlngs[i + 1]);
-                }
-                return totalDistance; // in meters
+                return computeDistance(this.mapElement.getLatLngs());
             } catch {
                 return -1;
             }
         } else {
             try {
-                const latlngs = this.mapElement.getLatLngs()[0];
-                let totalDistance = 0;
-                for (let i = 0; i < latlngs.length - 1; i++) {
-                    totalDistance += latlngs[i].distanceTo(latlngs[i + 1]);
-                }
-                return totalDistance; // in meters
+                return computeDistance(this.mapElement.getLatLngs()[0]);
             } catch {
-                return 0;
+                return -1;
             }
         }
     }
@@ -1477,6 +1479,7 @@ class Map {
         this.buttonSave = null;
         this.modification = null;
         this.layersContainer = null;
+        this.distanceLine = null;
     }
 
     setTileLayer(providerIndex) {
@@ -1733,6 +1736,11 @@ class Map {
         if (!this.readonly) {
             addContextMenuOption(menu, "ri-map-pin-line", "Add marker", () => {self.addMarker(latlng)});
         }
+        if (this.isMeasuringDistance()) {
+            addContextMenuOption(menu, "ri-route-line", "Stop distance measure", () => {self.stopMeasuringDistance()});
+        } else {
+            addContextMenuOption(menu, "ri-route-line", "Measure distance", () => {self.startMeasuringDistance(latlng)});
+        }
         const bounds = menu.getBoundingClientRect();
         menu.style.left = Math.min(x, window.innerWidth - (bounds.width + 8)) + "px";
         menu.style.top = Math.min(y, window.innerHeight - (bounds.height + 8)) + "px";
@@ -1988,6 +1996,46 @@ class Map {
                     self.buttonSave.setAttribute("disabled", true);
                 }
         });
+    }
+
+    isMeasuringDistance() {
+        return this.distanceLine != null;
+    }
+
+    startMeasuringDistance(latlng) {
+        if (this.isMeasuringDistance()) {
+            this.stopMeasuringDistance();
+        } 
+        var self = this;
+        const el = this.leafletMap.editTools.startPolyline(latlng);
+        el.editor.addMiddleMarker = () => {};
+        var firstEdit = true;
+        const popupContainer = create(null, "div");
+        const popupSpan = create(popupContainer, "span");
+        popupSpan.textContent = "salut !";
+        function updateTooltip() {
+            const distance = computeDistance(el.getLatLngs());
+            el.bindTooltip(formatDistance(distance));
+            el.openTooltip();
+        }
+        el.addEventListener("editable:vertex:new", (e) => {
+            if (firstEdit) {
+                firstEdit = false;
+                self.leafletMap.editTools.commitDrawing();
+                setTimeout(() => {updateTooltip()}, 1);
+            } else {
+                e.cancel();
+            }
+        });
+        el.addEventListener("editable:editing", () => {updateTooltip()});
+        this.distanceLine = el;
+    }
+
+    stopMeasuringDistance() {
+        if (this.distanceLine != null) {
+            this.distanceLine.remove();
+            this.distanceLine = null;
+        }
     }
 }
 
