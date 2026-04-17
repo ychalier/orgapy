@@ -116,7 +116,7 @@ class Project {
         dialog.setAttribute("closedby", "any");
         const card = create(dialog, "div", "card");
         const documentIframe = create(card, "iframe", "plain");
-        if (this.document != null) documentIframe.src = this.document.url + "/standalone";
+        if (this.document != null) documentIframe.src = this.document.url + "/fullscreen";
         documentIframe.width = 400;
         documentIframe.height = 400;
         const actionButtons = create(card, "div", "card-actions");

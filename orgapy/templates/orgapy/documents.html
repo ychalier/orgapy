@@ -17,9 +17,9 @@
                     <label for="selectSearchType">Filter</label>
                     <select id="selectSearchType" name="type" style="border-right: none">
                         <option {% if request.GET.type == 'all' %}selected{% endif %} value="all">All types</option>
-                        <option {% if request.GET.type == 'notes' %}selected{% endif %} value="notes">Notes</option>
-                        <option {% if request.GET.type == 'sheets' %}selected{% endif %} value="sheets">Sheets</option>
-                        <option {% if request.GET.type == 'maps' %}selected{% endif %} value="maps">Maps</option>
+                        <option {% if request.GET.type == 'note' %}selected{% endif %} value="note">Notes</option>
+                        <option {% if request.GET.type == 'sheet' %}selected{% endif %} value="sheet">Sheets</option>
+                        <option {% if request.GET.type == 'map' %}selected{% endif %} value="map">Maps</option>
                     </select>
                     <select name="status">
                         <option {% if request.GET.status == 'any' %}selected{% endif %} value="any">Any status</option>

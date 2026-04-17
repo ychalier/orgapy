@@ -82,6 +82,22 @@ def find_user_object(
     return obj
 
 
+def retrieve_document(request: HttpRequest, docid: str) -> tuple[Document, bool]:
+    doc = find_user_object(Document, ["id", "nonce"], docid)
+    has_permission = False
+    readonly = True
+    if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document"):
+        readonly =  False
+        has_permission = True
+    elif doc.public and isinstance(docid, str) and len(docid) == 12:
+        has_permission = True
+    if not has_permission:
+        raise PermissionDenied()
+    if request.GET.get("embed"):
+        readonly = True
+    return doc, readonly
+
+
 def get_checked_items(checklist: str) -> list[str]:
     return re.findall(r"\[x\] (.*)", checklist)
 

@@ -103,8 +103,8 @@ class Document(models.Model):
     subtitle = models.TextField(blank=True, null=True)
     content = models.TextField(blank=True, null=True)
     config = models.TextField(blank=True, null=True)
-    source_type = models.CharField(max_length=5) # NOTE: temporary
-    source_id = models.BigIntegerField() # NOTE: temporary
+    source_type = models.CharField(max_length=5) # TODO: remove
+    source_id = models.BigIntegerField() # TODO: remove
 
     class Meta:
         ordering = ["-date_modification"]
@@ -145,7 +145,7 @@ class Document(models.Model):
         return self.project_set.exclude(status=Project.ARCHIVED) # type: ignore
 
     def get_archived_projects(self):
-        return self.project_set.filter(status=Project.ARCHIVED).count() # type: ignore
+        return self.project_set.filter(status=Project.ARCHIVED) # type: ignore
 
 
 class AbstractDocument(models.Model):

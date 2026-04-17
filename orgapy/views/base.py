@@ -26,7 +26,8 @@ from .utils import (
     get_or_create_settings,
     toggle_document_attribute,
     view_document_list,
-    get_pending_mood_logs)
+    get_pending_mood_logs,
+    retrieve_document)
 
 
 # GENERAL ######################################################################
@@ -122,18 +123,7 @@ def view_create_document(request: HttpRequest) -> HttpResponse:
 
 
 def view_document(request: HttpRequest, docid: str) -> HttpResponse:
-    doc = find_user_object(Document, ["id", "nonce"], docid)
-    has_permission = False
-    readonly = True
-    if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document"):
-        readonly =  False
-        has_permission = True
-    elif doc.public and isinstance(docid, str) and len(docid) == 12:
-        has_permission = True
-    if not has_permission:
-        raise PermissionDenied()
-    if request.GET.get("embed"):
-        readonly = True
+    doc, readonly = retrieve_document(request, docid)
     response = render(request, f"orgapy/{doc.type}.html", {
         "document": doc,
         "readonly": readonly,
@@ -144,10 +134,7 @@ def view_document(request: HttpRequest, docid: str) -> HttpResponse:
 
 
 def view_document_raw(request: HttpRequest, docid: str) -> HttpResponse:
-
-    doc = find_user_object(Document, ["id", "nonce"], docid)
-    if (request.user is None or doc.user != request.user or not request.user.has_perm("orgapy.view_document")) and (not doc.public):
-        raise PermissionDenied()
+    doc, _ = retrieve_document(request, docid)
 
     content, ext, mimetype = "", ".txt", "text/plain"
     if doc.type == "note":
@@ -173,8 +160,17 @@ def view_document_raw(request: HttpRequest, docid: str) -> HttpResponse:
     return response
 
 
-def view_document_standalone(request, docid: str):
-    raise NotImplementedError() # TODO
+def view_note_fullscreen(request, docid: str):
+    note, readonly = retrieve_document(request, docid)
+    if note.type != "note":
+        raise PermissionDenied()
+    response = render(request, f"orgapy/note_fullscreen.html", {
+        "note": note,
+        "readonly": readonly,
+        "active": "documents",
+    })
+    response["X-Frame-Options"] = "SAMEORIGIN"
+    return response
 
 
 @permission_required("orgapy.view_document")
@@ -209,7 +205,9 @@ def view_save_document(request: HttpRequest) -> HttpResponse:
             title=request.POST.get("title"),
             subtitle=request.POST.get("subtitle"),
             content=request.POST.get("content"),
-            config=request.POST.get("config")
+            config=request.POST.get("config"),
+            source_type="", # TODO: remove
+            source_id=-1 # TODO: remove
         )
     else:
         doc = original
@@ -312,6 +310,7 @@ def view_notes(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_sheet")
 def view_sheets(request: HttpRequest) -> HttpResponse:
     return view_document_list(request, "orgapy/documents.html", type_filter="sheet", sort_key=None)
+
 
 @permission_required("orgapy.view_document")
 def view_maps(request: HttpRequest) -> HttpResponse:

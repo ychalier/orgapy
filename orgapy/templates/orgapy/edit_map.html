@@ -9,6 +9,7 @@
     {% csrf_token %}
     {% if document %}<input type="hidden" name="id" value="{{document.id}}" />{% endif %}
     <input hidden type="text" name="modification" value="{% if document %}{{ document.date_modification.timestamp }}{% endif %}" />
+    <input hidden type="text" name="type" value="map" />
     {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}" />{% endif %}
     <div class="card">
         <h1 class="card-header">

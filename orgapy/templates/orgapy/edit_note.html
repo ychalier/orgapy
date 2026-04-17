@@ -21,6 +21,7 @@
     {% if document.pinned %}<input type="hidden" name="pinned" checked>{% endif %}
     {% if document.hidden %}<input type="hidden" name="hidden" checked>{% endif %}
     {% endif %}
+    <input hidden type="text" name="type" value="note" />
     <input hidden type="text" name="modification" value="{% if document %}{{ document.date_modification.timestamp }}{% endif %}" />
     <header class="card card--nobottom">
         <h1 class="card-header">

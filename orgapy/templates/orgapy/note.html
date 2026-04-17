@@ -53,7 +53,7 @@
 <div class="col">
     <div class="row">
         <button id="buttonAddProject" class="button-primary" title="Add project"><i class="ri-add-line"></i> Create project</button>
-        <a class="button button-primary {% if document.archived_projects_count == 0 %}disabled{% endif %}" href="{% url 'orgapy:projects' %}?document={{ document.id }}&status=AR"><i class="ri-briefcase-line"></i> View archived ({{ document.archived_projects_count }})</a>
+        <a class="button button-primary {% if document.get_archived_projects.count == 0 %}disabled{% endif %}" href="{% url 'orgapy:projects' %}?document={{ document.id }}&status=AR"><i class="ri-briefcase-line"></i> View archived ({{ document.get_archived_projects.count }})</a>
     </div>
     <div id="projectsContainer" class="col"></div>
 </div>
