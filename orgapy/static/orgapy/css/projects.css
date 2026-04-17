@@ -34,18 +34,18 @@
     outline: none;
 }
 
-.project-note,
+.project-document,
 .project-title {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.project-note {
+.project-document {
     cursor: pointer;
 }
 
-.project-note + .project-title {
+.project-document + .project-title {
     color: var(--text-muted);
 }
 

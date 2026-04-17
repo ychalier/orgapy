@@ -113,19 +113,7 @@ class Document(models.Model):
         return f"[{self.user}] {self.id}. {self.title}"
 
     def get_absolute_url(self):
-        return reverse(f"orgapy:{self.type}", kwargs={"object_id": self.id})
-
-    # TODO: enable this later
-    # def save(self, *args, **kwargs):
-    #     if self.nonce is None:
-    #         self.nonce = generate_nonce()
-    #     super(Document, self).save(*args, **kwargs)
-    #     referenced_document_ids = set()
-    #     pattern = re.compile(r"@(?:embed)?(note|sheet|map)/(\d+)")
-    #     if self.content:
-    #         for _, document_id in re.findall(pattern, self.content):
-    #             referenced_document_ids.add(int(document_id))
-    #     self.references.set(Document.objects.filter(user=self.user, id__in=referenced_document_ids))
+        return reverse(f"orgapy:document", args=[self.id])
 
     @property
     def type_icon(self) -> str:
@@ -448,12 +436,12 @@ class Project(models.Model):
 
     @property
     def reference(self) -> str:
-        if self.note is None and self.title is not None:
+        if self.document is None and self.title is not None:
             return self.title
-        if self.note is not None and self.title is None:
-            return self.note.title
-        if self.note is not None and self.title is not None:
-            return f"{self.note.title} - {self.title}"
+        if self.document is not None and self.title is None:
+            return self.document.title
+        if self.document is not None and self.title is not None:
+            return f"{self.document.title} - {self.title}"
         return "Untitled"
 
     def to_json_dict(self) -> dict:
@@ -463,10 +451,10 @@ class Project(models.Model):
             "modification": self.date_modification.timestamp(),
             "title": self.title,
             "checklist": self.checklist if self.checklist else None,
-            "note": None if self.note is None else {
-                "id": self.note.id,
-                "title": self.note.title,
-                "url": self.note.get_absolute_url(),
+            "document": None if self.document is None else {
+                "id": self.document.id,
+                "title": self.document.title,
+                "url": self.document.get_absolute_url(),
             },
             "status": self.status,
         }

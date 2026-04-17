@@ -10,9 +10,7 @@ from django.utils.text import slugify
 
 from ..models import (
     Category,
-    Note,
-    Sheet,
-    Map,
+    Document,
     ProgressCounter,
     ProgressLog,
     Calendar,
@@ -22,12 +20,11 @@ from ..models import (
     Objective)
 
 from .utils import (
-    ConflictError,
     find_user_object,
     pretty_paginator,
     save_document_core,
     get_or_create_settings,
-    toggle_object_attribute,
+    toggle_document_attribute,
     view_document_list,
     get_pending_mood_logs)
 
@@ -106,21 +103,227 @@ def view_delete_project(request: HttpRequest, object_id: str) -> HttpResponse:
     return redirect("orgapy:home")
 
 
-# OBJECTS AND CATEGORIES #######################################################
+# DOCUMENTS ####################################################################
 
 
-@permission_required("orgapy.view_note")
-@permission_required("orgapy.view_sheet")
-@permission_required("orgapy.view_map")
+@permission_required("orgapy.view_document")
 def view_documents(request: HttpRequest) -> HttpResponse:
     return view_document_list(request, "orgapy/documents.html", sort_key=None)
 
 
+@permission_required("orgapy.add_document")
+def view_create_document(request: HttpRequest) -> HttpResponse:
+    doctype = request.GET.get("type", "note")
+    if doctype not in ["note", "sheet", "map"]:
+        raise BadRequest()
+    return render(request, f"orgapy/create_{doctype}.html", {
+        "active": "documents"
+    })
+
+
+def view_document(request: HttpRequest, docid: str) -> HttpResponse:
+    doc = find_user_object(Document, ["id", "nonce"], docid)
+    has_permission = False
+    readonly = True
+    if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document"):
+        readonly =  False
+        has_permission = True
+    elif doc.public and isinstance(docid, str) and len(docid) == 12:
+        has_permission = True
+    if not has_permission:
+        raise PermissionDenied()
+    if request.GET.get("embed"):
+        readonly = True
+    response = render(request, f"orgapy/{doc.type}.html", {
+        "document": doc,
+        "readonly": readonly,
+        "active": "documents",
+    })
+    response["X-Frame-Options"] = "SAMEORIGIN"
+    return response
+
+
+def view_document_raw(request: HttpRequest, docid: str) -> HttpResponse:
+
+    doc = find_user_object(Document, ["id", "nonce"], docid)
+    if (request.user is None or doc.user != request.user or not request.user.has_perm("orgapy.view_document")) and (not doc.public):
+        raise PermissionDenied()
+
+    content, ext, mimetype = "", ".txt", "text/plain"
+    if doc.type == "note":
+        content = doc.title if doc.title else "Untitled"
+        if doc.content:
+            content += "\n\n" + doc.content
+        ext = ".md"
+        mimetype = "text/markdown"
+    elif doc.type == "sheet":
+        if doc.content:
+            content = doc.content
+        ext = ".tsv"
+        mimetype = "text/tab-separated-values"
+    elif doc.type == "map":
+        if doc.content:
+            content = doc.content
+        ext = ".geojson"
+        mimetype = "application/geo+json"
+
+    filename = f"{slugify(doc.title)}{ext}" if doc.title else f"untitled{ext}"
+    response = HttpResponse(content=content, content_type=f"{mimetype}; charset=utf-8")
+    response["Content-Disposition"] = f'inline; filename="{filename}"'
+    return response
+
+
+def view_document_standalone(request, docid: str):
+    raise NotImplementedError() # TODO
+
+
+@permission_required("orgapy.view_document")
+def view_edit_document(request: HttpRequest, docid: str) -> HttpResponse:
+    doc = find_user_object(Document, "id", docid, request.user)
+    return render(request, f"orgapy/edit_{doc.type}.html", {
+        "document": doc,
+        "active": "documents",
+    })
+
+
+@permission_required("orgapy.change_document")
+def view_save_document(request: HttpRequest) -> HttpResponse:
+    if not request.method == "POST":
+        raise BadRequest()
+
+    original = None
+    if "id" in request.POST and Document.objects.filter(id=request.POST["id"]).exists():
+        original = Document.objects.get(id=request.POST["id"])
+        if original.date_modification.timestamp() > float(request.POST.get("modification", 0)):
+            return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
+    if original is not None and original.user != request.user:
+        raise PermissionDenied()
+
+    if original is None:
+        doc = Document.objects.create(
+            user=request.user,
+            type=request.POST.get("type", "note").strip(),
+            public="public" in request.POST,
+            pinned="pinned" in request.POST,
+            hidden="hidden" in request.POST,
+            title=request.POST.get("title"),
+            subtitle=request.POST.get("subtitle"),
+            content=request.POST.get("content"),
+            config=request.POST.get("config")
+        )
+    else:
+        doc = original
+        doc.public = "public" in request.POST
+        doc.pinned = "pinned" in request.POST
+        doc.hidden = "hidden" in request.POST
+        doc.title = request.POST.get("title")
+        doc.subtitle = request.POST.get("subtitle")
+        doc.content = request.POST.get("content")
+        doc.config = request.POST.get("config")
+
+    doc.categories.clear()
+    name_list = request.POST.get("categories", "").split(";")
+    for dirty_name in name_list:
+        name = dirty_name.lower().strip()
+        if name == "":
+            continue
+        int_id = None
+        try:
+            int_id = int(name)
+        except ValueError:
+            pass
+        if int_id is not None and Category.objects.filter(id=int_id, user=request.user).exists():
+            category = Category.objects.get(id=int_id, user=request.user)
+        elif Category.objects.filter(name=name, user=request.user).exists():
+            category = Category.objects.get(name=name, user=request.user)
+        elif name == "uncategorized":
+            raise BadRequest()
+        else:
+            category = Category.objects.create(name=name, user=request.user)
+        doc.categories.add(category)
+    save_document_core(doc)
+    return redirect(doc)
+
+
+@permission_required("orgapy.change_document")
+def view_toggle_document_hidden(request: HttpRequest, docid: str) -> HttpResponse:
+    return toggle_document_attribute(request, docid, "hidden")
+
+
+@permission_required("orgapy.change_document")
+def view_toggle_document_pin(request: HttpRequest, docid: str) -> HttpResponse:
+    return toggle_document_attribute(request, docid, "pinned")
+
+
+@permission_required("orgapy.change_document")
+def view_toggle_document_public(request: HttpRequest, docid: str) -> HttpResponse:
+    return toggle_document_attribute(request, docid, "public")
+
+
+@permission_required("orgapy.delete_document")
+def view_delete_document(request: HttpRequest, docid: str) -> HttpResponse:
+    doc = find_user_object(Document, "id", docid, request.user)
+    doc.soft_delete()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect("orgapy:documents")
+
+
+@permission_required("orgapy.add_document")
+def view_restore_document(request: HttpRequest, docid: str) -> HttpResponse:
+    doc = find_user_object(Document, "id", docid, request.user, allow_deleted=True)
+    doc.restore()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect(doc.get_absolute_url())
+
+
+@permission_required("orgapy.delete_document")
+def view_destroy_document(request: HttpRequest, docid: str) -> HttpResponse:
+    doc = find_user_object(Document, "id", docid, request.user, allow_deleted=True)
+    doc.delete()
+    if "next" in request.GET:
+        return redirect(request.GET["next"])
+    return redirect(f"orgapy:documents")
+
+
+@permission_required("orgapy.delete_document")
+def view_trash(request: HttpRequest) -> HttpResponse:
+    return view_document_list(request, "orgapy/trash.html", status_filter="deleted", sort_key="deletion")
+
+
+@permission_required("orgapy.add_document")
+def view_restore_all_documents(request: HttpRequest) -> HttpResponse:
+    Document.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
+    return redirect(f"orgapy:trash")
+
+
+@permission_required("orgapy.delete_document")
+def view_destroy_all_documents(request: HttpRequest) -> HttpResponse:
+    Document.objects.filter(user=request.user, deleted=True).delete()
+    return redirect(f"orgapy:trash")
+
+
+@permission_required("orgapy.view_document")
+def view_notes(request: HttpRequest) -> HttpResponse:
+    return view_document_list(request, "orgapy/documents.html", type_filter="note", sort_key=None)
+
+
+@permission_required("orgapy.view_sheet")
+def view_sheets(request: HttpRequest) -> HttpResponse:
+    return view_document_list(request, "orgapy/documents.html", type_filter="sheet", sort_key=None)
+
+@permission_required("orgapy.view_document")
+def view_maps(request: HttpRequest) -> HttpResponse:
+    return view_document_list(request, "orgapy/documents.html", type_filter="map", sort_key=None)
+
+
+# CATEGORIES ###################################################################
+
+
 @permission_required("orgapy.view_category")
 def view_categories(request: HttpRequest) -> HttpResponse:
-    uncategorized = Note.objects.filter(user=request.user, categories__isnull=True).count()\
-        + Sheet.objects.filter(user=request.user, categories__isnull=True).count()\
-        + Map.objects.filter(user=request.user, categories__isnull=True).count()
+    uncategorized = Document.objects.filter(user=request.user, categories__isnull=True).count()
     return render(request, "orgapy/categories.html", {
         "categories": Category.objects.filter(user=request.user),
         "specials": {
@@ -175,448 +378,6 @@ def view_delete_category(request: HttpRequest, object_id: str) -> HttpResponse:
         if category.user == request.user:
             category.delete()
     return redirect("orgapy:categories")
-
-
-@permission_required("orgapy.change_note")
-@permission_required("orgapy.change_sheet")
-@permission_required("orgapy.change_map")
-def view_edit(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    if active == "notes":
-        return view_edit_note(request, object_id)
-    if active == "sheets":
-        return view_edit_sheet(request, object_id)
-    if active == "maps":
-        return view_edit_map(request, object_id)
-    raise BadRequest(f"Unknown environment '{active}'")
-
-
-@permission_required("orgapy.change_note")
-@permission_required("orgapy.change_sheet")
-@permission_required("orgapy.change_map")
-def view_toggle_hidden(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    return toggle_object_attribute(request, active, object_id, "hidden")
-
-
-@permission_required("orgapy.change_note")
-@permission_required("orgapy.change_sheet")
-@permission_required("orgapy.change_map")
-def view_toggle_pin(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    return toggle_object_attribute(request, active, object_id, "pinned")
-
-
-@permission_required("orgapy.change_note")
-@permission_required("orgapy.change_sheet")
-@permission_required("orgapy.change_map")
-def view_toggle_public(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    return toggle_object_attribute(request, active, object_id, "public")
-
-
-@permission_required("orgapy.view_note")
-@permission_required("orgapy.view_sheet")
-@permission_required("orgapy.view_map")
-def view_export(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    if active == "notes":
-        return view_export_note(request, object_id)
-    if active == "sheets":
-        return view_export_sheet(request, object_id)
-    if active == "maps":
-        return view_export_map(request, object_id)
-    raise BadRequest(f"Unknown environment '{active}'")
-
-
-@permission_required("orgapy.delete_note")
-@permission_required("orgapy.delete_sheet")
-@permission_required("orgapy.delete_map")
-def view_delete(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    if active == "notes":
-        return view_delete_note(request, object_id)
-    if active == "sheets":
-        return view_delete_sheet(request, object_id)
-    if active == "maps":
-        return view_delete_map(request, object_id)
-    raise BadRequest(f"Unknown environment '{active}'")
-
-
-def view_share(request: HttpRequest, active: str, nonce: str) -> HttpResponse:
-    if active == "notes":
-        return view_note(request, nonce)
-    if active == "sheets":
-        return view_sheet(request, nonce)
-    if active == "maps":
-        return view_map(request, nonce)
-    raise BadRequest(f"Unknown environment '{active}'")
-
-
-@permission_required("orgapy.delete_note")
-@permission_required("orgapy.delete_sheet")
-@permission_required("orgapy.delete_map")
-def view_restore(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    try:
-        model = {"notes": Note, "sheets": Sheet, "maps": Map}[active]
-    except KeyError:
-        raise BadRequest()
-    obj: Note | Sheet | Map = find_user_object(model, "id", object_id, request.user, allow_deleted=True)
-    obj.restore()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect(obj.get_absolute_url())
-
-
-@permission_required("orgapy.delete_note")
-@permission_required("orgapy.delete_sheet")
-@permission_required("orgapy.delete_map")
-def view_destroy(request: HttpRequest, active: str, object_id: str) -> HttpResponse:
-    try:
-        model = {"notes": Note, "sheets": Sheet, "maps": Map}[active]
-    except KeyError:
-        raise BadRequest()
-    obj: Note | Sheet | Map = find_user_object(model, "id", object_id, request.user, allow_deleted=True)
-    obj.delete()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect(f"orgapy:{active}")
-
-
-@permission_required("orgapy.delete_note")
-@permission_required("orgapy.delete_sheet")
-@permission_required("orgapy.delete_map")
-def view_trash(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/trash.html", status_filter="deleted", sort_key="deletion")
-
-
-@permission_required("orgapy.delete_note")
-@permission_required("orgapy.delete_sheet")
-@permission_required("orgapy.delete_map")
-def view_restore_all(request: HttpRequest) -> HttpResponse:
-    Note.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
-    Sheet.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
-    Map.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
-    return redirect(f"orgapy:trash")
-
-
-@permission_required("orgapy.delete_note")
-@permission_required("orgapy.delete_sheet")
-@permission_required("orgapy.delete_map")
-def view_destroy_all(request: HttpRequest) -> HttpResponse:
-    Note.objects.filter(user=request.user, deleted=True).delete()
-    Sheet.objects.filter(user=request.user, deleted=True).delete()
-    Map.objects.filter(user=request.user, deleted=True).delete()
-    return redirect(f"orgapy:trash")
-
-
-# NOTES ########################################################################
-
-
-@permission_required("orgapy.view_note")
-def view_notes(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/notes.html", type_filter="notes")
-
-
-@permission_required("orgapy.add_note")
-def view_create_note(request: HttpRequest) -> HttpResponse:
-    return render(request, "orgapy/create_note.html", {
-        "active": "notes"
-    })
-
-
-@permission_required("orgapy.change_note")
-def view_save_note(request: HttpRequest) -> HttpResponse:
-    if request.method == "POST":
-        try:
-            note = save_document_core(request, Note, ["content"])
-        except ConflictError:
-            return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
-        return redirect("orgapy:note", object_id=note.id)
-    raise BadRequest()
-
-
-def view_note(request: HttpRequest, object_id: str) -> HttpResponse:
-    note = find_user_object(Note, ["id", "nonce"], object_id)
-    has_permission = False
-    readonly = True
-    if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
-        readonly =  False
-        has_permission = True
-    elif note.public and isinstance(object_id, str) and len(object_id) == 12:
-        has_permission = True
-    if not has_permission:
-        raise PermissionDenied()
-    return render(request, "orgapy/note.html", {
-        "note": note,
-        "readonly": readonly,
-        "active": "notes",
-    })
-
-
-def view_note_standalone(request: HttpRequest, object_id: str) -> HttpResponse:
-    note = find_user_object(Note, ["id", "nonce"], object_id)
-    has_permission = False
-    if request.user is not None and note.user == request.user and request.user.has_perm("orgapy.view_note"):
-        has_permission = True
-    elif note.public and isinstance(object_id, str) and len(object_id) == 12:
-        has_permission = True
-    if not has_permission:
-        raise PermissionDenied()
-    response = render(request, "orgapy/note_standalone.html", {
-        "note": note,
-        "readonly": True,
-    })
-    response["X-Frame-Options"] = "SAMEORIGIN"
-    return response
-
-
-@permission_required("orgapy.change_note")
-def view_edit_note(request: HttpRequest, object_id: str) -> HttpResponse:
-    note = find_user_object(Note, "id", object_id, request.user)
-    return render(request, "orgapy/edit_note.html", {
-        "note": note,
-        "active": "notes",
-    })
-
-
-@permission_required("orgapy.view_note")
-def view_export_note(request: HttpRequest, object_id: str) -> HttpResponse:
-    """View to export a note's content as Markdown"""
-    note = find_user_object(Note, "id", object_id, request.user)
-    markdown = note.title + "\n\n" + note.content
-    response = HttpResponse(content=markdown, content_type="text/markdown; charset=utf-8")
-    response["Content-Disposition"] = "inline; filename=\"{}.md\"".format(slugify(note.title))
-    return response
-
-
-@permission_required("orgapy.delete_note")
-def view_delete_note(request: HttpRequest, object_id: str) -> HttpResponse:
-    """View to delete a note"""
-    note = find_user_object(Note, "id", object_id, request.user)
-    note.soft_delete()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:notes")
-
-
-@permission_required("orgapy.change_note")
-def view_toggle_note_hidden(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_hidden(request, "notes", object_id)
-
-
-@permission_required("orgapy.change_note")
-def view_toggle_note_pin(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_pin(request, "notes", object_id)
-
-
-@permission_required("orgapy.change_note")
-def view_toggle_note_public(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_public(request, "notes", object_id)
-
-
-@permission_required("orgapy.delete_note")
-def view_restore_note(request, object_id: str) -> HttpResponse:
-    return view_restore(request, "notes", object_id)
-
-
-@permission_required("orgapy.delete_note")
-def view_destroy_note(request, object_id: str) -> HttpResponse:
-    return view_destroy(request, "notes", object_id)
-
-
-# SHEETS #######################################################################
-
-
-@permission_required("orgapy.view_sheet")
-def view_sheets(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/sheets.html", type_filter="sheets")
-
-
-@permission_required("orgapy.add_sheet")
-def view_create_sheet(request: HttpRequest) -> HttpResponse:
-    return render(request, "orgapy/create_sheet.html", {
-        "active": "sheets",
-    })
-
-
-@permission_required("orgapy.change_sheet")
-def view_save_sheet(request: HttpRequest) -> HttpResponse:
-    if request.method == "POST":
-        sheet = save_document_core(request, Sheet, ["description"])
-        if "next" in request.POST:
-            return redirect(request.POST["next"])
-        return redirect("orgapy:sheet", object_id=sheet.id)
-    raise BadRequest()
-
-
-def view_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_user_object(Sheet, ["id", "nonce"], object_id)
-    has_permission = False
-    read_only = False
-    if request.GET.get("embed"):
-        read_only = True
-    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet"):
-        has_permission = True
-    elif sheet.public and isinstance(object_id, str) and len(object_id) == 12:
-        has_permission = True
-        read_only = True
-    if not has_permission:
-        raise PermissionDenied()
-    response = render(request, "orgapy/sheet.html", {
-        "sheet": sheet,
-        "readonly": read_only,
-        "active": "sheets",
-    })
-    response["X-Frame-Options"] = "SAMEORIGIN"
-    return response
-
-
-@permission_required("orgapy.change_sheet")
-def view_edit_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_user_object(Sheet, "id", object_id, request.user)
-    return render(request, "orgapy/edit_sheet.html", {
-        "sheet": sheet,
-        "active": "sheets",
-    })
-
-
-@permission_required("orgapy.view_sheet")
-def view_export_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_user_object(Sheet, ["id", "nonce"], object_id)
-    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
-        response = HttpResponse(sheet.data, content_type="text/tab-separated-values")
-        response['Content-Disposition'] = f'attachment; filename="{sheet.title}.tsv"'
-        return response
-    raise PermissionDenied()
-
-
-@permission_required("orgapy.delete_sheet")
-def view_delete_sheet(request: HttpRequest, object_id: str) -> HttpResponse:
-    sheet = find_user_object(Sheet, "id", object_id, request.user)
-    sheet.soft_delete()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:sheets")
-
-
-@permission_required("orgapy.change_sheet")
-def view_toggle_sheet_hidden(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_hidden(request, "sheets", object_id)
-
-
-@permission_required("orgapy.change_sheet")
-def view_toggle_sheet_pin(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_pin(request, "sheets", object_id)
-
-
-@permission_required("orgapy.change_sheet")
-def view_toggle_sheet_public(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_public(request, "sheets", object_id)
-
-
-@permission_required("orgapy.delete_sheet")
-def view_restore_sheet(request, object_id: str) -> HttpResponse:
-    return view_restore(request, "sheets", object_id)
-
-
-@permission_required("orgapy.delete_sheet")
-def view_destroy_sheet(request, object_id: str) -> HttpResponse:
-    return view_destroy(request, "sheets", object_id)
-
-
-# MAPS #########################################################################
-
-
-@permission_required("orgapy.view_map")
-def view_maps(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/maps.html", type_filter="maps")
-
-
-@permission_required("orgapy.add_map")
-def view_create_map(request: HttpRequest) -> HttpResponse:
-    return render(request, "orgapy/create_map.html", {
-        "active": "maps",
-    })
-
-
-@permission_required("orgapy.change_map")
-def view_edit_map(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_user_object(Map, "id", object_id, request.user)
-    return render(request, "orgapy/edit_map.html", {
-        "map": mmap,
-        "active": "maps",
-    })
-
-
-@permission_required("orgapy.change_map")
-def view_save_map(request: HttpRequest) -> HttpResponse:
-    if request.method == "POST":
-        mmap = save_document_core(request, Map)
-        if "next" in request.POST:
-            return redirect(request.POST["next"])
-        return redirect("orgapy:map", object_id=mmap.id)
-    raise BadRequest()
-
-
-def view_map(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_user_object(Map, ["id", "nonce"], object_id)
-    has_permission = False
-    read_only = True
-    if not request.GET.get("embed"):
-        read_only = False
-    if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map"):
-        has_permission = True
-    elif mmap.public and isinstance(object_id, str) and len(object_id) == 12:
-        has_permission = True
-        read_only = True
-    if not has_permission:
-        raise PermissionDenied()
-    response = render(request, "orgapy/map.html", {
-        "map": mmap,
-        "readonly": read_only,
-        "active": "maps",
-    })
-    response["X-Frame-Options"] = "SAMEORIGIN"
-    return response
-
-
-@permission_required("orgapy.view_map")
-def view_export_map(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_user_object(Map, ["id", "nonce"], object_id)
-    if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map") or mmap.public:
-        response = HttpResponse(mmap.geojson, content_type="application/geo+json")
-        response['Content-Disposition'] = f'attachment; filename="{mmap.title}.geojson"'
-        return response
-    raise PermissionDenied()
-
-
-@permission_required("orgapy.delete_map")
-def view_delete_map(request: HttpRequest, object_id: str) -> HttpResponse:
-    mmap = find_user_object(Map, "id", object_id, request.user)
-    mmap.soft_delete()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:maps")
-
-
-@permission_required("orgapy.change_map")
-def view_toggle_map_hidden(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_hidden(request, "maps", object_id)
-
-
-@permission_required("orgapy.change_map")
-def view_toggle_map_pin(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_pin(request, "maps", object_id)
-
-
-@permission_required("orgapy.change_map")
-def view_toggle_map_public(request: HttpRequest, object_id: str) -> HttpResponse:
-    return view_toggle_public(request, "maps", object_id)
-
-
-@permission_required("orgapy.delete_map")
-def view_restore_map(request, object_id: str) -> HttpResponse:
-    return view_restore(request, "maps", object_id)
-
-
-@permission_required("orgapy.delete_map")
-def view_destroy_map(request, object_id: str) -> HttpResponse:
-    return view_destroy(request, "maps", object_id)
 
 
 # PROGRESS #####################################################################

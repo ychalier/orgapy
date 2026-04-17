@@ -11,9 +11,9 @@ from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 from django.urls import reverse
 
-from ..models import Category, Note, Sheet, Map, ProgressLog, Calendar, Task, Project, Objective, MoodLog
+from ..models import Category, Document, ProgressLog, Calendar, Task, Project, Objective, MoodLog
 from ..utils import parse_dt, parse_date
-from .utils import find_user_object, compare_checklists, compare_objective_histories, get_or_create_settings
+from .utils import find_user_object, compare_checklists, compare_objective_histories, get_or_create_settings, save_document_core
 
 
 def api(request: HttpRequest) -> HttpResponse:
@@ -63,16 +63,12 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_reference(request)
         case "edit-widgets":
             return api_edit_widgets(request)
-        case "sheet":
-            return api_sheet(request)
-        case "save-sheet":
-            return api_save_sheet(request)
-        case "map":
-            return api_map(request)
-        case "save-map":
-            return api_save_map(request)
+        case "get-document":
+            return api_get_document(request)
+        case "save-document":
+            return api_save_document(request)
         case "suggestions":
-            return api_suggestions(request)
+            return api_suggestions_documents(request)
         case "suggestions-notes":
             return api_suggestions_notes(request)
         case "suggestions-sheets":
@@ -84,7 +80,7 @@ def api(request: HttpRequest) -> HttpResponse:
         case "progress":
             return api_progress(request)
         case "search":
-            return api_search(request)
+            return api_search_documents(request)
         case "create-mood-log":
             return api_create_mood_log(request)
         case "list-mood-logs":
@@ -101,7 +97,7 @@ def api(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_project")
 def api_list_projects(request: HttpRequest) -> JsonResponse:
-    note_filter = request.GET.get("note")
+    document_filter = request.GET.get("document")
     status_filter = request.GET.get("status")
     project_filter = request.GET.get("project")
     projects = []
@@ -111,9 +107,9 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
             query = query.filter(id=int(project_filter))
         except:
             raise BadRequest()
-    if note_filter is not None:
+    if document_filter is not None:
         try:
-            query = query.filter(note__id=int(note_filter))
+            query = query.filter(document__id=int(document_filter))
         except ValueError:
             pass
     if status_filter is not None:
@@ -181,13 +177,13 @@ def api_edit_project(request: HttpRequest) -> JsonResponse:
     else:
         project.checklist = None
     project.status = project_data["status"]
-    note = None
-    if project_data["note"] is not None:
+    document = None
+    if project_data["document"] is not None:
         try:
-            note = Note.objects.get(user=request.user, id=int(project_data["note"]["id"]))
-        except Note.DoesNotExist:
+            document = Document.objects.get(user=request.user, id=int(project_data["document"]["id"]))
+        except Document.DoesNotExist:
             pass
-    project.note = note # type: ignore
+    project.document = document # type: ignore
     project.save()
     return JsonResponse({
         "success": True,
@@ -588,24 +584,22 @@ def api_complete_task(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
-@permission_required("orgapy.view_note")
-@permission_required("orgapy.view_sheet")
-@permission_required("orgapy.view_map")
+@permission_required("orgapy.view_document")
 def api_reference(request: HttpRequest) -> HttpResponse:
     note_ids = request.GET.getlist("note")
     sheet_ids = request.GET.getlist("sheet")
     map_ids = request.GET.getlist("map")
     results = []
-    for model, object_ids, object_type in ((Note, note_ids, "note"), (Sheet, sheet_ids, "sheet"), (Map, map_ids, "map")):
-        for object_id in object_ids:
-            result = {"type": object_type, "id": object_id, "title": None, "href": None, "error": None}
+    for document_ids, document_type in ((note_ids, "note"), (sheet_ids, "sheet"), (map_ids, "map")):
+        for document_id in document_ids:
+            result = {"type": document_type, "id": document_id, "title": None, "href": None, "error": None}
             try:
-                obj = model.objects.get(user=request.user, id=int(object_id))
-                result["title"] = obj.title
-                result["href"] = obj.get_absolute_url()
+                doc = Document.objects.get(user=request.user, id=int(document_id))
+                result["title"] = doc.title
+                result["href"] = doc.get_absolute_url()
             except ValueError:
                 result["error"] = "Invalid ID"
-            except model.DoesNotExist:
+            except Document.DoesNotExist:
                 result["error"] = "Not Found"
             except Exception:
                 result["error"] = "Other"
@@ -613,16 +607,18 @@ def api_reference(request: HttpRequest) -> HttpResponse:
     return JsonResponse({"success": True, "results": results})
 
 
-@permission_required("orgapy.change_note")
+@permission_required("orgapy.change_document")
 def api_edit_widgets(request: HttpRequest) -> JsonResponse:
     object_id = request.POST.get("objectId")
     updates = json.loads(request.POST.get("updates", "[]"))
     if object_id is None:
         raise BadRequest()
-    query = Note.objects.filter(user=request.user, id=int(object_id))
+    query = Document.objects.filter(user=request.user, id=int(object_id))
     if not query.exists():
         raise Http404()
-    note = query.get()
+    doc = query.get()
+    if doc.content is None:
+        return JsonResponse({"success": False, "reason": "Document has no content"})
     for update in updates:
         widget_type = update.get("type")
         widget_index = update.get("index")
@@ -635,161 +631,114 @@ def api_edit_widgets(request: HttpRequest) -> JsonResponse:
                 "color_round": r"(🔴|🟠|🟡|🟢|🔵|🟣|🟤|⚫|⚪)",
                 "color_square": r"(🟥|🟧|🟨|🟩|🟦|🟪|🟫|⬛|⬜)"
             }[widget_type]
-            for i, widget_match in enumerate(re.finditer(regex, note.content)):
+            for i, widget_match in enumerate(re.finditer(regex, doc.content)):
                 if i != widget_index:
                     continue
                 start, end = widget_match.span(0)
-                text = note.content
-                note.content = text[:start] + widget_value + text[end:]
+                text = doc.content
+                doc.content = text[:start] + widget_value + text[end:]
                 break
         elif widget_type == "checkbox":
-            for i, widget_match in enumerate(re.finditer(r"^ *- \[(x| )\]", note.content, re.MULTILINE)):
+            for i, widget_match in enumerate(re.finditer(r"^ *- \[(x| )\]", doc.content, re.MULTILINE)):
                 if i != widget_index:
                     continue
                 start, end = widget_match.span(1)
-                text = note.content
+                text = doc.content
                 if widget_value:
                     widget_value = "x"
                 else:
                     widget_value = " "
-                note.content = text[:start] + widget_value + text[end:]
+                doc.content = text[:start] + widget_value + text[end:]
                 break
-    note.date_modification = timezone.now()
-    note.save()
+    doc.date_modification = timezone.now()
+    doc.save()
     return JsonResponse({"success": True})
 
 
-def api_sheet(request: HttpRequest) -> JsonResponse:
-    sheet_id = request.GET.get("objectId")
-    if sheet_id is None:
+def api_get_document(request: HttpRequest) -> JsonResponse:
+    document_id = request.GET.get("objectId")
+    if document_id is None:
         raise BadRequest()
-    sheet = find_user_object(Sheet, ["id", "nonce"], sheet_id)
-    if request.user is not None and sheet.user == request.user and request.user.has_perm("orgapy.view_sheet") or sheet.public:
+    doc = find_user_object(Document, ["id", "nonce"], document_id)
+    if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document") or doc.public:
         return JsonResponse({
-            "title": sheet.title,
-            "data": sheet.data,
-            "config": sheet.config,
-            "modification": sheet.date_modification.timestamp(),
-            "url": sheet.get_absolute_url(),
+            "title": doc.title,
+            "subtitle": doc.subtitle,
+            "content": doc.content,
+            "config": doc.config,
+            "modification": doc.date_modification.timestamp(),
+            "url": doc.get_absolute_url(),
         })
     raise PermissionDenied()
 
 
-@permission_required("orgapy.change_sheet")
-def api_save_sheet(request: HttpRequest) -> JsonResponse:
-    sheet_id = request.POST.get("objectId")
-    if sheet_id is None:
+@permission_required("orgapy.change_document")
+def api_save_document(request: HttpRequest) -> JsonResponse:
+    document_id = request.POST.get("objectId")
+    if document_id is None:
         raise BadRequest()
-    sheet_data = request.POST.get("data")
-    sheet_config = request.POST.get("config")
+    doc = find_user_object(Document, "id", document_id, request.user)
     modification = float(request.POST.get("modification", 0))
-    sheet = find_user_object(Sheet, "id", sheet_id, request.user)
-    if sheet.date_modification.timestamp() > modification:
-        return JsonResponse({"success": False, "reason": "Sheet has newer modifications"})
-    sheet.data = sheet_data
-    sheet.config = sheet_config
-    sheet.date_modification = timezone.now()
-    sheet.save()
+    if doc.date_modification.timestamp() > modification:
+        return JsonResponse({"success": False, "reason": "Document has newer modifications"})
+    if "title" in request.POST:
+        doc.title = request.POST["title"]
+    if "subtitle" in request.POST:
+        doc.subtitle = request.POST["subtitle"]
+    if "content" in request.POST:
+        doc.content = request.POST["content"]
+    if "config" in request.POST:
+        doc.config = request.POST["config"]
+    save_document_core(doc)
     return JsonResponse({
         "success": True,
-        "modification": sheet.date_modification.timestamp()
+        "modification": doc.date_modification.timestamp()
     })
 
 
-def api_map(request: HttpRequest) -> JsonResponse:
-    map_id = request.GET.get("objectId")
-    if map_id is None:
-        raise BadRequest()
-    mmap = find_user_object(Map, ["id", "nonce"], map_id)
-    if request.user is not None and mmap.user == request.user and request.user.has_perm("orgapy.view_map") or mmap.public:
-        return JsonResponse({
-            "title": mmap.title,
-            "geojson": mmap.geojson,
-            "config": mmap.config,
-            "modification": mmap.date_modification.timestamp(),
-            "url": mmap.get_absolute_url(),
-        })
-    raise PermissionDenied()
-
-
-@permission_required("orgapy.change_map")
-def api_save_map(request: HttpRequest) -> JsonResponse:
-    map_id = request.POST.get("objectId")
-    if map_id is None:
-        raise BadRequest()
-    map_title = request.POST.get("title")
-    if map_title is None:
-        raise BadRequest()
-    map_geojson = request.POST.get("geojson")
-    map_config = request.POST.get("config")
-    modification = float(request.POST.get("modification", 0))
-    mmap = find_user_object(Map, "id", map_id, request.user)
-    if mmap.date_modification.timestamp() > modification:
-        return JsonResponse({"success": False, "reason": "Map has newer modifications"})
-    mmap.title = map_title
-    mmap.geojson = map_geojson
-    mmap.config = map_config
-    mmap.date_modification = timezone.now()
-    mmap.save()
-    return JsonResponse({
-        "success": True,
-        "modification": mmap.date_modification.timestamp()
-    })
-
-
-def make_suggestions_response(results: list[Category | Note | Sheet | Map] | QuerySet[Category] | QuerySet[Note] | QuerySet[Sheet] | QuerySet[Map]) -> JsonResponse:
+def make_suggestions_response(results: list[Category | Document] | QuerySet[Category] | QuerySet[Document]) -> JsonResponse:
     return JsonResponse({
         "results": [
             {
                 "id": result.id,
                 "title": result.title,
                 "url": result.get_absolute_url(),
-                "active": getattr(result, "active", None)
+                "type": getattr(result, "type", None)
             }
             for result in results
         ]
     })
 
 
-@permission_required("orgapy.view_note")
-@permission_required("orgapy.view_sheet")
-@permission_required("orgapy.view_map")
-def api_suggestions(request: HttpRequest) -> JsonResponse:
+@permission_required("orgapy.view_document")
+def api_suggestions_documents(request: HttpRequest, doctype: str | None = None) -> JsonResponse:
     query = request.GET.get("q", "").strip()
-    object_type = request.GET.get("t")
+    if doctype is None:
+        doctype = request.GET.get("t")
     results = []
     if len(query) >= 1:
         if query.startswith("#"):
-            results += Category.objects.filter(user=request.user, name__startswith=query[1:])[:5]
+            results = Category.objects.filter(user=request.user, name__startswith=query[1:])[:5]
+        elif doctype:
+            results = Document.objects.filter(user=request.user, deleted=False, hidden=False, type=doctype, title__startswith=query)[:5]
         else:
-            if (object_type is None or object_type == "note") and request.user.has_perm("orgapy.view_note"):
-                results += Note.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
-            if (object_type is None or object_type == "sheet") and request.user.has_perm("orgapy.view_sheet"):
-                results += Sheet.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
-            if (object_type is None or object_type == "map") and request.user.has_perm("orgapy.view_map"):
-                results += Map.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
+            results = Document.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
     return make_suggestions_response(results)
 
 
-@permission_required("orgapy.view_note")
+@permission_required("orgapy.view_document")
 def api_suggestions_notes(request: HttpRequest) -> JsonResponse:
-    query = request.GET.get("q", "").strip()
-    results = Note.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
-    return make_suggestions_response(results)
+    return api_suggestions_documents(request, "note")
 
 
-@permission_required("orgapy.view_sheet")
+@permission_required("orgapy.view_document")
 def api_suggestions_sheets(request: HttpRequest) -> JsonResponse:
-    query = request.GET.get("q", "").strip()
-    results = Sheet.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
-    return make_suggestions_response(results)
+    return api_suggestions_documents(request, "sheet")
 
 
-@permission_required("orgapy.view_map")
+@permission_required("orgapy.view_document")
 def api_suggestions_maps(request: HttpRequest) -> JsonResponse:
-    query = request.GET.get("q", "").strip()
-    results = Map.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
-    return make_suggestions_response(results)
+    return api_suggestions_documents(request, "map")
 
 
 @permission_required("orgapy.view_category")
@@ -812,40 +761,29 @@ def api_progress(request: HttpRequest) -> HttpResponse:
     return JsonResponse(data)
 
 
-@permission_required("orgapy.view_note")
-@permission_required("orgapy.view_sheet")
-@permission_required("orgapy.view_map")
-def api_search(request: HttpRequest) -> JsonResponse:
+@permission_required("orgapy.view_document")
+def api_search_documents(request: HttpRequest) -> JsonResponse:
     search_type = request.GET.get("type")
-    if search_type is None:
-        models = [Note, Sheet, Map]
-    elif search_type == "notes":
-        models = [Note]
-    elif search_type == "sheets":
-        models = [Sheet]
-    elif search_type == "maps":
-        models = [Map]
-    else:
-        raise BadRequest()
     search_query = request.GET.get("query")
     search_category = request.GET.get("category")
-    objects = []
-    for model in models:
-        query = model.objects.filter(user=request.user, deleted=False, hidden=False)
-        if search_query is not None:
-            query = query.filter(title__contains=search_query)
-        if search_category is not None:
-            query = query.filter(categories__name__exact=search_category)
-        for obj in query:
-            objects.append({
-                "id": obj.id,
-                "dateCreation": int(1000 * obj.date_creation.timestamp()),
-                "dateModification": int(1000 * obj.date_modification.timestamp()),
-                "title": obj.title,
-                "href": obj.get_absolute_url(),
-                "active": obj.active,
-            })
-    return JsonResponse({"objects": objects, "success": True})
+    qs = Document.objects.filter(user=request.user, deleted=False, hidden=False)
+    if search_type:
+        qs = qs.filter(type=search_type)
+    if search_query is not None:
+        qs = qs.filter(title__contains=search_query)
+    if search_category is not None:
+        qs = qs.filter(categories__name__exact=search_category)
+    documents = []
+    for doc in qs:
+        documents.append({
+            "id": doc.id,
+            "dateCreation": int(1000 * doc.date_creation.timestamp()),
+            "dateModification": int(1000 * doc.date_modification.timestamp()),
+            "title": doc.title,
+            "href": doc.get_absolute_url(),
+            "type": doc.type,
+        })
+    return JsonResponse({"success": True, "documents": documents})
 
 
 @permission_required("orgapy.create_mood_log")
@@ -940,10 +878,11 @@ def api_create_groceries_list(request: HttpRequest) -> JsonResponse:
             note_content += f"\n**{section_label}**\n\n"
             old_section = section_label
         note_content += f"- [ ] {item_label}\n"
-    note = Note.objects.create(
+    note = Document.objects.create(
         user=request.user,
         title=f"Shopping list {datetime.datetime.now().strftime("%b, %d")}",
         content=note_content.strip(),
+        type="note"
     )
     note.date_creation = datetime.datetime.now()
     note.save()

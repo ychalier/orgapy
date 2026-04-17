@@ -1643,7 +1643,7 @@ class Map {
         if (!this.readonly) {
             const prevButton = create(header, "a", "link-hidden");
             prevButton.innerHTML = `<i class="ri-map-2-line"></i>`;
-            prevButton.href = "../../documents";
+            prevButton.href = "../";
         }
 
         if (this.readonly) {
@@ -1982,11 +1982,11 @@ class Map {
         if (this.readonly) return;
         let mapExport = this.export();
         var self = this;
-        apiPost("save-map",
+        apiPost("save-document",
             {
                 objectId: this.objectId,
                 "title": mapExport.title,
-                "geojson": mapExport.geojson,
+                "content": mapExport.geojson,
                 "config": mapExport.config,
                 "modification": this.modification
             }, (data) => {
@@ -2294,15 +2294,15 @@ class SearchResultsDialog extends Dialog {
 function initializeMap(mapLayout, readonly) {
     var map = null;
     let mapId = mapLayout.getAttribute("map-id");
-    fetch(URL_API + `?action=map&objectId=${mapId}`, {
+    fetch(URL_API + `?action=get-document&objectId=${mapId}`, {
         method: "get",
         })
         .then(res => res.json())
         .then(mapData => {
             map = new Map(mapId, mapLayout, readonly);
             let geojson = null;
-            if (mapData.geojson != null && mapData.geojson.trim() != "") {
-                geojson = JSON.parse(mapData.geojson);
+            if (mapData.content != null && mapData.content.trim() != "") {
+                geojson = JSON.parse(mapData.content);
             }
             let config = {};
             if (mapData.config != null && mapData.config.trim() != "") {

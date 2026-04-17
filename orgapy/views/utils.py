@@ -12,11 +12,10 @@ from django.http import HttpRequest, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..models import Settings, Category, Note, Sheet, Map, ProgressLog, AbstractDocument, Project, MoodLog
+from ..models import Settings, Category, Document, ProgressLog, AbstractDocument, Project, MoodLog
 
 
-UserObject = TypeVar("UserObject", Category, Note, Sheet, Map, ProgressLog, Project, MoodLog)
-DocumentT = TypeVar("DocumentT", Note, Sheet, Map)
+UserObject = TypeVar("UserObject", Category, Document, ProgressLog, Project, MoodLog)
 LoggedUser = AbstractBaseUser
 
 
@@ -113,68 +112,15 @@ def compare_objective_histories(user: LoggedUser, name: str, before: str | None,
         )
 
 
-class ConflictError(Exception):
-    pass
-
-
-def save_document_core(
-        request: HttpRequest,
-        model: type[DocumentT],
-        specific_fields: list[str] = []) -> DocumentT:
-    original = None
-    if "id" in request.POST and model.objects.filter(id=request.POST["id"]).exists():
-        original = model.objects.get(id=request.POST["id"])
-        if original.date_modification.timestamp() > float(request.POST.get("modification", 0)):
-            raise ConflictError()
-    if original is not None and original.user != request.user:
-        raise PermissionDenied()
-    title = request.POST.get("title", "").strip()
-    kwargs = {}
-    for field in specific_fields:
-        kwargs[field] = request.POST.get(field, "").strip()
-    is_public = "public" in request.POST
-    is_pinned = "pinned" in request.POST
-    is_hidden = "hidden" in request.POST
-    if original is None:
-        obj = model.objects.create(
-            user=request.user,
-            title=title,
-            public=is_public,
-            pinned=is_pinned,
-            hidden=is_hidden,
-            **kwargs
-        )
-    else:
-        obj = original
-        obj.title = title
-        obj.public = is_public
-        obj.pinned = is_pinned
-        obj.hidden = is_hidden
-        for field, value in kwargs.items():
-            setattr(obj, field, value)
-    obj.categories.clear()
-    name_list = request.POST.get("categories", "").split(";") + request.POST.get("extra", "").split(";")
-    for dirty_name in name_list:
-        name = dirty_name.lower().strip()
-        if name == "":
-            continue
-        int_id = None
-        try:
-            int_id = int(name)
-        except ValueError:
-            pass
-        if int_id is not None and Category.objects.filter(id=int_id, user=request.user).exists():
-            category = Category.objects.get(id=int_id, user=request.user)
-        elif Category.objects.filter(name=name, user=request.user).exists():
-            category = Category.objects.get(name=name, user=request.user)
-        elif name == "uncategorized":
-            raise BadRequest()
-        else:
-            category = Category.objects.create(name=name, user=request.user)
-        obj.categories.add(category)
-    obj.date_modification = timezone.now()
-    obj.save()
-    return obj
+def save_document_core(document: Document):
+    document.date_modification = timezone.now()
+    document.save()
+    referenced_document_ids = set()
+    pattern = re.compile(r"@(?:embed)?(note|sheet|map)/(\d+)")
+    if document.content:
+        for _, document_id in re.findall(pattern, document.content):
+            referenced_document_ids.add(int(document_id))
+    document.references.set(Document.objects.filter(user=document.user, id__in=referenced_document_ids))
 
 
 def get_or_create_settings(user: LoggedUser) -> Settings:
@@ -188,7 +134,7 @@ def view_document_list(
         request: HttpRequest,
         template_name: str,
         search_query: str | None = None,
-        type_filter: Literal["notes", "sheets", "maps"] | None = None,
+        type_filter: Literal["note", "sheet", "map"] | None = None,
         status_filter: Literal["public", "hidden", "deleted", "projects"] | None = None,
         category_filters: str | None = None,
         sort_key: Literal["creation", "modification", "access", "deletion", "title"] | None = "modification",
@@ -236,7 +182,7 @@ def view_document_list(
 
     if type_filter is None:
         s = request.GET.get("type")
-        type_filter = s if s in ["notes", "sheets", "maps"] else None # type: ignore
+        type_filter = s if s in ["note", "sheet", "map"] else None # type: ignore
     if type_filter:
         attrs["type"] = type_filter
 
@@ -261,67 +207,44 @@ def view_document_list(
     if sort_key:
         attrs["sort"] = sort_key
 
-    documents = []
-
-    base_models: list[type[AbstractDocument]] = []
-    if type_filter is None:
-        base_models = [Note, Sheet, Map]
-    elif type_filter == "notes":
-        base_models = [Note]
-    elif type_filter == "sheets":
-        base_models = [Sheet]
-    elif type_filter == "maps":
-        base_models = [Map]
-
     category_pattern = re.compile(r"#([a-zA-Z0-9]+)")
     spaces_pattern = re.compile(r" +")
 
-    for base_model in base_models:
-        qs = base_model.objects.filter(user=request.user)
-        if status_filter == "public":
-            qs = qs.filter(public=True)
-        if status_filter == "hidden":
-            qs = qs.filter(hidden=True)
-        else:
-            qs = qs.filter(hidden=False)
-        if status_filter == "projects":
-            if base_model != Note:
-                continue
-            qs = qs.filter(project__status__in=[Project.ACTIVE, Project.INACTIVE, Project.FUTURE]).distinct()
-        if status_filter == "deleted":
-            qs = qs.filter(deleted=True)
-        else:
-            qs = qs.filter(deleted=False)
-        for category_id in category_ids:
-            qs = qs.filter(categories__in=[category_id])
-        if filter_uncategorized:
-            qs = qs.filter(categories__isnull=True)
-        if search_query:
-            for name in category_pattern.findall(search_query):
-                if name == "uncategorized":
-                    qs = qs.filter(categories__isnull=True)
-                else:
-                    qs = qs.filter(categories__name__exact=name)
-            search_query = spaces_pattern.sub(" ", category_pattern.sub("", search_query)).strip()
-            if search_query:
-                if base_model == Note:
-                    qs = qs.filter(Q(title__icontains=search_query) | Q(content__icontains=search_query))
-                elif base_model == Sheet:
-                    qs = qs.filter(Q(title__icontains=search_query) | Q(data__icontains=search_query))
-                else:
-                    qs = qs.filter(title__icontains=search_query)
-        documents += list(qs)
-
+    qs = Document.objects.filter(user=request.user)
+    if type_filter is not None:
+        qs = qs.filter(type=type_filter)
+    if status_filter == "public":
+        qs = qs.filter(public=True)
+    if status_filter == "hidden":
+        qs = qs.filter(hidden=True)
+    else:
+        qs = qs.filter(hidden=False)
+    if status_filter == "projects":
+        qs = qs.filter(project__status__in=[Project.ACTIVE, Project.INACTIVE, Project.FUTURE]).distinct()
+    if status_filter == "deleted":
+        qs = qs.filter(deleted=True)
+    else:
+        qs = qs.filter(deleted=False)
+    for category_id in category_ids:
+        qs = qs.filter(categories__in=[category_id])
+    if filter_uncategorized:
+        qs = qs.filter(categories__isnull=True)
+    if search_query:
+        for name in category_pattern.findall(search_query):
+            if name == "uncategorized":
+                qs = qs.filter(categories__isnull=True)
+            else:
+                qs = qs.filter(categories__name__exact=name)
+        search_query = spaces_pattern.sub(" ", category_pattern.sub("", search_query)).strip()
+        qs = qs.filter(Q(title__icontains=search_query) | Q(content__icontains=search_query))
+    
     if sort_key:
         if sort_key == "title":
-            real_sort_key = sort_key
-            documents.sort(key=lambda doc: doc.title)
+            qs = qs.order_by("-pinned", "title")
         else:
-            real_sort_key = "date_" + sort_key
-            documents.sort(key=lambda doc: getattr(doc, real_sort_key), reverse=True)
-    documents.sort(key=lambda doc: doc.pinned, reverse=True)
+            qs = qs.order_by("-pinned", f"-date_{sort_key}")
 
-    paginator = Paginator(documents, page_size)
+    paginator = Paginator(qs, page_size)
     page = request.GET.get("page")
     objects = paginator.get_page(page)
     return render(request, template_name, {
@@ -333,17 +256,13 @@ def view_document_list(
     })
 
 
-def toggle_object_attribute(request: HttpRequest, active: str, object_id: str, attrname: str) -> HttpResponse:
-    try:
-        model = {"notes": Note, "sheets": Sheet, "maps": Map}[active]
-    except KeyError:
-        raise BadRequest()
-    obj: Note | Sheet | Map = find_user_object(model, "id", object_id, request.user)
-    setattr(obj, attrname, not getattr(obj, attrname, False))
-    obj.save()
+def toggle_document_attribute(request: HttpRequest, object_id: str, attrname: str) -> HttpResponse:
+    doc = find_user_object(Document, "id", object_id, request.user)
+    setattr(doc, attrname, not getattr(doc, attrname, False))
+    doc.save()
     if "next" in request.GET:
         return redirect(request.GET["next"])
-    return redirect(obj.get_absolute_url())
+    return redirect(doc.get_absolute_url())
 
 
 def get_pending_mood_logs(user: LoggedUser, today_hours: int, lookback_days: int) -> list[datetime.date]:

@@ -1,39 +1,39 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}Edit {% if map %}'{{ map.title }}'{% else %}map{% endif %}{% endblock title %}
+{% block title %}Edit {% if document %}'{{ document.title }}'{% else %}map{% endif %}{% endblock title %}
 
 {% block column_main %}
 
-<form id="form-note-edit" action="{% url 'orgapy:save_map' %}" method="post">
+<form id="form-note-edit" action="{% url 'orgapy:save_document' %}" method="post">
     {% csrf_token %}
-    {% if map %}<input type="hidden" name="id" value="{{map.id}}" />{% endif %}
-    <input hidden type="text" name="modification" value="{% if map %}{{ map.date_modification.timestamp }}{% endif %}" />
+    {% if document %}<input type="hidden" name="id" value="{{document.id}}" />{% endif %}
+    <input hidden type="text" name="modification" value="{% if document %}{{ document.date_modification.timestamp }}{% endif %}" />
     {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}" />{% endif %}
     <div class="card">
         <h1 class="card-header">
-            <input class="input-inline" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ map.title }}{% endif %}" />
+            <input class="input-inline" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ document.title }}{% endif %}" />
         </h1>
         <div class="card-body colll">
-            {% include 'orgapy/partials/categories_input.html' with obj=map %}
+            {% include 'orgapy/partials/categories_input.html' with obj=document %}
             <div class="col">
                 <div>
                     <label class="toggle">
-                        <input type="checkbox" name="public" {% if map.public %}checked{% endif %} />
+                        <input type="checkbox" name="public" {% if document.public %}checked{% endif %} />
                         <span class="toggle-slider"></span>
                         <span class="toggle-text">Public</span>
                     </label>
                 </div>
                 <div>
                     <label class="toggle">
-                        <input type="checkbox" name="pinned" {% if map.pinned %}checked{% endif %} />
+                        <input type="checkbox" name="pinned" {% if document.pinned %}checked{% endif %} />
                         <span class="toggle-slider"></span>
                         <span class="toggle-text">Pinned</span>
                     </label>
                 </div>
                 <div>
                     <label class="toggle">
-                        <input type="checkbox" name="hidden" {% if map.hidden %}checked{% endif %} />
+                        <input type="checkbox" name="hidden" {% if document.hidden %}checked{% endif %} />
                         <span class="toggle-slider"></span>
                         <span class="toggle-text">Hidden</span>
                     </label>

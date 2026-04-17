@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/fullscreen.html" %}
 {% load static %}
 
-{% block title %}{% if map.title %}{{map.title}}{% else %}Untitled{% endif %}{% endblock title %}
+{% block title %}{% if document.title %}{{document.title}}{% else %}Untitled{% endif %}{% endblock title %}
 
 {% block head %}
 {{ block.super }}
@@ -15,16 +15,16 @@
 
 {% block column_main %}
 
-<div class="map-layout{% if request.GET.embed == '1' %} embedded{% endif %}" map-id="{{map.id}}">
+<div class="map-layout{% if request.GET.embed == '1' %} embedded{% endif %}" map-id="{{document.id}}">
     <div class="map-dashboard"></div>
     <div class="map-seed"></div>
 </div>
 
-{% if not readonly and map.referenced_in %}
+{% if not readonly and document.referenced_in %}
 <template id="template-refs">
     <div class="map-refs row">
-        {% for ref in map.referenced_in.all %}
-        <a class="reference label" href="{% url 'orgapy:note' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
+        {% for ref in document.referenced_in.all %}
+        <a class="reference label" href="{% url 'orgapy:document' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
         {% endfor %}
     </div>
 </template>

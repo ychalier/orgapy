@@ -3055,10 +3055,10 @@ class Sheet {
     saveData() {
         let sheetExport = this.export();
         apiPost(
-            "save-sheet",
+            "save-document",
             {
                 objectId: this.objectId,
-                data: sheetExport.data,
+                content: sheetExport.data,
                 config: sheetExport.config,
                 modification: this.modification,
             }, (data) => {
@@ -3076,15 +3076,15 @@ class Sheet {
 function initializeSheet(sheetSeed, readonly) {
     var sheet = null;
     let sheetId = sheetSeed.getAttribute("sheet-id");
-    fetch(URL_API + `?action=sheet&objectId=${sheetId}`, {
+    fetch(URL_API + `?action=get-document&objectId=${sheetId}`, {
         method: "get",
         })
         .then(res => res.json())
         .then(sheetData => {
             sheet = new Sheet(sheetId, sheetSeed, readonly);
             let data = null;
-            if (sheetData.data != null && sheetData.data.trim() != "") {
-                data = parseTsv(sheetData.data);
+            if (sheetData.content != null && sheetData.content.trim() != "") {
+                data = parseTsv(sheetData.content);
             }
             let config = null;
             if (sheetData.config != null && sheetData.config.trim() != "") {

@@ -1,30 +1,30 @@
 <div class="line">
     <span class="x-hint" style="min-width: 1.6rem">{{ obj.date_modification_display }}</span>
-    {% if obj.active == "notes" %}<i title="Note" class="ri-sticky-note-line"></i>{% elif obj.active == "sheets" %}<i title="Sheet" class="ri-table-line"></i>{% elif obj.active == "maps" %}<i title="Map" class="ri-map-2-line"></i>{% endif %}
-    {% if obj.pinned %}<a class="button button-inline" href="{% url 'orgapy:toggle_pin' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>{% endif %}
-    {% if obj.public %}<a class="button button-inline" href="{% url 'orgapy:toggle_public' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Make private"><i class="ri-lock-line"></i></a>{% endif %}
+    {% if obj.type_icon %}<i title="{{ obj.get_type_display }}" class="{{ obj.type_icon }}"></i>{% endif %}
+    {% if obj.pinned %}<a class="button button-inline" href="{% url 'orgapy:toggle_document_pin' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Unpin"><i class="ri-bookmark-fill"></i></a>{% endif %}
+    {% if obj.public %}<a class="button button-inline" href="{% url 'orgapy:toggle_document_public' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Make private"><i class="ri-lock-line"></i></a>{% endif %}
     {% if obj.active == "notes" and obj.ongoing_projects %}<a class="button button-inline" href="{% url 'orgapy:projects' %}?note={{ obj.id }}" title="Projects"><i class="ri-briefcase-line"></i></a>{% endif %}
-    {% if obj.hidden %}<a class="button button-inline" href="{% url 'orgapy:toggle_hidden' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Unhide"><i class="ri-eye-line"></i></a>{% endif %}
+    {% if obj.hidden %}<a class="button button-inline" href="{% url 'orgapy:toggle_hidden' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Unhide"><i class="ri-eye-line"></i></a>{% endif %}
     {% if obj.deleted %}<span>{{ obj.title }}</span>{% else %}<a class="link-hidden" href="{{ obj.get_absolute_url }}">{% if obj.title %}{{ obj.title }}{% else %}<i>Untitled</i>{% endif %}</a>{% endif %}
     {% if obj.categories.all %}{% for category in obj.categories.all %}<a class="link-tenuous" href="{{ category.get_absolute_url }}">#{{category.name}}</a>{% endfor%}{% else %}<a class="link-tenuous" href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>{% endif %}
     <div class="dropdown">
         <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
         <ul class="menu">
             {% if obj.deleted %}
-            <li class="menu-item"><a class="link-confirm" message="Please confirm restoration of '{{ obj.title }}'" href="{% url 'orgapy:restore' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Restore"><i class="ri-arrow-left-up-box-line"></i> Restore</a></li>
-            <li class="menu-item"><a class="link-confirm" message="Please confirm DESTRUCTION of '{{ obj.title }}'" href="{% url 'orgapy:destroy' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Destroy"><i class="ri-file-shred-line"></i> Destroy</a></li>
+            <li class="menu-item"><a class="link-confirm" message="Please confirm restoration of '{{ obj.title }}'" href="{% url 'orgapy:restore_document' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Restore"><i class="ri-arrow-left-up-box-line"></i> Restore</a></li>
+            <li class="menu-item"><a class="link-confirm" message="Please confirm DESTRUCTION of '{{ obj.title }}'" href="{% url 'orgapy:destroy_document' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Destroy"><i class="ri-file-shred-line"></i> Destroy</a></li>
             {% else %}
-            <li class="menu-item"><a href="{% url 'orgapy:edit' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Edit"><i class="ri-pencil-fill"></i> Edit</a></li>
-            {% if not obj.pinned %}<li class="menu-item"><a href="{% url 'orgapy:toggle_pin' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Mark as favorite"><i class="ri-bookmark-fill"></i> Pin</a></li>{% endif %}
+            <li class="menu-item"><a href="{% url 'orgapy:edit_document' docid=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Edit"><i class="ri-pencil-fill"></i> Edit</a></li>
+            {% if not obj.pinned %}<li class="menu-item"><a href="{% url 'orgapy:toggle_document_pin' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Mark as favorite"><i class="ri-bookmark-fill"></i> Pin</a></li>{% endif %}
             {% if not obj.public %}
-            <li class="menu-item"><a href="{% url 'orgapy:toggle_public' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Make public"><i class="ri-lock-unlock-line"></i> Publish</a></li>
+            <li class="menu-item"><a href="{% url 'orgapy:toggle_document_public' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Make public"><i class="ri-lock-unlock-line"></i> Publish</a></li>
             {% else %}
-            <li class="menu-item"><a href="{% url 'orgapy:toggle_public' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Make private"><i class="ri-lock-line"></i> Make private</a></li>
-            <li class="menu-item"><a href="{% url 'orgapy:share' active=obj.active nonce=obj.nonce %}"><i class="ri-share-line"></i> Share</a></li>
+            <li class="menu-item"><a href="{% url 'orgapy:toggle_document_public' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Make private"><i class="ri-lock-line"></i> Make private</a></li>
+            {# <li class="menu-item"><a href="{% url 'orgapy:share' nonce=obj.nonce %}"><i class="ri-share-line"></i> Share</a></li> TODO: delete when using nonces only #} 
             {% endif %}
-            <li class="menu-item"><a href="{% url 'orgapy:export' active=obj.active object_id=obj.id %}" title="Download"><i class="ri-download-line"></i> Download</a></li>
-            {% if not obj.hidden %}<li class="menu-item"><a href="{% url 'orgapy:toggle_hidden' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" title="Mark as hidden"><i class="ri-eye-line"></i> Hide</a></li>{% endif %}
-            <li class="menu-item"><a href="{% url 'orgapy:delete' active=obj.active object_id=obj.id %}?next={{ request.get_full_path | urlencode }}" class="button button-danger link-confirm" message="Please confirm deletion of '{{ obj.title }}'" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+            <li class="menu-item"><a href="{% url 'orgapy:raw_document' obj.id %}" title="Download"><i class="ri-download-line"></i> Raw</a></li>
+            {% if not obj.hidden %}<li class="menu-item"><a href="{% url 'orgapy:toggle_document_hidden' obj.id %}?next={{ request.get_full_path | urlencode }}" title="Mark as hidden"><i class="ri-eye-line"></i> Hide</a></li>{% endif %}
+            <li class="menu-item"><a href="{% url 'orgapy:delete_document' obj.id %}?next={{ request.get_full_path | urlencode }}" class="button button-danger link-confirm" message="Please confirm deletion of '{{ obj.title }}'" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
             {% endif %}
         </ul>
     </div>

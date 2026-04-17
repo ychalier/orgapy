@@ -44,7 +44,7 @@ class Project {
         this.title = data.title == null ? null : (data.title == "" ? null : data.title);
         this.checklist = data.checklist;
         this.rank = data.rank;
-        this.note = data.note;
+        this.document = data.document;
         this.status = data.status;
         this.checklistItems = null;
         this.splitChecklist();
@@ -110,44 +110,44 @@ class Project {
         input.focus();
     }
 
-    openNoteDialog() {
+    openDocumentDialog() {
         var self = this;
         const dialog = create(this.container, "dialog");
         dialog.setAttribute("closedby", "any");
         const card = create(dialog, "div", "card");
-        const noteIframe = create(card, "iframe", "plain");
-        if (this.note != null) noteIframe.src = this.note.url + "/standalone";
-        noteIframe.width = 400;
-        noteIframe.height = 400;
+        const documentIframe = create(card, "iframe", "plain");
+        if (this.document != null) documentIframe.src = this.document.url + "/standalone";
+        documentIframe.width = 400;
+        documentIframe.height = 400;
         const actionButtons = create(card, "div", "card-actions");
-        const noteLink = create(actionButtons, "a", "button");
-        noteLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i><span>Go to note</span>`;
-        if (this.note != null) noteLink.href = this.note.url;
-        const noteEditLink = create(actionButtons, "a", "button");
-        noteEditLink.innerHTML = `<i class="ri-pencil-fill"></i><span>Edit note</span>`;
-        if (this.note != null) noteEditLink.href = this.note.url + "/edit";
-        const noteClear = create(actionButtons, "span", "button button-danger");
-        noteClear.innerHTML = `<i class="ri-close-line"></i><span>Unbind from project</span>`;
+        const documentLink = create(actionButtons, "a", "button");
+        documentLink.innerHTML = `<i class="ri-arrow-right-circle-line"></i><span>Go to document</span>`;
+        if (this.document != null) documentLink.href = this.document.url;
+        const documentEditLink = create(actionButtons, "a", "button");
+        documentEditLink.innerHTML = `<i class="ri-pencil-fill"></i><span>Edit document</span>`;
+        if (this.document != null) documentEditLink.href = this.document.url + "/edit";
+        const documentClear = create(actionButtons, "span", "button button-danger");
+        documentClear.innerHTML = `<i class="ri-close-line"></i><span>Unbind from project</span>`;
 
-        function clearNote() {
-            if (confirm(`Unbind '${self.note.title}' from this project?`)) {
+        function clearDocument() {
+            if (confirm(`Unbind '${self.document.title}' from this project?`)) {
                 dialog.close();
-                self.unbindNote();
+                self.unbindDocument();
             }
         }
 
-        if (this.note == null) openNoteInput();
+        if (this.document == null) openDocumentInput();
 
-        noteClear.addEventListener("click", clearNote);
+        documentClear.addEventListener("click", clearDocument);
         dialog.showModal();
     }
 
-    openNoteInputDialog() {
+    openDocumentInputDialog() {
         var self = this;
         const dialog = create(this.container, "dialog");
         dialog.setAttribute("closedby", "any");
         const card = create(dialog, "div", "card");
-        create(card, "h2", "card-header").textContent = "Bind note";
+        create(card, "h2", "card-header").textContent = "Bind document";
         const cardBody = create(card, "div", "card-body");
         const container = create(cardBody, "div", "search");
         const input = create(create(container, "div", "search-bar"), "input", "search-input");
@@ -156,11 +156,11 @@ class Project {
         let currentId = null;
         let currentTitle = null;
         let currentUrl = null;
-        if (this.note != null) {
-            input.value = this.note.title;
-            currentId = this.note.id;
-            currentTitle = this.note.title;
-            currentUrl = this.note.url;
+        if (this.document != null) {
+            input.value = this.document.title;
+            currentId = this.document.id;
+            currentTitle = this.document.title;
+            currentUrl = this.document.url;
         }
 
         bindSearch(container, "suggestions-notes", (state) => {
@@ -174,7 +174,7 @@ class Project {
                 currentUrl = entry.url;
             }
             if (currentId != null && currentTitle != null && currentUrl != null) {
-                self.note = {
+                self.document = {
                     id: currentId,
                     title: currentTitle,
                     url: currentUrl
@@ -247,17 +247,17 @@ class Project {
         }
         badge.innerHTML = `<i class="ri-checkbox-circle-line"></i> ${completed}/${total}`;
 
-        if (this.note != null) {
-            const noteSpan = create(header, "span", "project-note");
-            noteSpan.textContent = this.note.title;
-            noteSpan.addEventListener("click", (e) => {
+        if (this.document != null) {
+            const documentSpan = create(header, "span", "project-document");
+            documentSpan.textContent = this.document.title;
+            documentSpan.addEventListener("click", (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                self.openNoteDialog();});
+                self.openDocumentDialog();});
         }
 
         const title = create(header, "span", "project-title");
-        title.textContent = this.title == null ? (this.note == null ? "Untitled" : "") : this.title;
+        title.textContent = this.title == null ? (this.document == null ? "Untitled" : "") : this.title;
         title.addEventListener("click", (event) => {
             event.stopPropagation();
             self.inflateTitleInput(title);
@@ -460,13 +460,13 @@ class Project {
 
     inflateContextMenuItems(menu) {
         var self = this;
-        if (this.title == null && this.note != null) {
+        if (this.title == null && this.document != null) {
             addContextMenuOption(menu, "ri-input-field", "Set title", () => {self.inflateTitleInput(self.container.querySelector(".project-header .project-title"))});
         }
-        if (this.note == null) {
-            addContextMenuOption(menu, "ri-sticky-note-line", "Bind note", () => {self.openNoteInputDialog()});
+        if (this.document == null) {
+            addContextMenuOption(menu, "ri-sticky-document-line", "Bind document", () => {self.openDocumentInputDialog()});
         } else {
-            addContextMenuOption(menu, "ri-sticky-note-line", "Unbind note", () => {self.unbindNote()});
+            addContextMenuOption(menu, "ri-sticky-document-line", "Unbind document", () => {self.unbindDocument()});
         }
         addContextMenuOption(menu, "ri-checkbox-circle-line", "Status", () => {self.openStatusDialog()});
         const option = addContextMenuOption(menu, "ri-delete-bin-line", "Delete", () => {self.delete()});
@@ -538,7 +538,7 @@ class Project {
             title: this.title,
             modification: this.modification,
             checklist: this.checklist,
-            note: this.note,
+            document: this.document,
             status: this.status,
         }
     }
@@ -577,10 +577,10 @@ class Project {
     }
 
     reference() {
-        if (this.note != null && this.title != null) {
-            return `${this.note.title} - ${this.title}`;
-        } else if (this.note != null) {
-            return this.note.title;
+        if (this.document != null && this.title != null) {
+            return `${this.document.title} - ${this.title}`;
+        } else if (this.document != null) {
+            return this.document.title;
         } else if (this.title != null) {
             return this.title;
         } else {
@@ -606,8 +606,8 @@ class Project {
         this.update();
     }
 
-    unbindNote() {
-        this.note = null;
+    unbindDocument() {
+        this.document = null;
         this.update();
     }
 
@@ -615,7 +615,7 @@ class Project {
 
 class TemporaryProject extends Project {
 
-    constructor(parentContainer, note, forceExpand=false) {
+    constructor(parentContainer, document, forceExpand=false) {
         super(
             parentContainer,
             {
@@ -624,7 +624,7 @@ class TemporaryProject extends Project {
                 modification: new Date(),
                 title: null,
                 checklist: null,
-                note: note == undefined ? null : note,
+                document: document == undefined ? null : document,
                 status: "AC",
             },
             forceExpand);
@@ -646,7 +646,7 @@ class TemporaryProject extends Project {
         apiPost("create-project", {}, (data) => {
             projects[data.project.id] = new Project(self.parentContainer, data.project, self.forceExpand);
             projects[data.project.id].title = title;
-            projects[data.project.id].note = self.note;
+            projects[data.project.id].document = self.document;
             inflateProjects(self.parentContainer);
             projects[data.project.id].save();
         });
@@ -696,7 +696,7 @@ function inflateProjects(container) {
     });
 }
 
-function fetchProjects(container, noteId=null, forceExpand=false, statusFilter=null, projectId=null) {
+function fetchProjects(container, documentId=null, forceExpand=false, statusFilter=null, projectId=null) {
     let ranks = {};
     const rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
     if (rankStorage != null) {
@@ -706,7 +706,7 @@ function fetchProjects(container, noteId=null, forceExpand=false, statusFilter=n
         }
     }
     const params = {action: "list-projects"};
-    if (noteId != null) params["note"] = noteId;
+    if (documentId != null) params["document"] = documentId;
     if (statusFilter != null) params["status"] = statusFilter;
     if (projectId != null) params["project"] = projectId;
     fetch(URL_API + "?" + (new URLSearchParams(params)).toString())
@@ -723,8 +723,8 @@ function fetchProjects(container, noteId=null, forceExpand=false, statusFilter=n
         });
 }
 
-function onButtonProjectCreate(container, note, forceExpand) {
-    let tempProject = new TemporaryProject(container, note, forceExpand);
+function onButtonProjectCreate(container, document, forceExpand) {
+    let tempProject = new TemporaryProject(container, document, forceExpand);
     let tempProjectElement = tempProject.create();
     container.appendChild(tempProjectElement);
     setTimeout(() => {
