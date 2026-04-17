@@ -76,6 +76,92 @@ class Category(models.Model):
 
 class Document(models.Model):
 
+    NOTE = "note"
+    SHEET = "sheet"
+    MAP = "map"
+    TYPE_CHOICES = [
+        (NOTE, "Note"),
+        (SHEET, "Sheet"),
+        (MAP, "Map")
+    ]
+
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    type = models.CharField(max_length=5, choices=TYPE_CHOICES, default=NOTE)
+    nonce = models.CharField(max_length=12, unique=True, blank=True, default=generate_nonce)
+    date_creation = models.DateTimeField(default=timezone.now)
+    date_modification = models.DateTimeField(default=timezone.now)
+    date_access = models.DateTimeField(default=timezone.now)
+    date_deletion = models.DateTimeField(blank=True, null=True)
+    public = models.BooleanField(default=False)
+    pinned = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False)
+    deleted = models.BooleanField(default=False)
+    references = models.ManyToManyField("Document", blank=True, related_name="referenced_in")
+    categories = models.ManyToManyField("Category", blank=True, related_name="documents")
+    title = models.CharField(max_length=255, blank=True, null=True)
+    subtitle = models.TextField(blank=True, null=True)
+    content = models.TextField(blank=True, null=True)
+    config = models.TextField(blank=True, null=True)
+    source_type = models.CharField(max_length=5) # NOTE: temporary
+    source_id = models.BigIntegerField() # NOTE: temporary
+
+    class Meta:
+        ordering = ["-date_modification"]
+
+    def __str__(self):
+        return f"[{self.user}] {self.id}. {self.title}"
+
+    def get_absolute_url(self):
+        return reverse(f"orgapy:{self.type}", kwargs={"object_id": self.id})
+
+    # TODO: enable this later
+    # def save(self, *args, **kwargs):
+    #     if self.nonce is None:
+    #         self.nonce = generate_nonce()
+    #     super(Document, self).save(*args, **kwargs)
+    #     referenced_document_ids = set()
+    #     pattern = re.compile(r"@(?:embed)?(note|sheet|map)/(\d+)")
+    #     if self.content:
+    #         for _, document_id in re.findall(pattern, self.content):
+    #             referenced_document_ids.add(int(document_id))
+    #     self.references.set(Document.objects.filter(user=self.user, id__in=referenced_document_ids))
+
+    @property
+    def type_icon(self) -> str:
+        return {
+            "note": "ri-sticky-note-line",
+            "sheet": "ri-table-line",
+            "map": "ri-map-2-line"
+        }[self.type]
+
+    def date_modification_display(self):
+        now = datetime.datetime.now()
+        if now.date() == self.date_modification.date():
+            return "TODAY"
+        elif now.year == self.date_modification.year:
+            return self.date_modification.strftime("%m-%d")
+        return self.date_modification.strftime("%Y-%m-%d")
+
+    def soft_delete(self):
+        self.deleted = True
+        self.date_deletion = timezone.now()
+        self.save()
+
+    def restore(self):
+        self.deleted = False
+        self.date_deletion = None
+        self.save()
+
+    def get_ongoing_projects(self):
+        return self.project_set.exclude(status=Project.ARCHIVED) # type: ignore
+
+    def get_archived_projects(self):
+        return self.project_set.filter(status=Project.ARCHIVED).count() # type: ignore
+
+
+class AbstractDocument(models.Model):
+
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -99,7 +185,7 @@ class Document(models.Model):
     def save(self, *args, **kwargs):
         if self.nonce is None:
             self.nonce = generate_nonce()
-        super(Document, self).save(*args, **kwargs)
+        super(AbstractDocument, self).save(*args, **kwargs)
 
     def date_modification_display(self):
         now = datetime.datetime.now()
@@ -120,7 +206,7 @@ class Document(models.Model):
         self.save()
 
 
-class Note(Document):
+class Note(AbstractDocument):
 
     content = models.TextField()
     note_refs = models.ManyToManyField("Note", related_name="referenced_in")
@@ -164,7 +250,7 @@ class SheetGroup(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
 
-class Sheet(Document):
+class Sheet(AbstractDocument):
 
     description = models.TextField(blank=True, null=True)
     data = models.TextField(blank=True, null=True)
@@ -177,7 +263,7 @@ class Sheet(Document):
         return reverse("orgapy:sheet", kwargs={"object_id": self.id})
 
 
-class Map(Document):
+class Map(AbstractDocument):
 
     geojson = models.TextField(blank=True, null=True)
     config = models.TextField(blank=True, null=True)
@@ -254,7 +340,7 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{ self.user} - { self.id }. { self.title }"
-    
+
     @property
     def overdue(self) -> bool:
         if self.due_date is None:
@@ -330,6 +416,7 @@ class Project(models.Model):
     checklist = models.TextField(blank=True, null=True)
     rank = models.FloatField()                                            # Deprecated
     note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True)
+    document = models.ForeignKey("Document", on_delete=models.SET_NULL, null=True, blank=True)
     archived = models.BooleanField(default=False)                         # Deprecated
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=ACTIVE)
 
@@ -656,11 +743,11 @@ class MoodLog(models.Model):
     @property
     def activities_display(self) -> str:
         return self.activities.replace(",", " ")
-    
+
     @property
     def overall(self) -> int:
         return self.mood + self.energy + self.health + self.stress - 4
-    
+
     @property
     def label(self) -> str:
         return ["-", "Devastated", "Very bad", "Bad", "Not Great", "Neutral", "Good", "Very good", "Excellent"][self.overall]

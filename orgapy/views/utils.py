@@ -12,7 +12,7 @@ from django.http import HttpRequest, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..models import Settings, Category, Note, Sheet, Map, ProgressLog, Document, Project, MoodLog
+from ..models import Settings, Category, Note, Sheet, Map, ProgressLog, AbstractDocument, Project, MoodLog
 
 
 UserObject = TypeVar("UserObject", Category, Note, Sheet, Map, ProgressLog, Project, MoodLog)
@@ -263,7 +263,7 @@ def view_document_list(
 
     documents = []
 
-    base_models: list[type[Document]] = []
+    base_models: list[type[AbstractDocument]] = []
     if type_filter is None:
         base_models = [Note, Sheet, Map]
     elif type_filter == "notes":
