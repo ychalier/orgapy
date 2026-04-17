@@ -11,7 +11,6 @@ from django.utils.text import slugify
 from ..models import (
     Category,
     Document,
-    ProgressCounter,
     ProgressLog,
     Calendar,
     Project,
@@ -206,8 +205,6 @@ def view_save_document(request: HttpRequest) -> HttpResponse:
             subtitle=request.POST.get("subtitle"),
             content=request.POST.get("content"),
             config=request.POST.get("config"),
-            source_type="", # TODO: remove
-            source_id=-1 # TODO: remove
         )
     else:
         doc = original
@@ -412,35 +409,15 @@ def view_progress(request: HttpRequest, year: int | str | None = None) -> HttpRe
     paginator = Paginator(objects, page_size)
     page = request.GET.get("page")
     logs = paginator.get_page(page)
-
-    counter_query = ProgressCounter.objects.filter(user=request.user, year=year)
-    counter = None
-    if counter_query.exists():
-        counter = counter_query.get()
-
+   
     return render(request, "orgapy/progress.html", {
         "logs": logs,
         "year": year,
         "paginator": pretty_paginator(logs),
-        "counter": counter,
         "dt_filter": dt_filter,
         "dt_start": dt_start,
         "dt_end": dt_end,
     })
-
-
-@permission_required("orgapy.change_progress")
-def view_progress_compute(request: HttpRequest, year: int | str | None = None) -> HttpResponse:
-    if year is None:
-        year = datetime.datetime.now().year
-    else:
-        year = int(year)
-    counter_query = ProgressCounter.objects.filter(user=request.user, year=year)
-    if not counter_query.exists():
-        raise Http404()
-    counter = counter_query.get()
-    counter.recompute()
-    return redirect("orgapy:progress_year", year=counter.year)
 
 
 @permission_required("orgapy.view_progress")
@@ -457,7 +434,9 @@ def view_progress_export(request: HttpRequest, year: int | str | None = None) ->
             log.dt.isoformat(),
             str(log.description)
         ]))
-    return HttpResponse("\n".join(lines), content_type="text/tab-separated-values")
+    response = HttpResponse("\n".join(lines), content_type="text/tab-separated-values; charset=utf-8")
+    response["Content-Disposition"] = f'inline; filename="progress-{year}.tsv"'
+    return response
 
 
 @permission_required("orgapy.add_progress_log")

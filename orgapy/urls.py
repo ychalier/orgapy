@@ -37,7 +37,6 @@ urlpatterns = [
     path("progress/log/<object_id>", views.view_edit_progress_log, name="edit_progress_log"),
     path("progress/log/<object_id>/delete", views.view_delete_progress_log, name="delete_progress_log"),
     path("progress/<year>", views.view_progress, name="progress_year"),
-    path("progress/<year>/compute", views.view_progress_compute, name="progress_compute"),
     path("progress/<year>/export", views.view_progress_export, name="progress_export"),
     path("settings", views.view_settings, name="settings"),
     path("settings/calendar", views.view_calendar_form, name="calendar_form"),

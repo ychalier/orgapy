@@ -103,8 +103,6 @@ class Document(models.Model):
     subtitle = models.TextField(blank=True, null=True)
     content = models.TextField(blank=True, null=True)
     config = models.TextField(blank=True, null=True)
-    source_type = models.CharField(max_length=5) # TODO: remove
-    source_id = models.BigIntegerField() # TODO: remove
 
     class Meta:
         ordering = ["-date_modification"]
@@ -146,120 +144,6 @@ class Document(models.Model):
 
     def get_archived_projects(self):
         return self.project_set.filter(status=Project.ARCHIVED) # type: ignore
-
-
-class AbstractDocument(models.Model):
-
-    id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_access = models.DateTimeField(auto_now_add=True, auto_now=False)
-    title = models.CharField(max_length=255)
-    public = models.BooleanField(default=False)
-    pinned = models.BooleanField(default=False)
-    hidden = models.BooleanField(default=False)
-    nonce = models.TextField(max_length=12, unique=True, blank=True, default=generate_nonce)
-    deleted = models.BooleanField(default=False)
-    date_deletion = models.DateTimeField(auto_now_add=False, auto_now=False, blank=True, null=True)
-
-    class Meta:
-        abstract = True
-        ordering = ["-date_modification"]
-
-    def __str__(self):
-        return f"{ self.user} - { self.id }. { self.title }"
-
-    def save(self, *args, **kwargs):
-        if self.nonce is None:
-            self.nonce = generate_nonce()
-        super(AbstractDocument, self).save(*args, **kwargs)
-
-    def date_modification_display(self):
-        now = datetime.datetime.now()
-        if now.date() == self.date_modification.date():
-            return "TODAY"
-        elif now.year == self.date_modification.year:
-            return self.date_modification.strftime("%m-%d")
-        return self.date_modification.strftime("%Y-%m-%d")
-
-    def soft_delete(self):
-        self.deleted = True
-        self.date_deletion = timezone.now()
-        self.save()
-
-    def restore(self):
-        self.deleted = False
-        self.date_deletion = None
-        self.save()
-
-
-class Note(AbstractDocument):
-
-    content = models.TextField()
-    note_refs = models.ManyToManyField("Note", related_name="referenced_in")
-    sheet_refs = models.ManyToManyField("Sheet", related_name="referenced_in")
-    map_refs = models.ManyToManyField("Map", related_name="referenced_in")
-    categories = models.ManyToManyField("Category", blank=True, related_name="notes")
-    active = "notes"
-
-    def save(self, *args, **kwargs):
-        super(Note, self).save(*args, **kwargs)
-        objects = {"note": set(), "sheet": set(), "map": set()}
-        pattern = re.compile(r"@(note|sheet|map)/(\d+)")
-        for object_type, object_id in re.findall(pattern, self.content):
-            objects[object_type].add(int(object_id))
-        self.note_refs.set(Note.objects.filter(user=self.user, id__in=objects["note"]))
-        self.sheet_refs.set(Sheet.objects.filter(user=self.user, id__in=objects["sheet"]))
-        self.map_refs.set(Map.objects.filter(user=self.user, id__in=objects["map"]))
-
-    def get_absolute_url(self):
-        return reverse("orgapy:note", kwargs={"object_id": self.id})
-
-    def ongoing_projects(self):
-        return self.project_set.exclude(status=Project.ARCHIVED) # type: ignore
-
-    @property
-    def archived_projects_count(self) -> int:
-        return self.project_set.filter(status=Project.ARCHIVED).count() # type: ignore
-
-
-class SheetGroup(models.Model):
-
-    id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-
-    class Meta:
-
-        ordering = ["title"]
-
-    def __str__(self):
-        return f"{ self.user} - { self.id }. { self.title }"
-
-
-class Sheet(AbstractDocument):
-
-    description = models.TextField(blank=True, null=True)
-    data = models.TextField(blank=True, null=True)
-    config = models.TextField(blank=True, null=True)
-    group = models.ForeignKey("SheetGroup", on_delete=models.SET_NULL, null=True, blank=True)
-    categories = models.ManyToManyField("Category", blank=True, related_name="sheets")
-    active = "sheets"
-
-    def get_absolute_url(self):
-        return reverse("orgapy:sheet", kwargs={"object_id": self.id})
-
-
-class Map(AbstractDocument):
-
-    geojson = models.TextField(blank=True, null=True)
-    config = models.TextField(blank=True, null=True)
-    categories = models.ManyToManyField("Category", blank=True, related_name="maps")
-    active = "maps"
-
-    def get_absolute_url(self):
-        return reverse("orgapy:map", kwargs={"object_id": self.id})
 
 
 class Objective(models.Model):
@@ -336,47 +220,6 @@ class Task(models.Model):
         return timezone.now().date() > self.due_date
 
 
-class Quote(models.Model):
-
-    id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_modification = models.DateTimeField(auto_now_add=True, auto_now=False)
-    content = models.TextField()
-    reference = models.CharField(max_length=255, default="", blank=True)
-    active = "quotes"
-
-    class Meta:
-
-        ordering = ["-date_creation"]
-
-    def __str__(self):
-        return f"{ self.user} - { self.id }. { self.reference_nomarkup }"
-
-    def date_modification_display(self):
-        now = datetime.datetime.now()
-        if now.date() == self.date_modification.date():
-            return "TODAY"
-        elif now.year == self.date_modification.year:
-            return self.date_modification.strftime("%m-%d")
-        return self.date_modification.strftime("%Y-%m-%d")
-
-    def get_absolute_url(self):
-        return reverse("orgapy:quote", kwargs={"object_id": self.id})
-
-    @property
-    def reference_html(self) -> str:
-        return re.sub(r"\*([^\*]*)\*", r"<i>\1</i>", self.reference)
-
-    @property
-    def reference_nomarkup(self) -> str:
-        return re.sub(r"\*", r"", self.reference)
-
-    @property
-    def title(self) -> str:
-        return ravel(self.content)
-
-
 class Project(models.Model):
 
     ACTIVE = "AC"
@@ -395,17 +238,8 @@ class Project(models.Model):
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=False, auto_now=True)
     title = models.CharField(max_length=255, blank=True, null=True)
-    category = models.CharField(max_length=255, default="general")        # Deprecated
-    limit_date = models.DateField(blank=True, null=True)                  # Deprecated
-    progress_min = models.PositiveIntegerField(blank=True, null=True)     # Deprecated
-    progress_max = models.PositiveIntegerField(blank=True, null=True)     # Deprecated
-    progress_current = models.PositiveIntegerField(blank=True, null=True) # Deprecated
-    description = models.TextField(blank=True, null=True)                 # Deprecated
     checklist = models.TextField(blank=True, null=True)
-    rank = models.FloatField()                                            # Deprecated
-    note = models.ForeignKey("Note", on_delete=models.SET_NULL, null=True, blank=True)
     document = models.ForeignKey("Document", on_delete=models.SET_NULL, null=True, blank=True)
-    archived = models.BooleanField(default=False)                         # Deprecated
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, default=ACTIVE)
 
     class Meta:
@@ -575,57 +409,6 @@ class Calendar(models.Model):
         return success
 
 
-class ProgressCounter(models.Model):
-
-    id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    year = models.PositiveIntegerField()
-    data = models.TextField(default="{}")
-
-    class Meta:
-
-        ordering = ["user", "-year"]
-        constraints = [
-            models.UniqueConstraint(fields=["user", "year"], name="unique_user_year")
-        ]
-
-    def __str__(self):
-        return f"{ self.user } - { self.year }"
-
-    @property
-    def json(self) -> dict:
-        return json.loads(self.data)
-
-    def increment(self, dt: datetime.date):
-        key = dt.strftime(r"%Y-%m-%d")
-        json_data = self.json
-        json_data.setdefault(key, 0)
-        json_data[key] += 1
-        self.data = json.dumps(json_data)
-        self.save()
-
-    def decrement(self, dt: datetime.date):
-        key = dt.strftime(r"%Y-%m-%d")
-        json_data = self.json
-        value = json_data.get(key, 0)
-        value -= 1
-        if value > 0:
-            json_data[key] = value
-        else:
-            del json_data[key]
-        self.data = json.dumps(json_data)
-        self.save()
-
-    def recompute(self):
-        data = {}
-        for log in ProgressLog.objects.filter(user=self.user, dt__year=self.year):
-            key = log.dt.strftime(r"%Y-%m-%d")
-            data.setdefault(key, 0)
-            data[key] += 1
-        self.data = json.dumps(data)
-        self.save()
-
-
 class ProgressLog(models.Model):
 
     OTHER = "OT"
@@ -651,23 +434,6 @@ class ProgressLog(models.Model):
 
     def __str__(self):
         return f"{ self.user } [{ self.type }] { self.description }"
-
-    def save(self, *args, **kwargs):
-        if self.id is None:
-            now = datetime.datetime.now().date()
-            query = ProgressCounter.objects.filter(user=self.user, year=now.year)
-            if query.exists():
-                counter = query.get()
-            else:
-                counter = ProgressCounter.objects.create(user=self.user, year=now.year)
-            counter.increment(now)
-        return super(ProgressLog, self).save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        query = ProgressCounter.objects.filter(user=self.user, year=self.dt.year)
-        if query.exists():
-            query.get().decrement(self.dt.date())
-        return super(ProgressLog, self).delete(*args, **kwargs)
 
     def get_absolute_url(self):
         dfs = self.dt.strftime(r"%Y-%m-%d")

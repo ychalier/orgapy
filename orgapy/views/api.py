@@ -748,7 +748,7 @@ def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
     return make_suggestions_response(results)
 
 
-@permission_required("orgapy.view_progress_counter")
+@permission_required("orgapy.view_progress_log")
 def api_progress(request: HttpRequest) -> HttpResponse:
     data = {}
     for log in ProgressLog.objects.filter(user=request.user).order_by("dt"):

@@ -12,11 +12,9 @@
 
 <header class="card">
     <h1 class="card-header">{% if dt_filter %}{{ dt_start | date }}{% if dt_start != dt_end %} — {{ dt_end | date }}{% endif %}{% else %}{{ year }} Progress{% endif %}</h1>
-    {% if counter %}<div class="card-body"><div id="chart" year="{{ counter.year }}" url="{% url 'orgapy:progress' %}"></div></div>{% endif %}
+    <div class="card-body"><div id="chart" year="{{ year }}" url="{% url 'orgapy:progress' %}"></div></div>
     <div class="card-actions">
-        {% if counter %}
-        <a class="button" href="{% url 'orgapy:progress_export' year=counter.year %}"><i class="ri-download-line"></i><span>Export</span></a>
-        {% endif %}
+        <a class="button" href="{% url 'orgapy:progress_export' year=year %}"><i class="ri-download-line"></i><span>Export</span></a>
         <a class="button" href="{% url 'orgapy:create_progress_log' %}"><i class="ri-add-line"></i><span>Create</span> Log</a>
     </div>
 </header>
