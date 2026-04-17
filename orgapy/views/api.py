@@ -109,7 +109,7 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
             raise BadRequest()
     if document_filter is not None:
         try:
-            query = query.filter(document__id=int(document_filter))
+            query = query.filter(document__nonce=document_filter)
         except ValueError:
             pass
     if status_filter is not None:
@@ -586,15 +586,15 @@ def api_complete_task(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.view_document")
 def api_reference(request: HttpRequest) -> HttpResponse:
-    note_ids = request.GET.getlist("note")
-    sheet_ids = request.GET.getlist("sheet")
-    map_ids = request.GET.getlist("map")
+    note_nonces = request.GET.getlist("note")
+    sheet_nonces = request.GET.getlist("sheet")
+    map_nonces = request.GET.getlist("map")
     results = []
-    for document_ids, document_type in ((note_ids, "note"), (sheet_ids, "sheet"), (map_ids, "map")):
-        for document_id in document_ids:
-            result = {"type": document_type, "id": document_id, "title": None, "href": None, "error": None}
+    for nonces, doctype in ((note_nonces, "note"), (sheet_nonces, "sheet"), (map_nonces, "map")):
+        for nonce in nonces:
+            result = {"type": doctype, "nonce": nonce, "title": None, "href": None, "error": None}
             try:
-                doc = Document.objects.get(user=request.user, id=int(document_id))
+                doc = Document.objects.get(user=request.user, nonce=nonce)
                 result["title"] = doc.title
                 result["href"] = doc.get_absolute_url()
             except ValueError:
@@ -609,11 +609,11 @@ def api_reference(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.change_document")
 def api_edit_widgets(request: HttpRequest) -> JsonResponse:
-    object_id = request.POST.get("objectId")
+    nonce = request.POST.get("nonce")
     updates = json.loads(request.POST.get("updates", "[]"))
-    if object_id is None:
+    if nonce is None:
         raise BadRequest()
-    query = Document.objects.filter(user=request.user, id=int(object_id))
+    query = Document.objects.filter(user=request.user, nonce=nonce)
     if not query.exists():
         raise Http404()
     doc = query.get()
@@ -656,10 +656,10 @@ def api_edit_widgets(request: HttpRequest) -> JsonResponse:
 
 
 def api_get_document(request: HttpRequest) -> JsonResponse:
-    document_id = request.GET.get("objectId")
-    if document_id is None:
+    nonce = request.GET.get("nonce")
+    if nonce is None:
         raise BadRequest()
-    doc = find_user_object(Document, ["id", "nonce"], document_id)
+    doc = find_user_object(Document, "nonce", nonce)
     if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document") or doc.public:
         return JsonResponse({
             "title": doc.title,
@@ -674,10 +674,10 @@ def api_get_document(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.change_document")
 def api_save_document(request: HttpRequest) -> JsonResponse:
-    document_id = request.POST.get("objectId")
-    if document_id is None:
+    nonce = request.POST.get("nonce")
+    if nonce is None:
         raise BadRequest()
-    doc = find_user_object(Document, "id", document_id, request.user)
+    doc = find_user_object(Document, "nonce", nonce, request.user)
     modification = float(request.POST.get("modification", 0))
     if doc.date_modification.timestamp() > modification:
         return JsonResponse({"success": False, "reason": "Document has newer modifications"})
@@ -696,11 +696,23 @@ def api_save_document(request: HttpRequest) -> JsonResponse:
     })
 
 
-def make_suggestions_response(results: list[Category | Document] | QuerySet[Category] | QuerySet[Document]) -> JsonResponse:
+@permission_required("orgapy.view_document")
+def api_suggestions_documents(request: HttpRequest, doctype: str | None = None) -> JsonResponse:
+    query = request.GET.get("q", "").strip()
+    if doctype is None:
+        doctype = request.GET.get("t")
+    results: list[Category | Document] = []
+    if len(query) >= 1:
+        if query.startswith("#"):
+            results = list(Category.objects.filter(user=request.user, name__startswith=query[1:])[:5])
+        elif doctype:
+            results = list(Document.objects.filter(user=request.user, deleted=False, hidden=False, type=doctype, title__startswith=query)[:5])
+        else:
+            results = list(Document.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5])
     return JsonResponse({
         "results": [
             {
-                "id": result.id,
+                "nonce": result.nonce if isinstance(result, Document) else result.name,
                 "title": result.title,
                 "url": result.get_absolute_url(),
                 "type": getattr(result, "type", None)
@@ -708,22 +720,6 @@ def make_suggestions_response(results: list[Category | Document] | QuerySet[Cate
             for result in results
         ]
     })
-
-
-@permission_required("orgapy.view_document")
-def api_suggestions_documents(request: HttpRequest, doctype: str | None = None) -> JsonResponse:
-    query = request.GET.get("q", "").strip()
-    if doctype is None:
-        doctype = request.GET.get("t")
-    results = []
-    if len(query) >= 1:
-        if query.startswith("#"):
-            results = Category.objects.filter(user=request.user, name__startswith=query[1:])[:5]
-        elif doctype:
-            results = Document.objects.filter(user=request.user, deleted=False, hidden=False, type=doctype, title__startswith=query)[:5]
-        else:
-            results = Document.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5]
-    return make_suggestions_response(results)
 
 
 @permission_required("orgapy.view_document")
@@ -745,7 +741,17 @@ def api_suggestions_maps(request: HttpRequest) -> JsonResponse:
 def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
     query = request.GET.get("q", "").strip()
     results = Category.objects.filter(user=request.user, name__startswith=query)[:5]
-    return make_suggestions_response(results)
+    return JsonResponse({
+        "results": [
+            {
+                "nonce": result.name,
+                "title": result.title,
+                "url": result.get_absolute_url(),
+                "type": getattr(result, "type", None)
+            }
+            for result in results
+        ]
+    })
 
 
 @permission_required("orgapy.view_progress_log")

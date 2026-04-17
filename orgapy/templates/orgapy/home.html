@@ -136,7 +136,7 @@ markdownToHtml(".markdown", true);
 window.addEventListener("click", clearContextMenus);
 buttonCreateProject.onclick = () => {onButtonProjectCreate(projectsContainer, null, false)};
 fetchProjects(projectsContainer,
-    noteId=null,
+    documentNonce=null,
     forceExpand=false,
     statusFilter="AC",
     projectId=null);

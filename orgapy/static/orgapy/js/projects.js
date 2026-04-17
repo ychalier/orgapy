@@ -153,12 +153,12 @@ class Project {
         const input = create(create(container, "div", "search-bar"), "input", "search-input");
         create(container, "ul", "search-suggestions menu");
 
-        let currentId = null;
+        let currentNonce = null;
         let currentTitle = null;
         let currentUrl = null;
         if (this.document != null) {
             input.value = this.document.title;
-            currentId = this.document.id;
+            currentNonce = this.document.nonce;
             currentTitle = this.document.title;
             currentUrl = this.document.url;
         }
@@ -169,13 +169,13 @@ class Project {
             return element;
         }, (entry) => {
             if (entry != null) {
-                currentId = entry.id;
+                currentNonce = entry.nonce;
                 currentTitle = entry.title;
                 currentUrl = entry.url;
             }
-            if (currentId != null && currentTitle != null && currentUrl != null) {
+            if (currentNonce != null && currentTitle != null && currentUrl != null) {
                 self.document = {
-                    id: currentId,
+                    id: currentNonce,
                     title: currentTitle,
                     url: currentUrl
                 }
@@ -455,7 +455,6 @@ class Project {
         }
         this.inflateHeader();
         this.inflateBody();
-        this.setStatusClass();
     }
 
     inflateContextMenuItems(menu) {
@@ -501,24 +500,8 @@ class Project {
         }
     }
 
-    setStatusClass() {
-        if (this.status == "AC") {
-            this.container.classList.remove("inactive");
-            this.container.classList.remove("archived");
-        } else if (this.status == "IN") {
-            this.container.classList.add("inactive");
-            this.container.classList.remove("archived");
-        } else if (this.status == "AR") {
-            this.container.classList.remove("inactive");
-            this.container.classList.add("archived");
-        } else {
-            console.warn("Invalid status", this.status);
-        }
-    }
-
     setStatus(newStatus) {
         this.status = newStatus;
-        this.setStatusClass();
         this.save();
     }
 
@@ -696,7 +679,7 @@ function inflateProjects(container) {
     });
 }
 
-function fetchProjects(container, documentId=null, forceExpand=false, statusFilter=null, projectId=null) {
+function fetchProjects(container, documentNonce=null, forceExpand=false, statusFilter=null, projectId=null) {
     let ranks = {};
     const rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
     if (rankStorage != null) {
@@ -706,7 +689,7 @@ function fetchProjects(container, documentId=null, forceExpand=false, statusFilt
         }
     }
     const params = {action: "list-projects"};
-    if (documentId != null) params["document"] = documentId;
+    if (documentNonce != null) params["document"] = documentNonce;
     if (statusFilter != null) params["status"] = statusFilter;
     if (projectId != null) params["project"] = projectId;
     fetch(URL_API + "?" + (new URLSearchParams(params)).toString())

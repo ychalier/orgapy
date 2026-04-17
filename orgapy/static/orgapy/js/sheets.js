@@ -1528,8 +1528,8 @@ class ContextMenu {
 
 class Sheet {
 
-    constructor(objectId, container, readonly=false) {
-        this.objectId = objectId;
+    constructor(nonce, container, readonly=false) {
+        this.nonce = nonce;
         this.modification = null;
 
         // Config
@@ -3057,7 +3057,7 @@ class Sheet {
         apiPost(
             "save-document",
             {
-                objectId: this.objectId,
+                nonce: this.nonce,
                 content: sheetExport.data,
                 config: sheetExport.config,
                 modification: this.modification,
@@ -3075,13 +3075,13 @@ class Sheet {
 
 function initializeSheet(sheetSeed, readonly) {
     var sheet = null;
-    let sheetId = sheetSeed.getAttribute("sheet-id");
-    fetch(URL_API + `?action=get-document&objectId=${sheetId}`, {
+    let sheetNonce = sheetSeed.getAttribute("sheet-nonce");
+    fetch(URL_API + `?action=get-document&nonce=${sheetNonce}`, {
         method: "get",
         })
         .then(res => res.json())
         .then(sheetData => {
-            sheet = new Sheet(sheetId, sheetSeed, readonly);
+            sheet = new Sheet(sheetNonce, sheetSeed, readonly);
             let data = null;
             if (sheetData.content != null && sheetData.content.trim() != "") {
                 data = parseTsv(sheetData.content);

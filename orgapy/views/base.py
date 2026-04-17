@@ -121,8 +121,8 @@ def view_create_document(request: HttpRequest) -> HttpResponse:
     })
 
 
-def view_document(request: HttpRequest, docid: str) -> HttpResponse:
-    doc, readonly = retrieve_document(request, docid)
+def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
+    doc, readonly = retrieve_document(request, nonce)
     response = render(request, f"orgapy/{doc.type}.html", {
         "document": doc,
         "readonly": readonly,
@@ -132,8 +132,8 @@ def view_document(request: HttpRequest, docid: str) -> HttpResponse:
     return response
 
 
-def view_document_raw(request: HttpRequest, docid: str) -> HttpResponse:
-    doc, _ = retrieve_document(request, docid)
+def view_document_raw(request: HttpRequest, nonce: str) -> HttpResponse:
+    doc, _ = retrieve_document(request, nonce)
 
     content, ext, mimetype = "", ".txt", "text/plain"
     if doc.type == "note":
@@ -159,8 +159,8 @@ def view_document_raw(request: HttpRequest, docid: str) -> HttpResponse:
     return response
 
 
-def view_note_fullscreen(request, docid: str):
-    note, readonly = retrieve_document(request, docid)
+def view_note_fullscreen(request, nonce: str):
+    note, readonly = retrieve_document(request, nonce)
     if note.type != "note":
         raise PermissionDenied()
     response = render(request, f"orgapy/note_fullscreen.html", {
@@ -173,8 +173,8 @@ def view_note_fullscreen(request, docid: str):
 
 
 @permission_required("orgapy.view_document")
-def view_edit_document(request: HttpRequest, docid: str) -> HttpResponse:
-    doc = find_user_object(Document, "id", docid, request.user)
+def view_edit_document(request: HttpRequest, nonce: str) -> HttpResponse:
+    doc = find_user_object(Document, "nonce", nonce, request.user)
     return render(request, f"orgapy/edit_{doc.type}.html", {
         "document": doc,
         "active": "documents",
@@ -185,12 +185,12 @@ def view_edit_document(request: HttpRequest, docid: str) -> HttpResponse:
 def view_save_document(request: HttpRequest) -> HttpResponse:
     if not request.method == "POST":
         raise BadRequest()
-
-    original = None
-    if "id" in request.POST and Document.objects.filter(id=request.POST["id"]).exists():
-        original = Document.objects.get(id=request.POST["id"])
+    try:
+        original = Document.objects.get(user=request.user, nonce=request.POST.get("nonce"))
         if original.date_modification.timestamp() > float(request.POST.get("modification", 0)):
             return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
+    except Document.DoesNotExist:
+        original = None
     if original is not None and original.user != request.user:
         raise PermissionDenied()
 
@@ -220,20 +220,11 @@ def view_save_document(request: HttpRequest) -> HttpResponse:
     name_list = request.POST.get("categories", "").split(";")
     for dirty_name in name_list:
         name = dirty_name.lower().strip()
-        if name == "":
+        if name == "" or name == "uncategorized":
             continue
-        int_id = None
         try:
-            int_id = int(name)
-        except ValueError:
-            pass
-        if int_id is not None and Category.objects.filter(id=int_id, user=request.user).exists():
-            category = Category.objects.get(id=int_id, user=request.user)
-        elif Category.objects.filter(name=name, user=request.user).exists():
             category = Category.objects.get(name=name, user=request.user)
-        elif name == "uncategorized":
-            raise BadRequest()
-        else:
+        except Category.DoesNotExist:
             category = Category.objects.create(name=name, user=request.user)
         doc.categories.add(category)
     save_document_core(doc)
@@ -241,23 +232,23 @@ def view_save_document(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.change_document")
-def view_toggle_document_hidden(request: HttpRequest, docid: str) -> HttpResponse:
-    return toggle_document_attribute(request, docid, "hidden")
+def view_toggle_document_hidden(request: HttpRequest, nonce: str) -> HttpResponse:
+    return toggle_document_attribute(request, nonce, "hidden")
 
 
 @permission_required("orgapy.change_document")
-def view_toggle_document_pin(request: HttpRequest, docid: str) -> HttpResponse:
-    return toggle_document_attribute(request, docid, "pinned")
+def view_toggle_document_pin(request: HttpRequest, nonce: str) -> HttpResponse:
+    return toggle_document_attribute(request, nonce, "pinned")
 
 
 @permission_required("orgapy.change_document")
-def view_toggle_document_public(request: HttpRequest, docid: str) -> HttpResponse:
-    return toggle_document_attribute(request, docid, "public")
+def view_toggle_document_public(request: HttpRequest, nonce: str) -> HttpResponse:
+    return toggle_document_attribute(request, nonce, "public")
 
 
 @permission_required("orgapy.delete_document")
-def view_delete_document(request: HttpRequest, docid: str) -> HttpResponse:
-    doc = find_user_object(Document, "id", docid, request.user)
+def view_delete_document(request: HttpRequest, nonce: str) -> HttpResponse:
+    doc = find_user_object(Document, "nonce", nonce, request.user)
     doc.soft_delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
@@ -265,8 +256,8 @@ def view_delete_document(request: HttpRequest, docid: str) -> HttpResponse:
 
 
 @permission_required("orgapy.add_document")
-def view_restore_document(request: HttpRequest, docid: str) -> HttpResponse:
-    doc = find_user_object(Document, "id", docid, request.user, allow_deleted=True)
+def view_restore_document(request: HttpRequest, nonce: str) -> HttpResponse:
+    doc = find_user_object(Document, "nonce", nonce, request.user, allow_deleted=True)
     doc.restore()
     if "next" in request.GET:
         return redirect(request.GET["next"])
@@ -274,8 +265,8 @@ def view_restore_document(request: HttpRequest, docid: str) -> HttpResponse:
 
 
 @permission_required("orgapy.delete_document")
-def view_destroy_document(request: HttpRequest, docid: str) -> HttpResponse:
-    doc = find_user_object(Document, "id", docid, request.user, allow_deleted=True)
+def view_destroy_document(request: HttpRequest, nonce: str) -> HttpResponse:
+    doc = find_user_object(Document, "nonce", nonce, request.user, allow_deleted=True)
     doc.delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])
@@ -347,32 +338,30 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
 
 
 @permission_required("orgapy.change_category")
-def view_edit_category(request: HttpRequest, object_id: str) -> HttpResponse:
-    query = Category.objects.filter(id=object_id)
-    if query.exists():
-        category = query.get()
-        if category.user == request.user:
-            if request.method == "POST":
-                new_name = request.POST.get("name")
-                if new_name is None:
-                    raise BadRequest()
-                if len(new_name) > 0:
-                    category.name = new_name.lower()
-                    category.save()
-                return redirect("orgapy:category", name=category.name)
-            return render(request, "orgapy/edit_category.html", {
-                "category": category,
-            })
-    return redirect("orgapy:categories")
+def view_edit_category(request: HttpRequest, name: str) -> HttpResponse:
+    try:
+        category = Category.objects.get(user=request.user, name=name)
+    except Category.DoesNotExist:
+        return redirect("orgapy:categories")
+    if request.method == "POST":
+        new_name = request.POST.get("name")
+        if new_name is None:
+            raise BadRequest()
+        if len(new_name) > 0:
+            category.name = new_name.lower()
+            category.save()
+        return redirect("orgapy:category", name=category.name)
+    return render(request, "orgapy/edit_category.html", {
+        "category": category,
+    })
 
 
 @permission_required("orgapy.delete_category")
-def view_delete_category(request: HttpRequest, object_id: str) -> HttpResponse:
-    query = Category.objects.filter(id=object_id)
-    if query.exists():
-        category = query.get()
-        if category.user == request.user:
-            category.delete()
+def view_delete_category(request: HttpRequest, name: str) -> HttpResponse:
+    try:
+        Category.objects.get(user=request.user, name=name).delete()
+    except Category.DoesNotExist:
+        pass
     return redirect("orgapy:categories")
 
 

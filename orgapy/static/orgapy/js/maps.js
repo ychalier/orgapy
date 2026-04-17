@@ -1461,8 +1461,8 @@ function copyToClipboard(text) {
 
 class Map {
 
-    constructor(objectId, mapLayout, readonly=false) {
-        this.objectId = objectId;
+    constructor(nonce, mapLayout, readonly=false) {
+        this.nonce = nonce;
         this.dashboardContainer = mapLayout.querySelector(".map-dashboard");
         this.container = mapLayout.querySelector(".map-seed");
         this.readonly = readonly;
@@ -1984,7 +1984,7 @@ class Map {
         var self = this;
         apiPost("save-document",
             {
-                objectId: this.objectId,
+                "nonce": this.nonce,
                 "title": mapExport.title,
                 "content": mapExport.geojson,
                 "config": mapExport.config,
@@ -2293,13 +2293,13 @@ class SearchResultsDialog extends Dialog {
 
 function initializeMap(mapLayout, readonly) {
     var map = null;
-    let mapId = mapLayout.getAttribute("map-id");
-    fetch(URL_API + `?action=get-document&objectId=${mapId}`, {
+    let mapNonce = mapLayout.getAttribute("map-nonce");
+    fetch(URL_API + `?action=get-document&nonce=${mapNonce}`, {
         method: "get",
         })
         .then(res => res.json())
         .then(mapData => {
-            map = new Map(mapId, mapLayout, readonly);
+            map = new Map(mapNonce, mapLayout, readonly);
             let geojson = null;
             if (mapData.content != null && mapData.content.trim() != "") {
                 geojson = JSON.parse(mapData.content);

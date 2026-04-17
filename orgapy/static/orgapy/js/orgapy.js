@@ -200,12 +200,12 @@ function markdownToHtmlFancy(element, useKatex=false, embed=false) {
         extensions.push(
             {
                 type: "output",
-                regex: /@embedsheet\/(\d+)/g,
+                regex: /@embedsheet\/([a-zA-Z0-9]+)/g,
                 replace: `<iframe src="../sheets/$1?embed=1"></iframe><a href="../sheets/$1"><small>Edit sheet</small></a>`
             },
             {
                 type: "output",
-                regex: /@embedmap\/(\d+)/g,
+                regex: /@embedmap\/([a-zA-Z0-9]+)/g,
                 replace: `<iframe src="../maps/$1?embed=1"></iframe><a href="../maps/$1"><small>Edit map</small></a>`
             },
         );
@@ -268,18 +268,18 @@ function markdownToHtmlFancy(element, useKatex=false, embed=false) {
             },
             {
                 type: "output",
-                regex: /(@note\/(\d+))/g,
-                replace: `<a class="reference label" ref-type="note" ref-id="$2"><i class="ri-sticky-note-line" title="Note"></i> <span>$1</span></a>`
+                regex: /(@note\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="note" ref-nonce="$2"><i class="ri-sticky-note-line" title="Note"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
-                regex: /(@sheet\/(\d+))/g,
-                replace: `<a class="reference label" ref-type="sheet" ref-id="$2"><i class="ri-table-line" title="Sheet"></i> <span>$1</span></a>`
+                regex: /(@sheet\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="sheet" ref-nonce="$2"><i class="ri-table-line" title="Sheet"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
-                regex: /(@map\/(\d+))/g,
-                replace: `<a class="reference label" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
+                regex: /(@map\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="map" ref-nonce="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
@@ -306,7 +306,7 @@ function markdownToHtmlFancy(element, useKatex=false, embed=false) {
     const refEls = element.querySelectorAll(".reference");
     const refIndex = {"note": {}, "sheet": {}, "map": {}};
     for (const refEl of refEls) {
-        const refId = refEl.getAttribute("ref-id");
+        const refId = refEl.getAttribute("ref-nonce");
         const refType = refEl.getAttribute("ref-type");
         if (refId == null || refId == "" || refType == null || refType == "") {
             console.warn("Invalid reference:", refType, refId);
@@ -321,19 +321,19 @@ function markdownToHtmlFancy(element, useKatex=false, embed=false) {
     if (refArgs.length > 0) {
         fetch(URL_API + `?action=reference&${refArgs.join("&")}`).then(res => res.json()).then(data => {
             for (const result of data.results) {
-                if (!(result.type in refIndex) || !(result.id in refIndex[result.type])) {
-                    console.warn("Unbound reference result", result.type, result.id);
+                if (!(result.type in refIndex) || !(result.nonce in refIndex[result.type])) {
+                    console.warn("Unbound reference result", result.type, result.nonce);
                     continue;
                 }
-                for (const refEl of refIndex[result.type][result.id]) {
+                for (const refEl of refIndex[result.type][result.nonce]) {
                     if (result.error == null) {
                         refEl.querySelector("span").textContent = result.title;
                         refEl.setAttribute("href", result.href);
                     } else {
-                        const refId = refEl.getAttribute("ref-id");
+                        const refNonce = refEl.getAttribute("ref-nonce");
                         const refType = refEl.getAttribute("ref-type");
                         refEl.querySelector("span").textContent = `${result.error}`;
-                        refEl.setAttribute("title", `@${refType}/${refId}`);
+                        refEl.setAttribute("title", `@${refType}/${refNonce}`);
                         refEl.classList.add("error");
                     }
                 }

@@ -1,5 +1,6 @@
 import datetime
 import json
+import random
 import re
 from math import ceil
 
@@ -10,7 +11,16 @@ from django.urls import reverse
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from .utils import generate_nonce, ravel
+
+DOCUMENT_NONCE_TOKENS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+DOCUMENT_NONCE_LENGTH = 4
+def generate_document_nonce() -> str:
+    while True:
+        nonce = "".join(random.choices(DOCUMENT_NONCE_TOKENS, k=DOCUMENT_NONCE_LENGTH))
+        try:
+            Document.objects.get(nonce=nonce)
+        except Document.DoesNotExist:
+            return nonce
 
 
 class Settings(models.Model):
@@ -67,7 +77,7 @@ class Category(models.Model):
 
     @property
     def count(self) -> int:
-        return self.notes.count() + self.sheets.count() + self.maps.count() # type: ignore
+        return self.documents.count() # type: ignore
 
     @property
     def title(self) -> str:
@@ -88,7 +98,7 @@ class Document(models.Model):
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     type = models.CharField(max_length=5, choices=TYPE_CHOICES, default=NOTE)
-    nonce = models.CharField(max_length=12, unique=True, blank=True, default=generate_nonce)
+    nonce = models.CharField(max_length=12, unique=True, blank=True, default=generate_document_nonce)
     date_creation = models.DateTimeField(default=timezone.now)
     date_modification = models.DateTimeField(default=timezone.now)
     date_access = models.DateTimeField(default=timezone.now)
@@ -111,7 +121,7 @@ class Document(models.Model):
         return f"[{self.user}] {self.id}. {self.title}"
 
     def get_absolute_url(self):
-        return reverse(f"orgapy:document", args=[self.id])
+        return reverse(f"orgapy:document", args=[self.nonce])
 
     @property
     def type_icon(self) -> str:
@@ -286,7 +296,7 @@ class Project(models.Model):
             "title": self.title,
             "checklist": self.checklist if self.checklist else None,
             "document": None if self.document is None else {
-                "id": self.document.id,
+                "nonce": self.document.nonce,
                 "title": self.document.title,
                 "url": self.document.get_absolute_url(),
             },

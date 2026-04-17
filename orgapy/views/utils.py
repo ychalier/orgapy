@@ -82,14 +82,14 @@ def find_user_object(
     return obj
 
 
-def retrieve_document(request: HttpRequest, docid: str) -> tuple[Document, bool]:
-    doc = find_user_object(Document, ["id", "nonce"], docid)
+def retrieve_document(request: HttpRequest, nonce: str) -> tuple[Document, bool]:
+    doc = find_user_object(Document, "nonce", nonce)
     has_permission = False
     readonly = True
     if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document"):
-        readonly =  False
+        readonly = False
         has_permission = True
-    elif doc.public and isinstance(docid, str) and len(docid) == 12:
+    elif doc.public:
         has_permission = True
     if not has_permission:
         raise PermissionDenied()
@@ -163,7 +163,7 @@ def view_document_list(
     Args:
         request: The incoming HttpRequest from an authenticated user
         template_name: Path to an HTML template.
-            Must extend layout/objects.html
+            Must extend layout/documents.html
         search_query: Text query for filtering document titles or content (for notes and sheets)
         type_filter: Filter document type.
             If None, uses GET params.
@@ -272,8 +272,8 @@ def view_document_list(
     })
 
 
-def toggle_document_attribute(request: HttpRequest, object_id: str, attrname: str) -> HttpResponse:
-    doc = find_user_object(Document, "id", object_id, request.user)
+def toggle_document_attribute(request: HttpRequest, nonce: str, attrname: str) -> HttpResponse:
+    doc = find_user_object(Document, "nonce", nonce, request.user)
     setattr(doc, attrname, not getattr(doc, attrname, False))
     doc.save()
     if "next" in request.GET:

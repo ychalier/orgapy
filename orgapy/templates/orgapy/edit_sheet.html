@@ -7,7 +7,7 @@
 
 <form id="form-note-edit" action="{% url 'orgapy:save_document' %}" method="post">
     {% csrf_token %}
-    {% if document %}<input type="hidden" name="id" value="{{document.id}}" />{% endif %}
+    {% if document %}<input type="hidden" name="nonce" value="{{document.nonce}}" />{% endif %}
     <input hidden type="text" name="modification" value="{% if document %}{{ document.date_modification.timestamp }}{% endif %}" />
     <input hidden type="text" name="type" value="sheet" />
     {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}" />{% endif %}

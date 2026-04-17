@@ -22,20 +22,19 @@
         <div class="col">
             <div class="muted"><i class="ri-calendar-line"></i> Created on <time>{{ document.date_creation | date:"Y-m-d" }}</time>{% if document.date_creation.date != document.date_modification.date %}, edited on <time>{{ document.date_modification | date:"Y-m-d" }}</time>{% endif %}</div>
             <div><i class="ri-hashtag"></i> {% if document.categories.all %}{% for category in document.categories.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{{ category.get_absolute_url }}">{{ category.name | title }}</a>{% endfor %}{% else %}<a href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>{% endif %}</div>
-            {% if document.referenced_in.all %}<div><i class="ri-links-line"></i> {% for ref in document.referenced_in.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{% url 'orgapy:document' ref.id %}"> {{ ref.title }}</a>{% endfor %}</div>{% endif %}
+            {% if document.referenced_in.all %}<div><i class="ri-links-line"></i> {% for ref in document.referenced_in.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{% url 'orgapy:document' ref.nonce %}"> {{ ref.title }}</a>{% endfor %}</div>{% endif %}
         </div>
     </div>
 </header>
 
 {% if not readonly %}
 <div class="card-actions card-actions--standalone" style="position: sticky; top: -1px">
-    <a href="{% url 'orgapy:edit_document' document.id %}" class="button" title="Edit"><i class="ri-pencil-fill"></i><span>Edit</span></a>
-    <a href="{% url 'orgapy:toggle_document_pin' document.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if document.pinned %}active{% endif %}" title="{% if document.pinned %}Unpin{% else %}Pin{% endif %} this document"><i class="ri-bookmark-fill"></i><span>{% if document.pinned %}Unpin{% else %}Pin{% endif %}</span></a>
-    <a href="{% url 'orgapy:toggle_document_public' document.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if document.public %}active{% endif %}" title="{% if document.public %}Make private{% else %}Make public{% endif %}">{% if document.public %}<i class="ri-lock-line"></i><span>Unpublish</span>{% else %}<i class="ri-lock-unlock-line"></i><span>Publish</span>{% endif %}</a>
-    {% if document.public %}<a href="{% url 'orgapy:document' document.nonce %}" class="button" title="Share"><i class="ri-share-line"></i><span>Share</span></a>{% endif %}
-    <a href="{% url 'orgapy:raw_document' document.id %}" class="button" title="Download as Markdown"><i class="ri-download-line"></i><span>Raw</span></a>
-    <a href="{% url 'orgapy:toggle_document_hidden' document.id %}?next={{ request.get_full_path | urlencode }}" class="button {% if document.hidden %}active{% endif %}" title="{% if document.hidden %}Unhide{% else %}Hide{% endif %} this document">{% if document.hidden %}<i class="ri-eye-off-line"></i><span>Unhide</span>{% else %}<i class="ri-eye-line"></i><span>Hide</span>{% endif %}</span></a>
-    <a href="{% url 'orgapy:delete_document' document.id %}" class="button button-danger link-confirm" message="Please confirm deletion of '{{ document.title }}'" title="Delete"><i class="ri-delete-bin-line"></i><span>Delete</span></a>
+    <a href="{% url 'orgapy:edit_document' document.nonce %}" class="button" title="Edit"><i class="ri-pencil-fill"></i><span>Edit</span></a>
+    <a href="{% url 'orgapy:toggle_document_pin' document.nonce %}?next={{ request.get_full_path | urlencode }}" class="button {% if document.pinned %}active{% endif %}" title="{% if document.pinned %}Unpin{% else %}Pin{% endif %} this document"><i class="ri-bookmark-fill"></i><span>{% if document.pinned %}Unpin{% else %}Pin{% endif %}</span></a>
+    <a href="{% url 'orgapy:toggle_document_public' document.nonce %}?next={{ request.get_full_path | urlencode }}" class="button {% if document.public %}active{% endif %}" title="{% if document.public %}Make private{% else %}Make public{% endif %}">{% if document.public %}<i class="ri-lock-line"></i><span>Unpublish</span>{% else %}<i class="ri-lock-unlock-line"></i><span>Publish</span>{% endif %}</a>
+    <a href="{% url 'orgapy:raw_document' document.nonce %}" class="button" title="Download as Markdown"><i class="ri-download-line"></i><span>Raw</span></a>
+    <a href="{% url 'orgapy:toggle_document_hidden' document.nonce %}?next={{ request.get_full_path | urlencode }}" class="button {% if document.hidden %}active{% endif %}" title="{% if document.hidden %}Unhide{% else %}Hide{% endif %} this document">{% if document.hidden %}<i class="ri-eye-off-line"></i><span>Unhide</span>{% else %}<i class="ri-eye-line"></i><span>Hide</span>{% endif %}</span></a>
+    <a href="{% url 'orgapy:delete_document' document.nonce %}" class="button button-danger link-confirm" message="Please confirm deletion of '{{ document.title }}'" title="Delete"><i class="ri-delete-bin-line"></i><span>Delete</span></a>
 </div>
 {% endif %}
 
@@ -53,7 +52,7 @@
 <div class="col">
     <div class="row">
         <button id="buttonAddProject" class="button-primary" title="Add project"><i class="ri-add-line"></i> Create project</button>
-        <a class="button button-primary {% if document.get_archived_projects.count == 0 %}disabled{% endif %}" href="{% url 'orgapy:projects' %}?document={{ document.id }}&status=AR"><i class="ri-briefcase-line"></i> View archived ({{ document.get_archived_projects.count }})</a>
+        <a class="button button-primary {% if document.get_archived_projects.count == 0 %}disabled{% endif %}" href="{% url 'orgapy:projects' %}?document={{ document.nonce }}&status=AR"><i class="ri-briefcase-line"></i> View archived ({{ document.get_archived_projects.count }})</a>
     </div>
     <div id="projectsContainer" class="col"></div>
 </div>
@@ -63,20 +62,20 @@
 {{ block.super }}
 <script>
     markdownToHtml(".card-note", true, true);
-    {% if not readonly %}bindWidgets({{ document.id }});{% endif %}
+    {% if not readonly %}bindWidgets("{{ document.nonce }}");{% endif %}
     createToc(cardNote, document.querySelector("#toc"));
     const projectsDetails = projectsContainer.parentElement;
     window.addEventListener("load", () => {
         buttonAddProject.addEventListener("click", () => {
             projectsDetails.setAttribute("open", true);
             onButtonProjectCreate(projectsContainer, {
-                id: "{{ document.id }}",
+                nonce: "{{ document.nonce }}",
                 title: "{{ document.title | safe }}",
                 url: "{{ document.url }}",
             }, true);
         });
         fetchProjects(projectsContainer,
-            documentId={{ document.id }},
+            documentNonce="{{ document.nonce }}",
             forceExpand=false,
             statusFilter="AC,IN,FU",
             projectId=null);

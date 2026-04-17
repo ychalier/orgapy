@@ -15,7 +15,7 @@
 
 {% block column_main %}
 
-<div class="map-layout{% if request.GET.embed == '1' %} embedded{% endif %}" map-id="{{document.id}}">
+<div class="map-layout{% if request.GET.embed == '1' %} embedded{% endif %}" map-nonce="{{document.nonce}}">
     <div class="map-dashboard"></div>
     <div class="map-seed"></div>
 </div>
@@ -24,7 +24,7 @@
 <template id="template-refs">
     <div class="map-refs row">
         {% for ref in document.referenced_in.all %}
-        <a class="reference label" href="{% url 'orgapy:document' ref.id %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
+        <a class="reference label" href="{% url 'orgapy:document' ref.nonce %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
         {% endfor %}
     </div>
 </template>

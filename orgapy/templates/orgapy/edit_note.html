@@ -16,7 +16,7 @@
 <form id="noteForm" action="{% url 'orgapy:save_document' %}" method="post">
     {% csrf_token %}
     {% if document %}
-    <input type="hidden" name="id" value="{{document.id}}">
+    <input type="hidden" name="nonce" value="{{document.nonce}}">
     {% if document.public %}<input type="hidden" name="public" checked>{% endif %}
     {% if document.pinned %}<input type="hidden" name="pinned" checked>{% endif %}
     {% if document.hidden %}<input type="hidden" name="hidden" checked>{% endif %}

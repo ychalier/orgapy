@@ -5,7 +5,7 @@
 {% block content_title %}{% endblock content_title %}
 {% if objects %}
 <div class="card">
-    {% for obj in objects %}{% include 'orgapy/partials/object_list_item.html' %}{% endfor %}
+    {% for obj in objects %}{% include 'orgapy/partials/document_list_item.html' %}{% endfor %}
     {% include 'orgapy/partials/pagination.html' %}
 </div>
 {% else %}

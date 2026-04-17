@@ -53,7 +53,7 @@ function bindSaveNoteButtons(form, buttonSaveExit, buttonSaveContinue) {
     });
 }
 
-function bindWidgets(noteId) {
+function bindWidgets(docNonce) {
 
     const WIDGET_UPDATE_TIMEOUT = 1000;
 
@@ -74,7 +74,7 @@ function bindWidgets(noteId) {
         }
         if (selectedUpdates.length > 0) {
             apiPost("edit-widgets", {
-                objectId: noteId,
+                nonce: docNonce,
                 updates: JSON.stringify(selectedUpdates)
             }, () => {
                 toast(`Saved widgets`, TOAST_SHORT);
@@ -197,7 +197,7 @@ function openSmdeDropdown(cmInstance, word) {
     dropdown.style.left = wordStart.left + "px";
 
     // Parse current widget
-    const [match, objectTypeKey, objectId] = word.match(/@(\w+)\/(\d+)?/);
+    const [match, objectTypeKey, objectNonce] = word.match(/@(\w+)\/([a-zA-Z0-9]+)?/);
     const objectType = {
         note: "note",
         sheet: "sheet",
@@ -222,19 +222,19 @@ function openSmdeDropdown(cmInstance, word) {
         highlight.style.height = bounds.height + "px";
     }
 
-    function setObjectId(newId, origin) {
+    function setNonce(newNonce, origin) {
         smdeDropdownState = origin;
         const replaceFrom = {line: cursor.line, ch: iStart};
         const replaceTo = {line: cursor.line, ch: iEnd};
-        cmInstance.replaceRange(`@${objectTypeKey}/${newId}`, replaceFrom, replaceTo, origin);
+        cmInstance.replaceRange(`@${objectTypeKey}/${newNonce}`, replaceFrom, replaceTo, origin);
     }
 
     const searchbar = create(create(dropdown, "div", "search-bar"), "input", "search-input");
 
     // Set pinned value
-    if (objectId != undefined) {
+    if (objectNonce != undefined) {
         const pinnedButton = create(dropdown, "button", "search-pin ellipsis");
-        fetch(URL_API + `?action=reference&${objectType}=${objectId}`).then(res => res.json()).then(data => {
+        fetch(URL_API + `?action=reference&${objectType}=${objectNonce}`).then(res => res.json()).then(data => {
             const result = data.results[0];
             if (result.error == null) {
                 pinnedButton.title = result.title;
@@ -243,7 +243,7 @@ function openSmdeDropdown(cmInstance, word) {
                 pinnedButton.textContent = result.error;
             }
         });
-        pinnedButton.addEventListener("click", () => { setObjectId("", "interlink-reset") });
+        pinnedButton.addEventListener("click", () => { setNonce("", "interlink-reset") });
     }
 
     create(dropdown, "ul", "search-suggestions menu");
@@ -256,7 +256,7 @@ function openSmdeDropdown(cmInstance, word) {
         if (entry == null) {
             unfocusSmdeDropdown();
         } else {
-            setObjectId(entry.id, "interlink-set")
+            setNonce(entry.nonce, "interlink-set")
         }
     });
 
@@ -288,7 +288,7 @@ function onCmCursorActivity(cmInstance) {
     let iEnd = iStart + 1;
     while (iEnd < line.length && line.charAt(iEnd) != " ") iEnd++;
     const word = line.substring(iStart, iEnd).trim();
-    if (word.match(/^@(note|sheet|map|embedsheet|embedmap)\/(\d+)?$/)) {
+    if (word.match(/^@(note|sheet|map|embedsheet|embedmap)\/([a-zA-Z0-9]+)?$/)) {
         setTimeout(() => { openSmdeDropdown(cmInstance, word); }, 1);
     } else {
         closeSmdeDropdown();
