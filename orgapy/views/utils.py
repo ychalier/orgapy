@@ -64,7 +64,7 @@ def find_user_object(
         except ValueError:
             fields.remove("id")
     if not fields:
-        raise BadRequest()
+        raise BadRequest("Missing filtering key")
     nodes = Q(**{fields[0]: value})
     for field in fields[1:]:
         nodes |= Q(**{field: value})

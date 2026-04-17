@@ -65,10 +65,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
     status_filter = request.GET.get("status")
     query = Project.objects.filter(user=request.user)
     if note_filter is not None:
-        try:
-            query = query.filter(note__id=int(note_filter))
-        except:
-            raise BadRequest()
+        query = query.filter(document__nonce=note_filter)
     if status_filter is not None:
         query = query.filter(status=status_filter)
     query = query.order_by("-date_modification")
@@ -115,7 +112,7 @@ def view_documents(request: HttpRequest) -> HttpResponse:
 def view_create_document(request: HttpRequest) -> HttpResponse:
     doctype = request.GET.get("type", "note")
     if doctype not in ["note", "sheet", "map"]:
-        raise BadRequest()
+        raise BadRequest("Wrong document type")
     return render(request, f"orgapy/create_{doctype}.html", {
         "active": "documents"
     })
@@ -184,7 +181,7 @@ def view_edit_document(request: HttpRequest, nonce: str) -> HttpResponse:
 @permission_required("orgapy.change_document")
 def view_save_document(request: HttpRequest) -> HttpResponse:
     if not request.method == "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     try:
         original = Document.objects.get(user=request.user, nonce=request.POST.get("nonce"))
         if original.date_modification.timestamp() > float(request.POST.get("modification", 0)):
@@ -346,7 +343,7 @@ def view_edit_category(request: HttpRequest, name: str) -> HttpResponse:
     if request.method == "POST":
         new_name = request.POST.get("name")
         if new_name is None:
-            raise BadRequest()
+            raise BadRequest("Missing name")
         if len(new_name) > 0:
             category.name = new_name.lower()
             category.save()
@@ -391,7 +388,7 @@ def view_progress(request: HttpRequest, year: int | str | None = None) -> HttpRe
             dt_start = dt
             dt_end = dt
     except ValueError:
-        raise BadRequest()
+        raise BadRequest("Wrong value")
 
     page_size = 25
     objects = ProgressLog.objects.filter(user=request.user).filter(dt__range=[dt_start, dt_end + datetime.timedelta(days=1)]).order_by("-dt")
@@ -451,7 +448,7 @@ def view_delete_progress_log(request: HttpRequest, object_id: str) -> HttpRespon
 @permission_required("orgapy.view_save_progress_log")
 def view_save_progress_log(request: HttpRequest) -> HttpResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     original_log = None
     if ("id" in request.POST
         and ProgressLog.objects.filter(id=request.POST["id"]).exists()):
@@ -460,7 +457,7 @@ def view_save_progress_log(request: HttpRequest) -> HttpResponse:
         raise PermissionDenied()
     dt_string = request.POST.get("dt")
     if dt_string is None:
-        raise BadRequest()
+        raise BadRequest("Missing dt")
     dt = datetime.datetime.strptime(dt_string, f"%Y-%m-%dT%H:%M")
     log_type = request.POST.get("type", ProgressLog.OTHER)
     description = request.POST.get("description")
@@ -509,7 +506,7 @@ def view_settings(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.change_calendar")
 def view_calendar_form(request: HttpRequest) -> HttpResponse:
     if not request.method == "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     if "id" in request.POST:
         query = Calendar.objects.filter(user=request.user, id=request.POST["id"])
         if not query.exists():
@@ -525,7 +522,7 @@ def view_calendar_form(request: HttpRequest) -> HttpResponse:
         elif "delete" in request.POST:
             calendar.delete()
         else:
-            raise BadRequest()
+            raise BadRequest("Missing action")
     else:
         calendar = Calendar.objects.create(
             user=request.user,

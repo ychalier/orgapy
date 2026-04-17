@@ -92,7 +92,7 @@ def api(request: HttpRequest) -> HttpResponse:
         case "create-groceries-list":
             return api_create_groceries_list(request)
         case _:
-            raise BadRequest()
+            raise BadRequest(f"Unknown action '{action}'")
 
 
 @permission_required("orgapy.view_project")
@@ -106,7 +106,7 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
         try:
             query = query.filter(id=int(project_filter))
         except:
-            raise BadRequest()
+            raise BadRequest("Invalid project filter")
     if document_filter is not None:
         try:
             query = query.filter(document__nonce=document_filter)
@@ -128,7 +128,7 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.add_project")
 def api_create_project(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     max_rank = Project.objects.filter(user=request.user).aggregate(Max("rank"))["rank__max"]
     if max_rank is None:
         max_rank = 1
@@ -141,14 +141,14 @@ def api_create_project(request: HttpRequest) -> JsonResponse:
 
 def get_project_from_post(request: HttpRequest) -> Project:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     project_id = request.POST.get("project_id")
     if project_id is None:
-        raise BadRequest()
+        raise BadRequest("Missing project id")
     try:
         project_id = int(project_id)
     except:
-        raise BadRequest()
+        raise BadRequest("Wrong project id")
     try:
         project = Project.objects.get(id=project_id, user=request.user)
     except Project.DoesNotExist:
@@ -161,11 +161,11 @@ def api_edit_project(request: HttpRequest) -> JsonResponse:
     project = get_project_from_post(request)
     project_data = request.POST.get("project_data")
     if project_data is None:
-        raise BadRequest()
+        raise BadRequest("Missing project data")
     try:
         project_data = json.loads(project_data)
     except:
-        raise BadRequest()
+        raise BadRequest("Wrong project data")
     if project.date_modification.timestamp() > project_data["modification"]:
         return JsonResponse({"success": False, "reason": "Project has newer modifications"})
     project.title = project_data["title"]
@@ -196,7 +196,7 @@ def api_set_project_status(request: HttpRequest) -> JsonResponse:
     project = get_project_from_post(request)
     status = request.POST.get("status")
     if status not in [Project.ACTIVE, Project.INACTIVE, Project.ARCHIVED, Project.FUTURE]:
-        raise BadRequest()
+        raise BadRequest(f"Wrong status {status}")
     project.status = status
     project.save()
     return JsonResponse({
@@ -226,15 +226,15 @@ def api_list_objectives(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.add_objective")
 def api_add_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     objective_name = request.POST.get("name")
     objective_period = request.POST.get("period")
     if objective_name is None or objective_period is None:
-        raise BadRequest()
+        raise BadRequest("Missing objective name or period")
     try:
         objective_period = float(objective_period)
     except:
-        raise BadRequest()
+        raise BadRequest("Wrong period")
     Objective.objects.create(
         user=request.user,
         name=objective_name,
@@ -247,7 +247,7 @@ def api_add_objective(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.change_objective")
 def api_edit_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     print(request.POST)
     if "delete" in request.POST:
         return api_delete_objective(request)
@@ -256,12 +256,12 @@ def api_edit_objective(request: HttpRequest) -> JsonResponse:
     objective_period = request.POST.get("period")
     objective_flexible = request.POST.get("flexible", "") == "on"
     if objective_id is None or objective_name is None or objective_period is None:
-        raise BadRequest()
+        raise BadRequest("Missing objective id, name or period")
     try:
         objective_id = int(objective_id)
         objective_period = int(objective_period)
     except:
-        raise BadRequest()
+        raise BadRequest("Wrong objective id or period")
     if not Objective.objects.filter(id=objective_id, user=request.user).exists():
         raise Http404()
     objective = Objective.objects.get(id=objective_id, user=request.user)
@@ -272,20 +272,25 @@ def api_edit_objective(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
-@permission_required("orgapy.change_objective")
-def api_archive_objective(request: HttpRequest) -> JsonResponse:
+def get_objective_from_post(request: HttpRequest) -> Objective:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     objective_id = request.POST.get("objective_id")
     if objective_id is None:
-        raise BadRequest()
+        raise BadRequest("Missing objective id")
     try:
         objective_id = int(objective_id)
     except:
-        raise BadRequest()
+        raise BadRequest("Wrong objective id")
     if not Objective.objects.filter(id=objective_id, user=request.user).exists():
         raise Http404()
-    objective = Objective.objects.get(id=objective_id, user=request.user)
+    return Objective.objects.get(id=objective_id, user=request.user)
+
+
+
+@permission_required("orgapy.change_objective")
+def api_archive_objective(request: HttpRequest) -> JsonResponse:
+    objective = get_objective_from_post(request)
     objective.archived = True
     objective.save()
     return JsonResponse({"success": True})
@@ -293,18 +298,7 @@ def api_archive_objective(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.change_objective")
 def api_unarchive_objective(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    objective_id = request.POST.get("objective_id")
-    if objective_id is None:
-        raise BadRequest()
-    try:
-        objective_id = int(objective_id)
-    except:
-        raise BadRequest()
-    if not Objective.objects.filter(id=objective_id, user=request.user).exists():
-        raise Http404()
-    objective = Objective.objects.get(id=objective_id, user=request.user)
+    objective = get_objective_from_post(request)
     objective.archived = False
     objective.save()
     return JsonResponse({"success": True})
@@ -312,18 +306,8 @@ def api_unarchive_objective(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.delete_objective")
 def api_delete_objective(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    objective_id = request.POST.get("id")
-    if objective_id is None:
-        raise BadRequest()
-    try:
-        objective_id = int(objective_id)
-    except:
-        raise BadRequest()
-    if not Objective.objects.filter(id=objective_id, user=request.user).exists():
-        raise Http404()
-    Objective.objects.get(id=objective_id, user=request.user).delete()
+    objective = get_objective_from_post(request)
+    objective.delete()
     return JsonResponse({"success": True})
 
 
@@ -331,20 +315,10 @@ def api_delete_objective(request: HttpRequest) -> JsonResponse:
 def api_edit_objective_history(request: HttpRequest) -> JsonResponse:
     """Objective history must be a JSON string
     """
-    if request.method != "POST":
-        raise BadRequest()
-    objective_id = request.POST.get("objective_id")
+    objective = get_objective_from_post(request)
     objective_history = request.POST.get("objective_history")
-    if objective_id is None or objective_history is None:
-        raise BadRequest()
-    try:
-        objective_id = int(objective_id)
-    except:
-        raise BadRequest()
-    if not Objective.objects.filter(id=objective_id, user=request.user).exists():
-        raise Http404()
-
-    objective = Objective.objects.get(id=objective_id, user=request.user)
+    if  objective_history is None:
+        raise BadRequest("Missing objective history")
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
     compare_objective_histories(request.user, objective.name, objective.history, objective_history)
@@ -377,11 +351,11 @@ def api_list_calendars(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.change_calendar")
 def api_delete_calendar(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     href = request.POST.get("href")
     calendarid = request.POST.get("calendarid")
     if href is None or calendarid is None:
-        raise BadRequest()
+        raise BadRequest("Missing href or calendarid")
     if not Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
         raise Http404()
     calendar = Calendar.objects.get(user=request.user, id=int(calendarid))
@@ -392,7 +366,7 @@ def api_delete_calendar(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.change_calendar")
 def api_add_event(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     calendarid = request.POST.get("calendarid")
     title = request.POST.get("title")
     dtstart_date = request.POST.get("dtstart-date")
@@ -405,7 +379,7 @@ def api_add_event(request: HttpRequest) -> JsonResponse:
         dtstart_time = "00:00"
         dtend_time = "00:00"
     if title is None or dtstart_date is None or dtstart_time is None or dtend_date is None or dtend_time is None or calendarid is None:
-        raise BadRequest()
+        raise BadRequest("Missing title or some date")
     if not Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
         raise Http404()
     if location is not None and location.strip() == "":
@@ -435,39 +409,48 @@ def api_list_tasks(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"tasks": tasks})
 
 
-@permission_required("orgapy.edit_task")
-def api_edit_task(request: HttpRequest) -> JsonResponse:
+def get_task_from_post(request: HttpRequest) -> Task:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     task_id = request.POST.get("id")
     if task_id is None:
-        raise BadRequest()
+        raise BadRequest("Missing id")
+    try:
+        task_id = int(task_id)
+    except:
+        raise BadRequest("Wrong id")
+    try:
+        task = Task.objects.get(id=task_id, user=request.user)
+    except Task.DoesNotExist:
+        raise Http404()
+    return task
+
+
+@permission_required("orgapy.edit_task")
+def api_edit_task(request: HttpRequest) -> JsonResponse:
+    task = get_task_from_post(request)
     task_title = request.POST.get("title")
     if task_title is None:
-        raise BadRequest()
+        raise BadRequest("Missing title")
     task_start_date = request.POST.get("start_date")
     if task_start_date is None:
-        raise BadRequest()
+        raise BadRequest("Missing start date")
     task_due_date = request.POST.get("due_date")
     if task_due_date is not None and task_due_date.strip() == "":
         task_due_date = None
     task_recurring_mode = request.POST.get("recurring_mode")
     if task_recurring_mode is None:
-        raise BadRequest()
+        raise BadRequest("Missing recurring mode")
     task_recurring_period = request.POST.get("recurring_period")
     if task_recurring_period is None:
-        raise BadRequest()
+        raise BadRequest("Missing recurring period")
     try:
-        task_id = int(task_id)
         task_start_date = parse_date(task_start_date)
         if task_due_date is not None:
             task_due_date = parse_date(task_due_date)
         task_recurring_period = None if task_recurring_period.strip() == "" else int(task_recurring_period)
     except:
-        raise BadRequest()
-    if not Task.objects.filter(id=task_id, user=request.user).exists():
-        raise Http404()
-    task = Task.objects.get(id=task_id, user=request.user)
+        raise BadRequest("Wrong values")
     task.title = task_title
     task.start_date = task_start_date
     task.due_date = task_due_date
@@ -480,19 +463,19 @@ def api_edit_task(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.add_task")
 def api_add_task(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     task_title = request.POST.get("title")
     if task_title is None:
-        raise BadRequest()
+        raise BadRequest("Missing title")
     task_start_date = request.POST.get("start_date")
     if task_start_date is None:
-        raise BadRequest()
+        raise BadRequest("Missing start date")
     task_due_date = request.POST.get("due_date")
     if task_due_date is not None and task_due_date.strip() == "":
         task_due_date = None
     task_recurring_mode = request.POST.get("recurring_mode")
     if task_recurring_mode is None:
-        raise BadRequest()
+        raise BadRequest("Missing recurring mode")
     task_recurring_period = request.POST.get("recurring_period")
     try:
         task_start_date = parse_date(task_start_date)
@@ -500,7 +483,7 @@ def api_add_task(request: HttpRequest) -> JsonResponse:
             task_due_date = parse_date(task_due_date)
         task_recurring_period = None if (task_recurring_period is None or task_recurring_period.strip() == "") else int(task_recurring_period)
     except:
-        raise BadRequest()
+        raise BadRequest("Wrong values")
     Task.objects.create(
         user=request.user,
         title=task_title,
@@ -514,35 +497,14 @@ def api_add_task(request: HttpRequest) -> JsonResponse:
 
 @permission_required("orgapy.delete_task")
 def api_delete_task(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    task_id = request.POST.get("id")
-    if task_id is None:
-        raise BadRequest()
-    try:
-        task_id = int(task_id)
-    except:
-        raise BadRequest()
-    if not Task.objects.filter(id=task_id, user=request.user).exists():
-        raise Http404()
-    Task.objects.get(id=task_id, user=request.user).delete()
+    task = get_task_from_post(request)
+    task.delete()
     return JsonResponse({"success": True})
 
 
 @permission_required("orgapy.edit_task")
 def api_complete_task(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest()
-    task_id = request.POST.get("id")
-    if task_id is None:
-        raise BadRequest()
-    try:
-        task_id = int(task_id)
-    except:
-        raise BadRequest()
-    if not Task.objects.filter(id=task_id, user=request.user).exists():
-        raise Http404()
-    task = Task.objects.get(id=task_id, user=request.user)
+    task = get_task_from_post(request)
     task.completed = True
     task.date_completion = timezone.now()
     task.save()
@@ -562,7 +524,7 @@ def api_complete_task(request: HttpRequest) -> JsonResponse:
         elif task.recurring_mode == Task.YEARLY:
             delta = dateutil.relativedelta.relativedelta(years=task.recurring_period)
         else:
-            raise BadRequest()
+            raise BadRequest("Wrong recurring mode")
         due_date = task.due_date
         start_date = task.start_date
         today = datetime.datetime.now().date()
@@ -612,7 +574,7 @@ def api_edit_widgets(request: HttpRequest) -> JsonResponse:
     nonce = request.POST.get("nonce")
     updates = json.loads(request.POST.get("updates", "[]"))
     if nonce is None:
-        raise BadRequest()
+        raise BadRequest("Missing nonce")
     query = Document.objects.filter(user=request.user, nonce=nonce)
     if not query.exists():
         raise Http404()
@@ -658,7 +620,7 @@ def api_edit_widgets(request: HttpRequest) -> JsonResponse:
 def api_get_document(request: HttpRequest) -> JsonResponse:
     nonce = request.GET.get("nonce")
     if nonce is None:
-        raise BadRequest()
+        raise BadRequest("Missing nonce")
     doc = find_user_object(Document, "nonce", nonce)
     if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document") or doc.public:
         return JsonResponse({
@@ -676,7 +638,7 @@ def api_get_document(request: HttpRequest) -> JsonResponse:
 def api_save_document(request: HttpRequest) -> JsonResponse:
     nonce = request.POST.get("nonce")
     if nonce is None:
-        raise BadRequest()
+        raise BadRequest("Missing nonce")
     doc = find_user_object(Document, "nonce", nonce, request.user)
     modification = float(request.POST.get("modification", 0))
     if doc.date_modification.timestamp() > modification:
@@ -795,7 +757,7 @@ def api_search_documents(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.create_mood_log")
 def api_create_mood_log(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     try:
         MoodLog.objects.create(
             user=request.user,
@@ -806,9 +768,9 @@ def api_create_mood_log(request: HttpRequest) -> JsonResponse:
             stress=int(request.POST["stress"]),
             activities=request.POST["activities"].strip().strip(","))
     except ValueError:
-        raise BadRequest()
+        raise BadRequest("Wrong value")
     except KeyError:
-        raise BadRequest()
+        raise BadRequest("Missing key")
 
     return JsonResponse({"success": True})
 
@@ -846,7 +808,7 @@ def api_list_groceries(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.change_settings")
 def api_save_groceries(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
     settings = get_or_create_settings(request.user)
@@ -858,7 +820,7 @@ def api_save_groceries(request: HttpRequest) -> JsonResponse:
 @permission_required("orgapy.change_settings")
 def api_create_groceries_list(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
-        raise BadRequest()
+        raise BadRequest("Wrong method")
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
     groceries_data = json.loads(request.POST.get("groceries", "{}"))
