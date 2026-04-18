@@ -242,7 +242,6 @@ def api_add_objective(request: HttpRequest) -> JsonResponse:
 def api_edit_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest("Wrong method")
-    print(request.POST)
     if "delete" in request.POST:
         return api_delete_objective(request)
     objective_id = request.POST.get("id")

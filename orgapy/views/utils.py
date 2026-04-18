@@ -255,7 +255,6 @@ def view_document_list(
         for name in category_pattern.findall(search_query):
             category_names.add(name)
         search_query = re.sub(r" +", " ", category_pattern.sub("", search_query)).strip()
-    print("1", category_names)
     if search_query:
         attrs["query"] = search_query
 
@@ -275,7 +274,6 @@ def view_document_list(
         category_filters = request.GET.get("categories")
     if category_filters:
         category_names.update(category_filters.split(";"))
-    print("2", category_names)
     category_ids: list[int] = []
     filter_uncategorized = False
     if category_names:
