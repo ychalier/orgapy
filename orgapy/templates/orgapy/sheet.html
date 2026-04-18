@@ -39,9 +39,7 @@
             {% else %}
                 <a class="link-tenuous" href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
             {% endif %}
-            {% for ref in document.referenced_in.all %}
-            <a class="reference label" href="{% url 'orgapy:document' ref.nonce %}"><i class="ri-links-line"></i> {{ ref.title }}</a>
-            {% endfor %}
+            {% if not readonly %}{% for ref in document.referenced_in.all %}<a class="reference label" href="{% url 'orgapy:document' ref.nonce %}"><i class="ri-links-line"></i> {{ ref.title }}</a>{% endfor %}{% endif %}
             {% if document.subtitle %}
             <span class="markdown-inline">{{document.subtitle | safe}}</span>
             {% endif %}

@@ -130,13 +130,12 @@ def compare_objective_histories(user: LoggedUser, name: str, before: str | None,
 
 def save_document_core(document: Document):
     document.date_modification = timezone.now()
-    document.save()
-    referenced_document_ids = set()
-    pattern = re.compile(r"@(?:embed)?(note|sheet|map)/(\d+)")
+    nonces = set()
+    pattern = re.compile(r"@(?:embed)?(note|sheet|map)/([a-zA-Z0-9]+)")
     if document.content:
-        for _, document_id in re.findall(pattern, document.content):
-            referenced_document_ids.add(int(document_id))
-    document.references.set(Document.objects.filter(user=document.user, id__in=referenced_document_ids))
+        nonces = set([nonce for _, nonce in re.findall(pattern, document.content)])
+    document.references.set(Document.objects.filter(user=document.user, nonce__in=nonces))
+    document.save()
 
 
 def get_or_create_settings(user: LoggedUser) -> Settings:
