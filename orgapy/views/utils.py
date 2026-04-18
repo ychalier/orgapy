@@ -7,7 +7,8 @@ from urllib.parse import urlencode
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Page, Paginator
-from django.db.models import Q
+from django.db import models, connection
+from django.db.models import Q, QuerySet
 from django.http import HttpRequest, Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -145,6 +146,61 @@ def get_or_create_settings(user: LoggedUser) -> Settings:
     return Settings.objects.create(user=user)
 
 
+def build_fts_query(user_input: str) -> str:
+    phrases = re.findall(r'"([^"]+)"', user_input)
+    remaining = re.sub(r'"[^"]+"', '', user_input)
+    words = re.findall(r'\w+', remaining)
+    parts = []
+    parts.extend(f'"{p}"' for p in phrases)
+    parts.extend(f'{w}*' for w in words)
+    return ' '.join(parts)
+
+
+def search_within_queryset(
+        qs: QuerySet[Document],
+        query: str,
+        limit: int = 500,
+        title_weight: float = 10,
+        content_weight: float = 1,
+    ) -> QuerySet[Document]:
+
+    if not query:
+        return qs
+
+    fts_query = build_fts_query(query)
+
+    subquery = qs.values("id")
+    base_sql, base_params = subquery.query.sql_with_params()
+
+    sql = f"""
+        SELECT d.id, bm25(orgapy_document_fts, {title_weight}, {content_weight}) AS rank
+        FROM orgapy_document_fts
+        JOIN orgapy_document d ON d.id = orgapy_document_fts.rowid
+        WHERE orgapy_document_fts MATCH %s
+        AND d.id IN (
+            {base_sql}
+        )
+        ORDER BY rank
+        LIMIT {limit}
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, [fts_query, *base_params])
+        rows = cursor.fetchall()
+
+    if not rows:
+        return qs.none()
+
+    ids = [row[0] for row in rows]
+
+    ordering = models.Case(*[
+        models.When(pk=pk, then=pos)
+        for pos, pk in enumerate(ids)
+    ])
+
+    return qs.filter(pk__in=ids).annotate(relevance=ordering).order_by("relevance")
+
+
 def view_document_list(
         request: HttpRequest,
         template_name: str,
@@ -152,7 +208,7 @@ def view_document_list(
         type_filter: Literal["note", "sheet", "map"] | None = None,
         status_filter: Literal["public", "hidden", "deleted", "projects"] | None = None,
         category_filters: str | None = None,
-        sort_key: Literal["creation", "modification", "access", "deletion", "title"] | None = "modification",
+        sort_key: Literal["creation", "modification", "access", "deletion", "title", "relevance"] | None = "modification",
         page_size: int | None = None,
         kwargs: dict[str, Any] = {},
     ) -> HttpResponse:
@@ -192,6 +248,14 @@ def view_document_list(
 
     if search_query is None:
         search_query = request.GET.get("query")
+
+    category_names: set[str] = set()
+    if search_query:
+        category_pattern = re.compile(r"#([a-zA-Z0-9]+)")
+        for name in category_pattern.findall(search_query):
+            category_names.add(name)
+        search_query = re.sub(r" +", " ", category_pattern.sub("", search_query)).strip()
+    print("1", category_names)
     if search_query:
         attrs["query"] = search_query
 
@@ -207,23 +271,23 @@ def view_document_list(
     if status_filter:
         attrs["status"] = status_filter
 
-    category_ids: list[int] = []
-    filter_uncategorized = False
     if category_filters is None:
         category_filters = request.GET.get("categories")
     if category_filters:
-        attrs["categories"] = category_filters
-        category_ids = [c.id for c in Category.objects.filter(user=request.user, name__in=category_filters.split(";"))]
-        filter_uncategorized = "uncategorized" in category_filters.split(";")
+        category_names.update(category_filters.split(";"))
+    print("2", category_names)
+    category_ids: list[int] = []
+    filter_uncategorized = False
+    if category_names:
+        category_ids = [c.id for c in Category.objects.filter(user=request.user, name__in=category_names)]
+        filter_uncategorized = "uncategorized" in category_names
+        attrs["categories"] = ";".join(sorted(category_names))
 
     if sort_key is None:
         s = request.GET.get("sort")
-        sort_key = s if s in ["creation", "modification", "access", "deletion", "title"] else None # type: ignore
+        sort_key = s if s in ["creation", "modification", "access", "deletion", "title", "relevance"] else None # type: ignore
     if sort_key:
         attrs["sort"] = sort_key
-
-    category_pattern = re.compile(r"#([a-zA-Z0-9]+)")
-    spaces_pattern = re.compile(r" +")
 
     qs = Document.objects.filter(user=request.user)
     if type_filter is not None:
@@ -244,20 +308,19 @@ def view_document_list(
         qs = qs.filter(categories__in=[category_id])
     if filter_uncategorized:
         qs = qs.filter(categories__isnull=True)
+
     if search_query:
-        for name in category_pattern.findall(search_query):
-            if name == "uncategorized":
-                qs = qs.filter(categories__isnull=True)
-            else:
-                qs = qs.filter(categories__name__exact=name)
-        search_query = spaces_pattern.sub(" ", category_pattern.sub("", search_query)).strip()
-        qs = qs.filter(Q(title__icontains=search_query) | Q(content__icontains=search_query))
-    
+        qs = search_within_queryset(qs, search_query)
+
     if sort_key:
-        if sort_key == "title":
+        if sort_key == "relevance":
+            pass
+        elif sort_key == "title":
             qs = qs.order_by("-pinned", "title")
         else:
             qs = qs.order_by("-pinned", f"-date_{sort_key}")
+    else:
+        qs = qs.order_by("-pinned", "-date_modification")
 
     paginator = Paginator(qs, page_size)
     page = request.GET.get("page")
@@ -267,6 +330,7 @@ def view_document_list(
         "objects": objects,
         "query": attrs.get("query", ""),
         "paginator": pretty_paginator(objects, **attrs),
+        "attrs": attrs,
         **kwargs
     })
 

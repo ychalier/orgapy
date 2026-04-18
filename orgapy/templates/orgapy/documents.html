@@ -6,7 +6,7 @@
         <div class="card-body col">
             <div class="search">
                 <div class="search-bar">
-                    <input class="search-input" autocomplete="off" type="search" name="query" placeholder="Search" tabindex="1" value="{% if query %}{{query}}{% endif %}" />
+                    <input class="search-input" autocomplete="off" type="search" name="query" placeholder="Search" tabindex="1" value="{% if attrs.query %}{{ attrs.query }}{% endif %}" />
                     <i class="search-icon ri-close-line"></i>
                     <button class="search-button" tabindex="-1"><i class="ri-search-line"></i></button>
                 </div>
@@ -16,25 +16,26 @@
                 <div class="actionbar">
                     <label for="selectSearchType">Filter</label>
                     <select id="selectSearchType" name="type" style="border-right: none">
-                        <option {% if request.GET.type == 'all' %}selected{% endif %} value="all">All types</option>
-                        <option {% if request.GET.type == 'note' %}selected{% endif %} value="note">Notes</option>
-                        <option {% if request.GET.type == 'sheet' %}selected{% endif %} value="sheet">Sheets</option>
-                        <option {% if request.GET.type == 'map' %}selected{% endif %} value="map">Maps</option>
+                        <option {% if attrs.type == 'all' %}selected{% endif %} value="all">All types</option>
+                        <option {% if attrs.type == 'note' %}selected{% endif %} value="note">Notes</option>
+                        <option {% if attrs.type == 'sheet' %}selected{% endif %} value="sheet">Sheets</option>
+                        <option {% if attrs.type == 'map' %}selected{% endif %} value="map">Maps</option>
                     </select>
                     <select name="status">
-                        <option {% if request.GET.status == 'any' %}selected{% endif %} value="any">Any status</option>
-                        <option {% if request.GET.status == 'projects' %}selected{% endif %} value="projects">Projects</option>
-                        <option {% if request.GET.status == 'public' %}selected{% endif %} value="public">Public</option>
-                        <option {% if request.GET.status == 'hidden' %}selected{% endif %} value="hidden">Hidden</option>
+                        <option {% if attrs.status == 'any' %}selected{% endif %} value="any">Any status</option>
+                        <option {% if attrs.status == 'projects' %}selected{% endif %} value="projects">Projects</option>
+                        <option {% if attrs.status == 'public' %}selected{% endif %} value="public">Public</option>
+                        <option {% if attrs.status == 'hidden' %}selected{% endif %} value="hidden">Hidden</option>
                     </select>
                 </div>
                 <div class="actionbar">
                     <label for="selectSearchSort">Sort by</label>
                     <select id="selectSearchSort" name="sort">
-                        <option {% if request.GET.sort == 'creation' %}selected{% endif %} value="creation">Creation</option>
-                        <option {% if request.GET.sort == 'modification' or not request.GET.sort %}selected{% endif %} value="modification">Modification</option>
-                        <option {% if request.GET.sort == 'access' %}selected{% endif %} value="access">Access</option>
-                        <option {% if request.GET.sort == 'title' %}selected{% endif %} value="title">Title</option>
+                        <option {% if attrs.sort == 'relevance' %}selected{% endif %} value="relevance">Relevance</option>
+                        <option {% if attrs.sort == 'creation' %}selected{% endif %} value="creation">Creation</option>
+                        <option {% if attrs.sort == 'modification' %}selected{% endif %} value="modification">Modification</option>
+                        <option {% if attrs.sort == 'access' %}selected{% endif %} value="access">Access</option>
+                        <option {% if attrs.sort == 'title' %}selected{% endif %} value="title">Title</option>
                     </select>
                 </div>
                 {% include 'orgapy/partials/categories_input.html' %}

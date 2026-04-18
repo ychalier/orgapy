@@ -1,5 +1,5 @@
 <div id="categoriesInput" class="input-categories">
-    <input type="hidden" name="categories" value="{% if obj %}{% for category in obj.categories.all %}{% if not forloop.first %};{% endif %}{{ category.name }}{% endfor %}{% elif request.GET.categories %}{{ request.GET.categories }}{% endif %}" />
+    <input type="hidden" name="categories" value="{% if obj %}{% for category in obj.categories.all %}{% if not forloop.first %};{% endif %}{{ category.name }}{% endfor %}{% elif attrs.categories %}{{ attrs.categories }}{% endif %}" />
     <div class="input-categories-current"></div>
     <div class="search">
         <div class="search-bar">
