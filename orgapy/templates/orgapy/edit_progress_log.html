@@ -3,41 +3,39 @@
 
 {% block title %}Edit progress log{% endblock title %}
 
-{% block head %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/progress.css' %}" />
-<script src="{% static 'orgapy/js/progress.js' %}"></script>
-{% endblock %}
-
 {% block column_main %}
 
 <form action="{% url 'orgapy:save_progress_log' %}" method="post">
     {% csrf_token %}
     {% if log %}<input type="hidden" name="id" value="{{ log.id }}">{% endif %}
-    <header class="card">
-        <h1>Edit Progress Log</h1>
-        <p>
-            <label for="input-description">Description</label>
-            <input  id="input-description" type="text" name="description" value="{% if log %}{{ log.description }}{% endif %}" required placeholder="Project X - Task Z" />
-        </p>
-        <p>
-            <label for="input-dt">Timestamp</label>
-            <input  id="input-dt" type="datetime-local" name="dt" value="{% if log %}{{ log.dt_html }}{% endif %}" required />
-        </p>
-        <p>
-            <label for="select-type">Type</label>
-            <select id="select-type" name="type" required>
-                <option value="OT" {% if log and log.type == 'OT' %}selected{% endif %}>Other</option>
-                <option value="PR" {% if log and log.type == 'PR' %}selected{% endif %}>Project checklist item checked</option>
-                <option value="TA" {% if log and log.type == 'TA' %}selected{% endif %}>Task completed</option>
-                <option value="OB" {% if log and log.type == 'OB' %}selected{% endif %}>Objective completed</option>
-            </select>
-        </p>
-        <button>Save</button>
-        {% if log %}
-        <a href="{% url 'orgapy:delete_progress_log' object_id=log.id %}" class="button link-confirm button-danger" title="Delete">Delete</a>
-        {% endif %}
-    </header>
+    <div class="card">
+        <h1 class="card-header">Edit progress log</h1>
+        <div class="card-body colll">
+            <div>
+                <label for="input-description">Description</label>
+                <input  id="input-description" type="text" name="description" value="{% if log %}{{ log.description }}{% endif %}" required placeholder="Project X - Task Z" />
+            </div>
+            <div>
+                <label for="input-dt">Timestamp</label>
+                <input  id="input-dt" type="datetime-local" name="dt" value="{% if log %}{{ log.dt_html }}{% endif %}" required />
+            </div>
+            <div>
+                <label for="select-type">Type</label>
+                <select id="select-type" name="type" required>
+                    <option value="OT" {% if log and log.type == 'OT' %}selected{% endif %}>Other</option>
+                    <option value="PR" {% if log and log.type == 'PR' %}selected{% endif %}>Project checklist item checked</option>
+                    <option value="TA" {% if log and log.type == 'TA' %}selected{% endif %}>Task completed</option>
+                    <option value="OB" {% if log and log.type == 'OB' %}selected{% endif %}>Objective completed</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-actions">
+            <button>Save</button>
+            {% if log %}
+            <a href="{% url 'orgapy:delete_progress_log' object_id=log.id %}" class="button link-confirm button-danger" title="Delete">Delete</a>
+            {% endif %}
+        </div>
+    </div>
 </form>
 
 {% endblock column_main %}

@@ -24,19 +24,13 @@
     {% for log in logs %}
     <div class="line">
         <span class="x-hint" title="{{ log.dt | date:"Y-m-d H:i:s" }}">{{ log.dt | date:"m-d" }}</span>
-        {% if log.type == "PR" %}
-        <i class="ri-briefcase-line" title="{{ log.get_type_display }}"></i>
-        {% elif log.type == "TA" %}
-        <i class="ri-checkbox-circle-line" title="{{ log.get_type_display }}"></i>
-        {% elif log.type == "OB" %}
-        <i class="ri-focus-2-line" title="{{ log.get_type_display }}"></i>
-        {% endif %}
-        <span>{{ log.description }}</span>
+        <i class="{{ log.get_icon_class }}" title="{{ log.get_type_display }}"></i>
+        <a class="link-hidden" href="{% url 'orgapy:edit_progress_log' log.id %}">{{ log.description }}</a>
         <div class="dropdown">
             <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
             <ul class="menu">
-                <li class="menu-item"><a href="{% url 'orgapy:edit_progress_log' object_id=log.id %}"><i class="ri-pencil-fill"></i> Edit</a></li>
-                <li class="menu-item"><a href="{% url 'orgapy:delete_progress_log' object_id=log.id %}" class="button-danger link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+                <li class="menu-item"><a href="{% url 'orgapy:edit_progress_log' log.id %}"><i class="ri-pencil-fill"></i> Edit</a></li>
+                <li class="menu-item"><a href="{% url 'orgapy:delete_progress_log' log.id %}" class="button-danger link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
             </ul>
         </div>
     </div>

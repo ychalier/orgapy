@@ -462,6 +462,16 @@ class ProgressLog(models.Model):
     @property
     def dt_html(self) -> str:
         return f"{self.dt.year}-{self.dt.month:02d}-{self.dt.day:02d}T{self.dt.hour:02d}:{self.dt.minute:02d}"
+    
+    def get_icon_class(self) -> str:
+        if self.type == self.PROJECT_CHECKLIST_ITEM_CHECKED:
+            return "ri-briefcase-line"
+        elif self.type == self.TASK_COMPLETED:
+            return "ri-task-line"
+        elif self.type == self.OBJECTIVE_COMPLETED:
+            return "ri-focus-2-line"
+        else:
+            return "ri-bar-chart-2-line"
 
 
 class MoodLog(models.Model):

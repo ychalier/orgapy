@@ -759,7 +759,7 @@ function inflateCalendar(container, data, options) {
                 if (options.relative) {
                     value = Math.ceil(levels * value / maxValue);
                 }
-                if (value > levels) {
+                if (value >= levels) {
                     dayCell.classList.add("filled-more");
                 } else {
                     dayCell.classList.add(`filled-${value}`);
