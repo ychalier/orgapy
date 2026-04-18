@@ -783,6 +783,7 @@ input:checked+.toggle-slider+.toggle-text {
     border-top-right-radius: 0;
     box-shadow: none;
     overflow: hidden;
+    z-index: 3;
 }
 
 /***** CATEGORIES INPUT *******************************************************/
@@ -1033,10 +1034,13 @@ input:checked+.toggle-slider+.toggle-text {
     border-bottom: none;
 }
 
-.card-actions--standalone {
+.card-actions--sticky {
+    position: sticky;
+    top: -1px;
     border-left: 1px solid var(--border-primary);
     border-right: 1px solid var(--border-primary);
     border-bottom: 1px solid var(--border-primary);
+    background: var(--bg-secondary-alt);
     z-index: 2;
 }
 

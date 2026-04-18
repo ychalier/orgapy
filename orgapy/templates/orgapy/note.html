@@ -28,7 +28,7 @@
 </header>
 
 {% if not readonly %}
-<div class="card-actions card-actions--standalone" style="position: sticky; top: -1px">
+<div class="card-actions card-actions--sticky">
     <a href="{% url 'orgapy:edit_document' document.nonce %}" class="button" title="Edit"><i class="ri-pencil-fill"></i><span>Edit</span></a>
     <a href="{% url 'orgapy:toggle_document_pin' document.nonce %}?next={{ request.get_full_path | urlencode }}" class="button {% if document.pinned %}active{% endif %}" title="{% if document.pinned %}Unpin{% else %}Pin{% endif %} this document"><i class="ri-bookmark-fill"></i><span>{% if document.pinned %}Unpin{% else %}Pin{% endif %}</span></a>
     <a href="{% url 'orgapy:toggle_document_public' document.nonce %}?next={{ request.get_full_path | urlencode }}" class="button {% if document.public %}active{% endif %}" title="{% if document.public %}Make private{% else %}Make public{% endif %}">{% if document.public %}<i class="ri-lock-line"></i><span>Unpublish</span>{% else %}<i class="ri-lock-unlock-line"></i><span>Publish</span>{% endif %}</a>

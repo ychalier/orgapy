@@ -126,13 +126,11 @@ navbarSubmitSearchFormButton.onclick = (event) => {
     </div>
     {% endblock body %}
     <div id="snackbar" class="snackbar"></div>
-    {% block body_scripts %}{% endblock body_scripts %}
-    {% block body_scrips_minimized %}
     <script>
-document.querySelectorAll(".dropdown").forEach(bindDropdown);
-document.querySelectorAll(".link-confirm").forEach(bindLinkConfirm);
-document.querySelectorAll(".submit-confirm").forEach(bindSubmitConfirm);
+        document.querySelectorAll(".dropdown").forEach(bindDropdown);
+        document.querySelectorAll(".link-confirm").forEach(bindLinkConfirm);
+        document.querySelectorAll(".submit-confirm").forEach(bindSubmitConfirm);
     </script>
-    {% endblock %}
+    {% block body_scripts %}{% endblock body_scripts %}
 </body>
 </html>
