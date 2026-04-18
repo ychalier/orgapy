@@ -129,13 +129,7 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
 def api_create_project(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         raise BadRequest("Wrong method")
-    max_rank = Project.objects.filter(user=request.user).aggregate(Max("rank"))["rank__max"]
-    if max_rank is None:
-        max_rank = 1
-    project = Project.objects.create(
-        user=request.user,
-        rank=int(max_rank) + 1
-    )
+    project = Project.objects.create(user=request.user)
     return JsonResponse({"success": True, "project": project.to_json_dict()})
 
 

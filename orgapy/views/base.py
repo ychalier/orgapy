@@ -81,10 +81,10 @@ def view_projects(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.view_project")
-def view_project(request: HttpRequest, object_id: str) -> HttpResponse:
+def view_project(request: HttpRequest, nonce: str) -> HttpResponse:
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
-    project = find_user_object(Project, "id", object_id, request.user)
+    project = find_user_object(Project, "nonce", nonce, request.user)
     return render(request, "orgapy/project.html", {
         "project": project,
         "active": "projects",
@@ -92,8 +92,8 @@ def view_project(request: HttpRequest, object_id: str) -> HttpResponse:
 
 
 @permission_required("orgapy.delete_project")
-def view_delete_project(request: HttpRequest, object_id: str) -> HttpResponse:
-    project = find_user_object(Project, "id", object_id, request.user)
+def view_delete_project(request: HttpRequest, nonce: str) -> HttpResponse:
+    project = find_user_object(Project, "nonce", nonce, request.user)
     project.delete()
     if "next" in request.GET:
         return redirect(request.GET["next"])

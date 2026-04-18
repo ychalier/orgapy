@@ -43,7 +43,6 @@ class Project {
         this.modification = data.modification;
         this.title = data.title == null ? null : (data.title == "" ? null : data.title);
         this.checklist = data.checklist;
-        this.rank = data.rank;
         this.document = data.document;
         this.status = data.status;
         this.checklistItems = null;
@@ -645,26 +644,6 @@ class TemporaryProject extends Project {
 
 }
 
-const STORAGE_KEY_RANK = "orgapy.projects.ranks";
-
-function saveProjectRanks(container, ordering) {
-    let ranks = {};
-    container.querySelectorAll(".project").forEach((project, i) => {
-        let projectId = project.getAttribute("project_id");
-        ranks[projectId] = ordering[i];
-        projects[projectId].rank = ordering[i];
-    });
-    inflateProjects(container);
-    let rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
-    if (rankStorage == null) {
-        rankStorage = {};
-    } else {
-        rankStorage = JSON.parse(rankStorage);
-    }
-    rankStorage[window.location.pathname] = ranks;
-    localStorage.setItem(STORAGE_KEY_RANK, JSON.stringify(rankStorage));
-}
-
 function inflateProjects(container) {
     dragRankClear();
     if (container == null) {
@@ -672,22 +651,12 @@ function inflateProjects(container) {
         return;
     }
     container.innerHTML = "";
-    let projectIndices = [...Object.keys(projects)];
-    projectIndices.sort((a, b) => projects[a].rank - projects[b].rank);
-    projectIndices.forEach(projectId => {
+    for (let projectId in projects) {
         container.appendChild(projects[projectId].create());
-    });
+    }
 }
 
 function fetchProjects(container, documentNonce=null, forceExpand=false, statusFilter=null, projectId=null) {
-    let ranks = {};
-    const rankStorage = localStorage.getItem(STORAGE_KEY_RANK);
-    if (rankStorage != null) {
-        const parsedRankStorage = JSON.parse(rankStorage);
-        if (window.location.pathname in parsedRankStorage) {
-            ranks = parsedRankStorage[window.location.pathname];
-        }
-    }
     const params = {action: "list-projects"};
     if (documentNonce != null) params["document"] = documentNonce;
     if (statusFilter != null) params["status"] = statusFilter;
@@ -697,9 +666,6 @@ function fetchProjects(container, documentNonce=null, forceExpand=false, statusF
         .then(data => {
             projects = {};
             data.projects.forEach(projectData => {
-                if (projectData.id in ranks) {
-                    projectData.rank = ranks[projectData.id];
-                }
                 projects[projectData.id] = new Project(container, projectData, forceExpand);
             });
             inflateProjects(container);

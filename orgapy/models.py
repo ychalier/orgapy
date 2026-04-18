@@ -5,22 +5,31 @@ import re
 from math import ceil
 
 import caldav
-from django.db import models
+from django.db import models, OperationalError
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-DOCUMENT_NONCE_TOKENS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-DOCUMENT_NONCE_LENGTH = 4
-def generate_document_nonce() -> str:
+NONCE_TOKENS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+NONCE_LENGTH = 4
+
+def generate_nonce(model: 'type[Document] | type[Project]') -> str:
     while True:
-        nonce = "".join(random.choices(DOCUMENT_NONCE_TOKENS, k=DOCUMENT_NONCE_LENGTH))
+        nonce = "".join(random.choices(NONCE_TOKENS, k=NONCE_LENGTH))
         try:
-            Document.objects.get(nonce=nonce)
-        except Document.DoesNotExist:
+            model.objects.get(nonce=nonce)
+        except model.DoesNotExist:
             return nonce
+        except OperationalError:
+            return nonce
+
+def generate_document_nonce() -> str:
+    return generate_nonce(Document)
+
+def generate_project_nonce() -> str:
+    return generate_nonce(Project)
 
 
 class Settings(models.Model):
@@ -245,6 +254,7 @@ class Project(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    nonce = models.CharField(max_length=12, unique=True, blank=True, default=generate_project_nonce)
     date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
     date_modification = models.DateTimeField(auto_now_add=False, auto_now=True)
     title = models.CharField(max_length=255, blank=True, null=True)
@@ -260,7 +270,7 @@ class Project(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
     def get_absolute_url(self):
-        return reverse("orgapy:project", kwargs={"object_id": self.id})
+        return reverse("orgapy:project", args=[self.nonce])
 
     @property
     def items_count(self) -> int:
