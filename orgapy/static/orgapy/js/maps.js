@@ -1683,7 +1683,6 @@ class Map {
             self.onSearchFeature(searchInput.value);
         };
         searchForm.onsubmit = (e) => {
-            console.log()
             e.preventDefault();
             self.onSearchSubmit(searchInput.value);
         }

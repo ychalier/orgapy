@@ -34,6 +34,7 @@
                     <a href="{% url 'orgapy:documents' %}" class="button {% if active == "documents" %}active{% endif %}" tabindex="2"><i class="ri-file-copy-2-line"></i> Documents</a>
                 </div>
                 <div class="row">
+                    {% if request.user.is_authenticated %}
                     <form id="navbarSearchForm" class="search" action="{% url 'orgapy:documents' %}" method="get">
                         <div class="search-bar">
                             <input id="navbarSearchInput" class="search-input" autocomplete="off" type="search" name="query" tabindex="1" />
@@ -77,6 +78,7 @@ navbarSubmitSearchFormButton.onclick = (event) => {
     }
 }
                     </script>
+                    {% endif %}
                     <div class="dropdown">
                         <a class="button dropdown-toggle" tabindex="3"><i class="ri-menu-line"></i></a>
                         <ul class="menu">

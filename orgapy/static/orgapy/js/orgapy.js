@@ -167,9 +167,12 @@ function bindSearch(searchEl, apiAction, inflateMenuItem, onElementClick) {
 
 }
 
-function markdownToHtmlFancy(element, useKatex=false, embed=false) {
+function markdownToHtmlFancy(element, options) {
+    if (!("useKatex" in options)) options.useKatex = false;
+    if (!("embed" in options)) options.embed = false;
+    if (!("fetchReferences" in options)) options.fetchReferences = false;
     const extensions = [];
-    if (useKatex) {
+    if (options.useKatex) {
         extensions.push(
             showdownKatex({
                 displayMode: true,
@@ -182,36 +185,69 @@ function markdownToHtmlFancy(element, useKatex=false, embed=false) {
             })
         )
     }
-
-    if (embed) {
+    if (options.embed) {
         extensions.push(
             {
                 type: "output",
-                regex: /(@embedsheet\/(\d+))/g,
-                replace: `<a class="reference label" ref-type="sheet" ref-id="$2"><i class="ri-table-line" title="Sheet"></i> <span>$1</span></a>`
+                regex: /@embedsheet\/([a-zA-Z0-9]+)/g,
+                replace: `<div class="iframe-container"><iframe src="$1?embed=1"></iframe><div class="iframe-actions"><a class="button" href="$1"><i class="ri-arrow-right-circle-line"></i> View sheet</a></div></div>`
             },
             {
                 type: "output",
-                regex: /(@embedmap\/(\d+))/g,
-                replace: `<a class="reference label" ref-type="map" ref-id="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
+                regex: /@embedmap\/([a-zA-Z0-9]+)/g,
+                replace: `<div class="iframe-container"><iframe src="$1?embed=1"></iframe><div class="iframe-actions"><a class="button" href="$1"><i class="ri-arrow-right-circle-line"></i> View map</a></div></div>`
+            },
+        );
+    } else if (options.fetchReferences) {
+        extensions.push(
+            {
+                type: "output",
+                regex: /(@embedsheet\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="sheet" ref-nonce="$2"><i class="ri-table-line" title="Sheet"></i> <span>$1</span></a>`
+            },
+            {
+                type: "output",
+                regex: /(@embedmap\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="map" ref-nonce="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
             },
         );
     } else {
         extensions.push(
             {
                 type: "output",
-                regex: /@embedsheet\/([a-zA-Z0-9]+)/g,
-                replace: `<iframe src="../sheets/$1?embed=1"></iframe><a href="../sheets/$1"><small>Edit sheet</small></a>`
+                regex: /(@(embedsheet|embedmap)\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="label">$1</a>`
+            }
+        );
+    }
+    if (options.fetchReferences) {
+        extensions.push(
+            {
+                type: "output",
+                regex: /(@note\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="note" ref-nonce="$2"><i class="ri-sticky-note-line" title="Note"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
-                regex: /@embedmap\/([a-zA-Z0-9]+)/g,
-                replace: `<iframe src="../maps/$1?embed=1"></iframe><a href="../maps/$1"><small>Edit map</small></a>`
+                regex: /(@sheet\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="sheet" ref-nonce="$2"><i class="ri-table-line" title="Sheet"></i> <span>$1</span></a>`
             },
+            {
+                type: "output",
+                regex: /(@map\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="map" ref-nonce="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
+            }
+        );
+    } else {
+        extensions.push(
+            {
+                type: "output",
+                regex: /(@(note|sheet|map)\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="label">$1</a>`
+            }
         );
     }
-
-    let converter = new showdown.Converter({
+    const converter = new showdown.Converter({
         omitExtraWLInCodeBlocks: true,
         customizedHeaderId: true,
         headerLevelStart: 2,
@@ -265,21 +301,6 @@ function markdownToHtmlFancy(element, useKatex=false, embed=false) {
                 type: "output",
                 regex: /<pre><code class="(.*?) language-(.*?)">/g,
                 replace: `<pre class="code" data-lang="$1"><code class="language-$2">`,
-            },
-            {
-                type: "output",
-                regex: /(@note\/([a-zA-Z0-9]+))/g,
-                replace: `<a class="reference label" ref-type="note" ref-nonce="$2"><i class="ri-sticky-note-line" title="Note"></i> <span>$1</span></a>`
-            },
-            {
-                type: "output",
-                regex: /(@sheet\/([a-zA-Z0-9]+))/g,
-                replace: `<a class="reference label" ref-type="sheet" ref-nonce="$2"><i class="ri-table-line" title="Sheet"></i> <span>$1</span></a>`
-            },
-            {
-                type: "output",
-                regex: /(@map\/([a-zA-Z0-9]+))/g,
-                replace: `<a class="reference label" ref-type="map" ref-nonce="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
             },
             {
                 type: "output",
@@ -366,10 +387,12 @@ function markdownToHtmlBasic(element) {
     }
 }
 
-function markdownToHtml(selector, fancy=false, useKatex=false, embed=false) {
+function markdownToHtml(selector, options) {
+    if (options == undefined) options = {};
+    if (!("fancy" in options)) options.fancy = false;
     document.querySelectorAll(selector).forEach(element => {
-        if (fancy) {
-            markdownToHtmlFancy(element, useKatex, embed);
+        if (options.fancy) {
+            markdownToHtmlFancy(element, options);
         } else {
             markdownToHtmlBasic(element);
         }

@@ -18,6 +18,6 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    markdownToHtml(".card-note", true, true, true);
+    markdownToHtml(".card-note", {fancy: true, useKatex: true, embed: true, fetchReferences: true});
 </script>
 {% endblock body_scripts %}

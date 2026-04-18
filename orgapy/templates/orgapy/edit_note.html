@@ -30,9 +30,9 @@
         <div class="card-body">{% include 'orgapy/partials/categories_input.html' with obj=document %}</div>
     </header>
     <div class="card-actions card-actions--sticky">
-        {% if document %}<a class="button" href="{{ document.get_absolute_url }}"><i class="ri-arrow-right-circle-line"></i> View note</a>{% endif %}
         <button id="buttonSaveExit"><i class="ri-save-line"></i> Save</button>
         {% block save_and_continue %}<button id="buttonSaveContinue"><i class="ri-save-line"></i> Save and continue</button>{% endblock %}
+        {% if document %}<a class="button" href="{{ document.get_absolute_url }}"><i class="ri-arrow-right-circle-line"></i> View note</a>{% endif %}
     </div>
     <textarea class="document-form-content" id="noteContentInput" name="content" placeholder="Write content using Markdown">{{ document.content }}</textarea>
 </form>
@@ -42,6 +42,7 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
+    let buttonSaveContinue = document.getElementById("buttonSaveContinue");
     if (window.innerWidth > 800) {
         const simplemde = new SimpleMDE({
             element: noteContentInput,

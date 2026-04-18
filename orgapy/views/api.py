@@ -540,7 +540,6 @@ def api_complete_task(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
-@permission_required("orgapy.view_document")
 def api_reference(request: HttpRequest) -> HttpResponse:
     note_nonces = request.GET.getlist("note")
     sheet_nonces = request.GET.getlist("sheet")
@@ -549,16 +548,19 @@ def api_reference(request: HttpRequest) -> HttpResponse:
     for nonces, doctype in ((note_nonces, "note"), (sheet_nonces, "sheet"), (map_nonces, "map")):
         for nonce in nonces:
             result = {"type": doctype, "nonce": nonce, "title": None, "href": None, "error": None}
-            try:
-                doc = Document.objects.get(user=request.user, nonce=nonce)
-                result["title"] = doc.title
-                result["href"] = doc.get_absolute_url()
-            except ValueError:
-                result["error"] = "Invalid ID"
-            except Document.DoesNotExist:
-                result["error"] = "Not Found"
-            except Exception:
-                result["error"] = "Other"
+            if isinstance(request.user, AnonymousUser):
+                result["error"] = "Forbidden"
+            else:
+                try:
+                    doc = Document.objects.get(user=request.user, nonce=nonce)
+                    result["title"] = doc.title
+                    result["href"] = doc.get_absolute_url()
+                except ValueError:
+                    result["error"] = "Invalid ID"
+                except Document.DoesNotExist:
+                    result["error"] = "Not Found"
+                except Exception:
+                    result["error"] = "Error"
             results.append(result)
     return JsonResponse({"success": True, "results": results})
 

@@ -36,6 +36,10 @@
     flex-shrink: 0;
 }
 
+.sheet-toolbar-primary:empty {
+    display: none;
+}
+
 .sheet-toolbar-secondary {
     overflow: auto;
     flex-shrink: 1;

@@ -49,6 +49,7 @@
         <div id="toc" class="col"></div>
     </div>
 </div>
+{% if not readonly %}
 <div class="col">
     <div class="row">
         <button id="buttonAddProject" class="button-primary" title="Add project"><i class="ri-add-line"></i> Create project</button>
@@ -56,29 +57,32 @@
     </div>
     <div id="projectsContainer" class="col"></div>
 </div>
+{% endif %}
 {% endblock column_side %}
 
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    markdownToHtml(".card-note", true, true);
-    {% if not readonly %}bindWidgets("{{ document.nonce }}");{% endif %}
-    createToc(cardNote, document.querySelector("#toc"));
-    const projectsDetails = projectsContainer.parentElement;
-    window.addEventListener("load", () => {
-        buttonAddProject.addEventListener("click", () => {
-            projectsDetails.setAttribute("open", true);
-            onButtonProjectCreate(projectsContainer, {
-                nonce: "{{ document.nonce }}",
-                title: "{{ document.title | safe }}",
-                url: "{{ document.url }}",
-            }, true);
-        });
-        fetchProjects(projectsContainer,
-            documentNonce="{{ document.nonce }}",
-            forceExpand=false,
-            statusFilter="AC,IN,FU",
-            projectId=null);
+markdownToHtml(".card-note", {fancy: true, useKatex: true, embed: true, fetchReferences: true});
+createToc(cardNote, document.querySelector("#toc"));
+{% if not readonly %}
+bindWidgets("{{ document.nonce }}");
+const projectsDetails = projectsContainer.parentElement;
+window.addEventListener("load", () => {
+    buttonAddProject.addEventListener("click", () => {
+        projectsDetails.setAttribute("open", true);
+        onButtonProjectCreate(projectsContainer, {
+            nonce: "{{ document.nonce }}",
+            title: "{{ document.title | safe }}",
+            url: "{{ document.url }}",
+        }, true);
     });
+    fetchProjects(projectsContainer,
+        documentNonce="{{ document.nonce }}",
+        forceExpand=false,
+        statusFilter="AC,IN,FU",
+        projectId=null);
+});
+{% endif %}
 </script>
 {% endblock body_scripts %}

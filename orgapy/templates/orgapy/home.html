@@ -132,7 +132,6 @@ bindObjectiveDialog(dialogObjective, dialogCompletion, f);
 f();
 buttonCreateObjective.onclick = () => {openObjectiveDialog(dialogObjective)};
 
-markdownToHtml(".markdown", true);
 window.addEventListener("click", clearContextMenus);
 buttonCreateProject.onclick = () => {onButtonProjectCreate(projectsContainer, null, false)};
 fetchProjects(projectsContainer,
