@@ -33,6 +33,7 @@
                     <select id="selectSearchSort" name="sort">
                         <option {% if request.GET.sort == 'creation' %}selected{% endif %} value="creation">Creation</option>
                         <option {% if request.GET.sort == 'modification' or not request.GET.sort %}selected{% endif %} value="modification">Modification</option>
+                        <option {% if request.GET.sort == 'access' %}selected{% endif %} value="access">Access</option>
                         <option {% if request.GET.sort == 'title' %}selected{% endif %} value="title">Title</option>
                     </select>
                 </div>

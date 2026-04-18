@@ -6,6 +6,7 @@ from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.utils.text import slugify
 
 from ..models import (
@@ -120,6 +121,8 @@ def view_create_document(request: HttpRequest) -> HttpResponse:
 
 def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
     doc, readonly = retrieve_document(request, nonce)
+    doc.date_access = timezone.now()
+    doc.save(update_fields=["date_access"])
     response = render(request, f"orgapy/{doc.type}.html", {
         "document": doc,
         "readonly": readonly,
