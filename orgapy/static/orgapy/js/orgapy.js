@@ -189,17 +189,17 @@ function markdownToHtmlFancy(element, options) {
         extensions.push(
             {
                 type: "output",
-                regex: /@embedsheet\/([a-zA-Z0-9]+)/g,
-                replace: `<div class="iframe-container"><iframe src="$1?embed=1"></iframe><div class="iframe-actions"><a class="button" href="$1"><i class="ri-arrow-right-circle-line"></i> View sheet</a></div></div>`
-            },
-            {
-                type: "output",
-                regex: /@embedmap\/([a-zA-Z0-9]+)/g,
-                replace: `<div class="iframe-container"><iframe src="$1?embed=1"></iframe><div class="iframe-actions"><a class="button" href="$1"><i class="ri-arrow-right-circle-line"></i> View map</a></div></div>`
-            },
+                regex: /@embed(note|sheet|map)\/([a-zA-Z0-9]+)/g,
+                replace: `<div class="iframe-container"><iframe src="$2?embed=1"></iframe><div class="iframe-actions"><a class="button" href="$2"><i class="ri-arrow-right-circle-line"></i> View $1</a></div></div>`
+            }
         );
     } else if (options.fetchReferences) {
         extensions.push(
+            {
+                type: "output",
+                regex: /(@embednote\/([a-zA-Z0-9]+))/g,
+                replace: `<a class="reference label" ref-type="note" ref-nonce="$2"><i class="ri-sticky-note-line" title="Note"></i> <span>$1</span></a>`
+            },
             {
                 type: "output",
                 regex: /(@embedsheet\/([a-zA-Z0-9]+))/g,
@@ -209,13 +209,13 @@ function markdownToHtmlFancy(element, options) {
                 type: "output",
                 regex: /(@embedmap\/([a-zA-Z0-9]+))/g,
                 replace: `<a class="reference label" ref-type="map" ref-nonce="$2"><i class="ri-map-2-line" title="Map"></i> <span>$1</span></a>`
-            },
+            }
         );
     } else {
         extensions.push(
             {
                 type: "output",
-                regex: /(@(embedsheet|embedmap)\/([a-zA-Z0-9]+))/g,
+                regex: /(@embed(note|sheet|map)\/[a-zA-Z0-9]+)/g,
                 replace: `<a class="label">$1</a>`
             }
         );

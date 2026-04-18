@@ -123,52 +123,47 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
     doc, readonly = retrieve_document(request, nonce)
     doc.date_access = timezone.now()
     doc.save(update_fields=["date_access"])
-    response = render(request, f"orgapy/{doc.type}.html", {
-        "document": doc,
-        "readonly": readonly,
-        "active": "documents",
-    })
-    response["X-Frame-Options"] = "SAMEORIGIN"
-    return response
+    
+    if request.GET.get("raw"):
+        content, ext, mimetype = "", ".txt", "text/plain"
+        if doc.type == "note":
+            content = doc.title if doc.title else "Untitled"
+            if doc.content:
+                content += "\n\n" + doc.content
+            ext = ".md"
+            mimetype = "text/markdown"
+        elif doc.type == "sheet":
+            if doc.content:
+                content = doc.content
+            ext = ".tsv"
+            mimetype = "text/tab-separated-values"
+        elif doc.type == "map":
+            if doc.content:
+                content = doc.content
+            ext = ".geojson"
+            mimetype = "application/geo+json"
 
+        filename = f"{slugify(doc.title)}{ext}" if doc.title else f"untitled{ext}"
+        response = HttpResponse(content=content, content_type=f"{mimetype}; charset=utf-8")
+        response["Content-Disposition"] = f'inline; filename="{filename}"'
+    
+    elif request.GET.get("embed"):
+        template = f"orgapy/{doc.type}.html"
+        if doc.type == "note":
+            template = "orgapy/note_embed.html"
+        response = render(request, template, {
+            "document": doc,
+            "readonly": True,
+        })
+        response["X-Frame-Options"] = "SAMEORIGIN"
 
-def view_document_raw(request: HttpRequest, nonce: str) -> HttpResponse:
-    doc, _ = retrieve_document(request, nonce)
-
-    content, ext, mimetype = "", ".txt", "text/plain"
-    if doc.type == "note":
-        content = doc.title if doc.title else "Untitled"
-        if doc.content:
-            content += "\n\n" + doc.content
-        ext = ".md"
-        mimetype = "text/markdown"
-    elif doc.type == "sheet":
-        if doc.content:
-            content = doc.content
-        ext = ".tsv"
-        mimetype = "text/tab-separated-values"
-    elif doc.type == "map":
-        if doc.content:
-            content = doc.content
-        ext = ".geojson"
-        mimetype = "application/geo+json"
-
-    filename = f"{slugify(doc.title)}{ext}" if doc.title else f"untitled{ext}"
-    response = HttpResponse(content=content, content_type=f"{mimetype}; charset=utf-8")
-    response["Content-Disposition"] = f'inline; filename="{filename}"'
-    return response
-
-
-def view_note_fullscreen(request, nonce: str):
-    note, readonly = retrieve_document(request, nonce)
-    if note.type != "note":
-        raise PermissionDenied()
-    response = render(request, f"orgapy/note_fullscreen.html", {
-        "note": note,
-        "readonly": readonly,
-        "active": "documents",
-    })
-    response["X-Frame-Options"] = "SAMEORIGIN"
+    else:
+        response = render(request, f"orgapy/{doc.type}.html", {
+            "document": doc,
+            "readonly": readonly,
+            "active": "documents",
+        })
+    
     return response
 
 

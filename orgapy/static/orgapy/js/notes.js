@@ -202,6 +202,7 @@ function openSmdeDropdown(cmInstance, word) {
         note: "note",
         sheet: "sheet",
         map: "map",
+        embednote: "note",
         embedsheet: "sheet",
         embedmap: "map"
     }[objectTypeKey];
@@ -288,7 +289,7 @@ function onCmCursorActivity(cmInstance) {
     let iEnd = iStart + 1;
     while (iEnd < line.length && line.charAt(iEnd) != " ") iEnd++;
     const word = line.substring(iStart, iEnd).trim();
-    if (word.match(/^@(note|sheet|map|embedsheet|embedmap)\/([a-zA-Z0-9]+)?$/)) {
+    if (word.match(/^@(note|sheet|map|embednote|embedsheet|embedmap)\/([a-zA-Z0-9]+)?$/)) {
         setTimeout(() => { openSmdeDropdown(cmInstance, word); }, 1);
     } else {
         closeSmdeDropdown();
