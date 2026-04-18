@@ -18,9 +18,9 @@ class Command(BaseCommand):
             limit = timezone.now() - datetime.timedelta(days=settings.trash_period)
             if kwargs["dry_run"]:
                 print("Limit date:", limit)
-            for model in [models.Note, models.Sheet, models.Map]:
-                objects = model.objects.filter(user=settings.user, deleted=True, date_deletion__lt=limit)
-                if kwargs["dry_run"]:
-                    print(model, objects)
-                else:
-                    objects.delete()
+            docs = models.Document.objects.filter(user=settings.user, deleted=True, date_deletion__lt=limit)
+            if kwargs["dry_run"]:
+                for doc in docs:
+                    print(doc)
+            else:
+                docs.delete()
