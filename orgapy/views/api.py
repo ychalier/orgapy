@@ -174,7 +174,7 @@ def api_edit_project(request: HttpRequest) -> JsonResponse:
     document = None
     if project_data["document"] is not None:
         try:
-            document = Document.objects.get(user=request.user, id=int(project_data["document"]["id"]))
+            document = Document.objects.get(user=request.user, nonce=project_data["document"]["nonce"])
         except Document.DoesNotExist:
             pass
     project.document = document # type: ignore
