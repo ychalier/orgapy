@@ -509,15 +509,13 @@ function bindDropdown(dropdown, delay=10) {
 
 }
 
-function bindGotoPaginatorButton(buttonSelector, currentPage, maxPage, attrString) {
-    const button = document.querySelector(buttonSelector);
-    button.addEventListener("click", () => {
+function bindGotoPaginatorButton(gotoButton, currentPage, maxPage) {
+    gotoButton.addEventListener("click", () => {
         const page = prompt(`Go to page (1-${maxPage}):`, currentPage.toString());
         if (page) {
-            const pageNumber = Math.max(1, Math.min(maxPage, parseInt(page)));
-            const baseUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
-            const newUrl = baseUrl + `?page=${pageNumber}${attrString}`;
-            window.location.href = newUrl;
+            const params = new URLSearchParams(document.location.search);
+            params.set("page", Math.max(1, Math.min(maxPage, parseInt(page))));
+            window.location.href = "?" + params.toString();
         }
     });
 }
