@@ -109,7 +109,8 @@ def view_delete_project(request: HttpRequest, nonce: str) -> HttpResponse:
 
 @permission_required("orgapy.view_document")
 def view_documents(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/documents.html", sort_key=None)
+    template_name = "orgapy/" + ("documents_calendar.html" if request.GET.get("calendar") else "documents_list.html")
+    return view_document_list(request, template_name)
 
 
 @permission_required("orgapy.add_document")

@@ -210,7 +210,9 @@ def view_document_list(
         type_filter: Literal["note", "sheet", "map"] | None = None,
         status_filter: Literal["public", "hidden", "deleted", "projects"] | None = None,
         category_filters: str | None = None,
-        sort_key: Literal["creation", "modification", "access", "deletion", "title", "relevance"] | None = "modification",
+        dt_start: datetime.date | None = None,
+        dt_end: datetime.date | None = None,
+        sort_key: Literal["creation", "modification", "access", "deletion", "title", "relevance"] | None = None,
         page_size: int | None = None,
         kwargs: dict[str, Any] = {},
     ) -> HttpResponse:
@@ -282,7 +284,17 @@ def view_document_list(
         category_ids = [c.id for c in Category.objects.filter(user=request.user, name__in=category_names)]
         filter_uncategorized = "uncategorized" in category_names
         attrs["categories"] = ";".join(sorted(category_names))
-
+    
+    if dt_start is None and "start" in request.GET:
+        dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
+    if dt_start:
+        attrs["start"] = dt_start.strftime("%Y-%m-%d")
+    
+    if dt_end is None and "end" in request.GET:
+        dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
+    if dt_end:
+        attrs["start"] = dt_end.strftime("%Y-%m-%d")
+    
     if sort_key is None:
         s = request.GET.get("sort")
         sort_key = s if s in ["creation", "modification", "access", "deletion", "title", "relevance"] else None # type: ignore
@@ -308,6 +320,13 @@ def view_document_list(
         qs = qs.filter(categories__in=[category_id])
     if filter_uncategorized:
         qs = qs.filter(categories__isnull=True)
+    
+    if dt_start and dt_end:
+        qs = qs.filter(date_creation__range=[dt_start, dt_end + datetime.timedelta(days=1)])
+    elif dt_start:
+        qs = qs.filter(date_creation__gt=dt_start)
+    elif dt_end:
+        qs = qs.filter(date_creation__lt=dt_end)
 
     if search_query:
         qs = search_within_queryset(qs, search_query)
@@ -321,6 +340,45 @@ def view_document_list(
             qs = qs.order_by("-pinned", f"-date_{sort_key}")
     else:
         qs = qs.order_by("-pinned", "-date_modification")
+        
+    if request.GET.get("format") == "json":
+        mindt = Document.objects.values("date_creation").aggregate(Min("date_creation"))["date_creation__min"]
+        maxdt = Document.objects.values("date_creation").aggregate(Max("date_creation"))["date_creation__max"]
+        data = {
+            "entries": [],
+            "mindt": date_timestamp(mindt),
+            "maxdt": date_timestamp(maxdt),
+        }
+        for doc in qs:
+            data["entries"].append({
+                "dt": date_timestamp(doc.date_creation),
+                "label": doc.title,
+                "icon": doc.type_icon,
+                "href": doc.get_absolute_url()
+            })
+        return JsonResponse(data)
+
+    if request.GET.get("format") == "tsv":
+        lines = ["id\tnonce\ttype\ttitle\tdate_creation\tdate_modification\tdate_access\tdate_deletion\tpublic\tpinned\thidden\tdeleted\tcategories"]
+        for doc in qs:
+            lines.append("\t".join([
+                str(doc.id),
+                doc.nonce,
+                doc.type,
+                doc.title if doc.title else "",
+                doc.date_creation.isoformat(),
+                doc.date_modification.isoformat(),
+                doc.date_access.isoformat(),
+                doc.date_deletion.isoformat() if doc.date_deletion else "",
+                str(doc.public),
+                str(doc.pinned),
+                str(doc.hidden),
+                str(doc.deleted),
+                ";".join([category.name for category in doc.categories.all()])
+            ]))
+        response = HttpResponse("\n".join(lines), content_type="text/tab-separated-values; charset=utf-8")
+        response["Content-Disposition"] = f'inline; filename="documents.tsv"'
+        return response
 
     paginator = Paginator(qs, page_size)
     page = request.GET.get("page")

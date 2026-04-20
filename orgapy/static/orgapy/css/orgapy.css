@@ -1232,7 +1232,7 @@ dialog > .card {
 }
 
 .calendar--monthly {
-    --cellsize: 4rem;
+    --cellsize: 5rem;
 }
 
 .calendar-header {
@@ -1345,8 +1345,7 @@ dialog > .card {
     padding: .4rem;
     border-radius: .4rem;
     border: 1px solid var(--border-secondary);
-    transform: translateX(-50%);
-    max-width: min(100%, 16rem);
+    max-width: min(100%, 24rem);
 }
 
 .calendar-popover button,
@@ -1354,24 +1353,37 @@ dialog > .card {
     background-color: var(--bg-secondary-alt);
 }
 
+.calendar-day-body i + span {
+    margin-left: .1rem;
+}
+
+.calendar-popover i + span {
+    margin-left: .2rem;
+}
+
 @media (max-width: 800px) {
 
-    .calendar {
+    .calendar--yearly {
         height: 35rem;
     }
 
-    .calendar .calendar-body {
+    .calendar--yearly .calendar-body {
         transform: rotate(90deg) translateX(10rem);
         flex-direction: column-reverse;
     }
 
     .calendar--weekly {
-        --cellsize: 1.6rem;
-        height: 94rem;
+        --cellsize: 1rem;
+        height: 62rem;
     }
 
     .calendar--weekly .calendar-body {
-        transform: rotate(90deg) translateX(40rem);
+        transform: rotate(90deg) translateX(26rem);
+        flex-direction: column-reverse;
+    }
+
+    .calendar--monthly {
+        --cellsize: 2.6rem;
     }
 
 }

@@ -1,0 +1,19 @@
+{% extends "orgapy/layout/documents.html" %}
+{% block title %}Documents{% endblock title %}
+{% block content_title %}
+<div class="card">
+    <div class="card-body">{% include 'orgapy/partials/document_search.html' %}</div>
+    <div class="card-actions">
+        <a class="button" href="{% querystring calendar=1 %}"><i class="ri-calendar-line"></i><span>Calendar</span></a>
+        <a class="button" href="{% querystring format='tsv' %}"><i class="ri-download-line"></i><span>Export</span></a>
+        <div class="dropdown">
+            <button class="dropdown-toggle"><i class="ri-add-line"></i><span>Create</span></button>
+            <ul class="menu">
+                <li class="menu-item"><a href="{% url 'orgapy:create_document' %}?type=note{% if query %}&title={{query}}{% endif %}"><i class="ri-sticky-note-line"></i> Note</a></li>
+                <li class="menu-item"><a href="{% url 'orgapy:create_document' %}?type=sheet{% if query %}&title={{query}}{% endif %}"><i class="ri-table-line"></i> Sheet</a></li>
+                <li class="menu-item"><a href="{% url 'orgapy:create_document' %}?type=map{% if query %}&title={{query}}{% endif %}"><i class="ri-map-2-line"></i> Map</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock content_title %}

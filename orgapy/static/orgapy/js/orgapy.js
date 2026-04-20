@@ -677,7 +677,8 @@ function bindCalendar(container, exportButton, options) {
                 }
                 data[key].push(entry);
             }
-            inflateData(mode, dtStart, dtEnd, data, new Date(flatData.mindt), new Date(flatData.maxdt));
+            let maxDt = Math.max(new Date(), new Date(flatData.maxdt));
+            inflateData(mode, dtStart, dtEnd, data, new Date(flatData.mindt), maxDt);
         });
     }
 
@@ -821,7 +822,7 @@ function bindCalendar(container, exportButton, options) {
         } else if (mode == "monthly") {
 
             const weekdayOffset = (dtStart.getDay() + 6) % 7;
-            const daysInMonth = Math.floor((dtEnd - dtStart) / 1000 / 3600 / 24) + 1;
+            const daysInMonth = dtEnd.getDate();
             const weekCount = Math.ceil((daysInMonth + weekdayOffset) / 7);
 
             const firstRow = create(body, "div", "calendar-row");
@@ -905,11 +906,15 @@ function bindCalendar(container, exportButton, options) {
                         shouldClose = true;
                         setTimeout(closePopover, 100);
                     });
-                    const cellBounds = dayCell.getBoundingClientRect();
-                    popover.style.left = (cellBounds.left + cellBounds.width/2) + "px";
-                    popover.style.top = (cellBounds.top + cellBounds.height) + "px";
                     create(popover, "span", "hint").textContent = key;
                     options.inflateDetails(popover, data[key], true);
+                    const cellBounds = dayCell.getBoundingClientRect();
+                    const popoverBounds = popover.getBoundingClientRect();
+                    const maxLeft = window.innerWidth - popoverBounds.width;
+                    const minLeft = 0;
+                    const centeredLeft = cellBounds.left + (cellBounds.width - popoverBounds.width) / 2;
+                    popover.style.left = Math.min(maxLeft, Math.max(minLeft, (centeredLeft))) + "px";
+                    popover.style.top = (cellBounds.top + cellBounds.height) + "px";
                 }
                 function closePopover() {
                     if (popover == null) return;
