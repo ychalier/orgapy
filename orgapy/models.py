@@ -456,8 +456,7 @@ class ProgressLog(models.Model):
         return f"{ self.user } [{ self.type }] { self.description }"
 
     def get_absolute_url(self):
-        dfs = self.dt.strftime(r"%Y-%m-%d")
-        return reverse("orgapy:progress") + f"?date={dfs}"
+        return reverse("orgapy:edit_progress_log", args=[self.id])
 
     @property
     def dt_html(self) -> str:

@@ -64,11 +64,6 @@ The app uses Django built-in authentication framework, meaning that users need a
 - [Showdown KaTeX](https://obedm503.github.io/showdown-katex/) - Showdown extension to render math.
 - [SimpleMDE](https://simplemde.com/) - A simple, embeddable, and beautiful JS markdown editor.
 
-**Artworks:**
-
-- [*Agenda.jpg* by M.Minderhoud](https://commons.wikimedia.org/wiki/File:Agenda.jpg), originally published under CC-BY-SA 4.0, edited with the [halftone palette](https://chalier.fr/halftone-palette/)
-- [*Written with a feather.jpg* by Star61](https://commons.wikimedia.org/wiki/File:Written_with_a_feather.jpg), originally published under CC-BY-SA 4.0, edited with the [halftone palette](https://chalier.fr/halftone-palette/)
-
 ## Contributing
 
 Contributions are welcomed. Push your branch and create a pull request detailling your changes.

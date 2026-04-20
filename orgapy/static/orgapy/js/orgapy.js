@@ -621,94 +621,160 @@ function setupCategoryInput(container) {
 
 }
 
-/**
- *
- * @param {HTMLElement} container
- * @param {Object} data Map[Year, Map[Day, Array[Elements]]
- * @param {Object} options { currentYear, showHeader, weekly, relative }
- */
-function inflateCalendar(container, data, options) {
+function bindCalendar(container, exportButton, options) {
+
+    const monthLabels = ["jan.", "feb.", "mar.", "apr.", "may", "june", "july", "aug.", "sep.", "oct.", "nov.", "dec."];
+    const dayLabels = ["mon.", "tue.", "wed.", "thu.", "fri.", "sat.", "sun."];
+    const levelsCount = 10; // 0 to 9 included, and "more"
+
+    const baseUrl = location.origin + location.pathname;
+    const baseParams = new URLSearchParams(document.location.search);
 
     if (options == undefined) options = {};
-    if (!("currentYear" in options)) options.currentYear = null;
     if (!("showHeader" in options)) options.showHeader = true;
-    if (!("weekly" in options)) options.weekly = false;
-    if (!("relative" in options)) options.relative = false;
-    if (!("key" in options)) options.key = null;
-    if (!("classname" in options)) options.classname = null;
-    if (!("inflatePopover" in options)) options.inflatePopover = (popover, entries) => {
+    if (!("defaultMode" in options)) options.defaultMode = "yearly";
+    if (!("relativeLevels" in options)) options.relativeLevels = false;
+    if (!("levelKey" in options)) options.levelKey = null;
+    if (!("additionnalClassName" in options)) options.additionnalClassName = null;
+    if (!("inflateDetails" in options)) options.inflateDetails = (detailsContainer, entries, isPopover) => {
         for (const entry of entries) {
             let el;
             if ("href" in entry) {
-                el = create(popover, "a", "ellipsis link-hidden");
+                el = create(detailsContainer, "a", "ellipsis link-hidden");
                 el.href = entry.href;
             } else {
-                el = create(popover, "span", "ellipsis");
+                el = create(detailsContainer, "span", "ellipsis");
             }
-            el.textContent = entry.title;
+            if ("icon" in entry) {
+                create(el, "i").className = entry.icon;
+            }
+            create(el, "span").textContent = entry.label;
         }
     }
 
-    const minYear = Math.min(...Object.keys(data));
-    const maxYear = Math.max(...Object.keys(data));
+    const now = new Date();
+    const nowYear = now.getFullYear();
+    const nowMonth = now.getMonth();
 
-    const months = ["jan.", "feb.", "mar.", "apr.", "may", "june", "july", "aug.", "sep.", "oct.", "nov.", "dec."];
-    const levels = 10; // 0 to 9 included, and "more"
+    function fetchData(mode, dtStart, dtEnd) {
+        
+        const getParams = new URLSearchParams(baseParams);
+        getParams.set("format", "json");
+        getParams.set("start", dtf(dtStart, "YYYY-mm-dd"));
+        getParams.set("end", dtf(dtEnd, "YYYY-mm-dd"));
+        const url = baseUrl + "?" + getParams.toString();
 
-    function inflateYear(currentYear) {
+        const exportParams = new URLSearchParams(getParams);
+        exportParams.set("format", "tsv");
+        exportButton.href = baseUrl + "?" + exportParams.toString();
 
-        if (!(currentYear in data)) { data[currentYear] = {} };
-        const yearData = data[currentYear];
+        fetch(url).then(res => res.json()).then(flatData => {
+            const data = {};
+            for (const entry of flatData.entries) {
+                const key = dtf(new Date(entry.dt), "YYYY-mm-dd");
+                if (!(key in data)) {
+                    data[key] = [];
+                }
+                data[key].push(entry);
+            }
+            inflateData(mode, dtStart, dtEnd, data, new Date(flatData.mindt), new Date(flatData.maxdt));
+        });
+    }
+
+    function getPeriodLabel(mode, dtStart) {
+        if (mode == "yearly" || mode == "weekly") {
+            return dtStart.getFullYear();
+        } else if (mode == "monthly") {
+            return `${monthLabels[dtStart.getMonth()]} ${dtStart.getFullYear()}`;
+        } else {
+            throw new Error(`Invalid mode ${mode}`);
+        }
+    }
+
+    function getPreviousPeriod(mode, dtStart) {
+        if (mode == "yearly" || mode == "weekly") {
+            return {dtStart: new Date(dtStart.getFullYear() - 1, 0, 1), dtEnd: new Date(dtStart.getFullYear() - 1, 11, 31)};
+        } else if (mode == "monthly") {
+            return {dtStart: new Date(dtStart.getFullYear(), dtStart.getMonth() - 1, 1), dtEnd: new Date(dtStart.getFullYear(), dtStart.getMonth(), 0)};
+        } else {
+            throw new Error(`Invalid mode ${mode}`);
+        }
+    }
+
+    function getNextPeriod(mode, dtStart) {
+        if (mode == "yearly" || mode == "weekly") {
+            return {dtStart: new Date(dtStart.getFullYear() + 1, 0, 1), dtEnd: new Date(dtStart.getFullYear() + 1, 11, 31)};
+        } else if (mode == "monthly") {
+            return {dtStart: new Date(dtStart.getFullYear(), dtStart.getMonth() + 1, 1), dtEnd: new Date(dtStart.getFullYear(), dtStart.getMonth() + 2, 0)};
+        } else {
+            throw new Error(`Invalid mode ${mode}`);
+        }
+    }
+
+    function inflateData(mode, dtStart, dtEnd, data, minDt, maxDt) {
 
         container.innerHTML = "";
-        container.classList.add("calendar");
-        if (options.weekly) {
-            container.classList.add("calendar--weekly");
-        } else {
-            container.classList.remove("calendar--weekly");
-        }
-        if (options.classname != null) {
-            container.classList.add(options.classname);
-        }
+        container.className = `calendar calendar--${mode}`;
+        if (options.additionnalClassName != null) container.classList.add(options.additionnalClassName);
 
         if (options.showHeader) {
-
             const header = create(container, "div", "calendar-header");
 
             const prevButton = create(header, "button", "calendar-button");
             prevButton.textContent = "‹";
-            prevButton.title = currentYear - 1;
-            if (currentYear == minYear) {
+            prevButton.title = getPeriodLabel(mode, getPreviousPeriod(mode, dtStart).dtStart);
+            const prevPeriod = getPreviousPeriod(mode, dtStart);
+            if (prevPeriod.dtEnd < minDt) {
                 prevButton.setAttribute("disabled", "");
             } else {
-                prevButton.addEventListener("click", () => {inflateYear(currentYear - 1);});
+                prevButton.onclick = () => {fetchData(mode, prevPeriod.dtStart, prevPeriod.dtEnd)};
             }
 
-            create(header, "span", "calendar-year").textContent = currentYear;
+            create(header, "span", "calendar-year").textContent = getPeriodLabel(mode, dtStart);
 
             const nextButton = create(header, "button", "calendar-button");
             nextButton.textContent = "›";
-            nextButton.title = currentYear + 1;
-            if (currentYear == maxYear) {
+            nextButton.title = getPeriodLabel(mode, getNextPeriod(mode, dtStart).dtStart);
+            const nextPeriod = getNextPeriod(mode, dtStart);
+            if (nextPeriod.dtStart > maxDt) {
                 nextButton.setAttribute("disabled", "");
             } else {
-                nextButton.addEventListener("click", () => {inflateYear(currentYear + 1);});
+                nextButton.onclick = () => {fetchData(mode, nextPeriod.dtStart, nextPeriod.dtEnd)};
             }
 
-            const toggleWeeklyButton = create(header, "button", "button-inline");
-            toggleWeeklyButton.textContent = "❖";
-            toggleWeeklyButton.title = "Toggle weekly view";
-            toggleWeeklyButton.addEventListener("click", () => {
-                options.weekly = !options.weekly;
-                inflateYear(currentYear);
-            });
-
+            const changeModeButton = create(header, "button", "button-inline");
+            changeModeButton.textContent = "❖";
+            changeModeButton.title = "Change view mode";
+            changeModeButton.onclick = () => {
+                let newMode, newDtStart, newDtEnd;
+                switch(mode) {
+                    case "yearly":
+                        newMode = "weekly";
+                        newDtStart = dtStart;
+                        newDtEnd = dtEnd;
+                        break;
+                    case "weekly":
+                        newMode = "monthly";
+                        newDtStart = new Date(nowYear, nowMonth, 1);
+                        newDtEnd = new Date(nowYear, nowMonth + 1, 0);
+                        break;
+                    case "monthly":
+                        newMode = "yearly";
+                        newDtStart = new Date(nowYear, 0, 1);
+                        newDtEnd = new Date(nowYear, 11, 31);
+                        break;
+                    default:
+                        throw new Error(`Invalid mode ${mode}`);
+                }
+                fetchData(newMode, newDtStart, newDtEnd);
+            }
         }
 
         const body = create(container, "div", "calendar-body");
         const cells = [];
 
-        if (options.weekly) {
+        if (mode == "weekly") {
+            const currentYear = dtStart.getFullYear();
             const dateStart = new Date(currentYear, 0, 1);
             const weekdayOffset = (dateStart.getDay() + 6) % 7;
             const daysInYear = (currentYear % 4 == 0 && currentYear % 100 != 0) || currentYear % 400 == 0 ? 366 : 365;
@@ -730,7 +796,8 @@ function inflateCalendar(container, data, options) {
                 const key = dtf(dt, "YYYY-mm-dd");
                 cells[i].setAttribute("date", key);
             }
-        } else {
+        } else if (mode == "yearly") {
+            const currentYear = dtStart.getFullYear();
             const dt = new Date(currentYear, 0, 1);
             const firstRow = create(body, "div", "calendar-row");
             for (let i = 0; i <= 31; i++) {
@@ -743,7 +810,7 @@ function inflateCalendar(container, data, options) {
             while (dt.getFullYear() == currentYear) {
                 if (dt.getDate() == 1) {
                     monthRow = create(body, "div", "calendar-row");
-                    create(monthRow, "div", "calendar-month-name").textContent = months[dt.getMonth()];
+                    create(monthRow, "div", "calendar-month-name").textContent = monthLabels[dt.getMonth()];
                 }
                 const dayCell = create(monthRow, "div", "calendar-day");
                 const key = dtf(dt, "YYYY-mm-dd");
@@ -751,18 +818,52 @@ function inflateCalendar(container, data, options) {
                 cells.push(dayCell);
                 dt.setDate(dt.getDate() + 1);
             }
+        } else if (mode == "monthly") {
+
+            const weekdayOffset = (dtStart.getDay() + 6) % 7;
+            const daysInMonth = Math.floor((dtEnd - dtStart) / 1000 / 3600 / 24) + 1;
+            const weekCount = Math.ceil((daysInMonth + weekdayOffset) / 7);
+
+            const firstRow = create(body, "div", "calendar-row");
+            for (let i = 0; i < 7; i++) {
+                const cell = create(firstRow, "div", "calendar-day-number");
+                cell.textContent = dayLabels[i];
+            }
+
+            const rows = [];
+            for (let i = 0; i < weekCount; i++) {
+                rows.push(create(body, "div", "calendar-row"));
+            }
+            for (let i = 0; i < weekCount; i++) {
+                for (let j = 0; j < 7; j++) {
+                    cells.push(create(rows[i], "div", "calendar-day"));
+                }
+            }
+
+            for (let i = 0; i < weekdayOffset; i++) cells[i].classList.add("disabled");
+            for (let i = daysInMonth + weekdayOffset; i < cells.length; i++) cells[i].classList.add("disabled");
+            for (let i = weekdayOffset; i < daysInMonth + weekdayOffset; i++) {
+                const dt = new Date(dtStart);
+                dt.setDate(dt.getDate() + i - weekdayOffset);
+                const key = dtf(dt, "YYYY-mm-dd");
+                cells[i].setAttribute("date", key);
+                if (key in data) {
+                    options.inflateDetails(create(cells[i], "div", "calendar-day-body"), data[key], false);
+                }
+            }
+
         }
 
         let maxValue = -1;
-        if (options.relative) {
+        if (options.relativeLevels) {
             for (let i = 0; i < cells.length; i++) {
                 const key = cells[i].getAttribute("date");
-                if (key in yearData) {
+                if (key in data) {
                     let value = 0;
-                    if (options.key == null) {
-                        value = yearData[key].length;
-                    } else if (yearData[key].length > 0) {
-                        value = yearData[key][0][options.key];
+                    if (options.levelKey == null) {
+                        value = data[key].length;
+                    } else if (data[key].length > 0) {
+                        value = data[key][0][options.levelKey];
                     }
                     maxValue = Math.max(maxValue, value);
                 }
@@ -772,24 +873,24 @@ function inflateCalendar(container, data, options) {
         for (let i = 0; i < cells.length; i++) {
             const dayCell = cells[i];
             const key = dayCell.getAttribute("date");
-            if (key in yearData) {
+            if (key in data) {
                 let value = 0;
-                if (options.key == null) {
-                    value = yearData[key].length;
-                } else if (yearData[key].length > 0) {
-                    value = yearData[key][0][options.key];
+                if (options.levelKey == null) {
+                    value = data[key].length;
+                } else if (data[key].length > 0) {
+                    value = data[key][0][options.levelKey];
                 }
-                if (options.relative) {
-                    value = Math.ceil(levels * value / maxValue);
+                if (options.relativeLevels) {
+                    value = Math.ceil(levelsCount * value / maxValue);
                 }
-                if (value >= levels) {
+                if (value >= levelsCount) {
                     dayCell.classList.add("filled-more");
                 } else {
                     dayCell.classList.add(`filled-${value}`);
                 }
-                if ("href" in yearData[key][0]) {
+                if ("href" in data[key][0]) {
                     dayCell.addEventListener("click", () => {
-                        window.location.href = yearData[key][0].href;
+                        window.location.href = data[key][0].href;
                     });
                 }
                 let popover;
@@ -808,7 +909,7 @@ function inflateCalendar(container, data, options) {
                     popover.style.left = (cellBounds.left + cellBounds.width/2) + "px";
                     popover.style.top = (cellBounds.top + cellBounds.height) + "px";
                     create(popover, "span", "hint").textContent = key;
-                    options.inflatePopover(popover, yearData[key]);
+                    options.inflateDetails(popover, data[key], true);
                 }
                 function closePopover() {
                     if (popover == null) return;
@@ -833,7 +934,13 @@ function inflateCalendar(container, data, options) {
 
     }
 
-    inflateYear(options.currentYear != null ? options.currentYear : (new Date()).getFullYear());
+    if (options.defaultMode == "yearly" || options.defaultMode == "weekly") {
+        fetchData(options.defaultMode, new Date(nowYear, 0, 1), new Date(nowYear, 11, 31));
+    } else if (options.defaultMode == "monthly") {
+        fetchData(options.defaultMode, new Date(nowYear, nowMonth, 1), new Date(nowYear, nowMonth + 1, 0));
+    } else {
+        throw new Error(`Invalid mode ${mode}`);
+    }
 
 }
 

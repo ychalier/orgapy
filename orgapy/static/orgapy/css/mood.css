@@ -46,6 +46,13 @@
     --bg-secondary-hover: #eb0a62;
 }
 
+.label.mood-good,
+.label.mood-neutral,
+.label.mood-bad {
+    background-color: var(--bg-secondary);
+    color: var(--text-dark);
+}
+
 .moodlog-activities-wrapper {
     position: relative;
     height: 100%;

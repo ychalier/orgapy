@@ -1,5 +1,6 @@
 import datetime
 import random
+import time
 
 
 def generate_nonce() -> str:
@@ -26,3 +27,9 @@ def parse_dt(date_string: str, time_string: str) -> datetime.datetime:
 
 def parse_date(date_string: str) -> datetime.date:
     return datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+
+
+def date_timestamp(dt: datetime.datetime | datetime.date) -> int:
+    if isinstance(dt, datetime.datetime):
+        return int(1000 * dt.timestamp())
+    return int(1000 * time.mktime(dt.timetuple()))

@@ -1,59 +1,20 @@
 {% extends "orgapy/layout/skeleton.html" %}
-{% load static %}
 
-{% block title %}{{ year }} Progress{% endblock title %}
-
-{% block head %}
-{{ block.super }}
-<script src="{% static 'orgapy/js/progress.js' %}"></script>
-{% endblock head %}
+{% block title %}Progress tracker{% endblock title %}
 
 {% block column_main %}
-
-<header class="card">
-    <h1 class="card-header">{% if dt_filter %}{{ dt_start | date }}{% if dt_start != dt_end %} — {{ dt_end | date }}{% endif %}{% else %}{{ year }} Progress{% endif %}</h1>
-    <div class="card-body"><div id="chart" year="{{ year }}" url="{% url 'orgapy:progress' %}"></div></div>
-    <div class="card-actions">
-        <a class="button" href="{% url 'orgapy:progress_export' year=year %}"><i class="ri-download-line"></i><span>Export</span></a>
-        <a class="button" href="{% url 'orgapy:create_progress_log' %}"><i class="ri-add-line"></i><span>Create</span> Log</a>
-    </div>
-</header>
-
-{% if logs %}
-<div class="card card-lines">
-    {% for log in logs %}
-    <div class="line">
-        <span class="x-hint" title="{{ log.dt | date:"Y-m-d H:i:s" }}">{{ log.dt | date:"m-d" }}</span>
-        <i class="{{ log.get_icon_class }}" title="{{ log.get_type_display }}"></i>
-        <a class="link-hidden" href="{% url 'orgapy:edit_progress_log' log.id %}">{{ log.description }}</a>
-        <div class="dropdown">
-            <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
-            <ul class="menu">
-                <li class="menu-item"><a href="{% url 'orgapy:edit_progress_log' log.id %}"><i class="ri-pencil-fill"></i> Edit</a></li>
-                <li class="menu-item"><a href="{% url 'orgapy:delete_progress_log' log.id %}" class="button-danger link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
-            </ul>
-        </div>
-    </div>
-    {% endfor %}
-    {% include 'orgapy/partials/pagination.html' with paginator=paginator %}
-</div>
-
-{% else %}
 <div class="card">
-    <p>No log at this date.</p>
+    <h1 class="card-header">Progress tracker</h1>
+    <div class="card-body"><div id="calendarContainer"></div></div>
+    <div class="card-actions">
+        <a id="buttonExport" class="button"><i class="ri-download-line"></i><span>Export</span></a>
+    </div>
 </div>
-{% endif %}
+{% endblock %}
 
-{% endblock column_main %}
-
-{% if counter %}
 {% block body_scripts %}
 {{ block.super }}
 <script>
-const year = parseInt(chart.getAttribute("year"));
-fetch(URL_API + `?action=progress&year=${year}`).then(res => res.json()).then(data => {
-    inflateCalendar(chart, data, {showHeader: true, weekly: true, relative: true});
-});
+    bindCalendar(calendarContainer, buttonExport, {relativeLevels: true, defaultMode: "weekly"});
 </script>
 {% endblock body_scripts %}
-{% endif %}

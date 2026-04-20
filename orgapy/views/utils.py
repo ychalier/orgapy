@@ -1,22 +1,24 @@
 import datetime
 import json
 import re
-from typing import Literal, TypeVar, Any
+from typing import Callable, Literal, TypeVar, Any
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Page, Paginator
 from django.db import models, connection
-from django.db.models import Q, QuerySet
-from django.http import HttpRequest, Http404, HttpResponse
+from django.db.models import Q, QuerySet, Min, Max
+from django.http import HttpRequest, Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from ..models import Settings, Category, Document, ProgressLog, Project, MoodLog
+from ..utils import date_timestamp
 
 
 UserObject = TypeVar("UserObject", Category, Document, ProgressLog, Project, MoodLog)
+LogT = TypeVar("LogT", ProgressLog, MoodLog)
 LoggedUser = AbstractBaseUser
 
 
@@ -360,3 +362,51 @@ def get_pending_mood_logs(user: LoggedUser, today_hours: int, lookback_days: int
     if now.hour < today_hours:
         dates.pop()
     return dates
+
+
+def view_calendar(
+        request: HttpRequest,
+        model: type[LogT],
+        date_field: str,
+        json_generator: Callable[[LogT], dict],
+        tsv_header: str,
+        tsv_generator: Callable[[LogT], str],
+        template: str,
+        filename: str,
+        kwargs: dict[str, Any] = {},
+        ) -> HttpResponse:
+    year = datetime.datetime.now().year
+
+    dt_start = datetime.datetime(year, 1, 1, 0, 0, 0, 0)
+    dt_end = datetime.datetime(year, 12, 31, 0, 0, 0, 0)
+    try:
+        if "start" in request.GET:
+            dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
+        if "end" in request.GET:
+            dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
+    except ValueError:
+        raise BadRequest("Wrong value")
+
+    logs = model.objects.filter(user=request.user, **{f"{date_field}__range": [dt_start, dt_end + datetime.timedelta(days=1)]})
+
+    if request.GET.get("format") == "json":
+        mindt = model.objects.values(date_field).aggregate(Min(date_field))[f"{date_field}__min"]
+        maxdt = model.objects.values(date_field).aggregate(Max(date_field))[f"{date_field}__max"]
+        data = {
+            "entries": [],
+            "mindt": date_timestamp(mindt),
+            "maxdt": date_timestamp(maxdt),
+        }
+        for log in logs:
+            data["entries"].append(json_generator(log))
+        return JsonResponse(data)
+
+    elif request.GET.get("format") == "tsv":
+        lines = [tsv_header]
+        for log in logs:
+            lines.append(tsv_generator(log))
+        response = HttpResponse("\n".join(lines), content_type="text/tab-separated-values; charset=utf-8")
+        response["Content-Disposition"] = f'inline; filename="{filename}-{dt_start.date()}-{dt_end.date()}.tsv"'
+        return response
+
+    return render(request, template, {**kwargs})

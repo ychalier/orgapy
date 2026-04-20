@@ -77,14 +77,8 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_suggestions_maps(request)
         case "suggestions-categories":
             return api_suggestions_categories(request)
-        case "progress":
-            return api_progress(request)
-        case "search":
-            return api_search_documents(request)
         case "create-mood-log":
             return api_create_mood_log(request)
-        case "list-mood-logs":
-            return api_list_mood_logs(request)
         case "list-groceries":
             return api_list_groceries(request)
         case "save-groceries":
@@ -711,44 +705,6 @@ def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
     })
 
 
-@permission_required("orgapy.view_progress_log")
-def api_progress(request: HttpRequest) -> HttpResponse:
-    data = {}
-    for log in ProgressLog.objects.filter(user=request.user).order_by("dt"):
-        data.setdefault(log.dt.year, {})
-        key = log.dt.strftime("%Y-%m-%d")
-        data[log.dt.year].setdefault(key, [])
-        data[log.dt.year][key].append({
-            "title": log.description
-        })
-    return JsonResponse(data)
-
-
-@permission_required("orgapy.view_document")
-def api_search_documents(request: HttpRequest) -> JsonResponse:
-    search_type = request.GET.get("type")
-    search_query = request.GET.get("query")
-    search_category = request.GET.get("category")
-    qs = Document.objects.filter(user=request.user, deleted=False, hidden=False)
-    if search_type:
-        qs = qs.filter(type=search_type)
-    if search_query is not None:
-        qs = qs.filter(title__contains=search_query)
-    if search_category is not None:
-        qs = qs.filter(categories__name__exact=search_category)
-    documents = []
-    for doc in qs:
-        documents.append({
-            "id": doc.id,
-            "dateCreation": int(1000 * doc.date_creation.timestamp()),
-            "dateModification": int(1000 * doc.date_modification.timestamp()),
-            "title": doc.title,
-            "href": doc.get_absolute_url(),
-            "type": doc.type,
-        })
-    return JsonResponse({"success": True, "documents": documents})
-
-
 @permission_required("orgapy.create_mood_log")
 def api_create_mood_log(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -768,28 +724,6 @@ def api_create_mood_log(request: HttpRequest) -> JsonResponse:
         raise BadRequest("Missing key")
 
     return JsonResponse({"success": True})
-
-
-@permission_required("orgapy.view_mood_log")
-def api_list_mood_logs(request: HttpRequest) -> JsonResponse:
-    data = {}
-    for log in MoodLog.objects.filter(user=request.user).order_by("date"):
-        data.setdefault(log.date.year, {})
-        key = log.date.strftime("%Y-%m-%d")
-        data[log.date.year].setdefault(key, [])
-        data[log.date.year][key].append({
-            "level": log.overall,
-            "mood": log.mood_classname,
-            "energy": log.energy_classname,
-            "health": log.health_classname,
-            "stress": log.stress_classname,
-            "activities": log.activities_display,
-            "editUrl": reverse("admin:orgapy_moodlog_change", args=[log.id]),
-            "deleteUrl": reverse("orgapy:delete_mood_log", args=[log.id]),
-            "label": log.label,
-
-        })
-    return JsonResponse(data)
 
 
 @permission_required("orgapy.view_settings")

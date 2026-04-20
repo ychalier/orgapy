@@ -1,4 +1,5 @@
 import datetime
+import time
 
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
@@ -8,6 +9,7 @@ from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
+from django.urls import reverse
 
 from ..models import (
     Category,
@@ -27,7 +29,8 @@ from .utils import (
     toggle_document_attribute,
     view_document_list,
     get_pending_mood_logs,
-    retrieve_document)
+    retrieve_document,
+    view_calendar)
 
 
 # GENERAL ######################################################################
@@ -123,7 +126,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
     doc, readonly = retrieve_document(request, nonce)
     doc.date_access = timezone.now()
     doc.save(update_fields=["date_access"])
-    
+
     if request.GET.get("raw"):
         content, ext, mimetype = "", ".txt", "text/plain"
         if doc.type == "note":
@@ -146,7 +149,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
         filename = f"{slugify(doc.title)}{ext}" if doc.title else f"untitled{ext}"
         response = HttpResponse(content=content, content_type=f"{mimetype}; charset=utf-8")
         response["Content-Disposition"] = f'inline; filename="{filename}"'
-    
+
     elif request.GET.get("embed"):
         template = f"orgapy/{doc.type}.html"
         if doc.type == "note":
@@ -163,7 +166,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
             "readonly": readonly,
             "active": "documents",
         })
-    
+
     return response
 
 
@@ -316,12 +319,6 @@ def view_categories(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_category")
 def view_category(request: HttpRequest, name: str) -> HttpResponse:
-    if name in ["journal", "org"]:
-        return render(request, f"orgapy/specials/journal.html", {"category": name})
-    if name == "quote":
-        return render(request, f"orgapy/specials/quote.html", {})
-    if name == "all":
-        return render(request, f"orgapy/specials/all.html", {})
     if name == "uncategorized":
         category = {"id": -1, "name": "uncategorized"}
     else:
@@ -364,63 +361,29 @@ def view_delete_category(request: HttpRequest, name: str) -> HttpResponse:
 
 
 @permission_required("orgapy.view_progress_log")
-def view_progress(request: HttpRequest, year: int | str | None = None) -> HttpResponse:
-    if year is None:
-        year = datetime.datetime.now().year
-    else:
-        year = int(year)
-
-    dt_start = datetime.datetime(year, 1, 1, 0, 0, 0, 0)
-    dt_end = datetime.datetime(year, 12, 31, 0, 0, 0, 0)
-    dt_filter = False
-    try:
-        if "start" in request.GET:
-            dt_filter = True
-            dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
-        if "end" in request.GET:
-            dt_filter = True
-            dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
-        if "date" in request.GET:
-            dt_filter = True
-            dt = datetime.datetime.strptime(request.GET["date"], "%Y-%m-%d")
-            dt_start = dt
-            dt_end = dt
-    except ValueError:
-        raise BadRequest("Wrong value")
-
-    page_size = 25
-    objects = ProgressLog.objects.filter(user=request.user).filter(dt__range=[dt_start, dt_end + datetime.timedelta(days=1)]).order_by("-dt")
-    paginator = Paginator(objects, page_size)
-    page = request.GET.get("page")
-    logs = paginator.get_page(page)
-   
-    return render(request, "orgapy/progress.html", {
-        "logs": logs,
-        "year": year,
-        "paginator": pretty_paginator(logs),
-        "dt_filter": dt_filter,
-        "dt_start": dt_start,
-        "dt_end": dt_end,
-    })
-
-
-@permission_required("orgapy.view_progress")
-def view_progress_export(request: HttpRequest, year: int | str | None = None) -> HttpResponse:
-    if year is None:
-        year = datetime.datetime.now().year
-    else:
-        year = int(year)
-    lines = ["id\ttype\tdt\tdescription"]
-    for log in ProgressLog.objects.filter(user=request.user, dt__year=year):
-        lines.append("\t".join([
+def view_progress(request: HttpRequest) -> HttpResponse:
+    def json_generator(log: ProgressLog) -> dict:
+        return {
+            "dt": int(1000 * log.dt.timestamp()),
+            "label": "" if log.description is None else log.description,
+            "icon": log.get_icon_class(),
+            "href": log.get_absolute_url(),
+        }
+    def tsv_generator(log: ProgressLog) -> str:
+        return "\t".join([
             str(log.id),
             log.type,
             log.dt.isoformat(),
             str(log.description)
-        ]))
-    response = HttpResponse("\n".join(lines), content_type="text/tab-separated-values; charset=utf-8")
-    response["Content-Disposition"] = f'inline; filename="progress-{year}.tsv"'
-    return response
+        ])
+    return view_calendar(request,
+        ProgressLog,
+        "dt",
+        json_generator,
+        "id\ttype\tdt\tdescription",
+        tsv_generator,
+        "orgapy/progress.html",
+        "progress")
 
 
 @permission_required("orgapy.add_progress_log")
@@ -537,17 +500,50 @@ def view_calendar_form(request: HttpRequest) -> HttpResponse:
 
 
 @permission_required("orgapy.view_mood_log")
-def view_mood(request: HttpRequest) -> HttpResponse:
+def view_mood(request: HttpRequest, year: int | str | None = None) -> HttpResponse:
+
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
     settings = get_or_create_settings(request.user)
     pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
-    logs = MoodLog.objects.filter(user=request.user).order_by("-date")
-    return render(request, "orgapy/mood.html", {
-        "settings": settings,
-        "pending_mood_logs": pending_mood_logs,
-        "logs": logs,
-    })
+
+    def json_generator(log: MoodLog) -> dict:
+        return {
+            "dt": int(1000 * time.mktime(log.date.timetuple())),
+            "label": log.label,
+            "level": log.overall,
+            "mood": log.mood_classname,
+            "energy": log.energy_classname,
+            "health": log.health_classname,
+            "stress": log.stress_classname,
+            "activities": log.activities_display,
+            "href": reverse("admin:orgapy_moodlog_change", args=[log.id])
+        }
+
+    def tsv_generator(log: MoodLog) -> str:
+        return "\t".join([
+            str(log.id),
+            log.date.isoformat(),
+            str(log.mood),
+            str(log.energy),
+            str(log.health),
+            str(log.stress),
+            log.activities
+        ])
+
+    return view_calendar(
+        request,
+        MoodLog,
+        "date",
+        json_generator,
+        "id\tdt\tmood\tenergy\thealth\tstress\tactivities",
+        tsv_generator,
+        "orgapy/mood.html",
+        "mood",
+        kwargs={
+            "settings": settings,
+            "pending_mood_logs": pending_mood_logs,
+        })
 
 
 @permission_required("orgapy.delete_mood_log")

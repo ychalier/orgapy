@@ -10,22 +10,30 @@
 {% endblock head %}
 
 {% block column_main %}
-{% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
 <div class="card">
     <h1 class="card-header">Mood tracker</h1>
-    <div class="card-body">
-        <div id="moodCalendar"></div>
+    <div class="card-body"><div id="calendarContainer"></div></div>
+    <div class="card-actions">
+        <a id="buttonExport" class="button"><i class="ri-download-line"></i><span>Export</span></a>
     </div>
 </div>
+
+{% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
+
+{% endblock %}
+
+{% block body_scripts %}
+{{ block.super }}
 <script>
-    fetch(URL_API + `?action=list-mood-logs`).then(res => res.json()).then(data => {
-        inflateCalendar(moodCalendar, data, {
-            key: "level",
-            classname: "mood-palette",
-            inflatePopover: (popover, entries) => {
-                const entry = entries[0];
-                create(popover, "span").textContent = entry.label;
-                const col = create(popover, "div", "coll");
+    bindCalendar(calendarContainer, buttonExport, {
+        levelKey: "level",
+        defaultMode: "monthly",
+        additionnalClassName: "mood-palette",
+        inflateDetails: (container, entries, isPopover) => {
+            const entry = entries[0];
+            if (isPopover) {
+                create(container, "span").textContent = entry.label;
+                const col = create(container, "div", "coll");
                 const trackers = create(col, "div", "actionbar");
                 create(trackers, "button", "mood-tracker " + entry.mood).title = "Mood";
                 create(trackers, "button", "mood-tracker " + entry.energy).title = "Energy";
@@ -34,16 +42,12 @@
                 if (entry.activities != "") {
                     create(col, "div").textContent = entry.activities;
                 }
-                const buttons = create(col, "div", "actionbar");
-                const editButton = create(buttons, "a", "button");
-                editButton.href = entry.editUrl;
-                editButton.innerHTML = `<i class="ri-pencil-fill"></i>`;
-                const deleteButton = create(buttons, "a", "button button-danger");
-                deleteButton.href = entry.deleteUrl;
-                deleteButton.innerHTML = `<i class="ri-delete-bin-line"></i>`;
-                bindLinkConfirm(deleteButton);
+            } else {
+                if (entry.activities != "") {
+                    create(container, "div").textContent = entry.activities;
+                }
             }
-        });
+        }
     });
 </script>
-{% endblock column_main %}
+{% endblock body_scripts %}

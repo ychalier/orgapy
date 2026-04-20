@@ -1231,6 +1231,10 @@ dialog > .card {
     --cellsize: .56rem;
 }
 
+.calendar--monthly {
+    --cellsize: 4rem;
+}
+
 .calendar-header {
     display: flex;
     justify-content: center;
@@ -1240,11 +1244,12 @@ dialog > .card {
 }
 
 .calendar-year {
-    width: 3rem;
+    width: 6rem;
     font-weight: bold;
     font-size: large;
     text-align: center;
     user-select: none;
+    white-space: nowrap;
 }
 
 .calendar-button {
@@ -1270,12 +1275,22 @@ dialog > .card {
     font-size: small;
 }
 
+.calendar--monthly .calendar-day-number {
+    writing-mode: unset;
+    text-align: center;
+}
+
 .calendar-day-number:first-child,
 .calendar-month-name {
     text-align: right;
     width: 28px;
     margin-right: 2px;
     font-size: small;
+}
+
+.calendar--monthly .calendar-day-number:first-child {
+    width: var(--cellsize);
+    text-align: center;
 }
 
 .calendar-day {
@@ -1301,6 +1316,26 @@ dialog > .card {
 .calendar-day.filled-9 {background-color: var(--level-9)}
 .calendar-day.filled-more {background-color: var(--level-more)}
 
+.calendar--monthly .calendar-day {
+    overflow: auto;
+}
+
+.calendar--monthly .calendar-day-body {
+    display: flex;
+    flex-direction: column;
+    font-size: small;
+    padding: .2rem;
+    gap: .1rem;
+}
+
+.calendar--monthly .calendar-day.filled-6,
+.calendar--monthly .calendar-day.filled-7,
+.calendar--monthly .calendar-day.filled-8,
+.calendar--monthly .calendar-day.filled-9,
+.calendar--monthly .calendar-day.filled-more {
+    color: var(--text-dark);
+}
+
 .calendar-popover {
     position: absolute;
     background: var(--bg-secondary);
@@ -1311,7 +1346,7 @@ dialog > .card {
     border-radius: .4rem;
     border: 1px solid var(--border-secondary);
     transform: translateX(-50%);
-    max-width: min(100%, 12rem);
+    max-width: min(100%, 16rem);
 }
 
 .calendar-popover button,
