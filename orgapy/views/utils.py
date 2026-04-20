@@ -294,7 +294,7 @@ def view_document_list(
     if dt_end is None and "end" in request.GET:
         dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
     if dt_end:
-        attrs["start"] = dt_end.strftime("%Y-%m-%d")
+        attrs["end"] = dt_end.strftime("%Y-%m-%d")
     
     if sort_key is None:
         s = request.GET.get("sort")

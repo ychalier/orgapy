@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -65,21 +66,68 @@ def view_home(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_project")
 def view_projects(request: HttpRequest) -> HttpResponse:
-    note_filter = request.GET.get("note")
-    status_filter = request.GET.get("status")
-    query = Project.objects.filter(user=request.user)
-    if note_filter is not None:
-        query = query.filter(document__nonce=note_filter)
-    if status_filter is not None:
-        query = query.filter(status=status_filter)
-    query = query.order_by("-date_modification")
-    page_size = 25
-    paginator = Paginator(query, page_size)
+    attrs = {}
+
+    page_size = int(request.GET.get("size", 25))
+    attrs["size"] = page_size
+
+    search_query = request.GET.get("query")
+    if search_query:
+        attrs["query"] = search_query
+    
+    s = request.GET.get("status")
+    status_filter = s if s in [status for status, _ in Project.STATUS_CHOICES] else None
+    if status_filter:
+        attrs["status"] = status_filter
+    
+    document_filter = request.GET.get("document")
+    if document_filter:
+        attrs["document"] = document_filter
+
+    dt_start = None
+    if "start" in request.GET:
+        dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
+    if dt_start:
+        attrs["start"] = dt_start.strftime("%Y-%m-%d")
+    
+    dt_end = None
+    if "end" in request.GET:
+        dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
+    if dt_end:
+        attrs["end"] = dt_end.strftime("%Y-%m-%d")
+
+    s = request.GET.get("sort")
+    sort_key = s if s in ["creation", "modification"] else None
+    if sort_key:
+        attrs["sort"] = sort_key
+    
+    qs = Project.objects.filter(user=request.user)
+    if status_filter:
+        qs = qs.filter(status=status_filter)
+    if document_filter:
+        qs = qs.filter(document__nonce=document_filter)
+    if dt_start and dt_end:
+        qs = qs.filter(date_creation__range=[dt_start, dt_end + datetime.timedelta(days=1)])
+    elif dt_start:
+        qs = qs.filter(date_creation__gt=dt_start)
+    elif dt_end:
+        qs = qs.filter(date_creation__lt=dt_end)
+    if search_query:
+        qs = qs.filter(Q(title__icontains=search_query) | Q(checklist__icontains=search_query))
+    
+    if sort_key:
+        qs = qs.order_by(f"-date_{sort_key}")
+    else:
+        qs = qs.order_by("-date_modification")
+
+    paginator = Paginator(qs, page_size)
     page = request.GET.get("page")
     projects = paginator.get_page(page)
     return render(request, "orgapy/projects.html", {
         "projects": projects,
         "paginator": pretty_paginator(projects),
+        "active": "projects",
+        "attrs": attrs,
         "active": "projects",
     })
 

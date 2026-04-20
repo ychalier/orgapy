@@ -10,25 +10,49 @@
 {% endblock head %}
 
 {% block column_main %}
-
 <div class="card">
     <div class="card-body">
-        <div class="minititle" style="display: inline-block">filters</div>
-        {% if request.GET.status or request.GET.note %}
-            {% if request.GET.note %}<span class="label label-inline">@note/{{ request.GET.note }}</span>{% endif %}
-            {% if request.GET.status == 'AC' %}<span class="label label-inline">ACTIVE</span>{% endif %}
-            {% if request.GET.status == 'IN' %}<span class="label label-inline label-grey">INACTIVE</span>{% endif %}
-            {% if request.GET.status == 'AR' %}<span class="label label-inline label-purple">ARCHIVED</span>{% endif %}
-            {% if request.GET.status == 'FU' %}<span class="label label-inline label-pink">FUTURE</span>{% endif %}
-            <a href="?" class="label label-inline label-grey"><i class="ri-close-line"></i> Clear</a>
-        {% else %}
-        <a href="?status=AC" class="label label-inline">ACTIVE</a>
-        <a href="?status=IN" class="label label-inline label-grey">INACTIVE</a>
-        <a href="?status=AR" class="label label-inline label-purple">ARCHIVED</a>
-        <a href="?status=FU" class="label label-inline label-pink">FUTURE</a>
-        {% endif %}
+        <form id="searchForm" class="search" action="{% url 'orgapy:projects' %}" method="get">
+            <div class="col">
+                <div class="search">
+                    <div class="search-bar">
+                        <input class="search-input" autocomplete="off" type="search" name="query" placeholder="Search" tabindex="1" value="{% if attrs.query %}{{ attrs.query }}{% endif %}" />
+                        <i class="search-icon ri-close-line"></i>
+                        <button class="search-button" tabindex="-1"><i class="ri-search-line"></i></button>
+                    </div>
+                    <ul class="search-suggestions menu"></ul>
+                </div>
+                <div class="row small">
+                    <div class="actionbar">
+                        <label for="selectSearchStatus">Filter</label>
+                        <select id="selectSearchStatus" name="status" style="border-right: none">
+                            <option {% if attrs.status == 'any' %}selected{% endif %} value="any">Any status</option>
+                            <option {% if attrs.status == 'AC' %}selected{% endif %} value="AC">Active</option>
+                            <option {% if attrs.status == 'IN' %}selected{% endif %} value="IN">Inactive</option>
+                            <option {% if attrs.status == 'AR' %}selected{% endif %} value="AR">Archived</option>
+                            <option {% if attrs.status == 'FU' %}selected{% endif %} value="FU">Future</option>
+                        </select>
+                    </div>
+                    <div class="actionbar">
+                        <label for="selectSearchSort">Sort by</label>
+                        <select id="selectSearchSort" name="sort">
+                            <option {% if attrs.sort == 'modification' %}selected{% endif %} value="modification">Modification</option>
+                            <option {% if attrs.sort == 'creation' %}selected{% endif %} value="creation">Creation</option>
+                        </select>
+                    </div>
+                    <div class="search">
+                        <div class="search-bar">
+                            <input type="hidden" name="document" value="{{ attr.document }}" />
+                            <input type="text" placeholder="Document" class="search-input" autocomplete="off" />
+                        </div>
+                        <ul class="search-suggestions menu"></ul>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
+<!-- TODO: bind search suggestions for projects, and document input -->
 
 {% if projects %}
 <div class="card card-lines">
@@ -50,7 +74,9 @@
 {% else %}
 {% block empty %}
 <div class="card">
-    <p>Nothing found 😔</p>
+    <div class="card-body">
+        <div>Nothing found 😔</div>
+    </div>
 </div>
 {% endblock empty %}
 {% endif %}
