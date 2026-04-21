@@ -170,6 +170,12 @@ function bindSearch(searchEl, suggestionsUrl, suggestionsParams, inflateMenuItem
         }
     });
 
+    searchInput.addEventListener("focusout", (event) => {
+        if (!suggestionsContainer.contains(event.relatedTarget)) {
+            suggestionsContainer.innerHTML = "";
+        }
+    });
+
     return { searchInput, suggestionsContainer, clear };
 
 }
