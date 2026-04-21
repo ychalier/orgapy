@@ -32,6 +32,7 @@
                 <div class="row">
                     <a href="{% url 'orgapy:home' %}" class="button {% if active == "home" %}active{% endif %}" tabindex="2"><i class="ri-home-line"></i> Home</a>
                     <a href="{% url 'orgapy:documents' %}" class="button {% if active == "documents" %}active{% endif %}" tabindex="2"><i class="ri-file-copy-2-line"></i> Documents</a>
+                    <a href="{% url 'orgapy:projects' %}" class="button {% if active == "projects" %}active{% endif %}" tabindex="2"><i class="ri-briefcase-line"></i> Projects</a>
                 </div>
                 <div class="row">
                     {% if request.user.is_authenticated %}
@@ -86,7 +87,6 @@ navbarSubmitSearchFormButton.onclick = (event) => {
                             {% block menu %}
                             {% if request.user.is_authenticated %}
                             <li class="menu-item"><a href="{% url 'orgapy:categories' %}" tabindex="3"><i class="ri-hashtag"></i> Categories</a></li>
-                            <li class="menu-item"><a href="{% url 'orgapy:projects' %}" tabindex="3"><i class="ri-briefcase-line"></i> Projects</a></li>
                             <li class="menu-item"><a href="{% url 'orgapy:trash' %}" tabindex="3"><i class="ri-delete-bin-line"></i> Trash</a></li>
                             <li class="menu-item">
                                 <div class="dropdown">
