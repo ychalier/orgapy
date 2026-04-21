@@ -13,7 +13,7 @@ from django.urls import reverse
 
 from ..models import Category, Document, ProgressLog, Calendar, Task, Project, Objective, MoodLog
 from ..utils import parse_dt, parse_date
-from .utils import find_user_object, compare_checklists, compare_objective_histories, get_or_create_settings, save_document_core
+from .utils import find_user_object, compare_checklists, compare_objective_histories, get_or_create_settings
 
 
 def api(request: HttpRequest) -> HttpResponse:
@@ -89,6 +89,7 @@ def api(request: HttpRequest) -> HttpResponse:
             raise BadRequest(f"Unknown action '{action}'")
 
 
+#TODO DEPRECATED, MERGE WITH PROJECTS
 @permission_required("orgapy.view_project")
 def api_list_projects(request: HttpRequest) -> JsonResponse:
     document_filter = request.GET.get("document")
@@ -119,6 +120,7 @@ def api_list_projects(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"projects": projects})
 
 
+#TODO DEPRECATED, MERGE WITH PROJECTS
 @permission_required("orgapy.add_project")
 def api_create_project(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -144,6 +146,7 @@ def get_project_from_post(request: HttpRequest) -> Project:
     return project
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.change_project")
 def api_edit_project(request: HttpRequest) -> JsonResponse:
     project = get_project_from_post(request)
@@ -179,6 +182,7 @@ def api_edit_project(request: HttpRequest) -> JsonResponse:
     })
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.change_project")
 def api_set_project_status(request: HttpRequest) -> JsonResponse:
     project = get_project_from_post(request)
@@ -193,6 +197,7 @@ def api_set_project_status(request: HttpRequest) -> JsonResponse:
     })
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.delete_project")
 def api_delete_project(request: HttpRequest) -> JsonResponse:
     project = get_project_from_post(request)
@@ -200,6 +205,7 @@ def api_delete_project(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.view_objective")
 def api_list_objectives(request: HttpRequest) -> JsonResponse:
     show_archived = request.GET.get("archived", "0") == "1"
@@ -211,6 +217,7 @@ def api_list_objectives(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"objectives": objectives})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.add_objective")
 def api_add_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -232,6 +239,7 @@ def api_add_objective(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.change_objective")
 def api_edit_objective(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -274,7 +282,7 @@ def get_objective_from_post(request: HttpRequest) -> Objective:
     return Objective.objects.get(id=objective_id, user=request.user)
 
 
-
+#TODO DEPRECATED
 @permission_required("orgapy.change_objective")
 def api_archive_objective(request: HttpRequest) -> JsonResponse:
     objective = get_objective_from_post(request)
@@ -283,6 +291,7 @@ def api_archive_objective(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.change_objective")
 def api_unarchive_objective(request: HttpRequest) -> JsonResponse:
     objective = get_objective_from_post(request)
@@ -291,6 +300,7 @@ def api_unarchive_objective(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.delete_objective")
 def api_delete_objective(request: HttpRequest) -> JsonResponse:
     objective = get_objective_from_post(request)
@@ -298,6 +308,7 @@ def api_delete_objective(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.change_objective")
 def api_edit_objective_history(request: HttpRequest) -> JsonResponse:
     """Objective history must be a JSON string
@@ -314,6 +325,7 @@ def api_edit_objective_history(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.view_calendar")
 def api_list_calendars(request: HttpRequest) -> JsonResponse:
     events = []
@@ -335,6 +347,7 @@ def api_list_calendars(request: HttpRequest) -> JsonResponse:
     })
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.change_calendar")
 def api_delete_calendar(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -350,6 +363,7 @@ def api_delete_calendar(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": success})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.change_calendar")
 def api_add_event(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -378,6 +392,7 @@ def api_add_event(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": success})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.view_task")
 def api_list_tasks(request: HttpRequest) -> JsonResponse:
     tasks = []
@@ -413,6 +428,7 @@ def get_task_from_post(request: HttpRequest) -> Task:
     return task
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.edit_task")
 def api_edit_task(request: HttpRequest) -> JsonResponse:
     task = get_task_from_post(request)
@@ -447,6 +463,7 @@ def api_edit_task(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.add_task")
 def api_add_task(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -482,6 +499,7 @@ def api_add_task(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.delete_task")
 def api_delete_task(request: HttpRequest) -> JsonResponse:
     task = get_task_from_post(request)
@@ -489,6 +507,7 @@ def api_delete_task(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.edit_task")
 def api_complete_task(request: HttpRequest) -> JsonResponse:
     task = get_task_from_post(request)
@@ -606,6 +625,7 @@ def api_edit_widgets(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED
 def api_get_document(request: HttpRequest) -> JsonResponse:
     nonce = request.GET.get("nonce")
     if nonce is None:
@@ -623,30 +643,31 @@ def api_get_document(request: HttpRequest) -> JsonResponse:
     raise PermissionDenied()
 
 
+#TODO DEPRECATED
 @permission_required("orgapy.change_document")
 def api_save_document(request: HttpRequest) -> JsonResponse:
-    nonce = request.POST.get("nonce")
-    if nonce is None:
-        raise BadRequest("Missing nonce")
-    doc = find_user_object(Document, "nonce", nonce, request.user)
-    modification = float(request.POST.get("modification", 0))
-    if doc.date_modification.timestamp() > modification:
-        return JsonResponse({"success": False, "reason": "Document has newer modifications"})
-    if "title" in request.POST:
-        doc.title = request.POST["title"]
-    if "subtitle" in request.POST:
-        doc.subtitle = request.POST["subtitle"]
-    if "content" in request.POST:
-        doc.content = request.POST["content"]
-    if "config" in request.POST:
-        doc.config = request.POST["config"]
-    save_document_core(doc)
+    # nonce = request.POST.get("nonce")
+    # if nonce is None:
+    #     raise BadRequest("Missing nonce")
+    # doc = find_user_object(Document, "nonce", nonce, request.user)
+    # modification = float(request.POST.get("modification", 0))
+    # if doc.date_modification.timestamp() > modification:
+    #     return JsonResponse({"success": False, "reason": "Document has newer modifications"})
+    # if "title" in request.POST:
+    #     doc.title = request.POST["title"]
+    # if "subtitle" in request.POST:
+    #     doc.subtitle = request.POST["subtitle"]
+    # if "content" in request.POST:
+    #     doc.content = request.POST["content"]
+    # if "config" in request.POST:
+    #     doc.config = request.POST["config"]
+    # save_document_core(doc)
     return JsonResponse({
-        "success": True,
-        "modification": doc.date_modification.timestamp()
+        "success": False,
+        # "modification": doc.date_modification.timestamp()
     })
 
-
+#TODO DEPRECATED
 @permission_required("orgapy.view_document")
 def api_suggestions_documents(request: HttpRequest, doctype: str | None = None) -> JsonResponse:
     query = request.GET.get("q", "").strip()
@@ -672,22 +693,22 @@ def api_suggestions_documents(request: HttpRequest, doctype: str | None = None) 
         ]
     })
 
-
+#TODO DEPRECATED
 @permission_required("orgapy.view_document")
 def api_suggestions_notes(request: HttpRequest) -> JsonResponse:
     return api_suggestions_documents(request, "note")
 
-
+#TODO DEPRECATED
 @permission_required("orgapy.view_document")
 def api_suggestions_sheets(request: HttpRequest) -> JsonResponse:
     return api_suggestions_documents(request, "sheet")
 
-
+#TODO DEPRECATED
 @permission_required("orgapy.view_document")
 def api_suggestions_maps(request: HttpRequest) -> JsonResponse:
     return api_suggestions_documents(request, "map")
 
-
+#TODO DEPRECATED
 @permission_required("orgapy.view_category")
 def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
     query = request.GET.get("q", "").strip()
@@ -705,6 +726,7 @@ def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
     })
 
 
+#TODO DEPRECATED, POST TO MOOD
 @permission_required("orgapy.create_mood_log")
 def api_create_mood_log(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -726,6 +748,7 @@ def api_create_mood_log(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED, GET TO GROCERIES
 @permission_required("orgapy.view_settings")
 def api_list_groceries(request: HttpRequest) -> JsonResponse:
     if isinstance(request.user, AnonymousUser):
@@ -734,6 +757,7 @@ def api_list_groceries(request: HttpRequest) -> JsonResponse:
     return JsonResponse(settings.groceries)
 
 
+#TODO DEPRECATED, POST TO GROCERIES
 @permission_required("orgapy.change_settings")
 def api_save_groceries(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -746,6 +770,7 @@ def api_save_groceries(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+#TODO DEPRECATED, POST TO GROCERIES
 @permission_required("orgapy.change_settings")
 def api_create_groceries_list(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":

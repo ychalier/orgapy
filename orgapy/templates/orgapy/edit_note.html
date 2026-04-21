@@ -1,7 +1,7 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}Edit {% if document %}'{{ document.title }}'{% else %}note{% endif %}{% endblock title %}
+{% block title %}Edit {% if document.title %}'{{ document.title }}'{% else %}note{% endif %}{% endblock title %}
 
 {% block head %}
 {{ block.super }}
@@ -13,28 +13,21 @@
 
 {% block column_main %}
 
-<form id="noteForm" action="{% url 'orgapy:save_document' %}" method="post">
+<form id="noteForm" action="{% url 'orgapy:document' document.nonce %}" method="post">
     {% csrf_token %}
-    {% if document %}
-    <input type="hidden" name="nonce" value="{{document.nonce}}">
-    {% if document.public %}<input type="hidden" name="public" checked>{% endif %}
-    {% if document.pinned %}<input type="hidden" name="pinned" checked>{% endif %}
-    {% if document.hidden %}<input type="hidden" name="hidden" checked>{% endif %}
-    {% endif %}
-    <input hidden type="text" name="type" value="note" />
-    <input hidden type="text" name="modification" value="{% if document %}{{ document.date_modification.timestamp }}{% endif %}" />
+    <input id="inputEtag" type="hidden" name="etag" value="{{ etag }}">
     <header class="card card--nobottom">
         <h1 class="card-header">
-            <input class="input-inline" type="text" name="title" placeholder="Title" maxlength="255" value="{% if request.GET.title %}{{ request.GET.title }}{% else %}{{ document.title }}{% endif %}" />
+            <input class="input-inline" type="text" name="title" placeholder="Title" maxlength="255" value="{% if document.title %}{{ document.title }}{% endif %}" />
         </h1>
         <div class="card-body">{% include 'orgapy/partials/categories_input.html' with obj=document %}</div>
     </header>
     <div class="card-actions card-actions--sticky">
-        <button id="buttonSaveExit"><i class="ri-save-line"></i> Save</button>
-        {% block save_and_continue %}<button id="buttonSaveContinue"><i class="ri-save-line"></i> Save and continue</button>{% endblock %}
-        {% if document %}<a class="button" href="{{ document.get_absolute_url }}"><i class="ri-arrow-right-circle-line"></i> View note</a>{% endif %}
+        <button id="buttonSave" type="submit" name="action" value="save"><i class="ri-save-line"></i> Save</button>
+        <button id="buttonContinue" disabled type="submit" name="action" value="continue"><i class="ri-save-line"></i> Save and continue</button>
+        <a class="button" href="{{ document.get_absolute_url }}"><i class="ri-arrow-right-circle-line"></i> View note</a>
     </div>
-    <textarea class="document-form-content" id="noteContentInput" name="content" placeholder="Write content using Markdown">{{ document.content }}</textarea>
+    <textarea class="document-form-content" id="noteContentInput" name="content" placeholder="Write content using Markdown">{% if document.content %}{{ document.content }}{% endif %}</textarea>
 </form>
 
 {% endblock column_main %}
@@ -42,7 +35,7 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    let buttonSaveContinue = document.getElementById("buttonSaveContinue");
+    //let buttonSaveContinue = document.getElementById("buttonSaveContinue");
     if (window.innerWidth > 800) {
         const simplemde = new SimpleMDE({
             element: noteContentInput,
@@ -66,7 +59,7 @@
             onCmCursorActivity(cmInstance, "{% url 'orgapy:suggestions' %}")
         });
         simplemde.codemirror.on("change", () => {
-            if (buttonSaveContinue != null) buttonSaveContinue.removeAttribute("disabled");
+            if (buttonContinue != null) buttonContinue.removeAttribute("disabled");
         });
         window.addEventListener("load", () => {
             simplemde.codemirror.refresh();
@@ -74,6 +67,46 @@
     } else {
         noteContentInput.style.height = (window.innerHeight - 290) + "px";
     }
-    bindSaveNoteButtons(noteForm, buttonSaveExit, buttonSaveContinue);
+    //bindSaveNoteButtons(noteForm, buttonSaveExit, buttonSaveContinue);
+    buttonContinue.onclick = (e) => {
+        e.preventDefault();
+        buttonContinue.setAttribute("disabled", "");
+        const formData = new FormData(noteForm);
+        formData.append("action", "continue");
+        fetch(noteForm.getAttribute("action"), {
+            method: "POST",
+            body: formData,
+            headers: {
+                "If-Match": inputEtag.value,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        }).then(res => {
+            if (res.status == 204) {
+                const newEtag = res.headers.get("ETag");
+                if (newEtag) inputEtag.value = newEtag;
+                toast("Saved!", 600);
+            } else if (res.status == 412) {
+                toast("Conflict detected", 600);
+            } else {
+                toast(`An error occurred: ${res.status}`, 600);
+            }
+        });
+        //const formdata = new FormData(form);
+        //fetch(form.action, {method: form.method, body: formdata}).then(res => {
+        //    if (res.status == 200) {
+        //        toast("Saved!", 600);
+        //        document.querySelector("input[name=modification]").value = new Date() / 1000;
+        //    } else {
+        //        res.text().then(resText => {
+        //            toast(`An error occurred: ${res.status} ${resText}`, 600);
+        //        });
+        //    }
+        //});
+    };
+    document.querySelectorAll("input,textarea").forEach(input => {
+        input.addEventListener("input", () => {
+            buttonContinue.removeAttribute("disabled");
+        });
+    });
 </script>
 {% endblock body_scripts %}

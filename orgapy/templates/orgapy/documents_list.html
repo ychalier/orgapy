@@ -9,9 +9,12 @@
         <div class="dropdown">
             <button class="dropdown-toggle"><i class="ri-add-line"></i><span>Create</span></button>
             <ul class="menu">
-                <li class="menu-item"><a href="{% url 'orgapy:create_document' %}?type=note{% if query %}&title={{query}}{% endif %}"><i class="ri-sticky-note-line"></i> Note</a></li>
-                <li class="menu-item"><a href="{% url 'orgapy:create_document' %}?type=sheet{% if query %}&title={{query}}{% endif %}"><i class="ri-table-line"></i> Sheet</a></li>
-                <li class="menu-item"><a href="{% url 'orgapy:create_document' %}?type=map{% if query %}&title={{query}}{% endif %}"><i class="ri-map-2-line"></i> Map</a></li>
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <li class="menu-item"><button type="submit" name="type" value="note"><i class="ri-sticky-note-line"></i> Note</button></li>
+                    <li class="menu-item"><button type="submit" name="type" value="sheet"><i class="ri-table-line"></i> Sheet</button></li>
+                    <li class="menu-item"><button type="submit" name="type" value="map"><i class="ri-map-2-line"></i> Map</button></li>
+                </form>
             </ul>
         </div>
     </div>

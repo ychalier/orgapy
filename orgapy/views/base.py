@@ -1,4 +1,5 @@
 import datetime
+import re
 import time
 
 from django.contrib.auth.decorators import permission_required
@@ -11,6 +12,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
 from django.urls import reverse
+from django.views.decorators.http import condition
 
 from ..models import (
     Category,
@@ -25,12 +27,9 @@ from ..models import (
 from .utils import (
     find_user_object,
     pretty_paginator,
-    save_document_core,
     get_or_create_settings,
-    toggle_document_attribute,
     view_document_list,
     get_pending_mood_logs,
-    retrieve_document,
     view_calendar)
 
 
@@ -157,23 +156,158 @@ def view_delete_project(request: HttpRequest, nonce: str) -> HttpResponse:
 
 @permission_required("orgapy.view_document")
 def view_documents(request: HttpRequest) -> HttpResponse:
+
+    if request.method == "POST":
+        doctype = request.POST.get("type", "note")
+        if doctype not in ["note", "sheet", "map"]:
+            raise BadRequest("Incorrect document type")
+        doc = Document.objects.create(user=request.user, type=doctype)
+        return redirect(doc.get_absolute_url() + "?edit=1")
+
     template_name = "orgapy/" + ("documents_calendar.html" if request.GET.get("calendar") else "documents_list.html")
     return view_document_list(request, template_name)
 
 
-@permission_required("orgapy.add_document")
-def view_create_document(request: HttpRequest) -> HttpResponse:
-    doctype = request.GET.get("type", "note")
-    if doctype not in ["note", "sheet", "map"]:
-        raise BadRequest("Wrong document type")
-    return render(request, f"orgapy/create_{doctype}.html", {
-        "active": "documents"
-    })
+def document_etag_func(request: HttpRequest, nonce: str) -> str | None:
+    try:
+        doc = Document.objects.get(nonce=nonce)
+    except Document.DoesNotExist:
+        return None
+    return doc.etag
 
 
+def last_modified_func(request: HttpRequest, nonce: str) -> datetime.datetime | None:
+    try:
+        doc = Document.objects.get(nonce=nonce)
+    except Document.DoesNotExist:
+        return None
+    return doc.updated_at
+
+
+@condition(document_etag_func, last_modified_func)
 def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
-    doc, readonly = retrieve_document(request, nonce)
-    doc.date_access = timezone.now()
+
+    try:
+        doc = Document.objects.get(nonce=nonce)
+    except Document.DoesNotExist:
+        raise Http404()
+    has_permission = False
+    readonly = True
+    if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document"):
+        readonly = False
+        has_permission = True
+    elif doc.public:
+        has_permission = True
+    if not has_permission:
+        raise PermissionDenied()
+    if request.GET.get("embed"):
+        readonly = True
+
+    now = timezone.now()
+
+    if request.method == "POST":
+        if doc.user != request.user:
+            raise PermissionDenied()
+
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        client_etag = request.headers.get("If-Match") or request.POST.get("etag")
+        current_etag = doc.etag
+
+        if client_etag != current_etag:
+            if is_ajax:
+                return HttpResponse(status=412)
+            else:
+                return HttpResponse(
+                    "This document was modified by someone else while you were editing. "
+                    "Please review the latest version before saving again.",
+                    content_type="text/plain",
+                    status=412)
+        
+        if request.POST.get("destroy") == "on":
+            doc.delete()
+            if "next" in request.POST:
+                return redirect(request.POST["next"])
+            return redirect("orgapy:documents")
+
+        update_fields = []
+
+        if "public" in request.POST:
+            update_fields.append("public")
+            doc.public = request.POST["public"] == "on"
+
+        if "pinned" in request.POST:
+            update_fields.append("pinned")
+            doc.pinned = request.POST["pinned"] == "on"
+
+        if "hidden" in request.POST:
+            update_fields.append("hidden")
+            doc.hidden = request.POST["hidden"] == "on"
+
+        if "deleted" in request.POST:
+            update_fields.append("deleted")
+            doc.deleted = request.POST["deleted"] == "on"
+            if doc.deleted:
+                update_fields.append("date_deletion")
+                doc.date_deletion = now
+
+        if "title" in request.POST:
+            update_fields.append("title")
+            doc.title = request.POST["title"]
+
+        if "subtitle" in request.POST:
+            update_fields.append("subtitle")
+            doc.subtitle = request.POST["subtitle"]
+
+        if "content" in request.POST:
+            new_content = request.POST["content"]
+            if new_content:
+                update_fields.append("content")
+                update_fields.append("date_modification")
+                doc.content = new_content
+                doc.date_modification = now
+                pattern = re.compile(r"@(?:embed)?(note|sheet|map)/([a-zA-Z0-9]+)")
+                nonces = set([nonce for _, nonce in re.findall(pattern, new_content)])
+                doc.references.set(Document.objects.filter(user=doc.user, nonce__in=nonces))
+
+        if "config" in request.POST:
+            update_fields.append("config")
+            doc.config = request.POST["config"]
+
+        if "categories" in request.POST:
+            doc.categories.clear()
+            name_list = request.POST.get("categories", "").split(";")
+            for dirty_name in name_list:
+                name = dirty_name.lower().strip()
+                if name == "" or name == "uncategorized":
+                    continue
+                try:
+                    category = Category.objects.get(name=name, user=request.user)
+                except Category.DoesNotExist:
+                    category = Category.objects.create(name=name, user=request.user)
+                doc.categories.add(category)
+
+        doc.updated_at = now
+        doc.save(update_fields=update_fields + ["updated_at"])
+
+        if "next" in request.POST:
+            return redirect(request.POST["next"])
+
+        action = request.POST.get("action")
+        if action == "continue":
+            if is_ajax:
+                response = HttpResponse(status=204)
+            else:
+                response = redirect(request.path)
+        else:
+            response = redirect("orgapy:document", doc.nonce)
+
+        response["ETag"] = doc.etag
+        return response
+
+    if doc.deleted:
+        raise Http404()
+
+    doc.date_access = now
     doc.save(update_fields=["date_access"])
 
     if request.GET.get("raw"):
@@ -209,147 +343,41 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
         })
         response["X-Frame-Options"] = "SAMEORIGIN"
 
+    elif request.GET.get("edit"):
+        if readonly:
+            raise PermissionDenied()
+        response = render(request, f"orgapy/edit_{doc.type}.html", {
+            "document": doc,
+            "active": "documents",
+            "etag": doc.etag,
+        })
+
     else:
         response = render(request, f"orgapy/{doc.type}.html", {
             "document": doc,
             "readonly": readonly,
             "active": "documents",
+            "etag": doc.etag,
         })
 
     return response
 
 
 @permission_required("orgapy.view_document")
-def view_edit_document(request: HttpRequest, nonce: str) -> HttpResponse:
-    doc = find_user_object(Document, "nonce", nonce, request.user)
-    return render(request, f"orgapy/edit_{doc.type}.html", {
-        "document": doc,
-        "active": "documents",
-    })
-
-
-@permission_required("orgapy.change_document")
-def view_save_document(request: HttpRequest) -> HttpResponse:
-    if not request.method == "POST":
-        raise BadRequest("Wrong method")
-    try:
-        original = Document.objects.get(user=request.user, nonce=request.POST.get("nonce"))
-        if original.date_modification.timestamp() > float(request.POST.get("modification", 0)):
-            return HttpResponse(content="Newer changes were made", content_type="text/plain", status=409)
-    except Document.DoesNotExist:
-        original = None
-    if original is not None and original.user != request.user:
-        raise PermissionDenied()
-
-    if original is None:
-        doc = Document.objects.create(
-            user=request.user,
-            type=request.POST.get("type", "note").strip(),
-            public="public" in request.POST,
-            pinned="pinned" in request.POST,
-            hidden="hidden" in request.POST,
-            title=request.POST.get("title"),
-            subtitle=request.POST.get("subtitle"),
-            content=request.POST.get("content"),
-            config=request.POST.get("config"),
-        )
-    else:
-        doc = original
-        doc.public = "public" in request.POST
-        doc.pinned = "pinned" in request.POST
-        doc.hidden = "hidden" in request.POST
-        doc.title = request.POST.get("title")
-        doc.subtitle = request.POST.get("subtitle")
-        doc.content = request.POST.get("content")
-        doc.config = request.POST.get("config")
-
-    doc.categories.clear()
-    name_list = request.POST.get("categories", "").split(";")
-    for dirty_name in name_list:
-        name = dirty_name.lower().strip()
-        if name == "" or name == "uncategorized":
-            continue
-        try:
-            category = Category.objects.get(name=name, user=request.user)
-        except Category.DoesNotExist:
-            category = Category.objects.create(name=name, user=request.user)
-        doc.categories.add(category)
-    save_document_core(doc)
-    return redirect(doc)
-
-
-@permission_required("orgapy.change_document")
-def view_toggle_document_hidden(request: HttpRequest, nonce: str) -> HttpResponse:
-    return toggle_document_attribute(request, nonce, "hidden")
-
-
-@permission_required("orgapy.change_document")
-def view_toggle_document_pin(request: HttpRequest, nonce: str) -> HttpResponse:
-    return toggle_document_attribute(request, nonce, "pinned")
-
-
-@permission_required("orgapy.change_document")
-def view_toggle_document_public(request: HttpRequest, nonce: str) -> HttpResponse:
-    return toggle_document_attribute(request, nonce, "public")
-
-
-@permission_required("orgapy.delete_document")
-def view_delete_document(request: HttpRequest, nonce: str) -> HttpResponse:
-    doc = find_user_object(Document, "nonce", nonce, request.user)
-    doc.soft_delete()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:documents")
-
-
-@permission_required("orgapy.add_document")
-def view_restore_document(request: HttpRequest, nonce: str) -> HttpResponse:
-    doc = find_user_object(Document, "nonce", nonce, request.user, allow_deleted=True)
-    doc.restore()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect(doc.get_absolute_url())
-
-
-@permission_required("orgapy.delete_document")
-def view_destroy_document(request: HttpRequest, nonce: str) -> HttpResponse:
-    doc = find_user_object(Document, "nonce", nonce, request.user, allow_deleted=True)
-    doc.delete()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect(f"orgapy:documents")
-
-
-@permission_required("orgapy.delete_document")
 def view_trash(request: HttpRequest) -> HttpResponse:
     return view_document_list(request, "orgapy/trash.html", status_filter="deleted", sort_key="deletion")
 
 
-@permission_required("orgapy.add_document")
-def view_restore_all_documents(request: HttpRequest) -> HttpResponse:
+@permission_required("orgapy.change_document")
+def view_restore_all_documents(request: HttpRequest) -> HttpResponse: # TODO: make this as a POST of trash
     Document.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
     return redirect(f"orgapy:trash")
 
 
 @permission_required("orgapy.delete_document")
-def view_destroy_all_documents(request: HttpRequest) -> HttpResponse:
+def view_destroy_all_documents(request: HttpRequest) -> HttpResponse: # TODO: make this as a POST of trash
     Document.objects.filter(user=request.user, deleted=True).delete()
     return redirect(f"orgapy:trash")
-
-
-@permission_required("orgapy.view_document")
-def view_notes(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/documents.html", type_filter="note", sort_key=None)
-
-
-@permission_required("orgapy.view_sheet")
-def view_sheets(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/documents.html", type_filter="sheet", sort_key=None)
-
-
-@permission_required("orgapy.view_document")
-def view_maps(request: HttpRequest) -> HttpResponse:
-    return view_document_list(request, "orgapy/documents.html", type_filter="map", sort_key=None)
 
 
 # CATEGORIES ###################################################################

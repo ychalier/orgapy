@@ -27,7 +27,9 @@
         {% endif %}
         {% if task.recurring_mode != 'ON' %}<i class="ri-refresh-line" title="{{task.get_recurring_mode_display}}, {{ task.recurring_period }}"></i>{% endif %}
         <span>{{ task.title }}</span>
-        <a class="dropdown-toggle" tabindex="0"><i class="ri-more-2-fill"></i></a>
+        <div class="dropdown">
+            <a class="dropdown-toggle" tabindex="0"><i class="ri-more-2-fill"></i></a>
+        </div>
     </div>
     {% endfor %}
     {% include 'orgapy/partials/pagination.html' %}

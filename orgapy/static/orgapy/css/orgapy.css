@@ -1096,6 +1096,10 @@ input:checked+.toggle-slider+.toggle-text {
     z-index: 2;
 }
 
+.card-actions form {
+    display: flex;
+}
+
 /***** MENUS AND DROPDOWNS ****************************************************/
 
 .contextmenu {

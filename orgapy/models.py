@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import json
 import random
 import re
@@ -112,6 +113,7 @@ class Document(models.Model):
     date_modification = models.DateTimeField(default=timezone.now)
     date_access = models.DateTimeField(default=timezone.now)
     date_deletion = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(default=timezone.now)
     public = models.BooleanField(default=False)
     pinned = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
@@ -163,6 +165,10 @@ class Document(models.Model):
 
     def get_archived_projects(self):
         return self.project_set.filter(status=Project.ARCHIVED) # type: ignore
+    
+    @property
+    def etag(self) -> str:
+        return hashlib.sha256(f"{self.nonce}:{self.updated_at.timestamp()}".encode()).hexdigest()
 
 
 class Objective(models.Model):

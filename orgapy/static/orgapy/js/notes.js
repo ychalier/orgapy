@@ -22,6 +22,7 @@ function createToc(contentContainer, tocContainer) {
     });
 }
 
+/*
 function bindSaveNoteButtons(form, buttonSaveExit, buttonSaveContinue) {
         
     function saveNoteAndExit() {
@@ -52,6 +53,7 @@ function bindSaveNoteButtons(form, buttonSaveExit, buttonSaveContinue) {
         });
     });
 }
+*/
 
 function bindWidgets(docNonce) {
 

@@ -86,22 +86,6 @@ def find_user_object(
     return obj
 
 
-def retrieve_document(request: HttpRequest, nonce: str) -> tuple[Document, bool]:
-    doc = find_user_object(Document, "nonce", nonce)
-    has_permission = False
-    readonly = True
-    if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document"):
-        readonly = False
-        has_permission = True
-    elif doc.public:
-        has_permission = True
-    if not has_permission:
-        raise PermissionDenied()
-    if request.GET.get("embed"):
-        readonly = True
-    return doc, readonly
-
-
 def get_checked_items(checklist: str) -> list[str]:
     return re.findall(r"\[x\] (.*)", checklist)
 
@@ -130,16 +114,6 @@ def compare_objective_histories(user: LoggedUser, name: str, before: str | None,
             type=ProgressLog.OBJECTIVE_COMPLETED,
             description=name
         )
-
-
-def save_document_core(document: Document):
-    document.date_modification = timezone.now()
-    nonces = set()
-    pattern = re.compile(r"@(?:embed)?(note|sheet|map)/([a-zA-Z0-9]+)")
-    if document.content:
-        nonces = set([nonce for _, nonce in re.findall(pattern, document.content)])
-    document.references.set(Document.objects.filter(user=document.user, nonce__in=nonces))
-    document.save()
 
 
 def get_or_create_settings(user: LoggedUser) -> Settings:
@@ -392,15 +366,6 @@ def view_document_list(
         "attrs": attrs,
         **kwargs
     })
-
-
-def toggle_document_attribute(request: HttpRequest, nonce: str, attrname: str) -> HttpResponse:
-    doc = find_user_object(Document, "nonce", nonce, request.user)
-    setattr(doc, attrname, not getattr(doc, attrname, False))
-    doc.save()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect(doc.get_absolute_url())
 
 
 def get_pending_mood_logs(user: LoggedUser, today_hours: int, lookback_days: int) -> list[datetime.date]:
