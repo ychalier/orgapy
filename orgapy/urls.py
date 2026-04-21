@@ -11,6 +11,7 @@ urlpatterns = [
     path("docs", views.view_documents, name="documents"),
     path("docs/create", views.view_create_document, name="create_document"),
     path("docs/save", views.view_save_document, name="save_document"),
+    path("docs/snippet", views.view_document_snippet, name="document_snippet"),
     path("docs/<nonce>", views.view_document, name="document"),
     path("docs/<nonce>/edit", views.view_edit_document, name="edit_document"),
     path("docs/<nonce>/hidden", views.view_toggle_document_hidden, name="toggle_document_hidden"),

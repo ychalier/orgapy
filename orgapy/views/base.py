@@ -680,3 +680,24 @@ def view_suggestions(request: HttpRequest) -> HttpResponse:
             for result in results
         ]
     })
+
+
+def view_document_snippet(request: HttpRequest) -> HttpResponse:
+    nonces = request.GET.getlist("nonce")
+    results = []
+    for nonce in nonces:
+        result = {"nonce": nonce, "title": None, "href": None, "icon": None, "error": None}
+        if isinstance(request.user, AnonymousUser):
+            result["error"] = "Forbidden"
+        else:
+            try:
+                doc = Document.objects.get(user=request.user, nonce=nonce)
+                result["title"] = doc.title
+                result["href"] = doc.get_absolute_url()
+                result["icon"] = doc.type_icon
+            except ValueError | Document.DoesNotExist:
+                result["error"] = "Invalid reference"
+            except Exception:
+                result["error"] = "Error"
+        results.append(result)
+    return JsonResponse({"results": results})

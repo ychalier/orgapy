@@ -812,6 +812,32 @@ input:checked+.toggle-slider+.toggle-text {
     z-index: 3;
 }
 
+.search-current {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--accent);
+    color: var(--text-dark);
+    height: 100%;
+    padding: .4rem;
+    box-sizing: border-box;
+    border-radius: .2rem;
+}
+
+.search-current-button {
+    background: none;
+    padding: 0;
+    border: none;
+    position: absolute;
+    right: .4rem;
+    color: var(--text-dark);
+}
+
+.search-current:not(.show) {
+    display: none;
+}
+
 /***** CATEGORIES INPUT *******************************************************/
 
 .input-categories {

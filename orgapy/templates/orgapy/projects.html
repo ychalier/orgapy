@@ -40,10 +40,14 @@
                             <option {% if attrs.sort == 'creation' %}selected{% endif %} value="creation">Creation</option>
                         </select>
                     </div>
-                    <div class="search">
+                    <div id="documentSearch" class="search">
                         <div class="search-bar">
-                            <input type="hidden" name="document" value="{{ attr.document }}" />
+                            <input type="hidden" name="document" value="{{ attrs.document }}" />
                             <input type="text" placeholder="Document" class="search-input" autocomplete="off" />
+                            <span class="search-current">
+                                <span class="search-current-label"></span>
+                                <button class="search-current-button"><i class="ri-close-line"></i></button>
+                            </span>
                         </div>
                         <ul class="search-suggestions menu"></ul>
                     </div>
@@ -53,21 +57,22 @@
     </div>
 </div>
 <script>
-    bindSearch(
-        searchForm,
-        "{% url 'orgapy:suggestions' %}",
-        {t: "project"},
-        (state) => {
-            const element = create(state.container, "a");
-            element.href = state.entry.url;
-            element.innerHTML = `<i class="ri-briefcase-line"></i> ${state.entry.label}`;
-            return element;
-        },
-        (entry) => {
-            if (entry != null) window.location.href = entry.url;
-        })
+const SUGGESTIONS_URLS = "{% url 'orgapy:suggestions' %}";
+bindSearch(
+    searchForm,
+    SUGGESTIONS_URLS,
+    {t: "project"},
+    (state) => {
+        const element = create(state.container, "a");
+        element.href = state.entry.url;
+        element.innerHTML = `<i class="ri-briefcase-line"></i> ${state.entry.label}`;
+        return element;
+    },
+    (entry) => {
+        if (entry != null) window.location.href = entry.url;
+    });
+bindDocumentInput(documentSearch, SUGGESTIONS_URLS, "{% url 'orgapy:document_snippet' %}");
 </script>
-<!-- TODO: bind document input -->
 
 {% if projects %}
 <div class="card card-lines">

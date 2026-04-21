@@ -991,3 +991,47 @@ function bindSubmitConfirm(input) {
         }
     });
 }
+
+function bindDocumentInput(container, suggestionsUrl, snippetUrl) {
+    const inputText = container.querySelector(".search-input");
+    const inputNonce = container.querySelector("input[name='document']");
+    const searchSuggestions = container.querySelector(".search-suggestions");
+    const searchCurrent = container.querySelector(".search-current");
+    const searchCurrentLabel = searchCurrent.querySelector("span");
+    const searchCurrentButton = searchCurrent.querySelector("button");
+    bindSearch(
+        container,
+        suggestionsUrl,
+        {t: "document"},
+        (state) => {
+            const element = create(state.container, "a");
+            element.href = state.entry.url;
+            element.textContent = state.entry.label;
+            return element;
+        },
+        (entry) => {
+            if (entry != null) {
+                inputText.value = "";
+                searchSuggestions.innerHTML = "";
+                searchCurrent.classList.add("show");
+                searchCurrentLabel.textContent = entry.label;
+                inputNonce.value = entry.ref;
+            }
+        });
+    searchCurrentButton.onclick = (e) => {
+        e.preventDefault();
+        searchCurrent.classList.remove("show");
+        inputText.focus();
+    }
+    if (inputNonce.value != "") {
+        fetch(`${snippetUrl}?nonce=${inputNonce.value}`)
+            .then(res => res.json())
+            .then(data => {
+            if (data.results.length > 0) {
+                const snippet = data.results[0];
+                searchCurrent.classList.add("show");
+                searchCurrentLabel.textContent = snippet.title;
+            }
+        });
+    }
+}
