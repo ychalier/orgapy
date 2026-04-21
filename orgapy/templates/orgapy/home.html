@@ -135,6 +135,7 @@ buttonCreateObjective.onclick = () => {openObjectiveDialog(dialogObjective)};
 window.addEventListener("click", clearContextMenus);
 buttonCreateProject.onclick = () => {onButtonProjectCreate(projectsContainer, null, false)};
 fetchProjects(projectsContainer,
+    "{% url 'orgapy:suggestions' %}",
     documentNonce=null,
     forceExpand=false,
     statusFilter="AC",

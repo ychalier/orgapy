@@ -36,7 +36,7 @@ function addContextMenuOption(menu, iconClass, label, callback) {
 
 class Project {
 
-    constructor(parentContainer, data, forceExpand=false) {
+    constructor(parentContainer, data, suggestionsUrl, forceExpand=false) {
         this.parentContainer = parentContainer;
         this.id = data.id;
         this.creation = data.creation;
@@ -45,6 +45,7 @@ class Project {
         this.checklist = data.checklist;
         this.document = data.document;
         this.status = data.status;
+        this.suggestionsUrl = suggestionsUrl;
         this.checklistItems = null;
         this.splitChecklist();
         this.expanded = false;
@@ -162,19 +163,19 @@ class Project {
             currentUrl = this.document.url;
         }
 
-        bindSearch(container, "suggestions-notes", (state) => {
+        bindSearch(container, this.suggestionsUrl, {t: "note"}, (state) => {
             const element = create(state.container, "button");
-            element.textContent = state.entry.title;
+            element.textContent = state.entry.label;
             return element;
         }, (entry) => {
             if (entry != null) {
-                currentNonce = entry.nonce;
-                currentTitle = entry.title;
+                currentNonce = entry.ref;
+                currentTitle = entry.label;
                 currentUrl = entry.url;
             }
             if (currentNonce != null && currentTitle != null && currentUrl != null) {
                 self.document = {
-                    id: currentNonce,
+                    nonce: currentNonce,
                     title: currentTitle,
                     url: currentUrl
                 }
@@ -597,7 +598,7 @@ class Project {
 
 class TemporaryProject extends Project {
 
-    constructor(parentContainer, document, forceExpand=false) {
+    constructor(parentContainer, document, suggestionsUrl, forceExpand=false) {
         super(
             parentContainer,
             {
@@ -609,6 +610,7 @@ class TemporaryProject extends Project {
                 document: document == undefined ? null : document,
                 status: "AC",
             },
+            suggestionsUrl,
             forceExpand);
         this.isTemporary = true;
     }
@@ -626,7 +628,7 @@ class TemporaryProject extends Project {
         }
         var self = this;
         apiPost("create-project", {}, (data) => {
-            projects[data.project.id] = new Project(self.parentContainer, data.project, self.forceExpand);
+            projects[data.project.id] = new Project(self.parentContainer, data.project, self.suggestionsUrl, self.forceExpand);
             projects[data.project.id].title = title;
             projects[data.project.id].document = self.document;
             inflateProjects(self.parentContainer);
@@ -656,7 +658,7 @@ function inflateProjects(container) {
     }
 }
 
-function fetchProjects(container, documentNonce=null, forceExpand=false, statusFilter=null, projectId=null) {
+function fetchProjects(container, suggestionUrl, documentNonce=null, forceExpand=false, statusFilter=null, projectId=null) {
     const params = {action: "list-projects"};
     if (documentNonce != null) params["document"] = documentNonce;
     if (statusFilter != null) params["status"] = statusFilter;
@@ -666,7 +668,7 @@ function fetchProjects(container, documentNonce=null, forceExpand=false, statusF
         .then(data => {
             projects = {};
             data.projects.forEach(projectData => {
-                projects[projectData.id] = new Project(container, projectData, forceExpand);
+                projects[projectData.id] = new Project(container, projectData, suggestionUrl, forceExpand);
             });
             inflateProjects(container);
         });

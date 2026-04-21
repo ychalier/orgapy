@@ -62,7 +62,9 @@
                 codeSyntaxHighlighting: true,
             }
         });
-        simplemde.codemirror.on("cursorActivity", onCmCursorActivity);
+        simplemde.codemirror.on("cursorActivity", (cmInstance) => {
+            onCmCursorActivity(cmInstance, "{% url 'orgapy:suggestions' %}")
+        });
         simplemde.codemirror.on("change", () => {
             if (buttonSaveContinue != null) buttonSaveContinue.removeAttribute("disabled");
         });

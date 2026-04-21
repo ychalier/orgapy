@@ -19,6 +19,7 @@
 <script>
     window.addEventListener("load", () => {
         fetchProjects(projectsContainer,
+            "{% url 'orgapy:suggestions' %}",
             documentNonce=null,
             forceExpand=true,
             statusFilter=null,

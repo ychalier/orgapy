@@ -163,7 +163,7 @@ function getCharPosition(span, charIndex) {
 var smdeDropdownState = null;
 var smdeSelectedResult = 0;
 var smdeResultCount = 0;
-function openSmdeDropdown(cmInstance, word) {
+function openSmdeDropdown(cmInstance, word, suggestionsUrl) {
     
     // Close any previously opened dropdown
     closeSmdeDropdown();
@@ -249,15 +249,15 @@ function openSmdeDropdown(cmInstance, word) {
 
     create(dropdown, "ul", "search-suggestions menu");
 
-    bindSearch(dropdown, `suggestions-${objectType}s`, (state) => {
+    bindSearch(dropdown, suggestionsUrl, {t: objectType}, (state) => {
         const element = create(state.container, "button");
-        element.textContent = state.entry.title;
+        element.textContent = state.entry.label;
         return element;
     }, (entry) => {
         if (entry == null) {
             unfocusSmdeDropdown();
         } else {
-            setNonce(entry.nonce, "interlink-set")
+            setNonce(entry.ref, "interlink-set")
         }
     });
 
@@ -281,7 +281,7 @@ function closeSmdeDropdown() {
     document.querySelectorAll(".smde-dropdown, .smde-highlight").forEach(remove);
 }
 
-function onCmCursorActivity(cmInstance) {
+function onCmCursorActivity(cmInstance, suggestionsUrl) {
     const cursor = cmInstance.getCursor();
     const line = cmInstance.getLine(cursor.line);
     let iStart = Math.max(0, cursor.ch - 1);
@@ -290,7 +290,7 @@ function onCmCursorActivity(cmInstance) {
     while (iEnd < line.length && line.charAt(iEnd) != " ") iEnd++;
     const word = line.substring(iStart, iEnd).trim();
     if (word.match(/^@(note|sheet|map|embednote|embedsheet|embedmap)\/([a-zA-Z0-9]+)?$/)) {
-        setTimeout(() => { openSmdeDropdown(cmInstance, word); }, 1);
+        setTimeout(() => { openSmdeDropdown(cmInstance, word, suggestionsUrl); }, 1);
     } else {
         closeSmdeDropdown();
     }

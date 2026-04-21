@@ -66,7 +66,7 @@ function apiPost(action, body, onSuccess=null) {
     fetchApi(URL_API + "?action=" + action, "post", formData, onSuccess);
 }
 
-function bindSearch(searchEl, apiAction, inflateMenuItem, onElementClick) {
+function bindSearch(searchEl, suggestionsUrl, suggestionsParams, inflateMenuItem, onElementClick) {
 
     const searchInput = searchEl.querySelector(".search-input");
     const suggestionsContainer = searchEl.querySelector(".search-suggestions");
@@ -97,7 +97,14 @@ function bindSearch(searchEl, apiAction, inflateMenuItem, onElementClick) {
     searchInput.addEventListener("input", () => {
         const query = searchInput.value.trim();
         fetchedAt = new Date();
-        fetch(URL_API + `?action=${apiAction}&q=${encodeURIComponent(query)}`).then(res => res.json()).then(data => {
+        const searchParams = new URLSearchParams();
+        searchParams.set("q", query); //TODO encodeURIComponent(query)
+        for (const key in suggestionsParams) {
+            searchParams.set(key, suggestionsParams[key]);
+        }
+        fetch(suggestionsUrl + "?" + searchParams.toString())
+            .then(res => res.json())
+            .then(data => {
             if (clearedAt >= fetchedAt) return;
             results = data.results;
             suggestionsContainer.innerHTML = "";
@@ -534,7 +541,7 @@ function bindSearchButton(form, button) {
     });
 }
 
-function setupCategoryInput(container) {
+function setupCategoryInput(container, suggestionsUrl) {
 
     const currentContainer = container.querySelector(".input-categories-current");
     const searchInput = container.querySelector(".search-input");
@@ -585,12 +592,12 @@ function setupCategoryInput(container) {
     parseHiddenValue();
     updateCurrentContainer();
 
-    const searchObject = bindSearch(container, "suggestions-categories", (state) => {
+    const searchObject = bindSearch(container, suggestionsUrl, {t: "category"}, (state) => {
         const element = create(state.container, "button");
-        element.textContent = state.entry.title.slice(1);
+        element.textContent = state.entry.label.slice(1);
         return element;
     }, (entry) => {
-        if (entry != null) pushCategory(entry.title.slice(1));
+        if (entry != null) pushCategory(entry.label.slice(1));
         searchObject.clear();
     });
 

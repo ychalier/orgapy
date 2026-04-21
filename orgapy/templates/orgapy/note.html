@@ -78,6 +78,7 @@ window.addEventListener("load", () => {
         }, true);
     });
     fetchProjects(projectsContainer,
+        "{% url 'orgapy:suggestions' %}",
         documentNonce="{{ document.nonce }}",
         forceExpand=false,
         statusFilter="AC,IN,FU",
