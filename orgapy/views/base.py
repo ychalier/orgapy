@@ -6,7 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import HttpRequest, HttpResponse, Http404
+from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.text import slugify
@@ -74,12 +74,12 @@ def view_projects(request: HttpRequest) -> HttpResponse:
     search_query = request.GET.get("query")
     if search_query:
         attrs["query"] = search_query
-    
+
     s = request.GET.get("status")
     status_filter = s if s in [status for status, _ in Project.STATUS_CHOICES] else None
     if status_filter:
         attrs["status"] = status_filter
-    
+
     document_filter = request.GET.get("document")
     if document_filter:
         attrs["document"] = document_filter
@@ -89,7 +89,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
         dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
     if dt_start:
         attrs["start"] = dt_start.strftime("%Y-%m-%d")
-    
+
     dt_end = None
     if "end" in request.GET:
         dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
@@ -100,7 +100,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
     sort_key = s if s in ["creation", "modification"] else None
     if sort_key:
         attrs["sort"] = sort_key
-    
+
     qs = Project.objects.filter(user=request.user)
     if status_filter:
         qs = qs.filter(status=status_filter)
@@ -114,7 +114,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
         qs = qs.filter(date_creation__lt=dt_end)
     if search_query:
         qs = qs.filter(Q(title__icontains=search_query) | Q(checklist__icontains=search_query))
-    
+
     if sort_key:
         qs = qs.order_by(f"-date_{sort_key}")
     else:
@@ -639,4 +639,44 @@ def view_objectives(request: HttpRequest) -> HttpResponse:
     return render(request, "orgapy/objectives.html", {
         "objectives": objectives,
         "settings": get_or_create_settings(request.user),
+    })
+
+
+# SUGGESTIONS ##################################################################
+@permission_required("orgapy.view_category")
+@permission_required("orgapy.view_document")
+@permission_required("orgapy.view_project")
+def view_suggestions(request: HttpRequest) -> HttpResponse:
+    stype = request.GET.get("t", "")
+    limit = int(request.GET.get("l", 10))
+    query = request.GET.get("q", "").strip()
+    results: list[Category | Document | Project] = []
+    if query:
+        if not stype:
+            if query.startswith("#"):
+                query = query[1:]
+                stype = "category"
+            else:
+                stype = "document"
+        if stype == "document":
+            qs = Document.objects.filter(user=request.user, deleted=False, hidden=False, title__istartswith=query)
+        elif stype in ["note", "sheet", "map"]:
+            qs = Document.objects.filter(user=request.user, deleted=False, hidden=False, type=stype, title__istartswith=query)
+        elif stype == "category":
+            qs = Category.objects.filter(user=request.user, name__istartswith=query)
+        elif stype == "project":
+            qs = Project.objects.filter(user=request.user).filter(Q(title__istartswith=query) | Q(document__title__istartswith=query))
+        else:
+            raise BadRequest("Invalid suggestion type")
+        results = list(qs[:limit])
+    return JsonResponse({
+        "results": [
+            {
+                "ref": getattr(result, "name", getattr(result, "nonce", None)),
+                "label": result.reference if isinstance(result, Project) else result.title,
+                "url": result.get_absolute_url(),
+                "type": result.type if isinstance(result, Document) else ("project" if isinstance(result, Project) else "category")
+            }
+            for result in results
+        ]
     })

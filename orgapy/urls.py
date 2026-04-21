@@ -44,5 +44,6 @@ urlpatterns = [
     path("groceries", views.view_groceries, name="groceries"),
     path("tasks", views.view_tasks, name="tasks"),
     path("objectives", views.view_objectives, name="objectives"),
+    path("suggestions", views.view_suggestions, name="suggestions"),
     path("api", api, name="api"),
 ]
