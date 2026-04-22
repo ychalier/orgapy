@@ -31,35 +31,6 @@
 <div class="card-actions card-actions--sticky">
     <a href="?edit=1" class="button" title="Edit"><i class="ri-pencil-fill"></i><span>Edit</span></a>
     <a href="?raw=1" class="button" title="Download as Markdown"><i class="ri-download-line"></i><span>Raw</span></a>
-    {% comment %}
-    <form method="post" action="">
-        {% csrf_token %}
-        <input type="hidden" name="etag" value="{{ etag }}">
-        {% if document.pinned %}
-            <button class="active" type="submit" name="pinned" value="off"><i class="ri-bookmark-fill"></i><span>Unpin</span></button>
-        {% else %}
-            <button type="submit" name="pinned" value="on"><i class="ri-bookmark-fill"></i><span>Pin</span></button>
-        {% endif %}
-    </form>
-    <form method="post" action="">
-        {% csrf_token %}
-        <input type="hidden" name="etag" value="{{ etag }}">
-        {% if document.hidden %}
-            <button class="active" type="submit" name="hidden" value="off"><i class="ri-eye-off-line"></i><span>Unhide</span></button>
-        {% else %}
-            <button type="submit" name="hidden" value="on"><i class="ri-eye-line"></i><span>Hide</span></button>
-        {% endif %}
-    </form>
-    <form method="post" action="">
-        {% csrf_token %}
-        <input type="hidden" name="etag" value="{{ etag }}">
-        {% if document.public %}
-            <button class="active" type="submit" name="public" value="off"><i class="ri-lock-line"></i><span>Make private</span></button>
-        {% else %}
-            <button type="submit" name="public" value="on"><i class="ri-lock-unlock-line"></i><span>Make public</span></button>
-        {% endif %}
-    </form>
-    {% endcomment %}
     <form method="post" action="">
         {% csrf_token %}
         <input type="hidden" name="etag" value="{{ etag }}">
@@ -85,7 +56,6 @@
         <input type="hidden" name="next" value="{% url 'orgapy:documents' %}">
         <button type="submit" name="deleted" value="on" class="button-danger submit-confirm" message="Do you want to delete '{{ document.title }}'?"><i class="ri-delete-bin-line"></i><span>Delete</span></button>
     </form>
-    {#<a href="{% url 'orgapy:delete_document' document.nonce %}" class="button button-danger link-confirm" message="Please confirm deletion of '{{ document.title }}'" title="Delete"><i class="ri-delete-bin-line"></i><span>Delete</span></a>#}
 </div>
 {% endif %}
 

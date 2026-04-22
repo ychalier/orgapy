@@ -63,10 +63,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_reference(request)
         case "edit-widgets":
             return api_edit_widgets(request)
-        case "get-document":
-            return api_get_document(request)
-        case "save-document":
-            return api_save_document(request)
         case "suggestions":
             return api_suggestions_documents(request)
         case "suggestions-notes":
@@ -624,48 +620,6 @@ def api_edit_widgets(request: HttpRequest) -> JsonResponse:
     doc.save()
     return JsonResponse({"success": True})
 
-
-#TODO DEPRECATED
-def api_get_document(request: HttpRequest) -> JsonResponse:
-    nonce = request.GET.get("nonce")
-    if nonce is None:
-        raise BadRequest("Missing nonce")
-    doc = find_user_object(Document, "nonce", nonce)
-    if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document") or doc.public:
-        return JsonResponse({
-            "title": doc.title,
-            "subtitle": doc.subtitle,
-            "content": doc.content,
-            "config": doc.config,
-            "modification": doc.date_modification.timestamp(),
-            "url": doc.get_absolute_url(),
-        })
-    raise PermissionDenied()
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_document")
-def api_save_document(request: HttpRequest) -> JsonResponse:
-    # nonce = request.POST.get("nonce")
-    # if nonce is None:
-    #     raise BadRequest("Missing nonce")
-    # doc = find_user_object(Document, "nonce", nonce, request.user)
-    # modification = float(request.POST.get("modification", 0))
-    # if doc.date_modification.timestamp() > modification:
-    #     return JsonResponse({"success": False, "reason": "Document has newer modifications"})
-    # if "title" in request.POST:
-    #     doc.title = request.POST["title"]
-    # if "subtitle" in request.POST:
-    #     doc.subtitle = request.POST["subtitle"]
-    # if "content" in request.POST:
-    #     doc.content = request.POST["content"]
-    # if "config" in request.POST:
-    #     doc.config = request.POST["config"]
-    # save_document_core(doc)
-    return JsonResponse({
-        "success": False,
-        # "modification": doc.date_modification.timestamp()
-    })
 
 #TODO DEPRECATED
 @permission_required("orgapy.view_document")

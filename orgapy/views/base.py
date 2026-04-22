@@ -341,7 +341,6 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
             "document": doc,
             "readonly": True,
         })
-        response["X-Frame-Options"] = "SAMEORIGIN"
 
     elif request.GET.get("edit"):
         if readonly:
@@ -350,6 +349,14 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
             "document": doc,
             "active": "documents",
             "etag": doc.etag,
+        })
+    
+    elif request.GET.get("format") == "json":
+        response = JsonResponse({
+            "title": doc.title,
+            "subtitle": doc.subtitle,
+            "content": doc.content,
+            "config": doc.config,
         })
 
     else:

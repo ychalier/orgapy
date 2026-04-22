@@ -1528,9 +1528,9 @@ class ContextMenu {
 
 class Sheet {
 
-    constructor(nonce, container, readonly=false) {
+    constructor(nonce, container, etag, readonly=false) {
         this.nonce = nonce;
-        this.modification = null;
+        this.etag = etag;
 
         // Config
         this.width = 4;
@@ -2979,8 +2979,7 @@ class Sheet {
         });
     }
 
-    setup(data=null, config=null, modification=null) {
-        this.modification = modification;
+    setup(data=null, config=null) {
         this.contextMenu.setup();
         this.initializeValues(data, config);
         this.bindToolbar();
@@ -3053,21 +3052,32 @@ class Sheet {
     }
 
     saveData() {
-        let sheetExport = this.export();
-        apiPost(
-            "save-document",
-            {
-                nonce: this.nonce,
-                content: sheetExport.data,
-                config: sheetExport.config,
-                modification: this.modification,
-            }, (data) => {
+        const sheetExport = this.export();
+        const formData = new FormData();
+        formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
+        formData.append("etag", this.etag);
+        formData.append("content", sheetExport.data);
+        formData.append("config", sheetExport.config);
+        formData.append("action", "continue");
+        fetch("", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "If-Match": this.etag,
+                "X-Requested-With": "XMLHttpRequest"
+            }})
+        .then(res => {
+            if (res.status == 204) {
+                const newEtag = res.headers.get("ETag");
+                if (newEtag) this.etag = newEtag;
                 toast("Saved!", 600);
-                this.modification = data.modification;
-                if (this.toolbarButtonSave != null) {
-                    this.toolbarButtonSave.setAttribute("disabled", "");
-                }
-            });
+            } else if (res.status == 412) {
+                toast("Conflict detected", 600);
+            } else {
+                toast(`An error occurred: ${res.status}`, 600);
+            }
+            this.toolbarButtonSave.setAttribute("disabled", "");
+        });
     }
 
 }
@@ -3075,13 +3085,14 @@ class Sheet {
 
 function initializeSheet(sheetSeed, readonly) {
     var sheet = null;
-    let sheetNonce = sheetSeed.getAttribute("sheet-nonce");
-    fetch(URL_API + `?action=get-document&nonce=${sheetNonce}`, {
-        method: "get",
+    const sheetNonce = sheetSeed.getAttribute("sheet-nonce");
+    fetch("?format=json", {cache: "no-cache"})
+        .then(res => {
+            const etag = res.headers.get("ETag").replaceAll("\"", "");
+            return res.json().then(sheetData => ({etag, sheetData}));
         })
-        .then(res => res.json())
-        .then(sheetData => {
-            sheet = new Sheet(sheetNonce, sheetSeed, readonly);
+        .then(({etag, sheetData}) => {
+            sheet = new Sheet(sheetNonce, sheetSeed, etag, readonly);
             let data = null;
             if (sheetData.content != null && sheetData.content.trim() != "") {
                 data = parseTsv(sheetData.content);
@@ -3090,9 +3101,8 @@ function initializeSheet(sheetSeed, readonly) {
             if (sheetData.config != null && sheetData.config.trim() != "") {
                 config = JSON.parse(sheetData.config);
             }
-            sheet.setup(data, config, sheetData.modification);
+            sheet.setup(data, config);
         });
-
 }
 
 

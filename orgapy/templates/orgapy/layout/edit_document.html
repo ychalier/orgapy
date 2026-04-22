@@ -1,0 +1,49 @@
+{% extends "orgapy/layout/skeleton.html" %}
+
+{% block title %}Edit {% if document.title %}'{{ document.title }}'{% else %}{{ document.type }}{% endif %}{% endblock title %}
+
+{% block column_main %}
+
+<form action="{% url 'orgapy:document' document.nonce %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="etag" value="{{ etag }}">
+    <div class="card">
+        <h1 class="card-header">
+            <input class="input-inline" type="text" name="title" placeholder="Title" maxlength="255" value="{% if document.title %}{{ document.title }}{% endif %}" />
+        </h1>
+        <div class="card-body colll">
+            {% include 'orgapy/partials/categories_input.html' with obj=document %}
+            {% if document.type == "sheet" %}
+            <div>
+                <label for="inputSubtitle">Subtitle</label>
+                <textarea id="inputSubtitle" rows="12" name="subtitle" placeholder="Write content using Markdown">{% if document.subtitle %}{{ document.subtitle }}{% endif %}</textarea>
+            </div>
+            {% endif %}
+            <div class="col">
+                <label class="toggle">
+                    <input type="hidden" name="pinned" value="off" />
+                    <input type="checkbox" name="pinned" {% if document.pinned %}checked{% endif %} />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">Pinned</span>
+                </label>
+                <label class="toggle">
+                    <input type="hidden" name="public" value="off" />
+                    <input type="checkbox" name="public" {% if document.public %}checked{% endif %} />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">Public</span>
+                </label>
+                <label class="toggle">
+                    <input type="hidden" name="hidden" value="off" />
+                    <input type="checkbox" name="hidden" {% if document.hidden %}checked{% endif %} />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">Hidden</span>
+                </label>
+            </div>
+        </div>
+        <div class="card-actions">
+            <button type="submit" name="next" value="{% url 'orgapy:documents' %}">Save and exit</button>
+            <button type="submit">Save and view</button>
+        </div>
+    </div>
+</form>
+{% endblock column_main %}
