@@ -1,0 +1,44 @@
+
+{% extends "orgapy/layout/skeleton.html" %}
+
+{% block title %}{{ task.title }}{% endblock title %}
+
+{% block column_main %}
+<form action="" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% if request.GET.next %}{{ request.GET.next}}{% else %}{% url 'orgapy:tasks' %}{% endif %}">
+    <div class="card">
+        <h1 class="card-header">
+            <input class="input-inline" name="title" type="text" placeholder="Housework, Call X, …" value="{{ task.title }}" />
+        </h1>
+        <div class="card-body colll">    
+            <div>
+                <label>Date start</label>
+                <input name="start_date" type="date" value="{{ task.start_date | date:'Y-m-d' }}" />
+            </div>
+            <div>
+                <label>Date due</label>
+                <input name="due_date" type="date" value="{% if task.due_date %}{{ task.due_date | date:'Y-m-d'  }}{% endif %}" />
+            </div>
+            <div>
+                <label>Recurring mode</label>
+                <select class="form-select" name="recurring_mode">
+                    <option value="ON" {% if task.recurring_mode == 'ON' %}selected{% endif %}>Once</option>
+                    <option value="DY" {% if task.recurring_mode == 'DY' %}selected{% endif %}>Daily</option>
+                    <option value="WK" {% if task.recurring_mode == 'WK' %}selected{% endif %}>Weekly</option>
+                    <option value="MN" {% if task.recurring_mode == 'MN' %}selected{% endif %}>Monthly</option>
+                    <option value="YR" {% if task.recurring_mode == 'YR' %}selected{% endif %}>Yearly</option>
+                </select>
+            </div>
+            <div>
+                <label>Recurring period</label>
+                <input name="recurring_period" type="number" value="{% if task.recurring_period %}{{ task.recurring_period }}{% endif %}" />
+            </div>
+        </div>
+        <div class="card-actions">
+            <button type="submit" name="action" value="save">Save</button>
+            <button type="submit" name="action" value="delete" class="button-danger submit-confirm" message="Do you want to delete '{{ task.title }}'?">Delete</button>
+        </div>
+    </div>
+</form>
+{% endblock column_main %}

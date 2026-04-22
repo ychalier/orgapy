@@ -13,11 +13,11 @@ from django.http import HttpRequest, Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..models import Settings, Category, Document, ProgressLog, Project, MoodLog
+from ..models import Settings, Category, Document, ProgressLog, Project, MoodLog, Task
 from ..utils import date_timestamp
 
 
-UserObject = TypeVar("UserObject", Category, Document, ProgressLog, Project, MoodLog)
+UserObject = TypeVar("UserObject", Category, Document, ProgressLog, Project, MoodLog, Task)
 LogT = TypeVar("LogT", ProgressLog, MoodLog)
 LoggedUser = AbstractBaseUser
 

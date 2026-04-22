@@ -15,7 +15,6 @@
 </script>
 <script src="{% static 'orgapy/js/dragrank.js' %}"></script>
 <script src="{% static 'orgapy/js/calendar.js' %}"></script>
-<script src="{% static 'orgapy/js/tasks.js' %}"></script>
 <script src="{% static 'orgapy/js/objectives.js' %}"></script>
 <script src="{% static 'orgapy/js/projects.js' %}"></script>
 <script src="{% static 'orgapy/js/mood.js' %}"></script>
@@ -42,11 +41,29 @@
     </div>
 </div>
 {% else %}
+{% if task_groups %}
 <div class="card">
     <div class="card-body">
-        <div id="tasksContainer" class="coll"></div>
+        <div id="tasksContainer" class="coll">
+            {% for task_group in task_groups %}
+            <details {% if task_group.open %}open{% endif %}>
+                <summary class="minititle">{{ task_group.label }}</summary>
+                {% for task in task_group.tasks %}
+                <div class="task {% if task.overdue %}task-overdue{% endif %}">
+                    <form action="{% url 'orgapy:task' task.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                        <button type="submit" name="action" value="complete" title="Complete" class="task-button-complete submit-confirm" message="Complete '{{ task.title }}'?"><i class="ri-check-line"></i></button>
+                    </form>
+                    <a class="link-hidden" href="{{ task.get_absolute_url }}?next={{ request.get_full_path | urlencode }}" title="Start date: {{ task.start_date | date }}{% if task.due_date %} Due date: {{ task.due_date | date }}{% endif %}">{{ task.title }}</a>
+                </div>
+                {% endfor %}
+            </details>
+            {% endfor %}
+        </div>
     </div>
 </div>
+{% endif %}
 <div id="objectivesContainer" class="objectives" tabindex="-1"></div>
 <div id="projectsContainer" class="projects coll" tabindex="-1">
     {% for project in projects %}
@@ -100,12 +117,11 @@
         </div>
     </div>
 </dialog>
-{% include 'orgapy/partials/task_dialog.html' %}
 {% include 'orgapy/partials/objective_dialogs.html' %}
 {% endblock column_main %}
 
 {% block menu_create %}
-<li class="menu-item"><button id="buttonCreateTask" tabindex="3"><i class="ri-task-line"></i> Task</button></li>
+<li class="menu-item"><form action="{% url 'orgapy:tasks' %}" method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button tabindex="3"><i class="ri-task-line"></i> Task</button></form></li>
 <li class="menu-item"><button id="buttonCreateObjective" tabindex="3"><i class="ri-focus-2-line"></i> Objective</button></li>
 <li class="menu-item"><button id="buttonCreateProject" tabindex="3"><i class="ri-briefcase-line"></i> Project</button></li>
 <li class="menu-item"><button id="buttonCreateEvent" tabindex="3"><i class="ri-calendar-line"></i> Event</button></li>
@@ -126,10 +142,6 @@ fetchEvents(eventsContainer, false);
 buttonCreateEvent.onclick = () => { dialogAddEvent.showModal() };
 buttonSubmitEvent.onclick = () => { onEventSubmit(eventsContainer, eventForm, buttonRefreshEvents) };
 buttonRefreshEvents.onclick = () => { onEventRefresh(eventsContainer, buttonRefreshEvents) };
-
-bindTaskDialog(dialogTask, () => { fetchAndInflateTasks(tasksContainer) });
-fetchAndInflateTasks(tasksContainer, dialogTask);
-buttonCreateTask.onclick = () => {openTaskDialog(dialogTask);}
 
 const f = () => {fetchAndInflateObjectives(objectivesContainer, false, dialogObjective, dialogCompletion)};
 bindObjectiveDialog(dialogObjective, dialogCompletion, f);

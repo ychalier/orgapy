@@ -1,6 +1,7 @@
 import datetime
 import re
 import time
+from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
@@ -54,10 +55,43 @@ def view_home(request: HttpRequest) -> HttpResponse:
     settings = get_or_create_settings(request.user)
     pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
     active_projects = Project.objects.filter(user=request.user, status=Project.ACTIVE).order_by("date_creation")
+
+    now = timezone.now()
+    tasks = Task.objects\
+        .filter(user=request.user, completed=False, start_date__lte=now)\
+        .order_by("due_date", "start_date")
+
+    today = now.date()
+    task_groups_dict = {}
+    for task in tasks:
+        group = task.get_group(today)
+        task_groups_dict.setdefault(group, [])
+        task_groups_dict[group].append(task)
+    task_groups = []
+    for group_index, group_tasks in sorted(task_groups_dict.items()):
+        task_groups.append({
+            "label": Task.GROUP_LABELS[group_index],
+            "tasks": group_tasks,
+            "open": group_index <= Task.THISWEEK
+        })
+
+    # for task in :
+    #     tasks.append({
+    #         "id": task.id,
+    #         "title": task.title,
+    #         "start_date": task.start_date.isoformat(),
+    #         "due_date": task.due_date.isoformat() if task.due_date is not None else None,
+    #         "recurring_mode": task.recurring_mode,
+    #         "recurring_period": task.recurring_period,
+    #     })
+    # tasks.sort(key=lambda x: x["due_date"] if x.get("due_date") is not None else "")
+    # return JsonResponse({"tasks": tasks})
+
     return render(request, "orgapy/home.html", {
         "settings": settings,
         "pending_mood_logs": pending_mood_logs,
         "projects": active_projects,
+        "task_groups": task_groups,
         "active": "home",
     })
 
@@ -738,8 +772,22 @@ def view_groceries(request: HttpRequest) -> HttpResponse:
 
 # TASKS ########################################################################
 
+
 @permission_required("orgapy.view_task")
 def view_tasks(request: HttpRequest) -> HttpResponse:
+
+    if request.method == "POST":
+        if not request.user.has_perm("orgapy.add_task"):
+            raise PermissionDenied()
+        task = Task.objects.create(
+            user=request.user,
+            start_date=timezone.now().date(),
+            title="My task"
+        )
+        redirect_url = task.get_absolute_url()
+        if request.POST.get("next"):
+            redirect_url += "?" + urlencode({"next": request.POST["next"]})
+        return redirect(redirect_url)
 
     page_size = 23
     objects = Task.objects.filter(user=request.user).order_by("completed", "-date_completion", "-due_date")
@@ -751,6 +799,56 @@ def view_tasks(request: HttpRequest) -> HttpResponse:
         "tasks": tasks,
         "paginator": pretty_paginator(tasks)
     })
+
+
+@permission_required("orgapy.view_task")
+def view_task(request: HttpRequest, task_id: str) -> HttpResponse:
+    task = find_user_object(Task, "id", task_id, request.user)
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "delete":
+            if not request.user.has_perm("orgapy.delete_task"):
+                raise PermissionDenied()
+            task.delete()
+
+        if action == "save":
+            if not request.user.has_perm("orgapy.change_task"):
+                raise PermissionDenied()
+            if "title" in request.POST:
+                task.title = request.POST["title"]
+            if "start_date" in request.POST:
+                task.start_date = datetime.datetime.strptime(request.POST["start_date"], "%Y-%m-%d").date()
+            if "due_date" in request.POST:
+                if request.POST["due_date"]:
+                    task.due_date = datetime.datetime.strptime(request.POST["due_date"], "%Y-%m-%d").date()
+                else:
+                    task.due_date = None
+            if "recurring_mode" in request.POST:
+                task.recurring_mode = request.POST["recurring_mode"]
+            if "recurring_period" in request.POST:
+                if request.POST["recurring_period"]:
+                    task.recurring_period = int(request.POST["recurring_period"])
+                else:
+                    task.recurring_period = None
+            task.save()
+
+        if action == "complete":
+            task.completed = True
+            task.date_completion = timezone.now()
+            task.save()
+            ProgressLog.objects.create(
+                user=request.user,
+                type=ProgressLog.TASK_COMPLETED,
+                description=task.title
+            )
+            task.create_recurring_child()
+
+        if request.POST.get("next"):
+            return redirect(request.POST["next"])
+
+    return render(request, "orgapy/task.html", {"task": task})
 
 
 # OBJECTIVES ###################################################################

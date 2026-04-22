@@ -6,6 +6,7 @@ import re
 from math import ceil
 
 import caldav
+from dateutil.relativedelta import relativedelta
 from django.db import models, OperationalError
 from django.conf import settings
 from django.urls import reverse
@@ -220,6 +221,26 @@ class Task(models.Model):
         (YEARLY, "Yearly")
     ]
 
+    TODAY = 0
+    TOMORROW = 1
+    THISWEEK = 2
+    NEXTWEEK = 3
+    THISMONTH = 4
+    NEXTMONTH = 5
+    LATER = 6
+    NODATE = 7
+
+    GROUP_LABELS = [
+        "Today",
+        "Tomorrow",
+        "This Week",
+        "Next Week",
+        "This Month",
+        "Next Month",
+        "Later",
+        "No Date",
+    ]
+
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
@@ -243,7 +264,71 @@ class Task(models.Model):
         if self.due_date is None:
             return False
         return timezone.now().date() > self.due_date
+    
+    def get_group(self, today: datetime.date) -> int:
+        if self.due_date is None:
+            return self.NODATE
+        limit_today = today + datetime.timedelta(days=1)
+        if self.due_date < limit_today:
+            return self.TODAY
+        limit_tomorrow = limit_today + datetime.timedelta(days=1)
+        if self.due_date < limit_tomorrow:
+            return self.TOMORROW
+        limit_thisweek = limit_today + datetime.timedelta(days=6 - today.weekday())
+        if self.due_date < limit_thisweek:
+            return self.THISWEEK
+        limit_nextweek = limit_thisweek + datetime.timedelta(days=7)
+        if self.due_date < limit_nextweek:
+            return self.NEXTWEEK
+        dt = today + relativedelta(months=1)
+        limit_thismonth = datetime.date(dt.year, dt.month, 1)
+        if self.due_date < limit_thismonth:
+            return self.THISMONTH
+        limit_nextmonth = limit_thismonth + relativedelta(months=1)
+        if self.due_date < limit_nextmonth:
+            return self.NEXTMONTH
+        return self.LATER
 
+    def create_recurring_child(self):
+        if self.recurring_mode == Task.ONCE or self.recurring_period is None:
+            return
+        delta = None
+        if self.recurring_mode == Task.DAILY:
+            delta = datetime.timedelta(days=self.recurring_period)
+        elif self.recurring_mode == Task.WEEKLY:
+            delta = datetime.timedelta(weeks=self.recurring_period)
+        elif self.recurring_mode == Task.MONTHLY:
+            delta = relativedelta(months=self.recurring_period)
+        elif self.recurring_mode == Task.YEARLY:
+            delta = relativedelta(years=self.recurring_period)
+        else:
+            return
+        print("Delta:", delta)
+        due_date = self.due_date
+        start_date = self.start_date
+        today = datetime.datetime.now().date()
+        while self.recurring_period: # avoid infinite loop if recurring period is zero
+            start_date += delta
+            if due_date is not None:
+                due_date += delta
+            if start_date >= today:
+                break
+        print("Start date:", start_date)
+        print("Due date:", due_date)
+        child = Task.objects.create(
+            user=self.user,
+            title=self.title,
+            start_date=start_date,
+            due_date=due_date,
+            recurring_mode=self.recurring_mode,
+            recurring_period=self.recurring_period,
+            recurring_parent=self if self.recurring_parent is None else self.recurring_parent,
+        )
+        print("Child:", child)
+    
+    def get_absolute_url(self):
+        return reverse("orgapy:task", args=[self.id])
+        
 
 class Project(models.Model):
 

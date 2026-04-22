@@ -27,6 +27,7 @@ urlpatterns = [
     path("trash", views.view_trash, name="trash"),
     path("groceries", views.view_groceries, name="groceries"),
     path("tasks", views.view_tasks, name="tasks"),
+    path("tasks/<task_id>", views.view_task, name="task"),
     path("objectives", views.view_objectives, name="objectives"),
     path("suggestions", views.view_suggestions, name="suggestions"),
     path("api", api, name="api"), # TODO: deprecated

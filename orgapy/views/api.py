@@ -2,7 +2,6 @@ import datetime
 import json
 import re
 
-import dateutil.relativedelta
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
@@ -10,7 +9,7 @@ from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 from django.urls import reverse
 
-from ..models import Category, Document, ProgressLog, Calendar, Task, Objective, MoodLog
+from ..models import Category, Document, Calendar, Objective, MoodLog
 from ..utils import parse_dt, parse_date
 from .utils import compare_objective_histories, get_or_create_settings
 
@@ -38,16 +37,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_delete_calendar(request)
         case "add-event":
             return api_add_event(request)
-        case "list-tasks":
-            return api_list_tasks(request)
-        case "add-task":
-            return api_add_task(request)
-        case "edit-task":
-            return api_edit_task(request)
-        case "delete-task":
-            return api_delete_task(request)
-        case "complete-task":
-            return api_complete_task(request)
         case "reference":
             return api_reference(request)
         case "edit-widgets":
@@ -259,166 +248,6 @@ def api_add_event(request: HttpRequest) -> JsonResponse:
     calendar = Calendar.objects.get(user=request.user, id=int(calendarid))
     success = calendar.add_event(title, dtstart, dtend, location, allday)
     return JsonResponse({"success": success})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.view_task")
-def api_list_tasks(request: HttpRequest) -> JsonResponse:
-    tasks = []
-    limit = int(request.GET.get("limit", 5))
-    max_start_date = timezone.now() + datetime.timedelta(days=limit)
-    for task in Task.objects.filter(user=request.user, completed=False, start_date__lte=max_start_date):
-        tasks.append({
-            "id": task.id,
-            "title": task.title,
-            "start_date": task.start_date.isoformat(),
-            "due_date": task.due_date.isoformat() if task.due_date is not None else None,
-            "recurring_mode": task.recurring_mode,
-            "recurring_period": task.recurring_period,
-        })
-    tasks.sort(key=lambda x: x["due_date"] if x.get("due_date") is not None else "")
-    return JsonResponse({"tasks": tasks})
-
-
-def get_task_from_post(request: HttpRequest) -> Task:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    task_id = request.POST.get("id")
-    if task_id is None:
-        raise BadRequest("Missing id")
-    try:
-        task_id = int(task_id)
-    except:
-        raise BadRequest("Wrong id")
-    try:
-        task = Task.objects.get(id=task_id, user=request.user)
-    except Task.DoesNotExist:
-        raise Http404()
-    return task
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.edit_task")
-def api_edit_task(request: HttpRequest) -> JsonResponse:
-    task = get_task_from_post(request)
-    task_title = request.POST.get("title")
-    if task_title is None:
-        raise BadRequest("Missing title")
-    task_start_date = request.POST.get("start_date")
-    if task_start_date is None:
-        raise BadRequest("Missing start date")
-    task_due_date = request.POST.get("due_date")
-    if task_due_date is not None and task_due_date.strip() == "":
-        task_due_date = None
-    task_recurring_mode = request.POST.get("recurring_mode")
-    if task_recurring_mode is None:
-        raise BadRequest("Missing recurring mode")
-    task_recurring_period = request.POST.get("recurring_period")
-    if task_recurring_period is None:
-        raise BadRequest("Missing recurring period")
-    try:
-        task_start_date = parse_date(task_start_date)
-        if task_due_date is not None:
-            task_due_date = parse_date(task_due_date)
-        task_recurring_period = None if task_recurring_period.strip() == "" else int(task_recurring_period)
-    except:
-        raise BadRequest("Wrong values")
-    task.title = task_title
-    task.start_date = task_start_date
-    task.due_date = task_due_date
-    task.recurring_mode = task_recurring_mode
-    task.recurring_period = task_recurring_period
-    task.save()
-    return JsonResponse({"success": True})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.add_task")
-def api_add_task(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    task_title = request.POST.get("title")
-    if task_title is None:
-        raise BadRequest("Missing title")
-    task_start_date = request.POST.get("start_date")
-    if task_start_date is None:
-        raise BadRequest("Missing start date")
-    task_due_date = request.POST.get("due_date")
-    if task_due_date is not None and task_due_date.strip() == "":
-        task_due_date = None
-    task_recurring_mode = request.POST.get("recurring_mode")
-    if task_recurring_mode is None:
-        raise BadRequest("Missing recurring mode")
-    task_recurring_period = request.POST.get("recurring_period")
-    try:
-        task_start_date = parse_date(task_start_date)
-        if task_due_date is not None:
-            task_due_date = parse_date(task_due_date)
-        task_recurring_period = None if (task_recurring_period is None or task_recurring_period.strip() == "") else int(task_recurring_period)
-    except:
-        raise BadRequest("Wrong values")
-    Task.objects.create(
-        user=request.user,
-        title=task_title,
-        start_date=task_start_date,
-        due_date=task_due_date,
-        recurring_mode=task_recurring_mode,
-        recurring_period=task_recurring_period,
-    )
-    return JsonResponse({"success": True})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.delete_task")
-def api_delete_task(request: HttpRequest) -> JsonResponse:
-    task = get_task_from_post(request)
-    task.delete()
-    return JsonResponse({"success": True})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.edit_task")
-def api_complete_task(request: HttpRequest) -> JsonResponse:
-    task = get_task_from_post(request)
-    task.completed = True
-    task.date_completion = timezone.now()
-    task.save()
-    ProgressLog.objects.create(
-        user=request.user,
-        type=ProgressLog.TASK_COMPLETED,
-        description=task.title
-    )
-    if task.recurring_mode != Task.ONCE and task.recurring_period is not None:
-        delta = None
-        if task.recurring_mode == Task.DAILY:
-            delta = datetime.timedelta(days=task.recurring_period)
-        elif task.recurring_mode == Task.WEEKLY:
-            delta = datetime.timedelta(weeks=task.recurring_period)
-        elif task.recurring_mode == Task.MONTHLY:
-            delta = dateutil.relativedelta.relativedelta(months=task.recurring_period)
-        elif task.recurring_mode == Task.YEARLY:
-            delta = dateutil.relativedelta.relativedelta(years=task.recurring_period)
-        else:
-            raise BadRequest("Wrong recurring mode")
-        due_date = task.due_date
-        start_date = task.start_date
-        today = datetime.datetime.now().date()
-        while task.recurring_period: # avoid infinite loop if recurring period is zero
-            start_date += delta
-            if due_date is not None:
-                due_date += delta
-            if start_date >= today:
-                break
-        Task.objects.create(
-            user=request.user,
-            title=task.title,
-            start_date=start_date,
-            due_date=due_date,
-            recurring_mode=task.recurring_mode,
-            recurring_period=task.recurring_period,
-            recurring_parent=task if task.recurring_parent is None else task.recurring_parent,
-        )
-    return JsonResponse({"success": True})
 
 
 def api_reference(request: HttpRequest) -> HttpResponse:

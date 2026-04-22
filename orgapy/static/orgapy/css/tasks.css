@@ -6,6 +6,10 @@
     display: none;
 }
 
+.task {
+    display: flex;
+}
+
 .task-overdue {
     color: var(--warning);
 }
