@@ -11,19 +11,23 @@
 {% endblock head %}
 
 {% block column_main %}
-<div id="projectsContainer"></div>
+<div id="projectContainer" href="{% url 'orgapy:project' project.id %}"></div>
 {% endblock column_main %}
 
 {% block body_scripts %}
 {{ block.super }}
 <script>
-    window.addEventListener("load", () => {
-        fetchProjects(projectsContainer,
-            "{% url 'orgapy:suggestions' %}",
-            documentNonce=null,
-            forceExpand=true,
-            statusFilter=null,
-            projectId={{ project.id }});
-    });
+    bindProject(
+        projectContainer,
+        "{% url 'orgapy:suggestions' %}",
+        forceExpand=true);
+    //window.addEventListener("load", () => {
+    //    fetchProjects(projectsContainer,
+    //        "{% url 'orgapy:suggestions' %}",
+    //        documentNonce=null,
+    //        forceExpand=true,
+    //        statusFilter=null,
+    //        projectId={{ project.id }});
+    //});
 </script>
 {% endblock body_scripts %}

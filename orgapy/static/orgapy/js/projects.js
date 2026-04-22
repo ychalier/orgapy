@@ -36,15 +36,15 @@ function addContextMenuOption(menu, iconClass, label, callback) {
 
 class Project {
 
-    constructor(parentContainer, data, suggestionsUrl, forceExpand=false) {
+    constructor(parentContainer, data, etag, projectUrl, suggestionsUrl, forceExpand=false) {
         this.parentContainer = parentContainer;
         this.id = data.id;
-        this.creation = data.creation;
-        this.modification = data.modification;
         this.title = data.title == null ? null : (data.title == "" ? null : data.title);
         this.checklist = data.checklist;
         this.document = data.document;
         this.status = data.status;
+        this.etag = etag;
+        this.projectUrl = projectUrl;
         this.suggestionsUrl = suggestionsUrl;
         this.checklistItems = null;
         this.splitChecklist();
@@ -93,7 +93,7 @@ class Project {
         } else {
             this.title = titleString.trim();
         }
-        this.update();
+        this.update("title");
     }
 
     inflateTitleInput(title) {
@@ -181,19 +181,19 @@ class Project {
                 }
             }
             self.inflateHeader();
-            self.save();
+            self.save("document");
             dialog.close();
         });
 
         dialog.showModal();
-        input.focus();       
+        input.focus();
     }
 
     openStatusDialog() {
         var self = this;
-        openProjectStatusDialog(this.container.querySelector(".project-status"), this.id, (newStatus, response) => {
-            self.status = newStatus;
-            self.modification = response.modification;
+        openProjectStatusDialog(newStatus => {
+            this.status = newStatus;
+            this.update("status");
         });
     }
 
@@ -291,7 +291,7 @@ class Project {
             } else {
                 self.setChecklistItemText(entryIndex, value);
             }
-            self.update();
+            self.update("checklist");
         }
         input.addEventListener("focusout", callback);
         input.addEventListener("keydown", (e) => { if (e.key == "Enter") {
@@ -315,7 +315,7 @@ class Project {
                     self.checklistItems.splice(entryIndex, 0, {state: false, text: line.trim()});
                 }
                 self.concatChecklist();
-                self.update();
+                self.update("checklist");
             }
         });
         element.replaceWith(input);
@@ -341,7 +341,7 @@ class Project {
                 event.preventDefault();
                 event.stopPropagation();
                 self.setChecklistItemState(i, !item.state);
-                self.update();
+                self.update("checklist");
                 return false;
             });
             label.addEventListener("click", (event) => {
@@ -355,7 +355,7 @@ class Project {
         dragRank(checklist, ".project-checklist-item", (ordering, permutation) => {
             dragRankReorder(self.checklistItems, permutation);
             self.concatChecklist();
-            self.update();
+            self.update("checklist");
         }, {
             dragAllowed: (element) => { return !element.classList.contains("editing"); }
         });
@@ -393,7 +393,7 @@ class Project {
             navigator.clipboard.writeText(self.toMarkdown());
             toast("Copied to clipboard!", 600);
         });
-        
+
         return checklist;
     }
 
@@ -463,11 +463,11 @@ class Project {
             addContextMenuOption(menu, "ri-input-field", "Set title", () => {self.inflateTitleInput(self.container.querySelector(".project-header .project-title"))});
         }
         if (this.document == null) {
-            addContextMenuOption(menu, "ri-sticky-document-line", "Bind document", () => {self.openDocumentInputDialog()});
+            addContextMenuOption(menu, "ri-sticky-note-line", "Bind document", () => {self.openDocumentInputDialog()});
         } else {
-            addContextMenuOption(menu, "ri-sticky-document-line", "Unbind document", () => {self.unbindDocument()});
+            addContextMenuOption(menu, "ri-sticky-note-line", "Unbind document", () => {self.unbindDocument()});
         }
-        addContextMenuOption(menu, "ri-checkbox-circle-line", "Status", () => {self.openStatusDialog()});
+        addContextMenuOption(menu, "ri-checkbox-circle-line", "Change status", () => {self.openStatusDialog()});
         const option = addContextMenuOption(menu, "ri-delete-bin-line", "Delete", () => {self.delete()});
         option.querySelector("button").classList.add("button-danger");
     }
@@ -483,26 +483,40 @@ class Project {
 
     create() {
         this.container = document.createElement("div");
-        this.container.setAttribute("project_id", this.id);
-        this.container.setAttribute("id", `project-${this.id}`);
         this.inflate();
         return this.container;
     }
 
     delete() {
         var self = this;
-        if (confirm(`Are you sure to delete '${this.title}'?`) == true) {
-            apiPost("delete-project", {project_id: this.id}, () => {
-                toast("Deleted!", 600);
-                delete projects[self.id];
-                inflateProjects(self.parentContainer);
+        if (confirm(`Do you want to delete '${this.reference()}'?`) == true) {
+            const formData = new FormData();
+            formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
+            formData.append("etag", this.etag);
+            formData.append("delete", "on");
+            fetch(this.projectUrl, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "If-Match": this.etag,
+                    "X-Requested-With": "XMLHttpRequest"
+                }})
+            .then(res => {
+                if (res.status == 204) {
+                    toast("Deleted!", 600);
+                } else if (res.status == 412) {
+                    toast("Conflict detected", 600);
+                } else {
+                    toast(`An error occurred: ${res.status}`, 600);
+                }
             });
+            remove(this.parentContainer);
         }
     }
 
     setStatus(newStatus) {
         this.status = newStatus;
-        this.save();
+        this.save("status");
     }
 
     toMarkdown() {
@@ -518,10 +532,9 @@ class Project {
 
     toDict() {
         return {
-            title: this.title,
-            modification: this.modification,
+            title: this.title == null ? "" : this.title,
             checklist: this.checklist,
-            document: this.document,
+            document: this.document == null ? "" : this.document.nonce,
             status: this.status,
         }
     }
@@ -530,32 +543,49 @@ class Project {
         return JSON.stringify(this.toDict());
     }
 
-    save() {
+    save(...keys) {
         var self = this;
         function actuallySave() {
-            let projectData = self.toJsonString();
-            if (projectData == self.previousProjectData) {
+            const projectData = self.toDict();
+            const projectString = JSON.stringify(projectData);
+            if (projectString == self.previousProjectData) {
                 console.log("No change detected, skipping save");
                 return;
             }
-            self.previousProjectData = projectData;
-            apiPost("edit-project",
-                {
-                    project_id: self.id,
-                    project_data: projectData
-                }, (data) => {
-                    self.modification = data.modification;
+            self.previousProjectData = projectString;
+            const formData = new FormData();
+            formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
+            formData.append("etag", self.etag);
+            for (const key of keys) {
+                formData.append(key, projectData[key]);
+            }
+            fetch(self.projectUrl, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "If-Match": self.etag,
+                    "X-Requested-With": "XMLHttpRequest"
+                }})
+            .then(res => {
+                if (res.status == 204) {
+                    const newEtag = res.headers.get("ETag");
+                    if (newEtag) self.etag = newEtag;
                     toast("Saved!", 600);
-                });
+                } else if (res.status == 412) {
+                    toast("Conflict detected", 600);
+                } else {
+                    toast(`An error occurred: ${res.status}`, 600);
+                }
+            });
         }
         if (this.saveTimeout != null) {
             clearTimeout(this.saveTimeout);
         }
-        this.saveTimeout = setTimeout(actuallySave, PROJECT_SAVE_TIMEOUT);        
+        this.saveTimeout = setTimeout(actuallySave, PROJECT_SAVE_TIMEOUT);
     }
 
-    update() {
-        this.save();
+    update(...keys) {
+        this.save(...keys);
         this.inflate();
     }
 
@@ -577,7 +607,7 @@ class Project {
             if (this.checklistItems[i].state) toClear++;
         }
         if (toClear == 0) return;
-        if (!confirm(`Please confirm clearing ${toClear} item${toClear > 1 ? "s" : ""} from '${this.reference()}'`)) return;
+        if (!confirm(`Do you want to clear ${toClear} item${toClear > 1 ? "s" : ""} from '${this.reference()}'?`)) return;
         for (let i = this.checklistItems.length - 1; i >= 0; i--) {
             if (this.checklistItems[i].state) {
                 this.checklistItems.splice(i, 1);
@@ -586,127 +616,66 @@ class Project {
         if (this.checklistItems.length != 0) {
             this.concatChecklist();
         }
-        this.update();
+        this.update("checklist");
     }
 
     unbindDocument() {
         this.document = null;
-        this.update();
+        this.update("document");
     }
 
 }
 
-class TemporaryProject extends Project {
+function bindProject(container, suggestionsUrl, forceExpand=false) {
+    const projectUrl = container.getAttribute("href");
+    fetch(projectUrl + "?format=json", {cache: "no-cache"})
+        .then(res => {
+            const etag = res.headers.get("ETag").replaceAll("\"", "");
+            return res.json().then(projectData => ({etag, projectData}));
+        })
+        .then(({etag, projectData}) => {
+            const project = new Project(container, projectData, etag, projectUrl, suggestionsUrl, forceExpand);
+            const element = project.create()
+            container.appendChild(element);
+        });
+}
 
-    constructor(parentContainer, document, suggestionsUrl, forceExpand=false) {
-        super(
-            parentContainer,
-            {
-                id: null,
-                creation: new Date(),
-                modification: new Date(),
-                title: null,
-                checklist: null,
-                document: document == undefined ? null : document,
-                status: "AC",
-            },
-            suggestionsUrl,
-            forceExpand);
-        this.isTemporary = true;
-    }
-
-    onTitleInputChange(input) {
-        this.container.classList.remove("editing");
-        let titleString = input.value.trim();
-        let title = titleString.trim();
-        if (title == "") title = null;
-        if (title == null) {
-            if (!(confirm("Create project with no title?"))) {
-                inflateProjects(this.parentContainer);
-                return;
-            }
+function bindCreateProjectButton(createButton, projectsContainer, projectsUrl, suggestionsUrl, documentNonce=null) {
+    createButton.addEventListener("click", () => {
+        const title = prompt("Enter project title", "Untitled");
+        if (title) {
+            const formData = new FormData();
+            formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
+            formData.append("title", title);
+            if (documentNonce != null) formData.append("document", documentNonce);
+            fetch(projectsUrl, {method: "POST", body: formData})
+                .then(res => {
+                    const etag = res.headers.get("ETag").replaceAll("\"", "");
+                    return res.json().then(projectData => ({etag, projectData}));
+                })
+                .then(({etag, projectData}) => {
+                    const container = create(projectsContainer, "div");
+                    const project = new Project(container, projectData, etag, projectData.url, suggestionsUrl);
+                    const element = project.create()
+                    container.appendChild(element);
+                });
         }
-        var self = this;
-        apiPost("create-project", {}, (data) => {
-            projects[data.project.id] = new Project(self.parentContainer, data.project, self.suggestionsUrl, self.forceExpand);
-            projects[data.project.id].title = title;
-            projects[data.project.id].document = self.document;
-            inflateProjects(self.parentContainer);
-            projects[data.project.id].save();
-        });
-    }
-
-    create() {
-        super.create();
-        let title = this.container.querySelector(".project-title");
-        this.inflateTitleInput(title);
-        this.container.querySelector("input").focus();
-        return this.container;
-    }
-
+    });
 }
 
-function inflateProjects(container) {
-    dragRankClear();
-    if (container == null) {
-        console.log("Could not find projects container");
-        return;
-    }
-    container.innerHTML = "";
-    for (let projectId in projects) {
-        container.appendChild(projects[projectId].create());
-    }
-}
-
-function fetchProjects(container, suggestionUrl, documentNonce=null, forceExpand=false, statusFilter=null, projectId=null) {
-    const params = {action: "list-projects"};
-    if (documentNonce != null) params["document"] = documentNonce;
-    if (statusFilter != null) params["status"] = statusFilter;
-    if (projectId != null) params["project"] = projectId;
-    fetch(URL_API + "?" + (new URLSearchParams(params)).toString())
-        .then(res => res.json())
-        .then(data => {
-            projects = {};
-            data.projects.forEach(projectData => {
-                projects[projectData.id] = new Project(container, projectData, suggestionUrl, forceExpand);
-            });
-            inflateProjects(container);
-        });
-}
-
-function onButtonProjectCreate(container, document, forceExpand) {
-    let tempProject = new TemporaryProject(container, document, forceExpand);
-    let tempProjectElement = tempProject.create();
-    container.appendChild(tempProjectElement);
-    setTimeout(() => {
-        tempProjectElement.querySelector("input").focus();
-    }, 1);
-}
-
-function openProjectStatusDialog(statusSpan, projectId, onSuccess=null) {
+function openProjectStatusDialog(onNewStatus) {
     const dialog = create(document.body, "dialog");
     dialog.setAttribute("closedby", "any");
     const card = create(dialog, "div", "card");
     create(card, "b", "card-header").textContent = "Set project status";
     const cardBody = create(card, "div", "card-body");
     const row = create(cardBody, "div", "row");
-    const currentStatus = statusSpan.getAttribute("status");
     for (const [value, name, labelClass] of [["AC", "ACTIVE", ""], ["IN", "INACTIVE", "label-grey"], ["AR", "ARCHIVED", "label-purple"], ["FU", "FUTURE", "label-pink"]]) {
-        if (value == currentStatus) continue;
         const option = create(row, "button", "label " + labelClass);
         option.textContent = name;
         option.addEventListener("click", () => {
             dialog.close();
-            apiPost("set-project-status", {project_id: projectId, status: value}, (response) => {
-                if (statusSpan != null) {
-                    statusSpan.setAttribute("status", value);
-                    statusSpan.textContent = name;
-                    statusSpan.className = "project-status label-inline label " + labelClass; 
-                }
-                if (onSuccess != null) {
-                    onSuccess(value, response);
-                }
-            });
+            onNewStatus(value);
         });
     }
     dialog.addEventListener("close", () => {

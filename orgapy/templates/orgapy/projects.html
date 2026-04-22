@@ -77,16 +77,27 @@ bindDocumentInput(documentSearch, SUGGESTIONS_URLS, "{% url 'orgapy:document_sni
 {% if projects %}
 <div class="card card-lines">
     {% for project in projects %}
-    <div class="line" project-id="{{ project.id }}">
-        <span class="project-status label label-inline {% if project.status == 'FU' %}label-pink{% elif project.status == 'IN' %}label-grey{% elif project.status == 'AR' %}label-purple{% endif %}" status="{{ project.status }}">{{ project.get_status_display | upper }}</span>
+    <div class="line">
+        <span class="project-status label label-inline {% if project.status == 'FU' %}label-pink{% elif project.status == 'IN' %}label-grey{% elif project.status == 'AR' %}label-purple{% endif %}" status="{{ project.status }}" href="{% url 'orgapy:project' project.id %}" etag="{{ project.etag }}">{{ project.get_status_display | upper }}</span>
         <span class="project-badge{% if project.items_count == 0 %} empty{% elif project.all_completed %} done{% endif %}" {% if project.items_count > 0 and not project.all_completed %}style="background: linear-gradient(90deg,rgba(37, 135, 50, 1){{ project.progress }}%,rgb(48, 48, 48) {{ project.progress }}%)"{% endif %}>{{ project.completed_items_count }}/{{ project.items_count }}</span>
         <a class="link-hidden" href="{{ project.get_absolute_url }}" title="{{ project.reference }}">{{ project.reference }}</a>
         <div class="dropdown">
             <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
             <ul class="menu">
-                <li class="menu-item"><a href="{% url 'orgapy:delete_project' project.nonce %}" message="Please confirm deletion of '{{ project.reference }}'" class="button-danger link-confirm" title="Delete"><i class="ri-delete-bin-line"></i> Delete</a></li>
+                <form action="{% url 'orgapy:project' project.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="etag" value="{{ project.etag }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <li class="menu-item"><button type="submit" name="delete" value="on" message="Do you want to delete '{{ project.reference }}'?" class="button-danger submit-confirm"><i class="ri-delete-bin-line"></i> Delete</button></li>
+                </form>
             </ul>
         </div>
+        <form class="project-form" action="{% url 'orgapy:project' project.id %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="etag" value="{{ project.etag }}">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <input type="hidden" name="status" value="{{ request.get_full_path }}">
+        </form>
     </div>
     {% endfor %}
     {% include 'orgapy/partials/pagination.html' %}
@@ -104,7 +115,12 @@ bindDocumentInput(documentSearch, SUGGESTIONS_URLS, "{% url 'orgapy:document_sni
 <script>
     document.querySelectorAll(".project-status").forEach(statusSpan => {
         statusSpan.addEventListener("click", () => {
-            openProjectStatusDialog(statusSpan, statusSpan.parentElement.getAttribute("project-id"));
+            openProjectStatusDialog((newStatus) => {
+                const form = statusSpan.parentElement.querySelector("form.project-form");
+                const inputStatus = form.querySelector("input[name='status']");
+                inputStatus.value = newStatus;
+                form.submit();
+            });
         });
     });
 </script>

@@ -30,7 +30,8 @@ from .utils import (
     get_or_create_settings,
     view_document_list,
     get_pending_mood_logs,
-    view_calendar)
+    view_calendar,
+    compare_checklists)
 
 
 # GENERAL ######################################################################
@@ -43,11 +44,7 @@ def view_landing(request: HttpRequest) -> HttpResponse:
 
 
 def view_about(request: HttpRequest) -> HttpResponse:
-    """View for the homepage, describing the application for a new user."""
     return render(request, "orgapy/about.html", {})
-
-
-# PROJECTS #####################################################################
 
 
 @permission_required("orgapy.view_project")
@@ -56,15 +53,38 @@ def view_home(request: HttpRequest) -> HttpResponse:
         raise PermissionDenied()
     settings = get_or_create_settings(request.user)
     pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
+    active_projects = Project.objects.filter(user=request.user, status=Project.ACTIVE).order_by("date_creation")
     return render(request, "orgapy/home.html", {
         "settings": settings,
         "pending_mood_logs": pending_mood_logs,
+        "projects": active_projects,
         "active": "home",
     })
 
 
+# PROJECTS #####################################################################
+
+
 @permission_required("orgapy.view_project")
 def view_projects(request: HttpRequest) -> HttpResponse:
+
+    if request.method == "POST":
+        if not request.user.has_perm("orgapy.add_project"):
+            raise PermissionDenied()
+        if not "title" in request.POST:
+            raise BadRequest("Missing title")
+        document = None
+        if "document" in request.POST:
+            try:
+                document = Document.objects.get(user=request.user, nonce=request.POST["document"])
+            except Document.DoesNotExist:
+                raise BadRequest("Incorrect document")
+        project = Project.objects.create(
+            user=request.user,
+            title=request.POST["title"],
+            document=document)
+        return redirect(project.get_absolute_url() + "?format=json")
+
     attrs = {}
 
     page_size = int(request.GET.get("size", 25))
@@ -131,24 +151,109 @@ def view_projects(request: HttpRequest) -> HttpResponse:
     })
 
 
+def project_etag_func(request: HttpRequest, project_id: str) -> str | None:
+    try:
+        project = Project.objects.get(user=request.user, id=project_id)
+    except Project.DoesNotExist:
+        return None
+    return project.etag
+
+
+def project_last_modified_func(request: HttpRequest, project_id: str) -> datetime.datetime | None:
+    try:
+        project = Project.objects.get(user=request.user, id=project_id)
+    except Project.DoesNotExist:
+        return None
+    return project.updated_at
+
+
 @permission_required("orgapy.view_project")
-def view_project(request: HttpRequest, nonce: str) -> HttpResponse:
+@condition(project_etag_func, project_last_modified_func)
+def view_project(request: HttpRequest, project_id: str) -> HttpResponse:
     if isinstance(request.user, AnonymousUser):
         raise PermissionDenied()
-    project = find_user_object(Project, "nonce", nonce, request.user)
+    project = find_user_object(Project, "id", project_id, request.user)
+
+    if request.method == "POST":
+
+        now = timezone.now()
+
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        client_etag = request.headers.get("If-Match") or request.POST.get("etag")
+        current_etag = project.etag
+
+        if client_etag != current_etag:
+            if is_ajax:
+                return HttpResponse(status=412)
+            else:
+                return HttpResponse(
+                    "This project was modified by someone else while you were editing. "
+                    "Please review the latest version before saving again.",
+                    content_type="text/plain",
+                    status=412)
+
+        if request.POST.get("delete") == "on":
+            project.delete()
+            if "next" in request.POST:
+                return redirect(request.POST["next"])
+            if is_ajax:
+                return HttpResponse(status=204)
+            return redirect("orgapy:projects")
+
+        update_fields = []
+
+        if "title" in request.POST:
+            update_fields.append("title")
+            new_title = request.POST["title"]
+            project.title = new_title if new_title else None
+
+        if "checklist" in request.POST:
+            update_fields.append("checklist")
+            new_checklist = request.POST["checklist"]
+            compare_checklists(request.user, project.reference, project.checklist, new_checklist)
+            project.checklist = new_checklist
+            update_fields.append("date_modification")
+            project.date_modification = now
+
+        if "document" in request.POST:
+            update_fields.append("document")
+            nonce = request.POST["document"]
+            if nonce:
+                project.document = Document.objects.get(user=request.user, nonce=nonce) # type: ignore
+            else:
+                project.document = None
+
+        if "status" in request.POST:
+            update_fields.append("status")
+            new_status = request.POST["status"]
+            if not new_status in [status for status, _ in Project.STATUS_CHOICES]:
+                raise BadRequest("Invalid status value")
+            project.status = new_status
+            if new_status == Project.ARCHIVED:
+                update_fields.append("date_archived")
+                project.date_archived = now
+
+        project.updated_at = now
+        project.save(update_fields=update_fields + ["updated_at"])
+
+        if "next" in request.POST:
+            return redirect(request.POST["next"])
+
+        if is_ajax:
+            response = HttpResponse(status=204)
+        else:
+            response = redirect(request.path)
+
+        response["ETag"] = project.etag
+        return response
+
+    if request.GET.get("format") == "json":
+        return JsonResponse(project.to_json_dict())
+
     return render(request, "orgapy/project.html", {
         "project": project,
         "active": "projects",
     })
-
-
-@permission_required("orgapy.delete_project")
-def view_delete_project(request: HttpRequest, nonce: str) -> HttpResponse:
-    project = find_user_object(Project, "nonce", nonce, request.user)
-    project.delete()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:home")
 
 
 # DOCUMENTS ####################################################################
@@ -176,7 +281,7 @@ def document_etag_func(request: HttpRequest, nonce: str) -> str | None:
     return doc.etag
 
 
-def last_modified_func(request: HttpRequest, nonce: str) -> datetime.datetime | None:
+def document_last_modified_func(request: HttpRequest, nonce: str) -> datetime.datetime | None:
     try:
         doc = Document.objects.get(nonce=nonce)
     except Document.DoesNotExist:
@@ -184,7 +289,7 @@ def last_modified_func(request: HttpRequest, nonce: str) -> datetime.datetime | 
     return doc.updated_at
 
 
-@condition(document_etag_func, last_modified_func)
+@condition(document_etag_func, document_last_modified_func)
 def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
 
     try:

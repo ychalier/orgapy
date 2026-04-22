@@ -98,7 +98,7 @@ function bindSearch(searchEl, suggestionsUrl, suggestionsParams, inflateMenuItem
         const query = searchInput.value.trim();
         fetchedAt = new Date();
         const searchParams = new URLSearchParams();
-        searchParams.set("q", query); //TODO encodeURIComponent(query)
+        searchParams.set("q", query);
         for (const key in suggestionsParams) {
             searchParams.set(key, suggestionsParams[key]);
         }

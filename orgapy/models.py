@@ -161,7 +161,7 @@ class Document(models.Model):
         self.save()
 
     def get_ongoing_projects(self):
-        return self.project_set.exclude(status=Project.ARCHIVED) # type: ignore
+        return self.project_set.exclude(status=Project.ARCHIVED).order_by("date_creation") # type: ignore
 
     def get_archived_projects(self):
         return self.project_set.filter(status=Project.ARCHIVED) # type: ignore
@@ -260,9 +260,10 @@ class Project(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    nonce = models.CharField(max_length=12, unique=True, blank=True, default=generate_project_nonce)
-    date_creation = models.DateTimeField(auto_now_add=True, auto_now=False)
-    date_modification = models.DateTimeField(auto_now_add=False, auto_now=True)
+    date_creation = models.DateTimeField(default=timezone.now)
+    date_modification = models.DateTimeField(default=timezone.now)
+    date_archived = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     title = models.CharField(max_length=255, blank=True, null=True)
     checklist = models.TextField(blank=True, null=True)
     document = models.ForeignKey("Document", on_delete=models.SET_NULL, null=True, blank=True)
@@ -276,7 +277,11 @@ class Project(models.Model):
         return f"{ self.user} - { self.id }. { self.title }"
 
     def get_absolute_url(self):
-        return reverse("orgapy:project", args=[self.nonce])
+        return reverse("orgapy:project", args=[self.id])
+    
+    @property
+    def etag(self) -> str:
+        return hashlib.sha256(f"{self.id}:{self.updated_at.timestamp()}".encode()).hexdigest()
 
     @property
     def items_count(self) -> int:
@@ -307,8 +312,6 @@ class Project(models.Model):
     def to_json_dict(self) -> dict:
         return {
             "id": self.id,
-            "creation": self.date_creation.timestamp(),
-            "modification": self.date_modification.timestamp(),
             "title": self.title,
             "checklist": self.checklist if self.checklist else None,
             "document": None if self.document is None else {
@@ -317,6 +320,7 @@ class Project(models.Model):
                 "url": self.document.get_absolute_url(),
             },
             "status": self.status,
+            "url": self.get_absolute_url(),
         }
 
     @property

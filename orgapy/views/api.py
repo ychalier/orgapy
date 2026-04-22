@@ -6,29 +6,18 @@ import dateutil.relativedelta
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
-from django.db.models import Max, Q, QuerySet
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 from django.urls import reverse
 
-from ..models import Category, Document, ProgressLog, Calendar, Task, Project, Objective, MoodLog
+from ..models import Category, Document, ProgressLog, Calendar, Task, Objective, MoodLog
 from ..utils import parse_dt, parse_date
-from .utils import compare_checklists, compare_objective_histories, get_or_create_settings
+from .utils import compare_objective_histories, get_or_create_settings
 
 
 def api(request: HttpRequest) -> HttpResponse:
     action = request.GET.get("action")
     match action:
-        case "list-projects":
-            return api_list_projects(request)
-        case "create-project":
-            return api_create_project(request)
-        case "edit-project":
-            return api_edit_project(request)
-        case "set-project-status":
-            return api_set_project_status(request)
-        case "delete-project":
-            return api_delete_project(request)
         case "list-objectives":
             return api_list_objectives(request)
         case "add-objective":
@@ -83,122 +72,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_create_groceries_list(request)
         case _:
             raise BadRequest(f"Unknown action '{action}'")
-
-
-#TODO DEPRECATED, MERGE WITH PROJECTS
-@permission_required("orgapy.view_project")
-def api_list_projects(request: HttpRequest) -> JsonResponse:
-    document_filter = request.GET.get("document")
-    status_filter = request.GET.get("status")
-    project_filter = request.GET.get("project")
-    projects = []
-    query = Project.objects.filter(user=request.user)
-    if project_filter is not None:
-        try:
-            query = query.filter(id=int(project_filter))
-        except:
-            raise BadRequest("Invalid project filter")
-    if document_filter is not None:
-        try:
-            query = query.filter(document__nonce=document_filter)
-        except ValueError:
-            pass
-    if status_filter is not None:
-        nodes = None
-        for status in status_filter.split(","):
-            if nodes is None:
-                nodes = Q(status=status)
-            else:
-                nodes |= Q(status=status)
-        query = query.filter(nodes)
-    for project in query:
-        projects.append(project.to_json_dict())
-    return JsonResponse({"projects": projects})
-
-
-#TODO DEPRECATED, MERGE WITH PROJECTS
-@permission_required("orgapy.add_project")
-def api_create_project(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    project = Project.objects.create(user=request.user)
-    return JsonResponse({"success": True, "project": project.to_json_dict()})
-
-
-def get_project_from_post(request: HttpRequest) -> Project:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    project_id = request.POST.get("project_id")
-    if project_id is None:
-        raise BadRequest("Missing project id")
-    try:
-        project_id = int(project_id)
-    except:
-        raise BadRequest("Wrong project id")
-    try:
-        project = Project.objects.get(id=project_id, user=request.user)
-    except Project.DoesNotExist:
-        raise Http404()
-    return project
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_project")
-def api_edit_project(request: HttpRequest) -> JsonResponse:
-    project = get_project_from_post(request)
-    project_data = request.POST.get("project_data")
-    if project_data is None:
-        raise BadRequest("Missing project data")
-    try:
-        project_data = json.loads(project_data)
-    except:
-        raise BadRequest("Wrong project data")
-    if project.date_modification.timestamp() > project_data["modification"]:
-        return JsonResponse({"success": False, "reason": "Project has newer modifications"})
-    project.title = project_data["title"]
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
-    compare_checklists(request.user, project.reference, project.checklist, project_data["checklist"])
-    if project_data["checklist"] is not None:
-        project.checklist = project_data["checklist"]
-    else:
-        project.checklist = None
-    project.status = project_data["status"]
-    document = None
-    if project_data["document"] is not None:
-        try:
-            document = Document.objects.get(user=request.user, nonce=project_data["document"]["nonce"])
-        except Document.DoesNotExist:
-            pass
-    project.document = document # type: ignore
-    project.save()
-    return JsonResponse({
-        "success": True,
-        "modification": project.date_modification.timestamp()
-    })
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_project")
-def api_set_project_status(request: HttpRequest) -> JsonResponse:
-    project = get_project_from_post(request)
-    status = request.POST.get("status")
-    if status not in [Project.ACTIVE, Project.INACTIVE, Project.ARCHIVED, Project.FUTURE]:
-        raise BadRequest(f"Wrong status {status}")
-    project.status = status
-    project.save()
-    return JsonResponse({
-        "success": True,
-        "modification": project.date_modification.timestamp(),
-    })
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.delete_project")
-def api_delete_project(request: HttpRequest) -> JsonResponse:
-    project = get_project_from_post(request)
-    project.delete()
-    return JsonResponse({"success": True})
 
 
 #TODO DEPRECATED
