@@ -13,7 +13,7 @@ from django.urls import reverse
 
 from ..models import Category, Document, ProgressLog, Calendar, Task, Project, Objective, MoodLog
 from ..utils import parse_dt, parse_date
-from .utils import find_user_object, compare_checklists, compare_objective_histories, get_or_create_settings
+from .utils import compare_checklists, compare_objective_histories, get_or_create_settings
 
 
 def api(request: HttpRequest) -> HttpResponse:

@@ -6,12 +6,10 @@
 {% block column_main %}
 <div class="card card-lines">
     <h1 class="card-header">Categories</h1>
-    {% for special, count in specials.items %}
     <div class="line gold">
-        <span class="label {% if count == 0 %}label-grey{% endif %}">{{ count }}</span>
-        <a class="link-hidden" href="{% url 'orgapy:category' name=special %}">{{ special | capfirst}}</a>
+        <span class="label {% if uncategorized == 0 %}label-grey{% endif %}">{{ uncategorized }}</span>
+        <a class="link-hidden" href="{% url 'orgapy:category' 'uncategorized' %}">Uncategorized</a>
     </div>
-    {% endfor %}
     {% for category in categories %}
     <div class="line">
         <span class="label {% if category.count == 0 %}label-red{% endif %}">{{ category.count }}</span>

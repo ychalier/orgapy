@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Edit '#{{ category.name }}'{% endblock title %}
 {% block column_main %}
-<form method="post" action="">
+<form method="post" action="{% url 'orgapy:category' category.name %}">
     {% csrf_token %}
     <div class="card">
         <h1 class="card-header">

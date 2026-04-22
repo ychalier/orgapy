@@ -222,7 +222,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
                     "Please review the latest version before saving again.",
                     content_type="text/plain",
                     status=412)
-        
+
         if request.POST.get("destroy") == "on":
             doc.delete()
             if "next" in request.POST:
@@ -350,7 +350,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
             "active": "documents",
             "etag": doc.etag,
         })
-    
+
     elif request.GET.get("format") == "json":
         response = JsonResponse({
             "title": doc.title,
@@ -372,22 +372,15 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
 
 @permission_required("orgapy.view_document")
 def view_trash(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        if request.POST.get("restore") and request.user.has_perm("orgapy.change_document"):
+            Document.objects.filter(user=request.user, deleted=True).update(deleted=False)
+        if request.POST.get("destroy") and request.user.has_perm("orgapy.delete_document"):
+            Document.objects.filter(user=request.user, deleted=True).delete()
+        if "next" in request.POST:
+            return redirect(request.POST["next"])
+        return redirect("orgapy:documents")
     return view_document_list(request, "orgapy/trash.html", status_filter="deleted", sort_key="deletion")
-
-
-@permission_required("orgapy.change_document")
-def view_restore_all_documents(request: HttpRequest) -> HttpResponse: # TODO: make this as a POST of trash
-    Document.objects.filter(user=request.user, deleted=True).update(deleted=False, date_deletion=None)
-    return redirect(f"orgapy:trash")
-
-
-@permission_required("orgapy.delete_document")
-def view_destroy_all_documents(request: HttpRequest) -> HttpResponse: # TODO: make this as a POST of trash
-    Document.objects.filter(user=request.user, deleted=True).delete()
-    return redirect(f"orgapy:trash")
-
-
-# CATEGORIES ###################################################################
 
 
 @permission_required("orgapy.view_category")
@@ -395,9 +388,8 @@ def view_categories(request: HttpRequest) -> HttpResponse:
     uncategorized = Document.objects.filter(user=request.user, categories__isnull=True).count()
     return render(request, "orgapy/categories.html", {
         "categories": Category.objects.filter(user=request.user),
-        "specials": {
-            "uncategorized": uncategorized
-        },
+        "active": "documents",
+        "uncategorized": uncategorized
     })
 
 
@@ -407,38 +399,30 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
         category = {"id": -1, "name": "uncategorized"}
     else:
         category = find_user_object(Category, "name", name, request.user)
+
+    if request.method == "POST":
+        if isinstance(category, dict):
+            raise Http404()
+
+        if request.POST.get("delete"):
+            category.delete()
+            return redirect("orgapy:categories")
+        if "name" in request.POST:
+            new_name = request.POST.get("name")
+            if new_name is None:
+                raise BadRequest("Missing name")
+            if len(new_name) > 0:
+                category.name = new_name.lower()
+                category.save()
+            return redirect("orgapy:category", name=category.name)
+
+    if request.GET.get("edit"):
+        return render(request, "orgapy/edit_category.html", {"category": category})
+
     return view_document_list(request,
         "orgapy/category.html",
         category_filters=name,
         kwargs={"category": category})
-
-
-@permission_required("orgapy.change_category")
-def view_edit_category(request: HttpRequest, name: str) -> HttpResponse:
-    try:
-        category = Category.objects.get(user=request.user, name=name)
-    except Category.DoesNotExist:
-        return redirect("orgapy:categories")
-    if request.method == "POST":
-        new_name = request.POST.get("name")
-        if new_name is None:
-            raise BadRequest("Missing name")
-        if len(new_name) > 0:
-            category.name = new_name.lower()
-            category.save()
-        return redirect("orgapy:category", name=category.name)
-    return render(request, "orgapy/edit_category.html", {
-        "category": category,
-    })
-
-
-@permission_required("orgapy.delete_category")
-def view_delete_category(request: HttpRequest, name: str) -> HttpResponse:
-    try:
-        Category.objects.get(user=request.user, name=name).delete()
-    except Category.DoesNotExist:
-        pass
-    return redirect("orgapy:categories")
 
 
 # PROGRESS #####################################################################
