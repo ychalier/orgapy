@@ -591,6 +591,9 @@ class MoodLog(models.Model):
 
     def __str__(self):
         return f"MoodLog(user={self.user}, date={self.date})"
+    
+    def get_absolute_url(self):
+        return reverse("orgapy:mood_log", args=[self.id])
 
     @staticmethod
     def tracker_classname(value) -> str:

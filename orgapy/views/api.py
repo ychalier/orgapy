@@ -51,8 +51,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_suggestions_maps(request)
         case "suggestions-categories":
             return api_suggestions_categories(request)
-        case "create-mood-log":
-            return api_create_mood_log(request)
         case "list-groceries":
             return api_list_groceries(request)
         case "save-groceries":
@@ -380,28 +378,6 @@ def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
             for result in results
         ]
     })
-
-
-#TODO DEPRECATED, POST TO MOOD
-@permission_required("orgapy.create_mood_log")
-def api_create_mood_log(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    try:
-        MoodLog.objects.create(
-            user=request.user,
-            date=datetime.datetime.strptime(request.POST["date"], "%Y-%m-%d"),
-            mood=int(request.POST["mood"]),
-            energy=int(request.POST["energy"]),
-            health=int(request.POST["health"]),
-            stress=int(request.POST["stress"]),
-            activities=request.POST["activities"].strip().strip(","))
-    except ValueError:
-        raise BadRequest("Wrong value")
-    except KeyError:
-        raise BadRequest("Missing key")
-
-    return JsonResponse({"success": True})
 
 
 #TODO DEPRECATED, GET TO GROCERIES

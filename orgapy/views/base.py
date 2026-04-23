@@ -600,11 +600,6 @@ def view_progress(request: HttpRequest) -> HttpResponse:
         "progress")
 
 
-# @permission_required("orgapy.add_progress_log")
-# def view_create_progress_log(request: HttpRequest) -> HttpResponse:
-#     return render(request, "orgapy/create_progress_log.html", {})
-
-
 @permission_required("orgapy.view_progress_log")
 def view_progress_log(request: HttpRequest, log_id: str) -> HttpResponse:
     log = find_user_object(ProgressLog, "id", log_id, request.user)
@@ -617,7 +612,7 @@ def view_progress_log(request: HttpRequest, log_id: str) -> HttpResponse:
             if not request.user.has_perm("orgapy.delete_progress_log"):
                 raise PermissionDenied()
             log.delete()
-        
+
         if action == "save":
             if not request.user.has_perm("orgapy.change_progress_log"):
                 raise PermissionDenied()
@@ -628,12 +623,10 @@ def view_progress_log(request: HttpRequest, log_id: str) -> HttpResponse:
             if "dt" in request.POST:
                 log.dt = datetime.datetime.strptime(request.POST["dt"], f"%Y-%m-%dT%H:%M")
             log.save()
-        
+
         return redirect("orgapy:progress")
 
-    return render(request, "orgapy/progress_log.html", {
-        "log": log,
-    })
+    return render(request, "orgapy/progress_log.html", {"log": log})
 
 
 # SETTINGS #####################################################################
@@ -706,6 +699,26 @@ def view_mood(request: HttpRequest, year: int | str | None = None) -> HttpRespon
     settings = get_or_create_settings(request.user)
     pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
 
+    if request.method == "POST":
+
+        if not request.user.has_perm("orgapy.add_mood_log"):
+            raise PermissionDenied()
+        log = MoodLog.objects.create(
+            user=request.user,
+            date=datetime.datetime.strptime(request.POST["date"], "%Y-%m-%d"),
+            mood=int(request.POST["mood"]),
+            energy=int(request.POST["energy"]),
+            health=int(request.POST["health"]),
+            stress=int(request.POST["stress"]),
+            activities=request.POST["activities"].strip().strip(","))
+
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        if is_ajax:
+            return HttpResponse(status=204)
+        else:
+            return redirect(log.get_absolute_url())
+
+
     def json_generator(log: MoodLog) -> dict:
         return {
             "dt": int(1000 * time.mktime(log.date.timetuple())),
@@ -716,7 +729,7 @@ def view_mood(request: HttpRequest, year: int | str | None = None) -> HttpRespon
             "health": log.health_classname,
             "stress": log.stress_classname,
             "activities": log.activities_display,
-            "href": reverse("admin:orgapy_moodlog_change", args=[log.id])
+            "href": log.get_absolute_url()
         }
 
     def tsv_generator(log: MoodLog) -> str:
@@ -745,13 +758,32 @@ def view_mood(request: HttpRequest, year: int | str | None = None) -> HttpRespon
         })
 
 
-@permission_required("orgapy.delete_mood_log")
-def view_delete_mood_log(request: HttpRequest, object_id: str) -> HttpResponse:
-    mood_log = find_user_object(MoodLog, "id", object_id, request.user)
-    mood_log.delete()
-    if "next" in request.GET:
-        return redirect(request.GET["next"])
-    return redirect("orgapy:mood")
+@permission_required("orgapy.view_mood_loog")
+def view_mood_log(request: HttpRequest, log_id: int) -> HttpResponse:
+    log = find_user_object(MoodLog, "id", log_id, request.user)
+
+    if request.method == "POST":
+
+        action = request.POST.get("action")
+
+        if action == "delete":
+            if not request.user.has_perm("delete_mood_log"):
+                raise PermissionDenied()
+            log.delete()
+
+        if action == "save":
+            if not request.user.has_perm("change_mood_log"):
+                raise PermissionDenied()
+            log.mood = int(request.POST["mood"])
+            log.energy = int(request.POST["energy"])
+            log.health = int(request.POST["health"])
+            log.stress = int(request.POST["stress"])
+            log.activities = request.POST["activities"]
+            log.save()
+
+        return redirect("orgapy:mood")
+
+    return render(request, "orgapy/mood_log.html", {"log": log})
 
 
 # GROCERIES ####################################################################

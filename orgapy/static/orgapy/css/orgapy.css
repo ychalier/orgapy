@@ -242,7 +242,8 @@ textarea:focus {
     outline: 1px solid var(--accent);
 }
 
-input[type=checkbox] {
+input[type=checkbox],
+input[type=range] {
     accent-color: var(--accent);
 }
 

@@ -3,13 +3,13 @@
         <div class="col">
             <div class="minititle">mood</div>
             {% for pending_mood_log_date in pending_mood_logs %}
-            <form class="moodlog-form">
+            <form class="moodlog-form" method="post" action="{% url 'orgapy:mood' %}">
                 {% csrf_token %}
                 <input type="text" name="date" value="{{ pending_mood_log_date | date:'Y-m-d' }}" hidden />
-                <input type="text" name="mood" value="2" hidden />
-                <input type="text" name="energy" value="2" hidden />
-                <input type="text" name="health" value="2" hidden />
-                <input type="text" name="stress" value="2" hidden />
+                <input type="text" name="mood" value="2" hidden>
+                <input type="text" name="energy" value="2" hidden>
+                <input type="text" name="health" value="2" hidden>
+                <input type="text" name="stress" value="2" hidden>
                 <div class="moodlog-bar">
                     <span class="moodlog-date">{{ pending_mood_log_date | date:'m-d' }}</span>
                     <button class="moodlog-tracker mood-neutral" name="mood" title="Mood"></button class>

@@ -1,0 +1,40 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}Mood log {{ log.date | date }}{% endblock title %}
+
+{% block column_main %}
+<form action="" method="post">
+    {% csrf_token %}
+    {% if log %}<input type="hidden" name="id" value="{{ log.id }}">{% endif %}
+    <div class="card">
+        <h1 class="card-header">Mood log {{ log.date | date }}</h1>
+        <div class="card-body colll">
+            <div>
+                <label>Mood</label>
+                <input type="range" name="mood" min="1" max="3" value="{{ log.mood }}">
+            </div>
+            <div>
+                <label>Energy</label>
+                <input type="range" name="energy" min="1" max="3" value="{{ log.energy }}">
+            </div>
+            <div>
+                <label>Health</label>
+                <input type="range" name="health" min="1" max="3" value="{{ log.health }}">
+            </div>
+            <div>
+                <label>Stress</label>
+                <input type="range" name="stress" min="1" max="3" value="{{ log.stress }}">
+            </div>
+            <div>
+                <label>Activities</label>
+                <input type="text" name="activities" value="{{ log.activities }}">
+            </div>
+        </div>
+        <div class="card-actions">
+            <button type="submit" name="action" value="save">Save</button>
+            <button type="submit" name="action" value="delete" class="button-danger submit-confirm" message="Do you want to delete this mood log entry?">Delete</button>
+        </div>
+    </div>
+</form>
+{% endblock column_main %}
