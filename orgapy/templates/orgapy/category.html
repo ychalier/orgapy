@@ -3,14 +3,16 @@
 {% block title %}#{{ category.name }}{% endblock title %}
 
 {% block content_title %}
-<header class="card">
-    <h1 class="card-header">{{ category.name | title }}</h1>
-    <div class="card-actions">
-        <a class="button" href="?edit=1" title="Rename"><i class="ri-pencil-fill"></i> Edit</a>
-        <form action="" method="post">
-            {% csrf_token %}
+<form method="post" action="{% url 'orgapy:category' category.name %}">
+    {% csrf_token %}
+    <header class="card">
+        <h1 class="card-header" style="display: flex">
+            <span>#</span><input class="input-inline" type="text" name="name" value="{{ category.name }}" placeholder="Name" />
+        </h1>
+        <div class="card-actions">
+            <button>Save</button>
             <button type="submit" name="delete" value="on" class="button-danger submit-confirm" message="Do you want to delete '{{ category.name }}'?"><i class="ri-delete-bin-line"></i> Delete</a>
-        </form>
-    </div>
-</header>
+        </div>
+    </header>
+</form>
 {% endblock content_title %}

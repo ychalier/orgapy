@@ -555,9 +555,6 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
                 category.save()
             return redirect("orgapy:category", name=category.name)
 
-    if request.GET.get("edit"):
-        return render(request, "orgapy/edit_category.html", {"category": category})
-
     return view_document_list(request,
         "orgapy/category.html",
         category_filters=name,
