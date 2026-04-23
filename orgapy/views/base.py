@@ -1,4 +1,5 @@
 import datetime
+import json
 import re
 import time
 from urllib.parse import urlencode
@@ -791,6 +792,60 @@ def view_mood_log(request: HttpRequest, log_id: int) -> HttpResponse:
 
 @permission_required("orgapy.view_settings")
 def view_groceries(request: HttpRequest) -> HttpResponse:
+
+    if isinstance(request.user, AnonymousUser):
+        raise PermissionDenied()
+    settings = get_or_create_settings(request.user)
+
+    if request.method == "POST":
+        if not request.user.has_perm("orgapy.change_settings"):
+            raise PermissionDenied()
+
+        if "groceries" in request.POST:
+            settings.groceries_data = request.POST.get("groceries")
+            settings.save()
+
+        note = None
+        if request.POST.get("action") == "create":
+            items: list[tuple[str, str]] = []
+            data = settings.groceries
+            for section_data in data.get("sections", []):
+                for item_data in section_data.get("items", []):
+                    if item_data.get("checked"):
+                        items.append((section_data.get("label", "Unnamed section"), item_data.get("label", "Unnamed item")))
+                    item_data["checked"] = False
+            settings.groceries_data = json.dumps(data)
+            settings.save()
+            try:
+                cat = Category.objects.get(user=request.user, name="groceries")
+            except Category.DoesNotExist:
+                cat = Category.objects.create(user=request.user, name="groceries")
+            old_section = None
+            note_content = ""
+            for section_label, item_label in items:
+                if section_label != old_section:
+                    note_content += f"\n**{section_label}**\n\n"
+                    old_section = section_label
+                note_content += f"- [ ] {item_label}\n"
+            note = Document.objects.create(
+                user=request.user,
+                title=f"Shopping list {datetime.datetime.now().strftime("%b, %d")}",
+                content=note_content.strip(),
+                type="note",
+                pinned=True
+            )
+            note.categories.add(cat)
+
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        if is_ajax:
+            return HttpResponse(status=204)
+
+        if note is not None:
+            return redirect(note.get_absolute_url())
+
+    if request.GET.get("format") == "json":
+        return JsonResponse(settings.groceries)
+
     return render(request, "orgapy/groceries.html", {})
 
 
