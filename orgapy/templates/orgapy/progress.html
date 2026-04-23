@@ -8,6 +8,7 @@
     <div class="card-body"><div id="calendarContainer"></div></div>
     <div class="card-actions">
         <a id="buttonExport" class="button"><i class="ri-download-line"></i><span>Export</span></a>
+        <form action="" method="post">{% csrf_token %}<button><i class="ri-add-line"></i><span>Append log</span></button></form>
     </div>
 </div>
 {% endblock %}

@@ -566,6 +566,16 @@ def view_category(request: HttpRequest, name: str) -> HttpResponse:
 
 @permission_required("orgapy.view_progress_log")
 def view_progress(request: HttpRequest) -> HttpResponse:
+
+    if request.method == "POST":
+        if not request.user.has_perm("orgapy.add_progress_log"):
+            raise PermissionDenied()
+        log = ProgressLog.objects.create(
+            user=request.user,
+            type=ProgressLog.OTHER
+        )
+        return redirect(log.get_absolute_url())
+
     def json_generator(log: ProgressLog) -> dict:
         return {
             "dt": int(1000 * log.dt.timestamp()),
@@ -590,55 +600,40 @@ def view_progress(request: HttpRequest) -> HttpResponse:
         "progress")
 
 
-@permission_required("orgapy.add_progress_log")
-def view_create_progress_log(request: HttpRequest) -> HttpResponse:
-    return render(request, "orgapy/create_progress_log.html", {})
+# @permission_required("orgapy.add_progress_log")
+# def view_create_progress_log(request: HttpRequest) -> HttpResponse:
+#     return render(request, "orgapy/create_progress_log.html", {})
 
 
-@permission_required("orgapy.change_progress_log")
-def view_edit_progress_log(request: HttpRequest, object_id: str) -> HttpResponse:
-    log = find_user_object(ProgressLog, "id", object_id, request.user)
-    return render(request, "orgapy/edit_progress_log.html", {
+@permission_required("orgapy.view_progress_log")
+def view_progress_log(request: HttpRequest, log_id: str) -> HttpResponse:
+    log = find_user_object(ProgressLog, "id", log_id, request.user)
+
+    if request.method == "POST":
+
+        action = request.POST.get("action")
+
+        if action == "delete":
+            if not request.user.has_perm("orgapy.delete_progress_log"):
+                raise PermissionDenied()
+            log.delete()
+        
+        if action == "save":
+            if not request.user.has_perm("orgapy.change_progress_log"):
+                raise PermissionDenied()
+            if "description" in request.POST:
+                log.description = request.POST["description"]
+            if "type" in request.POST:
+                log.type = request.POST["type"]
+            if "dt" in request.POST:
+                log.dt = datetime.datetime.strptime(request.POST["dt"], f"%Y-%m-%dT%H:%M")
+            log.save()
+        
+        return redirect("orgapy:progress")
+
+    return render(request, "orgapy/progress_log.html", {
         "log": log,
     })
-
-
-@permission_required("orgapy.delete_progress_log")
-def view_delete_progress_log(request: HttpRequest, object_id: str) -> HttpResponse:
-    log = find_user_object(ProgressLog, "id", object_id, request.user)
-    log.delete()
-    return redirect("orgapy:progress")
-
-
-@permission_required("orgapy.view_save_progress_log")
-def view_save_progress_log(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    original_log = None
-    if ("id" in request.POST
-        and ProgressLog.objects.filter(id=request.POST["id"]).exists()):
-        original_log = ProgressLog.objects.get(id=request.POST["id"])
-    if original_log is not None and original_log.user != request.user:
-        raise PermissionDenied()
-    dt_string = request.POST.get("dt")
-    if dt_string is None:
-        raise BadRequest("Missing dt")
-    dt = datetime.datetime.strptime(dt_string, f"%Y-%m-%dT%H:%M")
-    log_type = request.POST.get("type", ProgressLog.OTHER)
-    description = request.POST.get("description")
-    if original_log is None:
-        ProgressLog.objects.create(
-            user=request.user,
-            dt=dt,
-            type=log_type,
-            description=description
-        )
-    else:
-        original_log.dt = dt
-        original_log.type = log_type
-        original_log.description = description
-        original_log.save()
-    return redirect("orgapy:progress")
 
 
 # SETTINGS #####################################################################
