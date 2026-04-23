@@ -12,10 +12,10 @@
                 <input type="text" name="stress" value="2" hidden>
                 <div class="moodlog-bar">
                     <span class="moodlog-date">{{ pending_mood_log_date | date:'m-d' }}</span>
-                    <button class="moodlog-tracker mood-neutral" name="mood" title="Mood"></button class>
-                    <button class="moodlog-tracker mood-neutral" name="energy" title="Energy"></button class>
-                    <button class="moodlog-tracker mood-neutral" name="health" title="Health"></button class>
-                    <button class="moodlog-tracker mood-neutral" name="stress" title="Stress"></button class>
+                    <button class="moodlog-tracker mood-neutral" name="mood" title="Mood"></button>
+                    <button class="moodlog-tracker mood-neutral" name="energy" title="Energy"></button>
+                    <button class="moodlog-tracker mood-neutral" name="health" title="Health"></button>
+                    <button class="moodlog-tracker mood-neutral" name="stress" title="Stress"></button>
                     <div class="moodlog-activities-wrapper">
                         <input class="moodlog-activities" type="text" name="activities" placeholder="Activities" /> 
                         <div class="moodlog-activities-suggestions">{% for label, emoji in settings.mood_activities_list %}<button title="{{ label }}">{{ emoji }}</button>{% endfor %}</div>

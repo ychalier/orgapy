@@ -1,0 +1,78 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}{{ objective.name }}{% endblock title %}
+
+{% block column_main %}
+<form action="" method="post">
+    {% csrf_token %}
+    <div class="card">
+        <h1 class="card-header">
+            <input class="input-inline" required minlength="1" name="name" type="text" value="{{ objective.name }}" />
+        </h1>
+        <div class="card-body colll">
+            <div>
+                <label cfor="input-objective-period">Period (days)</label>
+                <input required name="period" type="number" id="input-objective-period" min="1" step="1" max="365" value="{{ objective.period }}" />
+            </div>
+            <div>
+                <label class="toggle">
+                    <input type="hidden" name="flexible" value="off" />
+                    <input type="checkbox" name="flexible" {% if objective.flexible %}checked{% endif %} />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">Flexible</span>
+                </label>
+            </div>
+            <div>
+                <label class="toggle">
+                    <input type="hidden" name="archived" value="off" />
+                    <input type="checkbox" name="archived" {% if objective.archived %}checked{% endif %} />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">Archived</span>
+                </label>
+            </div>
+        </div>
+        <div class="card-actions">
+            <button type="submit" name="action" value="save"><i class="ri-save-line"></i><span>Save</span></button>
+            <button id="buttonAddCompletion" type="submit" name="action" value="add-completion"><i class="ri-add-line"></i><span>Add completion</span></button>
+            <button type="submit" class="button-danger submit-confirm" name="delete" message="Do you want to delete '{{ objective.name }}'?"><i class="ri-delete-bin-line"></i><span>Delete</span></button>
+        </div>
+    </div>
+</form>
+<div class="card">
+    {% if objective.history %}
+    <details>
+        <summary class="card-body">Completions</summary>
+        <form action="" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete-completion">
+{% for timestamp, completion in objective.completions %}<div class="line"><button type="submit" name="ts" value="{{ timestamp }}" class="button-inline button-danger submit-confirm"><i class="ri-delete-bin-line"></i></button> <span>{{ completion }}</span></div>{% endfor %}
+        </form>
+    </details>
+    {% else %}
+    <div class="card-body">
+        <div>No completion 😔</div>
+    </div>
+    {% endif %}
+</div>
+<dialog id="dialogCompletion" closedby="any">
+    <form class="card" method="post">
+        {% csrf_token %}
+        <h2 class="card-header">Add completion</h2>
+        <div class="card-body colll">
+            <div>
+                <label>Date</label>
+                <input type="date" name="date" required>
+            </div>
+            <div>
+                <label>Time</label>
+                <input type="time" name="time" step="1" required>
+            </div>
+        </div>
+        <div class="card-actions">
+            <button type="submit" name="action" value="add-completion">Add</button>
+        </div>
+    </form>
+</dialog>
+<script>buttonAddCompletion.onclick = (e) => {e.preventDefault(); dialogCompletion.showModal()};</script>
+{% endblock column_main %}

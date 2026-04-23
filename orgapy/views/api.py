@@ -3,32 +3,17 @@ import re
 
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import AnonymousUser
-from django.core.exceptions import PermissionDenied, BadRequest
+from django.core.exceptions import BadRequest
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 
-from ..models import Category, Document, Calendar, Objective
+from ..models import Category, Document, Calendar
 from ..utils import parse_dt
-from .utils import compare_objective_histories
 
 
 def api(request: HttpRequest) -> HttpResponse:
     action = request.GET.get("action")
     match action:
-        case "list-objectives":
-            return api_list_objectives(request)
-        case "add-objective":
-            return api_add_objective(request)
-        case "edit-objective":
-            return api_edit_objective(request)
-        case "archive-objective":
-            return api_archive_objective(request)
-        case "unarchive-objective":
-            return api_unarchive_objective(request)
-        case "edit-objective-history":
-            return api_edit_objective_history(request)
-        case "delete-objective":
-            return api_delete_objective(request)
         case "list-calendars":
             return api_list_calendars(request)
         case "delete-calendar":
@@ -51,126 +36,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_suggestions_categories(request)
         case _:
             raise BadRequest(f"Unknown action '{action}'")
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.view_objective")
-def api_list_objectives(request: HttpRequest) -> JsonResponse:
-    show_archived = request.GET.get("archived", "0") == "1"
-    objectives = []
-    for objective in Objective.objects.filter(user=request.user):
-        if not show_archived and objective.archived:
-            continue
-        objectives.append(objective.to_dict())
-    return JsonResponse({"objectives": objectives})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.add_objective")
-def api_add_objective(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    objective_name = request.POST.get("name")
-    objective_period = request.POST.get("period")
-    if objective_name is None or objective_period is None:
-        raise BadRequest("Missing objective name or period")
-    try:
-        objective_period = float(objective_period)
-    except:
-        raise BadRequest("Wrong period")
-    Objective.objects.create(
-        user=request.user,
-        name=objective_name,
-        period=objective_period,
-        flexible=request.POST.get("flexible", "") == "on",
-        )
-    return JsonResponse({"success": True})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_objective")
-def api_edit_objective(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    if "delete" in request.POST:
-        return api_delete_objective(request)
-    objective_id = request.POST.get("id")
-    objective_name = request.POST.get("name")
-    objective_period = request.POST.get("period")
-    objective_flexible = request.POST.get("flexible", "") == "on"
-    if objective_id is None or objective_name is None or objective_period is None:
-        raise BadRequest("Missing objective id, name or period")
-    try:
-        objective_id = int(objective_id)
-        objective_period = int(objective_period)
-    except:
-        raise BadRequest("Wrong objective id or period")
-    if not Objective.objects.filter(id=objective_id, user=request.user).exists():
-        raise Http404()
-    objective = Objective.objects.get(id=objective_id, user=request.user)
-    objective.name = objective_name
-    objective.period = objective_period
-    objective.flexible = objective_flexible
-    objective.save()
-    return JsonResponse({"success": True})
-
-
-def get_objective_from_post(request: HttpRequest) -> Objective:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    objective_id = request.POST.get("objective_id")
-    if objective_id is None:
-        raise BadRequest("Missing objective id")
-    try:
-        objective_id = int(objective_id)
-    except:
-        raise BadRequest("Wrong objective id")
-    if not Objective.objects.filter(id=objective_id, user=request.user).exists():
-        raise Http404()
-    return Objective.objects.get(id=objective_id, user=request.user)
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_objective")
-def api_archive_objective(request: HttpRequest) -> JsonResponse:
-    objective = get_objective_from_post(request)
-    objective.archived = True
-    objective.save()
-    return JsonResponse({"success": True})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_objective")
-def api_unarchive_objective(request: HttpRequest) -> JsonResponse:
-    objective = get_objective_from_post(request)
-    objective.archived = False
-    objective.save()
-    return JsonResponse({"success": True})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.delete_objective")
-def api_delete_objective(request: HttpRequest) -> JsonResponse:
-    objective = get_objective_from_post(request)
-    objective.delete()
-    return JsonResponse({"success": True})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_objective")
-def api_edit_objective_history(request: HttpRequest) -> JsonResponse:
-    """Objective history must be a JSON string
-    """
-    objective = get_objective_from_post(request)
-    objective_history = request.POST.get("objective_history")
-    if  objective_history is None:
-        raise BadRequest("Missing objective history")
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
-    compare_objective_histories(request.user, objective.name, objective.history, objective_history)
-    objective.history = objective_history
-    objective.save()
-    return JsonResponse({"success": True})
 
 
 #TODO DEPRECATED

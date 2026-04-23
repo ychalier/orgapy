@@ -13,11 +13,11 @@ from django.http import HttpRequest, Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..models import Settings, Category, Document, ProgressLog, Project, MoodLog, Task
+from ..models import Settings, Category, Document, ProgressLog, Project, MoodLog, Task, Objective
 from ..utils import date_timestamp
 
 
-UserObject = TypeVar("UserObject", Category, Document, ProgressLog, Project, MoodLog, Task)
+UserObject = TypeVar("UserObject", Category, Document, ProgressLog, Project, MoodLog, Task, Objective)
 LogT = TypeVar("LogT", ProgressLog, MoodLog)
 LoggedUser = AbstractBaseUser
 
@@ -100,19 +100,6 @@ def compare_checklists(user: LoggedUser, reference: str, before: str | None, aft
             user=user,
             type=ProgressLog.PROJECT_CHECKLIST_ITEM_CHECKED,
             description=f"{reference} - {item}"
-        )
-
-
-def compare_objective_histories(user: LoggedUser, name: str, before: str | None, after: str | None):
-    if before is None or after is None:
-        return
-    history_before = json.loads(before) if before else []
-    history_after = json.loads(after) if after else []
-    for _ in range(len(history_after) - len(history_before)):
-        ProgressLog.objects.create(
-            user=user,
-            type=ProgressLog.OBJECTIVE_COMPLETED,
-            description=name
         )
 
 

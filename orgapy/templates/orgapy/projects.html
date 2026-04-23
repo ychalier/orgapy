@@ -75,7 +75,7 @@ bindDocumentInput(documentSearch, SUGGESTIONS_URLS, "{% url 'orgapy:document_sni
 </script>
 
 {% if projects %}
-<div class="card card-lines">
+<div class="card">
     {% for project in projects %}
     <div class="line">
         <span class="project-status label label-inline {% if project.status == 'FU' %}label-pink{% elif project.status == 'IN' %}label-grey{% elif project.status == 'AR' %}label-purple{% endif %}" status="{{ project.status }}" href="{% url 'orgapy:project' project.id %}" etag="{{ project.etag }}">{{ project.get_status_display | upper }}</span>

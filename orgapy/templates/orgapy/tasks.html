@@ -10,7 +10,7 @@
 {% endblock menu_create %}
 
 {% block column_main %}
-<div class="card card-lines">
+<div class="card">
     <h1 class="card-header">Tasks</h1>
     {% for task in tasks %}
     <div class="line task" task-id="{{ task.id }}" task-title="{{ task.title }}" task-start="{{ task.start_date | date:"Y-m-d" }}" task-due="{{ task.due_date | date:"Y-m-d"  }}" task-mode="{{ task.recurring_mode }}" task-period="{{ task.recurring_period }}">

@@ -10,9 +10,6 @@
 <link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/mood.css' %}" />
-<script>
-    const OBJECTIVE_START_HOURS = {{ settings.objective_start_hours }};
-</script>
 <script src="{% static 'orgapy/js/dragrank.js' %}"></script>
 <script src="{% static 'orgapy/js/calendar.js' %}"></script>
 <script src="{% static 'orgapy/js/objectives.js' %}"></script>
@@ -117,7 +114,6 @@
         </div>
     </div>
 </dialog>
-{% include 'orgapy/partials/objective_dialogs.html' %}
 {% endblock column_main %}
 
 {% block menu_create %}
@@ -143,10 +139,7 @@ buttonCreateEvent.onclick = () => { dialogAddEvent.showModal() };
 buttonSubmitEvent.onclick = () => { onEventSubmit(eventsContainer, eventForm, buttonRefreshEvents) };
 buttonRefreshEvents.onclick = () => { onEventRefresh(eventsContainer, buttonRefreshEvents) };
 
-const f = () => {fetchAndInflateObjectives(objectivesContainer, false, dialogObjective, dialogCompletion)};
-bindObjectiveDialog(dialogObjective, dialogCompletion, f);
-f();
-buttonCreateObjective.onclick = () => {openObjectiveDialog(dialogObjective)};
+fetchAndInflateObjectives(objectivesContainer, "{% url 'orgapy:objectives' %}", false);
 
 for (const projectContainer of document.querySelectorAll(".project-container")) {
      bindProject(

@@ -76,18 +76,6 @@ def view_home(request: HttpRequest) -> HttpResponse:
             "open": group_index <= Task.THISWEEK
         })
 
-    # for task in :
-    #     tasks.append({
-    #         "id": task.id,
-    #         "title": task.title,
-    #         "start_date": task.start_date.isoformat(),
-    #         "due_date": task.due_date.isoformat() if task.due_date is not None else None,
-    #         "recurring_mode": task.recurring_mode,
-    #         "recurring_period": task.recurring_period,
-    #     })
-    # tasks.sort(key=lambda x: x["due_date"] if x.get("due_date") is not None else "")
-    # return JsonResponse({"tasks": tasks})
-
     return render(request, "orgapy/home.html", {
         "settings": settings,
         "pending_mood_logs": pending_mood_logs,
@@ -934,13 +922,80 @@ def view_task(request: HttpRequest, task_id: str) -> HttpResponse:
 
 @permission_required("orgapy.view_objective")
 def view_objectives(request: HttpRequest) -> HttpResponse:
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
-    objectives = Objective.objects.filter(user=request.user)
+
+    qs = Objective.objects.filter(user=request.user).order_by("id")
+
+    if request.GET.get("format") == "json":
+        if isinstance(request.user, AnonymousUser):
+            raise PermissionDenied()
+        if not request.GET.get("archived"):
+            qs = qs.exclude(archived=True)
+        settings = get_or_create_settings(request.user)
+        return JsonResponse({
+            "startHours": settings.objective_start_hours,
+            "objectives": [
+                objective.to_dict()
+                for objective in qs
+            ]
+        })
+
+    objectives = list(qs)
     return render(request, "orgapy/objectives.html", {
-        "objectives": objectives,
-        "settings": get_or_create_settings(request.user),
+        "objectives": list(objectives),
     })
+
+
+@permission_required("orgapy.view_objective")
+def view_objective(request: HttpRequest, objective_id: str) -> HttpResponse:
+    objective = find_user_object(Objective, "id", objective_id, request.user)
+
+    if request.method == "POST":
+
+        action = request.POST.get("action")
+
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+        if action == "delete":
+            if not request.user.has_perm("orgapy.delete_objective"):
+                raise PermissionDenied()
+            objective.delete()
+        elif not request.user.has_perm("orgapy.change_objective"):
+            raise PermissionDenied()
+
+        if action == "add-completion":
+            if "ts" in request.POST:
+                ts = int(request.POST["ts"])
+            elif "date" in request.POST and "time" in request.POST:
+                ts = int(datetime.datetime.strptime(request.POST["date"] + " " + request.POST["time"], "%Y-%m-%d %H:%M:%S").timestamp())
+            else:
+                raise BadRequest("Missing timestamp")
+            history = json.loads(objective.history) if objective.history else []
+            history.append(ts)
+            objective.history = json.dumps(history)
+            ProgressLog.objects.create(
+                user=request.user,
+                type=ProgressLog.OBJECTIVE_COMPLETED,
+                description=objective.name
+            )
+
+        if action == "delete-completion":
+            ts = int(request.POST["ts"])
+            history = json.loads(objective.history) if objective.history else []
+            history.remove(ts)
+            objective.history = json.dumps(history)
+
+        if action == "save":
+            objective.name = request.POST["name"]
+            objective.period = int(request.POST["period"])
+            objective.flexible = request.POST["flexible"] == "on"
+            objective.archived = request.POST["archived"] == "on"
+
+        objective.save()
+
+        if is_ajax:
+            return HttpResponse(status=204)
+
+    return render(request, "orgapy/objective.html", {"objective": objective})
 
 
 # SUGGESTIONS ##################################################################

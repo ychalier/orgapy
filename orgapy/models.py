@@ -188,7 +188,10 @@ class Objective(models.Model):
 
     def __str__(self):
         return self.name
-
+    
+    def get_absolute_url(self):
+        return reverse("orgapy:objective", args=[self.id])
+    
     def to_dict(self):
         history_dict = None
         if self.history is not None:
@@ -197,13 +200,22 @@ class Objective(models.Model):
             except:
                 history_dict = None
         return {
-            "id": self.id,
             "name": self.name,
             "history": history_dict,
             "period": self.period,
             "flexible": self.flexible,
-            "archived": self.archived
+            "archived": self.archived,
+            "url": self.get_absolute_url()
         }
+
+    @property
+    def completions(self) -> list[tuple[int, datetime.datetime]]:
+        if not self.history:
+            return []
+        return [
+            (timestamp, datetime.datetime.fromtimestamp(timestamp))
+            for timestamp in reversed(json.loads(self.history))
+        ]
 
 
 class Task(models.Model):
