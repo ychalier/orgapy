@@ -11,10 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='project',
-            name='nonce',
-        ),
         migrations.AddField(
             model_name='project',
             name='date_archived',
