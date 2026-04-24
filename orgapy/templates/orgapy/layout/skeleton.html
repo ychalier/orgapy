@@ -14,10 +14,7 @@
     <script src="{% static 'orgapy/dependencies/showdown.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'orgapy/css/orgapy.css' %}" />
     <script src="{% static 'orgapy/js/orgapy.js' %}"></script>
-    <script>
-        const URL_API = "{% url 'orgapy:api' %}";
-        {% if request.user.is_authenticated %}const CSRF_TOKEN = "{{csrf_token}}";{% endif %}
-    </script>
+    {% if request.user.is_authenticated %}<script>const CSRF_TOKEN = "{{csrf_token}}";</script>{% endif %}
     {% endblock head %}
 </head>
 <body class="{% block body_class %}{% endblock %}">

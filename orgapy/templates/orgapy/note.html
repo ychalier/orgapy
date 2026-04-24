@@ -5,6 +5,7 @@
 
 {% block head %}
 {{ block.super }}
+<meta name="etag" content="{{ etag }}">
 <link rel="stylesheet" href="{% static 'orgapy/dependencies/darcula.min.css' %}">
 <script src="{% static 'orgapy/dependencies/highlight.min.js' %}"></script>
 <link rel="stylesheet" href="{% static 'orgapy/dependencies/katex.min.css' %}" />

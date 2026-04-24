@@ -22,40 +22,7 @@ function createToc(contentContainer, tocContainer) {
     });
 }
 
-/*
-function bindSaveNoteButtons(form, buttonSaveExit, buttonSaveContinue) {
-        
-    function saveNoteAndExit() {
-        form.submit();
-    }
-    buttonSaveExit.addEventListener("click", saveNoteAndExit);
-
-    if (buttonSaveContinue == null) return;
-    buttonSaveContinue.setAttribute("disabled", "");
-    buttonSaveContinue.addEventListener("click", (event) => {
-        event.preventDefault();
-        buttonSaveContinue.setAttribute("disabled", "");
-        const formdata = new FormData(form);
-        fetch(form.action, {method: form.method, body: formdata}).then(res => {
-            if (res.status == 200) {
-                toast("Saved!", 600);
-                document.querySelector("input[name=modification]").value = new Date() / 1000;
-            } else {
-                res.text().then(resText => {
-                    toast(`An error occurred: ${res.status} ${resText}`, 600);
-                });
-            }
-        });
-    });
-    document.querySelectorAll("input,textarea").forEach(input => {
-        input.addEventListener("input", () => {
-            buttonSaveContinue.removeAttribute("disabled");
-        });
-    });
-}
-*/
-
-function bindWidgets(docNonce) {
+function bindWidgets() {
 
     const WIDGET_UPDATE_TIMEOUT = 1000;
 
@@ -75,11 +42,29 @@ function bindWidgets(docNonce) {
             selectedUpdates.push(update);
         }
         if (selectedUpdates.length > 0) {
-            apiPost("edit-widgets", {
-                nonce: docNonce,
-                updates: JSON.stringify(selectedUpdates)
-            }, () => {
-                toast(`Saved widgets`, TOAST_SHORT);
+            const etagMeta = document.querySelector("meta[name='etag']");
+            const formData = new FormData();
+            formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
+            formData.append("widgets", JSON.stringify(selectedUpdates));
+            formData.append("etag", etagMeta.content);
+            formData.append("action", "continue");
+            fetch("", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "If-Match": etagMeta.content,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }).then(res => {
+                if (res.status == 204) {
+                    const newEtag = res.headers.get("ETag");
+                    if (newEtag) etagMeta.content = newEtag; 
+                    toast("Saved widgets!", 600);
+                } else if (res.status == 412) {
+                    toast("Conflict detected", 600);
+                } else {
+                    toast(`An error occurred: ${res.status}`, 600);
+                }
             });
         }
         widgetUpdateTimeout = null;

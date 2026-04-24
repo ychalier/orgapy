@@ -31,6 +31,7 @@ function dtf(dt, format) {
         .replace("SS", pad2(dt.getSeconds()))
 }
 
+/* TODO
 function fetchApi(url, method, formData=null, onSuccess=null) {
     const requestInit = {};
     requestInit.method = method;
@@ -65,6 +66,7 @@ function apiPost(action, body, onSuccess=null) {
     }
     fetchApi(URL_API + "?action=" + action, "post", formData, onSuccess);
 }
+*/
 
 function bindSearch(searchEl, suggestionsUrl, suggestionsParams, onElementClick) {
 

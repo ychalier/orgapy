@@ -385,6 +385,42 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
             if "next" in request.POST:
                 return redirect(request.POST["next"])
             return redirect("orgapy:documents")
+        
+        new_content = None
+        if "widgets" in request.POST and doc.content:
+            new_content = doc.content
+            widget_updates = json.loads(request.POST["widgets"])
+            for update in widget_updates:
+                widget_type = update.get("type")
+                widget_index = update.get("index")
+                widget_value = update.get("value")
+                if widget_type is None or widget_index is None or widget_value is None:
+                    continue
+                if widget_type in ["status", "color_round", "color_square"]:
+                    regex = {
+                        "status": r"(✅|❌|⏺️)",
+                        "color_round": r"(🔴|🟠|🟡|🟢|🔵|🟣|🟤|⚫|⚪)",
+                        "color_square": r"(🟥|🟧|🟨|🟩|🟦|🟪|🟫|⬛|⬜)"
+                    }[widget_type]
+                    for i, widget_match in enumerate(re.finditer(regex, new_content)):
+                        if i != widget_index:
+                            continue
+                        start, end = widget_match.span(0)
+                        text = new_content
+                        new_content = text[:start] + widget_value + text[end:]
+                        break
+                elif widget_type == "checkbox":
+                    for i, widget_match in enumerate(re.finditer(r"^ *- \[(x| )\]", new_content, re.MULTILINE)):
+                        if i != widget_index:
+                            continue
+                        start, end = widget_match.span(1)
+                        text = new_content
+                        if widget_value:
+                            widget_value = "x"
+                        else:
+                            widget_value = " "
+                        new_content = text[:start] + widget_value + text[end:]
+                        break
 
         update_fields = []
 
@@ -415,8 +451,9 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
             update_fields.append("subtitle")
             doc.subtitle = request.POST["subtitle"]
 
-        if "content" in request.POST:
-            new_content = request.POST["content"]
+        if "content" in request.POST or new_content:
+            if not new_content:
+                new_content = request.POST["content"]
             if new_content:
                 update_fields.append("content")
                 update_fields.append("date_modification")

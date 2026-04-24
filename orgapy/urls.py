@@ -1,6 +1,5 @@
 from django.urls import path
 from .views import base as views
-from .views.api import api
 
 app_name = "orgapy"
 
@@ -27,5 +26,4 @@ urlpatterns = [
     path("objectives/<objective_id>", views.view_objective, name="objective"),
     path("calendars", views.view_calendars, name="calendars"),
     path("suggestions", views.view_suggestions, name="suggestions"),
-    path("api", api, name="api"), # TODO: deprecated
 ]
