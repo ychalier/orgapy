@@ -303,6 +303,23 @@ def view_documents(request: HttpRequest) -> HttpResponse:
             raise BadRequest("Incorrect document type")
         doc = Document.objects.create(user=request.user, type=doctype)
         return redirect(doc.get_absolute_url() + "?edit=1")
+    
+    if request.GET.get("part") == "snippet":
+        nonces = request.GET.getlist("nonce")
+        results = []
+        for nonce in nonces:
+            result = {"nonce": nonce, "title": None, "href": None, "icon": None, "error": None}
+            try:
+                doc = Document.objects.get(user=request.user, nonce=nonce)
+                result["title"] = doc.title
+                result["href"] = doc.get_absolute_url()
+                result["icon"] = doc.type_icon
+            except Document.DoesNotExist:
+                result["error"] = "Invalid reference"
+            except Exception:
+                result["error"] = "Error"
+            results.append(result)
+        return JsonResponse({"results": results})
 
     template_name = "orgapy/" + ("documents_calendar.html" if request.GET.get("calendar") else "documents_list.html")
     return view_document_list(request, template_name)
@@ -1003,24 +1020,6 @@ def view_suggestions(request: HttpRequest) -> HttpResponse:
             for result in results
         ]
     })
-
-
-def view_document_snippet(request: HttpRequest) -> HttpResponse:
-    nonces = request.GET.getlist("nonce")
-    results = []
-    for nonce in nonces:
-        result = {"nonce": nonce, "title": None, "href": None, "icon": None, "error": None}
-        try:
-            doc = Document.objects.get(user=request.user, nonce=nonce)
-            result["title"] = doc.title
-            result["href"] = doc.get_absolute_url()
-            result["icon"] = doc.type_icon
-        except ValueError | Document.DoesNotExist:
-            result["error"] = "Invalid reference"
-        except Exception:
-            result["error"] = "Error"
-        results.append(result)
-    return JsonResponse({"results": results})
 
 
 @permission_required("orgapy.view_calendar")

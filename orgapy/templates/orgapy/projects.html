@@ -59,7 +59,7 @@
 <script>
 const SUGGESTIONS_URLS = "{% url 'orgapy:suggestions' %}";
 bindSearch(searchForm, SUGGESTIONS_URLS, {t: "project"});
-bindDocumentInput(documentSearch, SUGGESTIONS_URLS, "{% url 'orgapy:document_snippet' %}");
+bindDocumentInput(documentSearch, SUGGESTIONS_URLS, "{% url 'orgapy:documents' %}");
 </script>
 
 {% if projects %}

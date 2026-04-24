@@ -2,7 +2,6 @@ import json
 import re
 
 from django.contrib.auth.decorators import permission_required
-from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import BadRequest
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
@@ -13,37 +12,10 @@ from ..models import Document
 def api(request: HttpRequest) -> HttpResponse:
     action = request.GET.get("action")
     match action:
-        case "reference":
-            return api_reference(request)
         case "edit-widgets":
             return api_edit_widgets(request)
         case _:
             raise BadRequest(f"Unknown action '{action}'")
-
-
-def api_reference(request: HttpRequest) -> HttpResponse:
-    note_nonces = request.GET.getlist("note")
-    sheet_nonces = request.GET.getlist("sheet")
-    map_nonces = request.GET.getlist("map")
-    results = []
-    for nonces, doctype in ((note_nonces, "note"), (sheet_nonces, "sheet"), (map_nonces, "map")):
-        for nonce in nonces:
-            result = {"type": doctype, "nonce": nonce, "title": None, "href": None, "error": None}
-            if isinstance(request.user, AnonymousUser):
-                result["error"] = "Forbidden"
-            else:
-                try:
-                    doc = Document.objects.get(user=request.user, nonce=nonce)
-                    result["title"] = doc.title
-                    result["href"] = doc.get_absolute_url()
-                except ValueError:
-                    result["error"] = "Invalid ID"
-                except Document.DoesNotExist:
-                    result["error"] = "Not Found"
-                except Exception:
-                    result["error"] = "Error"
-            results.append(result)
-    return JsonResponse({"success": True, "results": results})
 
 
 @permission_required("orgapy.change_document")

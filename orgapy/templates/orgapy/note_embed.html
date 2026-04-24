@@ -16,6 +16,6 @@
 {% block column_main %}
 <div class="card card-note" style="border: none; border-radius: 0"><h1>{% if document.title %}{{ document.title }}{% else %}<i>Untitled</i>{% endif %}</h1>{% if document.content %}{{ document.content | safe }}{% else %}This document has no content.{% endif %}</div>
 <script>
-    markdownToHtml(".card-note", {fancy: true, useKatex: true, embed: true, fetchReferences: true});
+    markdownToHtml(".card-note", {fancy: true, useKatex: true, embed: true, fetchReferences: true, documentsUrl: "{% url 'orgapy:documents' %}"});
 </script>
 {% endblock %}

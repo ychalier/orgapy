@@ -9,7 +9,6 @@ urlpatterns = [
     path("about", views.view_about, name="about"),
     path("home", views.view_home, name="home"),
     path("docs", views.view_documents, name="documents"),
-    path("docs/snippet", views.view_document_snippet, name="document_snippet"), # TODO: merge with docs
     path("docs/<nonce>", views.view_document, name="document"),
     path("projects", views.view_projects, name="projects"),
     path("projects/<project_id>", views.view_project, name="project"),

@@ -91,7 +91,7 @@
 
 {% block body_scripts %}
 <script>
-markdownToHtml(".card-note", {fancy: true, useKatex: true, embed: true, fetchReferences: true});
+markdownToHtml(".card-note", {fancy: true, useKatex: true, embed: true, fetchReferences: true, documentsUrl: "{% url 'orgapy:documents' %}"});
 createToc(cardNote, document.querySelector("#toc"));
 {% if not readonly %}
 bindWidgets("{{ document.nonce }}");

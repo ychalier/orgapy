@@ -49,7 +49,7 @@ if (window.innerWidth > 800) {
         }
     });
     simplemde.codemirror.on("cursorActivity", (cmInstance) => {
-        onCmCursorActivity(cmInstance, "{% url 'orgapy:suggestions' %}")
+        onCmCursorActivity(cmInstance, "{% url 'orgapy:suggestions' %}", "{% url 'orgapy:documents' %}")
     });
     simplemde.codemirror.on("change", () => {
         if (buttonContinue != null) buttonContinue.removeAttribute("disabled");

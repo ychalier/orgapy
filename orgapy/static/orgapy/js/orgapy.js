@@ -342,44 +342,43 @@ function markdownToHtmlFancy(element, options) {
     element.querySelectorAll("p").forEach(paragraph => {
         paragraph.innerHTML = paragraph.innerHTML.replace(/(\w) ([:\?!;»€°])/g, "$1 $2").replace(/([«°]) (\w)/g, "$1 $2");;
     });
-    const refArgs = [];
-    const refEls = element.querySelectorAll(".reference");
-    const refIndex = {"note": {}, "sheet": {}, "map": {}};
-    for (const refEl of refEls) {
-        const refId = refEl.getAttribute("ref-nonce");
-        const refType = refEl.getAttribute("ref-type");
-        if (refId == null || refId == "" || refType == null || refType == "") {
-            console.warn("Invalid reference:", refType, refId);
-            continue;
+
+    const referenceElements = element.querySelectorAll(".reference");
+    if (referenceElements.length > 0) {
+        const getParams = new URLSearchParams();
+        getParams.append("part", "snippet");
+        const referenceMap = new Map();
+        for (const el of referenceElements) {
+            const nonce = el.getAttribute("ref-nonce");
+            getParams.append("nonce", nonce);
+            if (referenceMap.has(nonce)) {
+                referenceMap[nonce].push(el);
+            } else {
+                referenceMap.set(nonce, [el]);
+            }
         }
-        refArgs.push(`${refType}=${refId}`);
-        if (!(refId in refIndex[refType])) {
-            refIndex[refType][refId] = [];
-        }
-        refIndex[refType][refId].push(refEl);
-    }
-    if (refArgs.length > 0) {
-        fetch(URL_API + `?action=reference&${refArgs.join("&")}`).then(res => res.json()).then(data => {
-            for (const result of data.results) {
-                if (!(result.type in refIndex) || !(result.nonce in refIndex[result.type])) {
-                    console.warn("Unbound reference result", result.type, result.nonce);
-                    continue;
-                }
-                for (const refEl of refIndex[result.type][result.nonce]) {
-                    if (result.error == null) {
-                        refEl.querySelector("span").textContent = result.title;
-                        refEl.setAttribute("href", result.href);
-                    } else {
-                        const refNonce = refEl.getAttribute("ref-nonce");
-                        const refType = refEl.getAttribute("ref-type");
-                        refEl.querySelector("span").textContent = `${result.error}`;
-                        refEl.setAttribute("title", `@${refType}/${refNonce}`);
-                        refEl.classList.add("error");
+        fetch(options.documentsUrl + "?" + getParams.toString())
+            .then(res => res.json())
+            .then(data => {
+                for (const result of data.results) {
+                    if (!referenceMap.has(result.nonce)) {
+                        console.warn("Unbound reference result:", result);
+                        continue;
+                    }
+                    for (const el of referenceMap.get(result.nonce)) {
+                        if (result.error == null) {
+                            el.querySelector("span").textContent = result.title;
+                            el.setAttribute("href", result.href);
+                        } else {
+                            el.setAttribute("title", el.textContent.trim());
+                            el.querySelector("span").textContent = `${result.error}`;
+                            el.classList.add("error");
+                        }
                     }
                 }
-            }
         });
     }
+
     window.addEventListener("load", () => {
         hljs.highlightAll();
     });
@@ -1001,7 +1000,7 @@ function bindSubmitConfirm(input) {
     });
 }
 
-function bindDocumentInput(container, suggestionsUrl, snippetUrl) {
+function bindDocumentInput(container, suggestionsUrl, documentsUrl) {
     const inputText = container.querySelector(".search-input");
     const inputNonce = container.querySelector("input[name='document']");
     const searchSuggestions = container.querySelector(".search-suggestions");
@@ -1025,9 +1024,10 @@ function bindDocumentInput(container, suggestionsUrl, snippetUrl) {
         e.preventDefault();
         searchCurrent.classList.remove("show");
         inputText.focus();
+        inputNonce.value = "";
     }
     if (inputNonce.value != "") {
-        fetch(`${snippetUrl}?nonce=${inputNonce.value}`)
+        fetch(`${documentsUrl}?part=snippet&nonce=${inputNonce.value}`)
             .then(res => res.json())
             .then(data => {
             if (data.results.length > 0) {

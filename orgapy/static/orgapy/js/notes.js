@@ -165,7 +165,7 @@ function getCharPosition(span, charIndex) {
 var smdeDropdownState = null;
 var smdeSelectedResult = 0;
 var smdeResultCount = 0;
-function openSmdeDropdown(cmInstance, word, suggestionsUrl) {
+function openSmdeDropdown(cmInstance, word, suggestionsUrl, documentsUrl) {
     
     // Close any previously opened dropdown
     closeSmdeDropdown();
@@ -237,14 +237,16 @@ function openSmdeDropdown(cmInstance, word, suggestionsUrl) {
     // Set pinned value
     if (objectNonce != undefined) {
         const pinnedButton = create(dropdown, "button", "search-pin ellipsis");
-        fetch(URL_API + `?action=reference&${objectType}=${objectNonce}`).then(res => res.json()).then(data => {
-            const result = data.results[0];
-            if (result.error == null) {
-                pinnedButton.title = result.title;
-                pinnedButton.innerHTML = `${result.title} <i class="ri-close-line"></i>`;
-            } else {
-                pinnedButton.textContent = result.error;
-            }
+        fetch(`${documentsUrl}?part=snippet&nonce=${objectNonce}`)
+            .then(res => res.json())
+            .then(data => {
+                const result = data.results[0];
+                if (result.error == null) {
+                    pinnedButton.title = result.title;
+                    pinnedButton.innerHTML = `${result.title} <i class="ri-close-line"></i>`;
+                } else {
+                    pinnedButton.textContent = result.error;
+                }
         });
         pinnedButton.addEventListener("click", () => { setNonce("", "interlink-reset") });
     }
@@ -280,7 +282,7 @@ function closeSmdeDropdown() {
     document.querySelectorAll(".smde-dropdown, .smde-highlight").forEach(remove);
 }
 
-function onCmCursorActivity(cmInstance, suggestionsUrl) {
+function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
     const cursor = cmInstance.getCursor();
     const line = cmInstance.getLine(cursor.line);
     let iStart = Math.max(0, cursor.ch - 1);
@@ -289,7 +291,7 @@ function onCmCursorActivity(cmInstance, suggestionsUrl) {
     while (iEnd < line.length && line.charAt(iEnd) != " ") iEnd++;
     const word = line.substring(iStart, iEnd).trim();
     if (word.match(/^@(note|sheet|map|embednote|embedsheet|embedmap)\/([a-zA-Z0-9]+)?$/)) {
-        setTimeout(() => { openSmdeDropdown(cmInstance, word, suggestionsUrl); }, 1);
+        setTimeout(() => { openSmdeDropdown(cmInstance, word, suggestionsUrl, documentsUrl); }, 1);
     } else {
         closeSmdeDropdown();
     }
