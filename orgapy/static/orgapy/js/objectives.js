@@ -165,23 +165,9 @@ class Objective {
 function onObjectiveCheck(objective, onSubmit) {
     const ts = Math.floor((new Date()).getTime() / 1000);
     objective.history.push(ts);
-    const formData = new FormData();
-    formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
-    formData.append("action", "add-completion");
-    formData.append("ts", ts);
-    fetch(objective.url, {
-        method: "POST",
-        body: formData,
-        headers: {"X-Requested-With": "XMLHttpRequest"}
-    }).then(res => {
-        if (res.status == 204) {
-            toast("Saved objective history", 600);
-        } else {
-            toast(`An error occurred: ${res.status}`, 600);    
-        }
-        onSubmit();
-    })
-    
+    post(objective.url, {action: "add-completion", ts: ts})
+        .then(res => {toast("Saved objective history"); onSubmit();})
+        .catch(toast);    
 }
 
 function resetObjectivesScroll(container) {

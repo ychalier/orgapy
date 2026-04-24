@@ -487,27 +487,9 @@ class Project {
     delete() {
         var self = this;
         if (confirm(`Do you want to delete '${this.reference()}'?`) == true) {
-            const formData = new FormData();
-            formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
-            formData.append("etag", this.etag);
-            formData.append("delete", "on");
-            fetch(this.projectUrl, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "If-Match": this.etag,
-                    "X-Requested-With": "XMLHttpRequest"
-                }})
-            .then(res => {
-                if (res.status == 204) {
-                    toast("Deleted!", 600);
-                } else if (res.status == 412) {
-                    toast("Conflict detected", 600);
-                } else {
-                    toast(`An error occurred: ${res.status}`, 600);
-                }
-            });
-            remove(this.parentContainer);
+            post(this.projectUrl, {delete: "on"}, this.etag)
+                .then(res => {toast("Deleted"); remove(this.parentContainer)})
+                .catch(toast);
         }
     }
 
@@ -551,29 +533,12 @@ class Project {
             }
             self.previousProjectData = projectString;
             const formData = new FormData();
-            formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
-            formData.append("etag", self.etag);
             for (const key of keys) {
                 formData.append(key, projectData[key]);
             }
-            fetch(self.projectUrl, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "If-Match": self.etag,
-                    "X-Requested-With": "XMLHttpRequest"
-                }})
-            .then(res => {
-                if (res.status == 204) {
-                    const newEtag = res.headers.get("ETag");
-                    if (newEtag) self.etag = newEtag;
-                    toast("Saved!", 600);
-                } else if (res.status == 412) {
-                    toast("Conflict detected", 600);
-                } else {
-                    toast(`An error occurred: ${res.status}`, 600);
-                }
-            });
+            post(self.projectUrl, formData, self.etag, (newEtag) => {self.etag = newEtag})
+                .then(res => {toast("Saved")})
+                .catch(toast);
         }
         if (this.saveTimeout != null) {
             clearTimeout(this.saveTimeout);
@@ -625,16 +590,11 @@ class Project {
 
 function bindProject(container, suggestionsUrl, forceExpand=false) {
     const projectUrl = container.getAttribute("href");
-    fetch(projectUrl + "?format=json", {cache: "no-cache"})
-        .then(res => {
-            const etag = res.headers.get("ETag").replaceAll("\"", "");
-            return res.json().then(projectData => ({etag, projectData}));
-        })
-        .then(({etag, projectData}) => {
-            const project = new Project(container, projectData, etag, projectUrl, suggestionsUrl, forceExpand);
-            const element = project.create()
-            container.appendChild(element);
-        });
+    getEtag(projectUrl + "?format=json").then(({etag, data}) => {
+        const project = new Project(container, data, etag, projectUrl, suggestionsUrl, forceExpand);
+        const element = project.create()
+        container.appendChild(element);
+    });
 }
 
 function bindCreateProjectButton(createButton, projectsContainer, projectsUrl, suggestionsUrl, documentNonce=null) {

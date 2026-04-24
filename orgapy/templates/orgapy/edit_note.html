@@ -65,24 +65,9 @@ buttonContinue.onclick = (e) => {
     buttonContinue.setAttribute("disabled", "");
     const formData = new FormData(noteForm);
     formData.append("action", "continue");
-    fetch(noteForm.getAttribute("action"), {
-        method: "POST",
-        body: formData,
-        headers: {
-            "If-Match": inputEtag.value,
-            "X-Requested-With": "XMLHttpRequest"
-        }
-    }).then(res => {
-        if (res.status == 204) {
-            const newEtag = res.headers.get("ETag");
-            if (newEtag) inputEtag.value = newEtag;
-            toast("Saved!", 600);
-        } else if (res.status == 412) {
-            toast("Conflict detected", 600);
-        } else {
-            toast(`An error occurred: ${res.status}`, 600);
-        }
-    });
+    post(noteForm.getAttribute("action"), formData, inputEtag.value, (newEtag) => {inputEtag.value = newEtag})
+        .then(res => {toast("Saved")})
+        .catch(toast);
 };
 document.querySelectorAll("input,textarea").forEach(input => {
     input.addEventListener("input", () => {

@@ -43,25 +43,16 @@ function inflateMoodLogForm(form) {
 
     form.addEventListener("submit", (e) => {
         e.preventDefault();
-        const formData = new FormData(form);
-        fetch(form.getAttribute("action"), {
-            method: "POST",
-            body: formData,
-            headers: {
-                "X-Requested-With": "XMLHttpRequest"
-            }})
-        .then(res => {
-            if (res.status == 204) {
+        post(form.getAttribute("action"), new FormData(form))
+            .then((res) => {
                 const parent = form.parentElement;
                 remove(form);
                 if (document.querySelectorAll("form.moodlog-form").length == 0) {
                     remove(parent.parentElement.parentElement);
                 }
-                toast("Saved!", 600);
-            } else {
-                toast(`An error occurred: ${res.status}`, 600);
-            }
-        });
+                toast("Saved", 600);
+            })
+            .catch(toast);
     });
 
 }

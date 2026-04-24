@@ -3053,58 +3053,29 @@ class Sheet {
 
     saveData() {
         const sheetExport = this.export();
-        const formData = new FormData();
-        formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
-        formData.append("etag", this.etag);
-        formData.append("content", sheetExport.data);
-        formData.append("config", sheetExport.config);
-        formData.append("action", "continue");
-        fetch("", {
-            method: "POST",
-            body: formData,
-            headers: {
-                "If-Match": this.etag,
-                "X-Requested-With": "XMLHttpRequest"
-            }})
-        .then(res => {
-            if (res.status == 204) {
-                const newEtag = res.headers.get("ETag");
-                if (newEtag) this.etag = newEtag;
-                toast("Saved!", 600);
-            } else if (res.status == 412) {
-                toast("Conflict detected", 600);
-            } else {
-                toast(`An error occurred: ${res.status}`, 600);
-            }
-            this.toolbarButtonSave.setAttribute("disabled", "");
-        });
+        post("", {content: sheetExport.data, config: sheetExport.config, action: "continue"}, this.etag, (newEtag) => {this.etag = newEtag})
+            .then(res => { toast("Saved"); this.toolbarButtonSave.setAttribute("disabled", "")})
+            .catch(toast);
     }
 
 }
 
-
 function initializeSheet(sheetSeed, readonly) {
     var sheet = null;
     const sheetNonce = sheetSeed.getAttribute("sheet-nonce");
-    fetch("?format=json", {cache: "no-cache"})
-        .then(res => {
-            const etag = res.headers.get("ETag").replaceAll("\"", "");
-            return res.json().then(sheetData => ({etag, sheetData}));
-        })
-        .then(({etag, sheetData}) => {
-            sheet = new Sheet(sheetNonce, sheetSeed, etag, readonly);
-            let data = null;
-            if (sheetData.content != null && sheetData.content.trim() != "") {
-                data = parseTsv(sheetData.content);
-            }
-            let config = null;
-            if (sheetData.config != null && sheetData.config.trim() != "") {
-                config = JSON.parse(sheetData.config);
-            }
-            sheet.setup(data, config);
-        });
+    getEtag("?format=json").then(({etag, data}) => {
+        sheet = new Sheet(sheetNonce, sheetSeed, etag, readonly);
+        let data = null;
+        if (data.content != null && data.content.trim() != "") {
+            data = parseTsv(data.content);
+        }
+        let config = null;
+        if (data.config != null && data.config.trim() != "") {
+            config = JSON.parse(data.config);
+        }
+        sheet.setup(data, config);
+    });
 }
-
 
 function initializeSheets(readonly) {
     document.querySelectorAll(".sheet").forEach(sheetSeed => {
