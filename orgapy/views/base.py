@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Min, Max
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -32,7 +32,8 @@ from .utils import (
     view_document_list,
     get_pending_mood_logs,
     view_calendar,
-    compare_checklists)
+    compare_checklists,
+    date_timestamp)
 
 
 # GENERAL ######################################################################
@@ -153,7 +154,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
         attrs["end"] = dt_end.strftime("%Y-%m-%d")
 
     s = request.GET.get("sort")
-    sort_key = s if s in ["creation", "modification"] else None
+    sort_key = s if s in ["creation", "modification", "archived"] else None
     if sort_key:
         attrs["sort"] = sort_key
 
@@ -176,10 +177,46 @@ def view_projects(request: HttpRequest) -> HttpResponse:
     else:
         qs = qs.order_by("-date_modification")
 
+    if request.GET.get("format") == "json":
+        mindt = Project.objects.values("date_creation").aggregate(Min("date_creation"))["date_creation__min"]
+        maxdt = Project.objects.values("date_creation").aggregate(Max("date_creation"))["date_creation__max"]
+        data = {
+            "entries": [],
+            "mindt": date_timestamp(mindt),
+            "maxdt": date_timestamp(maxdt),
+        }
+        for project in qs:
+            data["entries"].append({
+                "dt": date_timestamp(project.date_creation),
+                "label": project.reference,
+                "icon": "ri-briefcase-line",
+                "href": project.get_absolute_url()
+            })
+        return JsonResponse(data)
+
+    if request.GET.get("format") == "tsv":
+        lines = ["id\ttitle\tdocument_nonce\tdocument_title\tdate_creation\tdate_modification\tdate_archived\tstatus"]
+        for project in qs:
+            lines.append("\t".join([
+                str(project.id),
+                project.title if project.title else "",
+                project.document.nonce if project.document else "",
+                project.document.title if project.document and project.document.title else "",
+                project.date_creation.isoformat(),
+                project.date_modification.isoformat(),
+                project.date_archived.isoformat() if project.date_archived else "",
+                project.get_status_display(), # type: ignore
+            ]))
+        response = HttpResponse("\n".join(lines), content_type="text/tab-separated-values; charset=utf-8")
+        response["Content-Disposition"] = f'inline; filename="documents.tsv"'
+        return response
+
     paginator = Paginator(qs, page_size)
     page = request.GET.get("page")
     projects = paginator.get_page(page)
-    return render(request, "orgapy/projects.html", {
+
+    template_name = "orgapy/" + ("projects_calendar.html" if request.GET.get("calendar") else "projects_list.html")
+    return render(request, template_name, {
         "projects": projects,
         "paginator": pretty_paginator(projects),
         "active": "projects",

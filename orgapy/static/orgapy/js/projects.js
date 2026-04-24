@@ -651,10 +651,14 @@ function bindCreateProjectButton(createButton, projectsContainer, projectsUrl, s
                     return res.json().then(projectData => ({etag, projectData}));
                 })
                 .then(({etag, projectData}) => {
-                    const container = create(projectsContainer, "div");
-                    const project = new Project(container, projectData, etag, projectData.url, suggestionsUrl);
-                    const element = project.create()
-                    container.appendChild(element);
+                    if (projectsContainer == null) {
+                        window.location.reload();
+                    } else {
+                        const container = create(projectsContainer, "div");
+                        const project = new Project(container, projectData, etag, projectData.url, suggestionsUrl);
+                        const element = project.create()
+                        container.appendChild(element);
+                    }
                 });
         }
     });

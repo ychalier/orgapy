@@ -1,0 +1,74 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}Projects{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
+<script src="{% static 'orgapy/js/projects.js' %}"></script>
+{% endblock head %}
+
+{% block column_main %}
+<div class="card">
+    <div class="card-body">{% include 'orgapy/partials/project_search.html' %}</div>
+    <div class="card-actions">
+        <button id="buttonCreateProject"><i class="ri-add-line"></i><span>Create project</span></button>
+        <a class="button" href="{% querystring calendar=1 %}"><i class="ri-calendar-line"></i><span>Calendar</span></a>
+        <a class="button" href="{% querystring format='tsv' %}"><i class="ri-download-line"></i><span>Export</span></a>
+    </div>
+</div>
+
+{% if projects %}
+<div class="card">
+    {% for project in projects %}
+    <div class="line">
+        <span class="project-status label label-inline {% if project.status == 'FU' %}label-pink{% elif project.status == 'IN' %}label-grey{% elif project.status == 'AR' %}label-purple{% endif %}" status="{{ project.status }}" href="{% url 'orgapy:project' project.id %}" etag="{{ project.etag }}">{{ project.get_status_display | upper }}</span>
+        <span class="project-badge{% if project.items_count == 0 %} empty{% elif project.all_completed %} done{% endif %}" {% if project.items_count > 0 and not project.all_completed %}style="background: linear-gradient(90deg,rgba(37, 135, 50, 1){{ project.progress }}%,rgb(48, 48, 48) {{ project.progress }}%)"{% endif %}>{{ project.completed_items_count }}/{{ project.items_count }}</span>
+        <a class="link-hidden" href="{{ project.get_absolute_url }}" title="{{ project.reference }}">{{ project.reference }}</a>
+        <div class="dropdown">
+            <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
+            <ul class="menu">
+                <form action="{% url 'orgapy:project' project.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="etag" value="{{ project.etag }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <li class="menu-item"><button type="submit" name="delete" value="on" message="Do you want to delete '{{ project.reference }}'?" class="button-danger submit-confirm"><i class="ri-delete-bin-line"></i> Delete</button></li>
+                </form>
+            </ul>
+        </div>
+        <form class="project-form" action="{% url 'orgapy:project' project.id %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="etag" value="{{ project.etag }}">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <input type="hidden" name="status" value="{{ request.get_full_path }}">
+        </form>
+    </div>
+    {% endfor %}
+    {% include 'orgapy/partials/pagination.html' %}
+</div>
+{% else %}
+{% block empty %}
+<div class="card">
+    <div class="card-body">
+        <div>Nothing found 😔</div>
+    </div>
+</div>
+{% endblock empty %}
+{% endif %}
+
+<script>
+document.querySelectorAll(".project-status").forEach(statusSpan => {
+    statusSpan.addEventListener("click", () => {
+        openProjectStatusDialog((newStatus) => {
+            const form = statusSpan.parentElement.querySelector("form.project-form");
+            const inputStatus = form.querySelector("input[name='status']");
+            inputStatus.value = newStatus;
+            form.submit();
+        });
+    });
+});
+bindCreateProjectButton(buttonCreateProject, null, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}");
+</script>
+
+{% endblock column_main %}

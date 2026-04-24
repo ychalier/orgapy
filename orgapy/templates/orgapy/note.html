@@ -101,12 +101,7 @@ for (const projectContainer of document.querySelectorAll(".project-container")) 
         projectContainer,
         "{% url 'orgapy:suggestions' %}");
 }
-bindCreateProjectButton(
-    buttonAddProject,
-    projectsContainer,
-    "{% url 'orgapy:projects' %}",
-    "{% url 'orgapy:suggestions' %}",
-    "{{ document.nonce }}");
+bindCreateProjectButton(buttonAddProject, projectsContainer, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}", "{{ document.nonce }}");
 {% endif %}
 </script>
 {% endblock body_scripts %}

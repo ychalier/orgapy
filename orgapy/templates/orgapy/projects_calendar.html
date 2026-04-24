@@ -1,0 +1,34 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}Projects{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<script src="{% static 'orgapy/js/projects.js' %}"></script>
+{% endblock head %}
+
+{% block column_main %}
+<div class="card">
+    <div class="card-body">{% include 'orgapy/partials/project_search.html' %}</div>
+    <div class="card-actions">
+        <button id="buttonCreateProject"><i class="ri-add-line"></i><span>Create project</span></button>
+        <a class="button" href="{% querystring calendar=None %}"><i class="ri-menu-line"></i> List view</a>
+        <a id="buttonExport" class="button"><i class="ri-download-line"></i><span>Export</span></a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div id="calendarContainer"></div>
+    </div>
+</div>
+
+<script>
+bindCalendar(calendarContainer, buttonExport, {defaultMode: "monthly"});
+bindCreateProjectButton(buttonCreateProject, null, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}");
+</script>
+{% endblock %}
+
+
+

@@ -2,7 +2,7 @@
     <button id="gotoButton" title="Go to page"><i class="ri-arrow-right-circle-line"></i></button>
     {% for page in paginator.pages %}
         {% if page %}
-            <a class="button {% if page == paginator.active %}active{% endif %}" href="?page={{ page }}{{ paginator.attr_string }}">{{ page }}</a>
+            <a class="button {% if page == paginator.active %}active{% endif %}" href="{% querystring page=page %}">{{ page }}</a>
         {% else %}
             <button disabled>…</button>
         {% endif %}

@@ -17,21 +17,16 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 NONCE_TOKENS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 NONCE_LENGTH = 4
 
-def generate_nonce(model: 'type[Document] | type[Project]') -> str:
+
+def generate_document_nonce() -> str:
     while True:
         nonce = "".join(random.choices(NONCE_TOKENS, k=NONCE_LENGTH))
         try:
-            model.objects.get(nonce=nonce)
-        except model.DoesNotExist:
+            Document.objects.get(nonce=nonce)
+        except Document.DoesNotExist:
             return nonce
         except OperationalError:
             return nonce
-
-def generate_document_nonce() -> str:
-    return generate_nonce(Document)
-
-def generate_project_nonce() -> str:
-    return generate_nonce(Project)
 
 
 class Settings(models.Model):
