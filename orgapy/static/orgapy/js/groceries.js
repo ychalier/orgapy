@@ -110,19 +110,9 @@ function bindGroceries(groceriesContainer, saveButton, createListButton) {
     function saveGroceriesData() {
         saveButton.setAttribute("disabled", "");
         const data = readGroceriesData();
-        const formData = new FormData();
-        formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
-        formData.append("groceries", JSON.stringify(data));
-        fetch("", {method: "POST", body: formData, headers: {
-            "X-Requested-With": "XMLHttpRequest"
-        }})
-            .then(res => {
-                if (res.status == 204) {
-                    toast("Saved!", 600);
-                } else {
-                    toast(`An error occurred: ${res.status}`, 600);
-                }
-            })
+        post("", {groceries: JSON.stringify(data)})
+            .then(res => {toast("Saved", 600)})
+            .catch(toast);
     }
 
     function createList() {

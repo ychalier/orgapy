@@ -1980,32 +1980,18 @@ class Map {
         if (this.readonly) return;
         let mapExport = this.export();
         var self = this;
-        const formData = new FormData();
-        formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
-        formData.append("etag", this.etag);
-        formData.append("title", this.title);
-        formData.append("content", mapExport.geojson);
-        formData.append("config", mapExport.config);
-        formData.append("action", "continue");
-        fetch("", {
-            method: "POST",
-            body: formData,
-            headers: {
-                "If-Match": this.etag,
-                "X-Requested-With": "XMLHttpRequest"
-            }})
-        .then(res => {
-            if (res.status == 204) {
-                const newEtag = res.headers.get("ETag");
-                if (newEtag) this.etag = newEtag;
-                toast("Saved!", 600);
-            } else if (res.status == 412) {
-                toast("Conflict detected", 600);
-            } else {
-                toast(`An error occurred: ${res.status}`, 600);
-            }
-            this.buttonSave.setAttribute("disabled", "");
-        });
+        post(
+            "", {
+                title: this.title,
+                content: mapExport.geojson,
+                config: mapExport.config,
+                action: "continue"
+            }, this.etag, (etag) => {self.etag = etag})
+            .then(res => {
+                toast("Saved", 600);
+                self.buttonSave.setAttribute("disabled", "");
+            })
+            .catch(toast);
     }
 
     isMeasuringDistance() {
@@ -2304,29 +2290,23 @@ class SearchResultsDialog extends Dialog {
 function initializeMap(mapLayout, readonly) {
     var map = null;
     let mapNonce = mapLayout.getAttribute("map-nonce");
-    fetch("?format=json", {cache: "no-cache"})
-        .then(res => {
-            const etag = res.headers.get("ETag").replaceAll("\"", "");
-            return res.json().then(mapData => ({etag, mapData}));
-        })
-        .then(({etag, mapData}) => {
-            map = new Map(mapNonce, mapLayout, etag, readonly);
-            let geojson = null;
-            if (mapData.content != null && mapData.content.trim() != "") {
-                try {
-                    geojson = JSON.parse(mapData.content);
-                } catch {
-                    geojson = [];
-                }
+    getEtag("?format=json").then(({etag, data}) => {
+        map = new Map(mapNonce, mapLayout, etag, readonly);
+        let geojson = null;
+        if (data.content != null && data.content.trim() != "") {
+            try {
+                geojson = JSON.parse(data.content);
+            } catch {
+                geojson = [];
             }
-            let config = {};
-            if (mapData.config != null && mapData.config.trim() != "") {
-                config = JSON.parse(mapData.config);
-            }
-            config.title = mapData.title;
-            map.setup(geojson, config);
-        });
-
+        }
+        let config = {};
+        if (data.config != null && data.config.trim() != "") {
+            config = JSON.parse(data.config);
+        }
+        config.title = data.title;
+        map.setup(geojson, config);
+    })
 }
 
 function initializeMaps(readonly) {

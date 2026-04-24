@@ -1107,7 +1107,7 @@ input:checked+.toggle-slider+.toggle-text {
     border: 1px solid var(--border-secondary);
     user-select: none;
     max-width: 32rem;
-    max-height: 24rem;
+    max-height: 25rem;
     overflow-y: auto;
 }
 

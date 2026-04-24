@@ -31,42 +31,52 @@ function dtf(dt, format) {
         .replace("SS", pad2(dt.getSeconds()))
 }
 
-/* TODO
-function fetchApi(url, method, formData=null, onSuccess=null) {
-    const requestInit = {};
-    requestInit.method = method;
-    if (formData != null) {
-        requestInit.body = formData;
+/**
+ * 
+ * @param {string} url
+ * @param {FormData | object} data 
+ * @param {string | null} etag
+ * @param {CallableFunction | null} onEtag
+ * @returns {Promise<Response>}
+ */
+async function post(url, data, etag=null, onEtag=null) {
+    if (!(data instanceof FormData)) {
+        const formData = new FormData();
+        for (const key in data) {
+            formData.append(key, data[key]);
+        }
+        data = formData;
     }
-    fetch(url, requestInit)
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                if (onSuccess != null) {
-                    onSuccess(data);
+    data.append("csrfmiddlewaretoken", CSRF_TOKEN);
+    const headers = {
+        "X-Requested-With": "XMLHttpRequest"
+    };
+    if (etag != null) {
+        headers["If-Match"] = etag;
+        data.append("etag", etag);
+    }
+    return fetch(url, {method: "post", body: data, headers: headers})
+        .then(response => {
+            if (response.status == 204) {
+                if (onEtag != null) {
+                    const newEtag = response.headers.get("ETag");
+                    if (newEtag) onEtag(newEtag);
                 }
+            } else if (response.status == 412) {
+                throw new Error("Conflict detected");
             } else {
-                if ("reason" in data) {
-                    alert(data.reason);
-                }
-                toast("An error occured", 600);
+                throw new Error(`Error ${response.status}`);
             }
-        })
-        .catch(err => {
-            console.error(err);
-            toast("An error occured", 600);
         });
 }
 
-function apiPost(action, body, onSuccess=null) {
-    let formData = new FormData();
-    formData.set("csrfmiddlewaretoken", CSRF_TOKEN);
-    for (const key in body) {
-        formData.set(key, body[key]);
-    }
-    fetchApi(URL_API + "?action=" + action, "post", formData, onSuccess);
+async function getEtag(url) {
+    return fetch(url, {cache: "no-cache"})
+        .then(async response => {
+            const etag = response.headers.get("ETag").replaceAll("\"", "");
+            return response.json().then(data => ({etag, data}));
+        });
 }
-*/
 
 function bindSearch(searchEl, suggestionsUrl, suggestionsParams, onElementClick) {
 
@@ -422,7 +432,7 @@ function markdownToHtml(selector, options) {
 const TOAST_LONG = 3500;
 const TOAST_SHORT = 2000;
 
-function toast(message, duration) {
+function toast(message, duration=600) {
     snackbar.textContent = message;
     snackbar.classList.add("show");
     setTimeout(function() {
