@@ -429,20 +429,44 @@ function markdownToHtml(selector, options) {
     });
 }
 
-const TOAST_LONG = 3500;
-const TOAST_SHORT = 2000;
+function moveToastsUp() {
+    document.querySelectorAll(".toast").forEach((toast) => {
+        if (toast.classList.contains("newest")) {
+            toast.style.bottom = `1rem`;
+            toast.classList.remove("newest");
+        } else {
+            const prevValue = toast.style.bottom.replace("rem", "");
+            const newValue = parseFloat(prevValue) + 2.6;
+            toast.style.bottom = `${newValue}rem`;
+        }
+    });
+}
 
-function toast(message, duration=600) {
-    snackbar.textContent = message;
-    snackbar.classList.add("show");
-    setTimeout(function() {
-        snackbar.classList.add("hide");
-        setTimeout(function() {
-            snackbar.classList.remove("show");
-            snackbar.classList.remove("hide");
-            snackbar.textContent = "";
-        }, 450);
+function showToast(message, error=false, duration=2000) {
+
+    const popover = document.createElement("article");
+    popover.popover = "manual";
+    popover.classList.add("toast");
+    popover.classList.add("newest");
+    if (error) {
+        popover.classList.add("error");
+    }
+
+    popover.textContent = message;
+    document.body.appendChild(popover);
+    popover.showPopover();
+
+    setTimeout(() => {
+        popover.hidePopover();
+        popover.remove();
     }, duration);
+
+    popover.addEventListener("toggle", (event) => {
+        if (event.newState === "open") {
+            moveToastsUp();
+        }
+    });
+
 }
 
 function bindDropdown(dropdown, delay=10) {

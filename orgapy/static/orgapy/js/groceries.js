@@ -111,8 +111,8 @@ function bindGroceries(groceriesContainer, saveButton, createListButton) {
         saveButton.setAttribute("disabled", "");
         const data = readGroceriesData();
         post("", {groceries: JSON.stringify(data)})
-            .then(res => {toast("Saved", 600)})
-            .catch(toast);
+            .then(res => {showToast("Saved groceries")})
+            .catch(msg => {showToast(msg, true)});
     }
 
     function createList() {

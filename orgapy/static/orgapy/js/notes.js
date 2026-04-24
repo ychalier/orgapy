@@ -44,8 +44,8 @@ function bindWidgets() {
         if (selectedUpdates.length > 0) {
             const etagMeta = document.querySelector("meta[name='etag']");
             post("", {widgets: JSON.stringify(selectedUpdates), action: "continue"}, etagMeta.content, (newEtag) => {etagMeta.content = newEtag})
-                .then(res => {toast("Saved widgets", 600)})
-                .catch(toast);
+                .then(res => {showToast("Saved widgets")})
+                .catch(msg => {showToast(msg, true)});
         }
         widgetUpdateTimeout = null;
     }

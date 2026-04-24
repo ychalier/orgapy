@@ -1454,11 +1454,6 @@ function parseQuery(query) {
     return {filters: filters, tokens: tokens};
 }
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
-    toast("Copied to clipboard!", 600);
-}
-
 class Map {
 
     constructor(nonce, mapLayout, etag, readonly=false) {
@@ -1731,7 +1726,10 @@ class Map {
         clearContextMenus();
         const menu = create(document.body, "ul", "contextmenu menu");
         const coordsString = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
-        addContextMenuOption(menu, null, coordsString, () => {copyToClipboard(coordsString)});
+        addContextMenuOption(menu, null, coordsString, () => {
+            navigator.clipboard.writeText(coordsString);
+            showToast("Copied coordinates to clipboard");
+        });
         if (!this.readonly) {
             addContextMenuOption(menu, "ri-map-pin-line", "Add marker", () => {self.addMarker(latlng)});
         }
@@ -1894,7 +1892,7 @@ class Map {
         var self = this;
         el.addEventListener("editable:drawing:commit", (event) => {
             if (self.getSelectedLayer() == undefined) {
-                toast("🛑 Select a layer first 🛑", TOAST_SHORT);
+                showToast("Select a layer first", true);
             } else {
                 self.getSelectedLayer().addFeatureFromMapElement(el);
             }
@@ -1988,10 +1986,10 @@ class Map {
                 action: "continue"
             }, this.etag, (etag) => {self.etag = etag})
             .then(res => {
-                toast("Saved", 600);
+                showToast("Saved map");
                 self.buttonSave.setAttribute("disabled", "");
             })
-            .catch(toast);
+            .catch(msg => {showToast(msg, true)});
     }
 
     isMeasuringDistance() {

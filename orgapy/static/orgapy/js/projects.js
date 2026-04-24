@@ -388,7 +388,7 @@ class Project {
         addButton("Clear", "ri-close-line", "Clear completed items", () => { self.clearChecklist() });
         addButton("Copy", "ri-file-copy-2-line", "Copy as Markdown", () => {
             navigator.clipboard.writeText(self.toMarkdown());
-            toast("Copied to clipboard!", 600);
+            showToast("Copied checklist to clipboard");
         });
 
         return checklist;
@@ -488,8 +488,8 @@ class Project {
         var self = this;
         if (confirm(`Do you want to delete '${this.reference()}'?`) == true) {
             post(this.projectUrl, {delete: "on"}, this.etag)
-                .then(res => {toast("Deleted"); remove(this.parentContainer)})
-                .catch(toast);
+                .then(res => {showToast("Deleted project"); remove(this.parentContainer)})
+                .catch(msg => {showToast(msg, true)});
         }
     }
 
@@ -537,8 +537,8 @@ class Project {
                 formData.append(key, projectData[key]);
             }
             post(self.projectUrl, formData, self.etag, (newEtag) => {self.etag = newEtag})
-                .then(res => {toast("Saved")})
-                .catch(toast);
+                .then(res => {showToast("Saved project")})
+                .catch(msg => {showToast(msg, true)});
         }
         if (this.saveTimeout != null) {
             clearTimeout(this.saveTimeout);

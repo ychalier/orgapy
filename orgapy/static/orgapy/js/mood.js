@@ -50,9 +50,9 @@ function inflateMoodLogForm(form) {
                 if (document.querySelectorAll("form.moodlog-form").length == 0) {
                     remove(parent.parentElement.parentElement);
                 }
-                toast("Saved", 600);
+                showToast("Saved mood log");
             })
-            .catch(toast);
+            .catch(msg => {showToast(msg, true)});
     });
 
 }

@@ -980,42 +980,28 @@ input:checked+.toggle-slider+.toggle-text {
     border-bottom-right-radius: .4rem;
 }
 
-/***** SNACKBAR ***************************************************************/
+/***** TOAST ******************************************************************/
 
-.snackbar {
-    visibility: hidden;
+.toast {
     min-width: 5rem;
-    transform: translateX(-50%);
-    border: 1px solid var(--border-secondary);
-    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-accent);
+    background-color: var(--bg-accent);
     text-align: center;
     border-radius: .2rem;
     padding: .4rem;
-    position: fixed;
-    z-index: 700;
-    left: 50%;
-    bottom: 2rem;
+    color: inherit;
 }
 
-.snackbar.show {
-    visibility: visible;
-    -webkit-animation: fadein 0.5s;
-    animation: fadein 0.5s;
+.toast.error {
+    border-color: var(--border-danger);
+    background-color: var(--bg-danger);
 }
 
-.snackbar.hide {
-    -webkit-animation: fadeout 0.5s;
-    animation: fadeout 0.5s;
-}
-
-@keyframes fadein {
-    from {bottom: 0; opacity: 0;}
-    to {bottom: 2rem; opacity: 1;}
-}
-
-@keyframes fadeout {
-    from {bottom: 2rem; opacity: 1;}
-    to {bottom: 0; opacity: 0;}
+:popover-open {
+    position: absolute;
+    inset: unset;
+    right: 1rem;
+    bottom: 1rem;
 }
 
 /***** CARDS ******************************************************************/

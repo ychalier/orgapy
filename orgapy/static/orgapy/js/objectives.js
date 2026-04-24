@@ -166,8 +166,8 @@ function onObjectiveCheck(objective, onSubmit) {
     const ts = Math.floor((new Date()).getTime() / 1000);
     objective.history.push(ts);
     post(objective.url, {action: "add-completion", ts: ts})
-        .then(res => {toast("Saved objective history"); onSubmit();})
-        .catch(toast);    
+        .then(res => {showToast("Saved objective history"); onSubmit();})
+        .catch(msg => {showToast(msg, true)});    
 }
 
 function resetObjectivesScroll(container) {

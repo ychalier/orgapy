@@ -2975,7 +2975,7 @@ class Sheet {
             const splitter = "---\t".repeat(self.width).trim();
             const markdownString = tsvString.replace("\n", "\n" + splitter + "\n").replaceAll("\t", " | ");
             navigator.clipboard.writeText(markdownString);
-            toast("Copied as Markdown", TOAST_SHORT);
+            showToast("Copied as Markdown");
         });
     }
 
@@ -3054,8 +3054,8 @@ class Sheet {
     saveData() {
         const sheetExport = this.export();
         post("", {content: sheetExport.data, config: sheetExport.config, action: "continue"}, this.etag, (newEtag) => {this.etag = newEtag})
-            .then(res => { toast("Saved"); this.toolbarButtonSave.setAttribute("disabled", "")})
-            .catch(toast);
+            .then(res => { showToast("Saved sheet"); this.toolbarButtonSave.setAttribute("disabled", "")})
+            .catch(msg => {showToast(msg, true)});
     }
 
 }
@@ -3065,15 +3065,15 @@ function initializeSheet(sheetSeed, readonly) {
     const sheetNonce = sheetSeed.getAttribute("sheet-nonce");
     getEtag("?format=json").then(({etag, data}) => {
         sheet = new Sheet(sheetNonce, sheetSeed, etag, readonly);
-        let data = null;
+        let body = null;
         if (data.content != null && data.content.trim() != "") {
-            data = parseTsv(data.content);
+            body = parseTsv(data.content);
         }
         let config = null;
         if (data.config != null && data.config.trim() != "") {
             config = JSON.parse(data.config);
         }
-        sheet.setup(data, config);
+        sheet.setup(body, config);
     });
 }
 

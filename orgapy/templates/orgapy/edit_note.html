@@ -66,8 +66,8 @@ buttonContinue.onclick = (e) => {
     const formData = new FormData(noteForm);
     formData.append("action", "continue");
     post(noteForm.getAttribute("action"), formData, inputEtag.value, (newEtag) => {inputEtag.value = newEtag})
-        .then(res => {toast("Saved")})
-        .catch(toast);
+        .then(res => {showToast("Saved note")})
+        .catch(msg => {showToast(msg, true)});
 };
 document.querySelectorAll("input,textarea").forEach(input => {
     input.addEventListener("input", () => {
