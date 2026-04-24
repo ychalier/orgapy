@@ -7,19 +7,12 @@ from django.core.exceptions import BadRequest
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 
-from ..models import Category, Document, Calendar
-from ..utils import parse_dt
+from ..models import Category, Document
 
 
 def api(request: HttpRequest) -> HttpResponse:
     action = request.GET.get("action")
     match action:
-        case "list-calendars":
-            return api_list_calendars(request)
-        case "delete-calendar":
-            return api_delete_calendar(request)
-        case "add-event":
-            return api_add_event(request)
         case "reference":
             return api_reference(request)
         case "edit-widgets":
@@ -36,73 +29,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_suggestions_categories(request)
         case _:
             raise BadRequest(f"Unknown action '{action}'")
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.view_calendar")
-def api_list_calendars(request: HttpRequest) -> JsonResponse:
-    events = []
-    calendars = []
-    calendar = None
-    for calendar in Calendar.objects.filter(user=request.user):
-        eventsd = calendar.get_events(force="force" in request.GET)
-        for event in eventsd:
-            event["calendar_id"] = calendar.id
-            events.append(event)
-        calendars.append({
-            "name": calendar.calendar_name,
-            "id": calendar.id,
-        })
-    return JsonResponse({
-        "calendars": calendars,
-        "events": events,
-        "last_sync": calendar.last_sync if calendar else None
-    })
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_calendar")
-def api_delete_calendar(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    href = request.POST.get("href")
-    calendarid = request.POST.get("calendarid")
-    if href is None or calendarid is None:
-        raise BadRequest("Missing href or calendarid")
-    if not Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
-        raise Http404()
-    calendar = Calendar.objects.get(user=request.user, id=int(calendarid))
-    success = calendar.delete_event(href)
-    return JsonResponse({"success": success})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.change_calendar")
-def api_add_event(request: HttpRequest) -> JsonResponse:
-    if request.method != "POST":
-        raise BadRequest("Wrong method")
-    calendarid = request.POST.get("calendarid")
-    title = request.POST.get("title")
-    dtstart_date = request.POST.get("dtstart-date")
-    dtstart_time = request.POST.get("dtstart-time")
-    dtend_date = request.POST.get("dtend-date")
-    dtend_time = request.POST.get("dtend-time")
-    location = request.POST.get("location")
-    allday = "allday" in request.POST
-    if allday:
-        dtstart_time = "00:00"
-        dtend_time = "00:00"
-    if title is None or dtstart_date is None or dtstart_time is None or dtend_date is None or dtend_time is None or calendarid is None:
-        raise BadRequest("Missing title or some date")
-    if not Calendar.objects.filter(user=request.user, id=int(calendarid)).exists():
-        raise Http404()
-    if location is not None and location.strip() == "":
-        location = None
-    dtstart = parse_dt(dtstart_date, dtstart_time)
-    dtend = parse_dt(dtend_date, dtend_time)
-    calendar = Calendar.objects.get(user=request.user, id=int(calendarid))
-    success = calendar.add_event(title, dtstart, dtend, location, allday)
-    return JsonResponse({"success": success})
 
 
 def api_reference(request: HttpRequest) -> HttpResponse:

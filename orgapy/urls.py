@@ -18,7 +18,6 @@ urlpatterns = [
     path("progress", views.view_progress, name="progress"),
     path("progress/<log_id>", views.view_progress_log, name="progress_log"),
     path("settings", views.view_settings, name="settings"),
-    path("settings/calendar", views.view_calendar_form, name="calendar_form"), # TODO: add custom view
     path("mood", views.view_mood, name="mood"),
     path("mood/<log_id>", views.view_mood_log, name="mood_log"),
     path("trash", views.view_trash, name="trash"),
@@ -27,6 +26,7 @@ urlpatterns = [
     path("tasks/<task_id>", views.view_task, name="task"),
     path("objectives", views.view_objectives, name="objectives"),
     path("objectives/<objective_id>", views.view_objective, name="objective"),
+    path("calendars", views.view_calendars, name="calendars"),
     path("suggestions", views.view_suggestions, name="suggestions"),
     path("api", api, name="api"), # TODO: deprecated
 ]

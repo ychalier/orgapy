@@ -57,11 +57,27 @@ def view_home(request: HttpRequest) -> HttpResponse:
     pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
     active_projects = Project.objects.filter(user=request.user, status=Project.ACTIVE).order_by("date_creation")
 
+    events = []
+    for calendar in Calendar.objects.filter(user=request.user):
+        events += calendar.get_events()
+    event_groups_dict = {}
+    for event in events:
+        dtstart = datetime.datetime.fromisoformat(event["dtstart"])
+        date = dtstart.date()
+        event_groups_dict.setdefault(date, [])
+        event_groups_dict[date].append({
+            "title": event["title"],
+            "time": None if len(event["dtstart"]) < 11 else dtstart.time(),
+            "location": event["location"]
+        })
+    event_groups = sorted(event_groups_dict.items())
+    for i in range(len(event_groups)):
+        event_groups[i][1].sort(key=lambda x: x["time"])
+
     now = timezone.now()
     tasks = Task.objects\
         .filter(user=request.user, completed=False, start_date__lte=now)\
         .order_by("due_date", "start_date")
-
     today = now.date()
     task_groups_dict = {}
     for task in tasks:
@@ -80,6 +96,7 @@ def view_home(request: HttpRequest) -> HttpResponse:
         "settings": settings,
         "pending_mood_logs": pending_mood_logs,
         "projects": active_projects,
+        "event_groups": event_groups,
         "task_groups": task_groups,
         "active": "home",
     })
@@ -633,48 +650,11 @@ def view_settings(request: HttpRequest) -> HttpResponse:
         user_settings.mood_log_hours = int(request.POST.get("mood_log_hours", 19))
         user_settings.mood_log_lookback_days = int(request.POST.get("mood_log_lookback_days", 2))
         user_settings.mood_activities = request.POST.get("mood_activities", "").strip()
-        user_settings.groceries_data = request.POST.get("groceries_data")
         user_settings.beach_mode = bool(request.POST.get("beach_mode", False))
         user_settings.save()
         if "ref" in request.POST and request.POST["ref"]:
             return redirect(request.POST["ref"])
-    calendars = Calendar.objects.filter(user=request.user).order_by("calendar_name")
-    return render(request, "orgapy/settings.html", {
-        "settings": user_settings,
-        "calendars": calendars,
-    })
-
-
-@permission_required("orgapy.change_calendar")
-def view_calendar_form(request: HttpRequest) -> HttpResponse:
-    if not request.method == "POST":
-        raise BadRequest("Wrong method")
-    if "id" in request.POST:
-        query = Calendar.objects.filter(user=request.user, id=request.POST["id"])
-        if not query.exists():
-            raise Http404()
-        calendar = query.get()
-        if "save" in request.POST:
-            calendar.url = request.POST["url"]
-            calendar.username = request.POST["username"]
-            calendar.password = request.POST["password"]
-            calendar.calendar_name = request.POST["name"]
-            calendar.sync_period = int(request.POST["sync_period"])
-            calendar.save()
-        elif "delete" in request.POST:
-            calendar.delete()
-        else:
-            raise BadRequest("Missing action")
-    else:
-        calendar = Calendar.objects.create(
-            user=request.user,
-            url=request.POST["url"],
-            username=request.POST["username"],
-            password=request.POST["password"],
-            calendar_name=request.POST["name"],
-            sync_period=int(request.POST["sync_period"]),
-        )
-    return redirect("orgapy:settings")
+    return render(request, "orgapy/settings.html", {"settings": user_settings})
 
 
 # MOOD #########################################################################
@@ -1057,3 +1037,55 @@ def view_document_snippet(request: HttpRequest) -> HttpResponse:
                 result["error"] = "Error"
         results.append(result)
     return JsonResponse({"results": results})
+
+
+@permission_required("orgapy.view_calendar")
+def view_calendars(request: HttpRequest) -> HttpResponse:
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "add":
+            if not request.user.has_perm("orgapy.add_calendar"):
+                raise PermissionDenied()
+            Calendar.objects.create(
+                user=request.user,
+                calendar_name=request.POST["name"],
+                url=request.POST["url"],
+                username=request.POST["username"],
+                password=request.POST["password"],
+                sync_period=int(request.POST["sync_period"]),
+            )
+
+        if action == "save":
+            if not request.user.has_perm("orgapy.change_calendar"):
+                raise PermissionDenied()
+            calendar = find_user_object(Calendar, "id", request.POST["id"], request.user)
+            calendar.calendar_name = request.POST["name"]
+            calendar.url = request.POST["url"]
+            calendar.username = request.POST["username"]
+            calendar.password = request.POST["password"]
+            calendar.sync_period = int(request.POST["sync_period"])
+            calendar.save()
+
+        if action == "delete":
+            if not request.user.has_perm("orgapy.delete_calendar"):
+                raise PermissionDenied()
+            calendar = find_user_object(Calendar, "id", request.POST["id"], request.user)
+            calendar.delete()
+
+        if action == "refresh":
+            if not request.user.has_perm("orgapy.change_calendar"):
+                raise PermissionDenied()
+            if "id" in request.POST:
+                calendar = find_user_object(Calendar, "id", request.POST["id"], request.user)
+                calendar.fetch_events()
+            else:
+                for calendar in Calendar.objects.filter(user=request.user):
+                    calendar.fetch_events()
+        
+        if "next" in request.POST:
+            return redirect(request.POST["next"])
+
+    calendars = Calendar.objects.filter(user=request.user)    
+    return render(request, "orgapy/calendars.html", {"calendars": calendars})

@@ -1419,6 +1419,38 @@ dialog > .card {
 
 }
 
+/***** EVENTS *****************************************************************/
+
+.event-dot {
+    display: inline-block;
+    margin-top: .1rem;
+    width: .5rem;
+    height: .5rem;
+    background: var(--accent);
+    border-radius: 50%;
+}
+
+/***** TASKS ******************************************************************/
+
+.task {
+    display: flex;
+}
+
+.task-overdue {
+    color: var(--warning);
+}
+
+.task-button-complete {
+    margin-right: .2rem;
+    width: 1.18rem;
+    height: 1.18rem;
+    padding: 0;
+}
+
+.task-button-complete:not(:hover) i {
+    visibility: hidden;
+}
+
 /***** UTILITY CLASSES ********************************************************/
 
 .row {
@@ -1497,4 +1529,8 @@ dialog > .card {
 
 .small {
     font-size: small;
+}
+
+.spaced-lines {
+    line-height: 1.6;
 }

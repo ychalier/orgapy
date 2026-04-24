@@ -1,0 +1,80 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+
+{% block title %}Calendars{% endblock title %}
+
+{% block column_main %}
+<header class="card">
+    <h1 class="card-header">Calendars</h1>
+    <div class="card-actions">
+        <button onclick="dialogAddCalendar.showModal()"><i class="ri-add-line"></i> Add calendar</button>
+        <form action="" method="post">{% csrf_token %}<button type="submit" name="action" value="refresh"><i class="ri-reset-left-line"></i> Sync all</button></form>
+    </div>
+</header>
+{% for calendar in calendars %}
+<form action="" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="id" value="{{ calendar.id }}" />
+    <div class="card">
+        <h2 class="card-header">
+            <input class="input-inline" type="text" name="name" value="{{ calendar.calendar_name }}" placeholder="Name" required>
+        </h2>
+        <div class="card-body">
+            <span class="hint">Last synchronization: {{ calendar.last_sync }}</span>
+            <p>
+                <label>URL</label>
+                <input type="url" name="url" value="{{ calendar.url }}" required>
+            </p>
+            <p>
+                <label>Username</label>
+                <input type="text" name="username" value="{{ calendar.username }}">
+            </p>
+            <p>
+                <label>Password</label>
+                <input type="password" name="password" value="{{ calendar.password }}">
+            </p>
+            <p>
+                <label>Sync Period</label>
+                <input type="number" name="sync_period" value="{{ calendar.sync_period }}" min="0" required>
+            </p>
+        </div>
+        <div class="card-actions">
+            <button type="submit" name="action" value="save"><i class="ri-save-line"></i> Save</button>
+            <button type="submit" name="action" value="refresh"><i class="ri-reset-left-line"></i> Sync</button>
+            <button type="submit" name="action" value="delete" class="button-danger submit-confirm" message="Do you want to delete '{{ calendar.calendar_name }}'?"><i class="ri-delete-bin-line"></i> Delete</button>
+        </div>
+    </div>
+</form>
+{% endfor %}
+<dialog id="dialogAddCalendar" closedby="any">
+    <form action="" method="post">
+        {% csrf_token %}
+        <div class="card">
+            <h2 class="card-header">
+                <input class="input-inline" type="text" name="name" value="{{ calendar.calendar_name }}" placeholder="Name" required />
+            </h2>
+            <div class="card-body colll">
+                <div>
+                    <label>URL</label>
+                    <input type="url" name="url" value="{{ calendar.url }}"  required />
+                </div>
+                <div>
+                    <label>Username</label>
+                    <input type="text" name="username" value="{{ calendar.username }}" />
+                </div>
+                <div>
+                    <label>Password</label>
+                    <input type="password" name="password" value="{{ calendar.password }}" />
+                </div>
+                <div>
+                    <label>Sync Period</label>
+                    <input type="number" name="sync_period" value="{{ calendar.sync_period }}" min="0" required />
+                </div>
+            </div>
+            <div class="card-actions">
+                <button type="submit" name="action" value="add"><i class="ri-save-line"></i> Save</button>
+            </div>
+        </div>
+    </form>
+</dialog>
+{% endblock column_main %}

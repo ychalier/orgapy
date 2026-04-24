@@ -1,17 +1,14 @@
 {% extends "orgapy/layout/skeleton.html" %}
 {% load static %}
 
-{% block title %}Home{% endblock title %}
+{% block title %}Orgapy{% endblock title %}
 
 {% block head %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'orgapy/css/calendar.css' %}" />
-<link rel="stylesheet" href="{% static 'orgapy/css/tasks.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/objectives.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/projects.css' %}" />
 <link rel="stylesheet" href="{% static 'orgapy/css/mood.css' %}" />
 <script src="{% static 'orgapy/js/dragrank.js' %}"></script>
-<script src="{% static 'orgapy/js/calendar.js' %}"></script>
 <script src="{% static 'orgapy/js/objectives.js' %}"></script>
 <script src="{% static 'orgapy/js/projects.js' %}"></script>
 <script src="{% static 'orgapy/js/mood.js' %}"></script>
@@ -19,11 +16,26 @@
 
 {% block column_main %}
 
+{% if event_groups %}
 <div class="card">
     <div class="card-body">
-        <div id="eventsContainer" class="coll"></div>
+        <div id="eventsContainer" class="coll spaced-lines">
+            {% for group_date, group_events in event_groups %}
+            <details open>
+                <summary class="minititle">{{ group_date | date }}</summary>
+                {% for event in group_events %}
+                <div class="row {% if event.over %}muted{% endif %}" {% if event.location %}title="{{ event.location }}"{% endif %}>
+                    <a class="event-dot"></a>
+                    {% if event.time %}<div>{{ event.time | date:'H:i' }}</div>{% endif %}
+                    <div class="ellipsis">{{ event.title }}</div>
+                </div>
+                {% endfor %}
+            </details>
+            {% endfor %}
+        </div>
     </div>
 </div>
+{% endif %}
 
 {% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
 
@@ -41,7 +53,7 @@
 {% if task_groups %}
 <div class="card">
     <div class="card-body">
-        <div id="tasksContainer" class="coll">
+        <div id="tasksContainer" class="coll spaced-lines">
             {% for task_group in task_groups %}
             <details {% if task_group.open %}open{% endif %}>
                 <summary class="minititle">{{ task_group.label }}</summary>
@@ -68,65 +80,18 @@
     {% endfor %}
 </div>
 {% endif %}
-
-<dialog id="dialogAddEvent" closedby="any">
-    <div class="card">
-        <h2 class="card-header">Create event</h2>
-        <form id="eventForm" method="post" action="{% url 'orgapy:api' %}?action=add-event" class="card-body colll">
-            {% csrf_token %}
-            <div>
-                <label>Calendar</label>
-                <select class="form-select" name="calendarid"></select>
-            </div>
-            <div>
-                <label>Title</label>
-                <input class="form-input" name="title" type="text" placeholder="Weekly Meeting, Launch, …" />
-            </div>
-            <div>
-                <label class="toggle">
-                    <input type="checkbox" name="allday" />
-                    <span class="toggle-slider"></span>
-                    <span class="toggle-text">All Day</span>
-                </label>
-            </div>
-            <div>
-                <label>Date start</label>
-                <span class="actionbar">
-                    <input name="dtstart-date" type="date" />
-                    <input name="dtstart-time" type="time" />
-                </span>
-            </div>
-            <div>
-                <label>Date end</label>
-                <span class="actionbar">
-                    <input name="dtend-date" type="date" />
-                    <input name="dtend-time" type="time" />
-                </span>
-            </div>
-            <div>
-                <label>Location</label>
-                <input class="form-input" name="location" type="text" placeholder="Paris, Room 5, …" />
-            </div>
-        </form>
-        <div class="card-actions">
-            <button id="buttonSubmitEvent">Add</button>
-            <button onclick="dialogAddEvent.close()">Cancel</button>
-        </div>
-    </div>
-</dialog>
 {% endblock column_main %}
 
 {% block menu_create %}
 <li class="menu-item"><form action="{% url 'orgapy:tasks' %}" method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button tabindex="3"><i class="ri-task-line"></i> Task</button></form></li>
 <li class="menu-item"><button id="buttonCreateObjective" tabindex="3"><i class="ri-focus-2-line"></i> Objective</button></li>
 <li class="menu-item"><button id="buttonCreateProject" tabindex="3"><i class="ri-briefcase-line"></i> Project</button></li>
-<li class="menu-item"><button id="buttonCreateEvent" tabindex="3"><i class="ri-calendar-line"></i> Event</button></li>
 <hr>
 {{ block.super }}
 {% endblock menu_create %}
 
 {% block menu %}
-<li class="menu-item"><button id="buttonRefreshEvents" tabindex="3"><i class="ri-reset-left-line"></i> Refresh Events</button></li>
+<li class="menu-item"><form action="{% url 'orgapy:calendars' %}" method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" name="action" value="refresh"><i class="ri-reset-left-line"></i> Refresh events</button></form></li>
 <hr>
 {{ block.super }}
 {% endblock menu %}
@@ -134,13 +99,7 @@
 {% block body_scripts %}
 {{ block.super }}
 <script>
-fetchEvents(eventsContainer, false);
-buttonCreateEvent.onclick = () => { dialogAddEvent.showModal() };
-buttonSubmitEvent.onclick = () => { onEventSubmit(eventsContainer, eventForm, buttonRefreshEvents) };
-buttonRefreshEvents.onclick = () => { onEventRefresh(eventsContainer, buttonRefreshEvents) };
-
 fetchAndInflateObjectives(objectivesContainer, "{% url 'orgapy:objectives' %}", false);
-
 for (const projectContainer of document.querySelectorAll(".project-container")) {
      bindProject(
         projectContainer,

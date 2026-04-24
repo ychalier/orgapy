@@ -4,17 +4,12 @@
 {% block title %}Settings{% endblock title %}
 
 {% block column_main %}
-<div class="card">
-
-    <h1 class="card-header">Settings</h1>
-
-    <div class="card-body">
-
-        <h2>General</h2>
-
-        <form action="{% url 'orgapy:settings' %}" method="post">
-            {% csrf_token %}
-            <input hidden type="text" name="ref" value="{{ request.GET.ref }}" />
+<form action="{% url 'orgapy:settings' %}" method="post">
+    {% csrf_token %}
+    <input hidden type="text" name="ref" value="{{ request.GET.ref }}" />
+    <div class="card">
+        <h1 class="card-header">Settings</h1>
+        <div class="card-body">
             <p>
                 <label for="input-objective-start-hours">Objective Start Hours</label>
                 <input id="input-objective-start-hours" type="number" name="objective_start_hours" value="{{ settings.objective_start_hours }}" min="0" max="23" step="1" />
@@ -42,11 +37,6 @@
                 <span class="hint">Write one activity per line. Each line contains a label and an emoji, separated by a space.</span>
             </p>
             <p>
-                <label for="input-groceries">Groceries</label>
-                <textarea id="input-groceries" name="groceries_data" rows="5">{% if settings.groceries_data %}{{ settings.groceries_data }}{% endif %}</textarea>
-                <span class="hint">JSON data for the grocery app.</span>
-            </p>
-            <p>
                 <label class="toggle">
                     <input type="checkbox" name="beach_mode" {% if settings.beach_mode %}checked{% endif %} />
                     <span class="toggle-slider"></span>
@@ -54,69 +44,10 @@
                 </label>
                 <span class="hint">Hide tasks, objectives and projects from homepage.</span>
             </p>
-            <button>Save</button>
-        </form>
-
-        <h2>Calendars</h2>
-
-        {% for calendar in calendars %}
-        <form action="{% url 'orgapy:calendar_form' %}" method="post" class="card-block">
-            <p>
-                <label>Name</label>
-                <input type="text" name="name" value="{{ calendar.calendar_name }}" />
-            </p>
-            {% csrf_token %}
-            <input type="hidden" name="id" value="{{ calendar.id }}" />
-            <p>
-                <label>URL</label>
-                <input type="url" name="url" value="{{ calendar.url }}" />
-            </p>
-            <p>
-                <label>Username</label>
-                <input type="text" name="username" value="{{ calendar.username }}" />
-            </p>
-            <p>
-                <label>Password</label>
-                <input type="password" name="password" value="{{ calendar.password }}" />
-            </p>
-            <p>
-                <label>Sync Period</label>
-                <input type="number" name="sync_period" value="{{ calendar.sync_period }}" min="0"/>
-            </p>
-            <div class="row">
-                <input type="submit" name="save" value="Save" />
-                <input class="button-danger submit-confirm" name="delete" type="submit" value="Delete" />
-            </div>
-        </form>
-        <br>
-        {% endfor %}
-
-        <form action="{% url 'orgapy:calendar_form' %}" method="post" class="card-block">
-            <p>
-                <label>Name</label>
-                <input type="text" name="name" placeholder="Work, Birthdays, …" />
-            </p>
-            {% csrf_token %}
-            <p>
-                <label>URL</label>
-                <input type="url" name="url" placeholder="https://example.org" />
-            </p>
-            <p>
-                <label>Username</label>
-                <input type="text" name="username" placeholder="Username" />
-            </p>
-            <p>
-                <label>Password</label>
-                <input type="password" name="password" placeholder="Password" />
-            </p>
-            <p>
-                <label>Sync Period</label>
-                <input type="number" name="sync_period" value="86400" min="0" placeholder="86400" />
-            </p>
-            <button>Create</button>
-        </form>
-
+        </div>
+        <div class="card-actions">
+            <button><i class="ri-save-line"></i> Save</button>
+        </div>
     </div>
-
-</div>
+</form>
 {% endblock column_main %}

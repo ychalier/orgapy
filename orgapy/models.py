@@ -486,55 +486,6 @@ class Calendar(models.Model):
             self.fetch_events()
         return json.loads(self.events) if self.events else []
 
-    def delete_event(self, href: str):
-        success = False
-        with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
-            principal = client.principal()
-            for calendar in principal.calendars():
-                assert isinstance(calendar, caldav.Calendar) # type: ignore
-                if calendar.name != self.calendar_name:
-                    continue
-                event = calendar.event_by_url(href)
-                if event is None:
-                    return False
-                if event is not None:
-                    event.delete()
-                events_data = [] if self.events is None else json.loads(self.events)
-                self.events = json.dumps(list(filter(lambda e: e["url"] != href, events_data)))
-                self.save()
-                success = True
-                break
-        return success
-
-    def add_event(self, title, dtstart, dtend, location, allday):
-        success = False
-        with caldav.DAVClient(url=self.url, username=self.username, password=self.password) as client:
-            principal = client.principal()
-            for calendar in principal.calendars():
-                if calendar.name != self.calendar_name:
-                    continue
-                if allday:
-                    dtstart = dtstart.date()
-                    dtend = dtend.date()
-                event = calendar.save_event(
-                    dtstart=dtstart,
-                    dtend=dtend,
-                    summary=title,
-                    location=location)
-                events_data = [] if self.events is None else json.loads(self.events)
-                events_data.append({
-                    "url": event.url,
-                    "title": title,
-                    "dtstart": dtstart.isoformat(),
-                    "dtend": dtend.isoformat(),
-                    "location": location
-                })
-                self.events = json.dumps(events_data, default=str)
-                self.save()
-                success = True
-                break
-        return success
-
 
 class ProgressLog(models.Model):
 
