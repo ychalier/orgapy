@@ -10,7 +10,6 @@
 {% endblock head %}
 
 {% block column_main %}
-
 <div class="sheet" sheet-nonce="{{document.nonce}}">
     <div class="sheet-toolbar">
         <span class="sheet-toolbar-primary">{% if not readonly %}
@@ -72,14 +71,8 @@
     <div class="sheet-body"></div>
 </div>
 
-{% endblock %}
-
-{% block body_scripts %}
-{{ block.super }}
 <script>
-    window.addEventListener("load", () => {
-        markdownToHtml(".markdown-inline", {fancy: false});
-        initializeSheets({% if readonly %}true{% else %}false{% endif %});
-    });
+markdownToHtml(".markdown-inline", {fancy: false});
+initializeSheets({% if readonly %}true{% else %}false{% endif %});
 </script>
-{% endblock body_scripts %}
+{% endblock %}

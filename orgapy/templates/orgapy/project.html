@@ -12,22 +12,5 @@
 
 {% block column_main %}
 <div id="projectContainer" href="{% url 'orgapy:project' project.id %}"></div>
-{% endblock column_main %}
-
-{% block body_scripts %}
-{{ block.super }}
-<script>
-    bindProject(
-        projectContainer,
-        "{% url 'orgapy:suggestions' %}",
-        forceExpand=true);
-    //window.addEventListener("load", () => {
-    //    fetchProjects(projectsContainer,
-    //        "{% url 'orgapy:suggestions' %}",
-    //        documentNonce=null,
-    //        forceExpand=true,
-    //        statusFilter=null,
-    //        projectId={{ project.id }});
-    //});
-</script>
-{% endblock body_scripts %}
+<script>bindProject(projectContainer, "{% url 'orgapy:suggestions' %}", forceExpand=true)</script>
+{% endblock %}

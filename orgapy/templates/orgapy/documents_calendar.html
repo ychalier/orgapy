@@ -29,14 +29,8 @@
     </div>
 </div>
 
+<script>bindCalendar(calendarContainer, buttonExport, {defaultMode: "monthly"});</script>
 {% endblock %}
-
-{% block body_scripts %}
-{{ block.super }}
-<script>
-    bindCalendar(calendarContainer, buttonExport, {defaultMode: "monthly"});
-</script>
-{% endblock body_scripts %}
 
 
 

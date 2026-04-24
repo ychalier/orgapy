@@ -7,7 +7,7 @@ from django.core.exceptions import BadRequest
 from django.http import HttpRequest, HttpResponse, Http404, JsonResponse
 from django.utils import timezone
 
-from ..models import Category, Document
+from ..models import Document
 
 
 def api(request: HttpRequest) -> HttpResponse:
@@ -17,16 +17,6 @@ def api(request: HttpRequest) -> HttpResponse:
             return api_reference(request)
         case "edit-widgets":
             return api_edit_widgets(request)
-        case "suggestions":
-            return api_suggestions_documents(request)
-        case "suggestions-notes":
-            return api_suggestions_notes(request)
-        case "suggestions-sheets":
-            return api_suggestions_sheets(request)
-        case "suggestions-maps":
-            return api_suggestions_maps(request)
-        case "suggestions-categories":
-            return api_suggestions_categories(request)
         case _:
             raise BadRequest(f"Unknown action '{action}'")
 
@@ -102,62 +92,3 @@ def api_edit_widgets(request: HttpRequest) -> JsonResponse:
     doc.date_modification = timezone.now()
     doc.save()
     return JsonResponse({"success": True})
-
-
-#TODO DEPRECATED
-@permission_required("orgapy.view_document")
-def api_suggestions_documents(request: HttpRequest, doctype: str | None = None) -> JsonResponse:
-    query = request.GET.get("q", "").strip()
-    if doctype is None:
-        doctype = request.GET.get("t")
-    results: list[Category | Document] = []
-    if len(query) >= 1:
-        if query.startswith("#"):
-            results = list(Category.objects.filter(user=request.user, name__startswith=query[1:])[:5])
-        elif doctype:
-            results = list(Document.objects.filter(user=request.user, deleted=False, hidden=False, type=doctype, title__startswith=query)[:5])
-        else:
-            results = list(Document.objects.filter(user=request.user, deleted=False, hidden=False, title__startswith=query)[:5])
-    return JsonResponse({
-        "results": [
-            {
-                "nonce": result.nonce if isinstance(result, Document) else result.name,
-                "title": result.title,
-                "url": result.get_absolute_url(),
-                "type": getattr(result, "type", None)
-            }
-            for result in results
-        ]
-    })
-
-#TODO DEPRECATED
-@permission_required("orgapy.view_document")
-def api_suggestions_notes(request: HttpRequest) -> JsonResponse:
-    return api_suggestions_documents(request, "note")
-
-#TODO DEPRECATED
-@permission_required("orgapy.view_document")
-def api_suggestions_sheets(request: HttpRequest) -> JsonResponse:
-    return api_suggestions_documents(request, "sheet")
-
-#TODO DEPRECATED
-@permission_required("orgapy.view_document")
-def api_suggestions_maps(request: HttpRequest) -> JsonResponse:
-    return api_suggestions_documents(request, "map")
-
-#TODO DEPRECATED
-@permission_required("orgapy.view_category")
-def api_suggestions_categories(request: HttpRequest) -> JsonResponse:
-    query = request.GET.get("q", "").strip()
-    results = Category.objects.filter(user=request.user, name__startswith=query)[:5]
-    return JsonResponse({
-        "results": [
-            {
-                "nonce": result.name,
-                "title": result.title,
-                "url": result.get_absolute_url(),
-                "type": getattr(result, "type", None)
-            }
-            for result in results
-        ]
-    })

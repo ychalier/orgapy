@@ -124,7 +124,7 @@ def view_projects(request: HttpRequest) -> HttpResponse:
 
     attrs = {}
 
-    page_size = int(request.GET.get("size", 25))
+    page_size = int(request.GET.get("size", 23))
     attrs["size"] = page_size
 
     search_query = request.GET.get("query")

@@ -12,7 +12,6 @@
 {% endblock %}
 
 {% block column_main %}
-
 <form id="noteForm" action="{% url 'orgapy:document' document.nonce %}" method="post">
     {% csrf_token %}
     <input id="inputEtag" type="hidden" name="etag" value="{{ etag }}">
@@ -29,84 +28,66 @@
     </div>
     <textarea class="document-form-content" id="noteContentInput" name="content" placeholder="Write content using Markdown">{% if document.content %}{{ document.content }}{% endif %}</textarea>
 </form>
-
-{% endblock column_main %}
-
-{% block body_scripts %}
-{{ block.super }}
 <script>
-    //let buttonSaveContinue = document.getElementById("buttonSaveContinue");
-    if (window.innerWidth > 800) {
-        const simplemde = new SimpleMDE({
-            element: noteContentInput,
-            autoDownloadFontAwesome: false,
-            autofocus: true,
-            autosave: false,
-            forceSync: true, // ?
-            indentWithTabs: false,
-            initialValue: noteContentInput.value,
-            lineWrapping: true,
-            status: false,
-            toolbar: false,
-            toolbarTips: false,
-            spellChecker: false,
-            renderingConfig: {
-                singleLineBreaks: true,
-                codeSyntaxHighlighting: true,
-            }
-        });
-        simplemde.codemirror.on("cursorActivity", (cmInstance) => {
-            onCmCursorActivity(cmInstance, "{% url 'orgapy:suggestions' %}")
-        });
-        simplemde.codemirror.on("change", () => {
-            if (buttonContinue != null) buttonContinue.removeAttribute("disabled");
-        });
-        window.addEventListener("load", () => {
-            simplemde.codemirror.refresh();
-        });
-    } else {
-        noteContentInput.style.height = (window.innerHeight - 290) + "px";
-    }
-    //bindSaveNoteButtons(noteForm, buttonSaveExit, buttonSaveContinue);
-    buttonContinue.onclick = (e) => {
-        e.preventDefault();
-        buttonContinue.setAttribute("disabled", "");
-        const formData = new FormData(noteForm);
-        formData.append("action", "continue");
-        fetch(noteForm.getAttribute("action"), {
-            method: "POST",
-            body: formData,
-            headers: {
-                "If-Match": inputEtag.value,
-                "X-Requested-With": "XMLHttpRequest"
-            }
-        }).then(res => {
-            if (res.status == 204) {
-                const newEtag = res.headers.get("ETag");
-                if (newEtag) inputEtag.value = newEtag;
-                toast("Saved!", 600);
-            } else if (res.status == 412) {
-                toast("Conflict detected", 600);
-            } else {
-                toast(`An error occurred: ${res.status}`, 600);
-            }
-        });
-        //const formdata = new FormData(form);
-        //fetch(form.action, {method: form.method, body: formdata}).then(res => {
-        //    if (res.status == 200) {
-        //        toast("Saved!", 600);
-        //        document.querySelector("input[name=modification]").value = new Date() / 1000;
-        //    } else {
-        //        res.text().then(resText => {
-        //            toast(`An error occurred: ${res.status} ${resText}`, 600);
-        //        });
-        //    }
-        //});
-    };
-    document.querySelectorAll("input,textarea").forEach(input => {
-        input.addEventListener("input", () => {
-            buttonContinue.removeAttribute("disabled");
-        });
+if (window.innerWidth > 800) {
+    const simplemde = new SimpleMDE({
+        element: noteContentInput,
+        autoDownloadFontAwesome: false,
+        autofocus: true,
+        autosave: false,
+        forceSync: true, // ?
+        indentWithTabs: false,
+        initialValue: noteContentInput.value,
+        lineWrapping: true,
+        status: false,
+        toolbar: false,
+        toolbarTips: false,
+        spellChecker: false,
+        renderingConfig: {
+            singleLineBreaks: true,
+            codeSyntaxHighlighting: true,
+        }
     });
+    simplemde.codemirror.on("cursorActivity", (cmInstance) => {
+        onCmCursorActivity(cmInstance, "{% url 'orgapy:suggestions' %}")
+    });
+    simplemde.codemirror.on("change", () => {
+        if (buttonContinue != null) buttonContinue.removeAttribute("disabled");
+    });
+    window.addEventListener("load", () => {
+        simplemde.codemirror.refresh();
+    });
+} else {
+    noteContentInput.style.height = (window.innerHeight - 290) + "px";
+}
+buttonContinue.onclick = (e) => {
+    e.preventDefault();
+    buttonContinue.setAttribute("disabled", "");
+    const formData = new FormData(noteForm);
+    formData.append("action", "continue");
+    fetch(noteForm.getAttribute("action"), {
+        method: "POST",
+        body: formData,
+        headers: {
+            "If-Match": inputEtag.value,
+            "X-Requested-With": "XMLHttpRequest"
+        }
+    }).then(res => {
+        if (res.status == 204) {
+            const newEtag = res.headers.get("ETag");
+            if (newEtag) inputEtag.value = newEtag;
+            toast("Saved!", 600);
+        } else if (res.status == 412) {
+            toast("Conflict detected", 600);
+        } else {
+            toast(`An error occurred: ${res.status}`, 600);
+        }
+    });
+};
+document.querySelectorAll("input,textarea").forEach(input => {
+    input.addEventListener("input", () => {
+        buttonContinue.removeAttribute("disabled");
+    });
+});
 </script>
-{% endblock body_scripts %}
+{% endblock %}

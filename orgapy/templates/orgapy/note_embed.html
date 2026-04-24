@@ -5,6 +5,8 @@
 
 {% block head %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/dependencies/darcula.min.css' %}">
+<script src="{% static 'orgapy/dependencies/highlight.min.js' %}"></script>
 <link rel="stylesheet" href="{% static 'orgapy/dependencies/katex.min.css' %}" />
 <script src="{% static 'orgapy/dependencies/showdown-katex.min.js' %}"></script>
 <link rel="stylesheet" href="{% static 'orgapy/css/notes.css' %}" />
@@ -13,11 +15,7 @@
 
 {% block column_main %}
 <div class="card card-note" style="border: none; border-radius: 0"><h1>{% if document.title %}{{ document.title }}{% else %}<i>Untitled</i>{% endif %}</h1>{% if document.content %}{{ document.content | safe }}{% else %}This document has no content.{% endif %}</div>
-{% endblock column_main %}
-
-{% block body_scripts %}
-{{ block.super }}
 <script>
     markdownToHtml(".card-note", {fancy: true, useKatex: true, embed: true, fetchReferences: true});
 </script>
-{% endblock body_scripts %}
+{% endblock %}

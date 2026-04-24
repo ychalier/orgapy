@@ -29,14 +29,5 @@
     </div>
 </template>
 {% endif %}
-
+<script>initializeMaps({% if readonly %}true{% else %}false{% endif %})</script>
 {% endblock %}
-
-{% block body_scripts %}
-{{ block.super }}
-<script>
-    window.addEventListener("load", () => {
-        initializeMaps({% if readonly %}true{% else %}false{% endif %});
-    });
-</script>
-{% endblock body_scripts %}

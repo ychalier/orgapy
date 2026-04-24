@@ -11,11 +11,7 @@
         <form action="" method="post">{% csrf_token %}<button><i class="ri-add-line"></i><span>Append log</span></button></form>
     </div>
 </div>
-{% endblock %}
-
-{% block body_scripts %}
-{{ block.super }}
 <script>
-    bindCalendar(calendarContainer, buttonExport, {relativeLevels: true, defaultMode: "weekly"});
+bindCalendar(calendarContainer, buttonExport, {relativeLevels: true, defaultMode: "weekly"});
 </script>
-{% endblock body_scripts %}
+{% endblock %}

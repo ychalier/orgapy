@@ -17,37 +17,31 @@
         <a id="buttonExport" class="button"><i class="ri-download-line"></i><span>Export</span></a>
     </div>
 </div>
-
 {% if pending_mood_logs %}{% include 'orgapy/partials/mood_log_forms.html' %}{% endif %}
-
-{% endblock %}
-
-{% block body_scripts %}
-{{ block.super }}
 <script>
-    bindCalendar(calendarContainer, buttonExport, {
-        levelKey: "level",
-        defaultMode: "monthly",
-        additionnalClassName: "mood-palette",
-        inflateDetails: (container, entries, isPopover) => {
-            const entry = entries[0];
-            if (isPopover) {
-                create(container, "span").textContent = entry.label;
-                const col = create(container, "div", "coll");
-                const trackers = create(col, "div", "actionbar");
-                create(trackers, "button", "mood-tracker " + entry.mood).title = "Mood";
-                create(trackers, "button", "mood-tracker " + entry.energy).title = "Energy";
-                create(trackers, "button", "mood-tracker " + entry.health).title = "Health";
-                create(trackers, "button", "mood-tracker " + entry.stress).title = "Stress";
-                if (entry.activities != "") {
-                    create(col, "div").textContent = entry.activities;
-                }
-            } else {
-                if (entry.activities != "") {
-                    create(container, "div").textContent = entry.activities;
-                }
+bindCalendar(calendarContainer, buttonExport, {
+    levelKey: "level",
+    defaultMode: "monthly",
+    additionnalClassName: "mood-palette",
+    inflateDetails: (container, entries, isPopover) => {
+        const entry = entries[0];
+        if (isPopover) {
+            create(container, "span").textContent = entry.label;
+            const col = create(container, "div", "coll");
+            const trackers = create(col, "div", "actionbar");
+            create(trackers, "button", "mood-tracker " + entry.mood).title = "Mood";
+            create(trackers, "button", "mood-tracker " + entry.energy).title = "Energy";
+            create(trackers, "button", "mood-tracker " + entry.health).title = "Health";
+            create(trackers, "button", "mood-tracker " + entry.stress).title = "Stress";
+            if (entry.activities != "") {
+                create(col, "div").textContent = entry.activities;
+            }
+        } else {
+            if (entry.activities != "") {
+                create(container, "div").textContent = entry.activities;
             }
         }
-    });
+    }
+});
 </script>
-{% endblock body_scripts %}
+{% endblock %}

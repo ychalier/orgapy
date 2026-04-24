@@ -212,8 +212,8 @@ def view_document_list(
     attrs = {}
 
     if page_size is None:
-        page_size = int(request.GET.get("size", 25))
-    if page_size != 25:
+        page_size = int(request.GET.get("size", 23))
+    if page_size != 23:
         attrs["size"] = page_size
 
     if search_query is None:
