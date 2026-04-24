@@ -42,32 +42,7 @@
 </form>
 <button id="navbarSearchButton"><i class="ri-search-line"></i></button>
 <script>
-bindSearch(
-    navbarSearchForm,
-    "{% url 'orgapy:suggestions' %}",
-    {},
-    (state) => {
-        const element = create(state.container, "a");
-        element.href = state.entry.url;
-        let prefix = "";
-        switch (state.entry.type) {
-            case "note":
-                prefix = `<i class="ri-sticky-note-line"></i> `;
-                break;
-            case "sheet":
-                prefix = `<i class="ri-table-line"></i> `;
-                break;
-            case "map":
-                prefix = `<i class="ri-map-2-line"></i> `;
-                break;
-        }
-        element.innerHTML = `${prefix}${ state.entry.label }`;
-        return element;
-    },
-    (entry) => {
-        if (entry != null) window.location.href = entry.url;
-    }
-);
+bindSearch(navbarSearchForm, "{% url 'orgapy:suggestions' %}", {});
 bindSearchButton(navbarSearchForm, navbarSearchButton);
 navbarSubmitSearchFormButton.onclick = (event) => {
     if (navbarSearchInput.value.trim() == "") {
@@ -105,12 +80,12 @@ navbarSubmitSearchFormButton.onclick = (event) => {
 <li class="menu-item"><a href="{% url 'orgapy:objectives' %}" tabindex="3"><i class="ri-focus-2-line"></i> Objectives</a></li>
 <li class="menu-item"><a href="{% url 'orgapy:progress' %}" tabindex="3"><i class="ri-bar-chart-2-line"></i> Progress</a></li>
 <li class="menu-item"><a href="{% url 'orgapy:projects' %}" tabindex="3"><i class="ri-briefcase-line"></i> Projects</a></li>
-<li class="menu-item"><a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}" tabindex="3"><i class="ri-settings-2-line"></i> Settings</a></li>                            
+<li class="menu-item"><a href="{% url 'orgapy:settings' %}?ref={{ request.get_full_path | urlencode }}" tabindex="3"><i class="ri-settings-2-line"></i> Settings</a></li>                            
 <li class="menu-item"><a href="{% url 'orgapy:tasks' %}" tabindex="3"><i class="ri-task-line"></i> Tasks</a></li>
 <li class="menu-item"><a href="{% url 'orgapy:trash' %}" tabindex="3"><i class="ri-delete-bin-line"></i> Trash</a></li>
 <hr>
 {% endif %}
-<li class="menu-item"><a href="{% url 'orgapy:about' %}" tabindex="3"><i class="ri-information-line"></i> About</a></li>
+<li class="menu-item"><a href="{% url 'orgapy:about' %}" tabindex="3"><i class="ri-information-line"></i> About</a></li>
 {% endblock menu %}
 </ul>
 </div>

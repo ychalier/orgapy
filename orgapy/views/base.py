@@ -996,9 +996,9 @@ def view_suggestions(request: HttpRequest) -> HttpResponse:
         "results": [
             {
                 "ref": getattr(result, "name", getattr(result, "nonce", None)),
-                "label": result.reference if isinstance(result, Project) else result.title,
+                "label": result.title if isinstance(result, Document) else (result.name if isinstance(result, Category) else result.reference),
                 "url": result.get_absolute_url(),
-                "type": result.type if isinstance(result, Document) else ("project" if isinstance(result, Project) else "category")
+                "icon": result.type_icon if isinstance(result, Document) else ("ri-hashtag" if isinstance(result, Category) else "ri-briefcase-line")
             }
             for result in results
         ]

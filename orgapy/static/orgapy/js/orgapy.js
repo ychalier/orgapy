@@ -66,10 +66,14 @@ function apiPost(action, body, onSuccess=null) {
     fetchApi(URL_API + "?action=" + action, "post", formData, onSuccess);
 }
 
-function bindSearch(searchEl, suggestionsUrl, suggestionsParams, inflateMenuItem, onElementClick) {
+function bindSearch(searchEl, suggestionsUrl, suggestionsParams, onElementClick) {
 
     const searchInput = searchEl.querySelector(".search-input");
     const suggestionsContainer = searchEl.querySelector(".search-suggestions");
+
+    if (onElementClick == undefined) {
+        onElementClick = (entry) => {if (entry != null) window.location.href = entry.url};
+    }
 
     var clearedAt = new Date();
     var fetchedAt = clearedAt;
@@ -113,7 +117,9 @@ function bindSearch(searchEl, suggestionsUrl, suggestionsParams, inflateMenuItem
             for (const [i, entry] of results.entries()) {
                 const li = create(suggestionsContainer, "li", "menu-item");
                 lines.push(li);
-                inflateMenuItem({container: li, entry: entry, query: query});
+                const menuItem = create(li, "a");
+                menuItem.href = entry.url;
+                menuItem.innerHTML = `<i class="${entry.icon}"></i> ${entry.label}`;
                 li.addEventListener("click", (e) => {
                     e.preventDefault();
                     onElementClick(entry);
@@ -598,14 +604,11 @@ function setupCategoryInput(container, suggestionsUrl) {
     parseHiddenValue();
     updateCurrentContainer();
 
-    const searchObject = bindSearch(container, suggestionsUrl, {t: "category"}, (state) => {
-        const element = create(state.container, "button");
-        element.textContent = state.entry.label.slice(1);
-        return element;
-    }, (entry) => {
-        if (entry != null) pushCategory(entry.label.slice(1));
-        searchObject.clear();
-    });
+    const searchObject = bindSearch(container, suggestionsUrl, {t: "category"},
+        (entry) => {
+            if (entry != null) pushCategory(entry.label);
+            searchObject.clear();
+        });
 
     const inputEndChars = " ,;";
 
@@ -1009,12 +1012,6 @@ function bindDocumentInput(container, suggestionsUrl, snippetUrl) {
         container,
         suggestionsUrl,
         {t: "document"},
-        (state) => {
-            const element = create(state.container, "a");
-            element.href = state.entry.url;
-            element.textContent = state.entry.label;
-            return element;
-        },
         (entry) => {
             if (entry != null) {
                 inputText.value = "";

@@ -251,17 +251,14 @@ function openSmdeDropdown(cmInstance, word, suggestionsUrl) {
 
     create(dropdown, "ul", "search-suggestions menu");
 
-    bindSearch(dropdown, suggestionsUrl, {t: objectType}, (state) => {
-        const element = create(state.container, "button");
-        element.textContent = state.entry.label;
-        return element;
-    }, (entry) => {
-        if (entry == null) {
-            unfocusSmdeDropdown();
-        } else {
-            setNonce(entry.ref, "interlink-set")
-        }
-    });
+    bindSearch(dropdown, suggestionsUrl, {t: objectType},
+        (entry) => {
+            if (entry == null) {
+                unfocusSmdeDropdown();
+            } else {
+                setNonce(entry.ref, "interlink-set")
+            }
+        });
 
     function unfocusSmdeDropdown() {
         smdeDropdownState = "interlink-set";

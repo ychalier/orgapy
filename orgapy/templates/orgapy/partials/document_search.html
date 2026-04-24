@@ -39,31 +39,4 @@
         </div>
     </div>
 </form>
-<script>
-bindSearch(
-    searchForm,
-    "{% url 'orgapy:suggestions' %}",
-    {t: "document"},
-    (state) => {
-        const element = create(state.container, "a");
-        element.href = state.entry.url;
-        let prefix = "";
-        switch (state.entry.type) {
-            case "note":
-                prefix = `<i class="ri-sticky-note-line"></i> `;
-                break;
-            case "sheet":
-                prefix = `<i class="ri-table-line"></i> `;
-                break;
-            case "map":
-                prefix = `<i class="ri-map-2-line"></i> `;
-                break;
-        }
-        element.innerHTML = `${prefix}${state.entry.label}`;
-        return element;
-    },
-    (entry) => {
-        if (entry != null) window.location.href = entry.url;
-    }
-);
-</script>
+<script>bindSearch(searchForm, "{% url 'orgapy:suggestions' %}", {t: "document"})</script>

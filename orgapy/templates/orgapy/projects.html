@@ -58,19 +58,7 @@
 </div>
 <script>
 const SUGGESTIONS_URLS = "{% url 'orgapy:suggestions' %}";
-bindSearch(
-    searchForm,
-    SUGGESTIONS_URLS,
-    {t: "project"},
-    (state) => {
-        const element = create(state.container, "a");
-        element.href = state.entry.url;
-        element.innerHTML = `<i class="ri-briefcase-line"></i> ${state.entry.label}`;
-        return element;
-    },
-    (entry) => {
-        if (entry != null) window.location.href = entry.url;
-    });
+bindSearch(searchForm, SUGGESTIONS_URLS, {t: "project"});
 bindDocumentInput(documentSearch, SUGGESTIONS_URLS, "{% url 'orgapy:document_snippet' %}");
 </script>
 

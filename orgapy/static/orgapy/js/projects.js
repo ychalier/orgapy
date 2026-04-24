@@ -163,27 +163,24 @@ class Project {
             currentUrl = this.document.url;
         }
 
-        bindSearch(container, this.suggestionsUrl, {t: "note"}, (state) => {
-            const element = create(state.container, "button");
-            element.textContent = state.entry.label;
-            return element;
-        }, (entry) => {
-            if (entry != null) {
-                currentNonce = entry.ref;
-                currentTitle = entry.label;
-                currentUrl = entry.url;
-            }
-            if (currentNonce != null && currentTitle != null && currentUrl != null) {
-                self.document = {
-                    nonce: currentNonce,
-                    title: currentTitle,
-                    url: currentUrl
+        bindSearch(container, this.suggestionsUrl, {t: "note"},
+            (entry) => {
+                if (entry != null) {
+                    currentNonce = entry.ref;
+                    currentTitle = entry.label;
+                    currentUrl = entry.url;
                 }
-            }
-            self.inflateHeader();
-            self.save("document");
-            dialog.close();
-        });
+                if (currentNonce != null && currentTitle != null && currentUrl != null) {
+                    self.document = {
+                        nonce: currentNonce,
+                        title: currentTitle,
+                        url: currentUrl
+                    }
+                }
+                self.inflateHeader();
+                self.save("document");
+                dialog.close();
+            });
 
         dialog.showModal();
         input.focus();
