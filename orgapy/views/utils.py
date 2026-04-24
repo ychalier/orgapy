@@ -90,7 +90,9 @@ def get_checked_items(checklist: str) -> list[str]:
     return re.findall(r"\[x\] (.*)", checklist)
 
 
-def compare_checklists(user: LoggedUser, reference: str, before: str | None, after: str | None):
+def compare_checklists(user: LoggedUser | AnonymousUser, reference: str, before: str | None, after: str | None):
+    if isinstance(user, AnonymousUser):
+        raise PermissionDenied()
     if before is None or after is None:
         return
     checked_before = set(get_checked_items(before))
@@ -103,7 +105,9 @@ def compare_checklists(user: LoggedUser, reference: str, before: str | None, aft
         )
 
 
-def get_or_create_settings(user: LoggedUser) -> Settings:
+def get_or_create_settings(user: LoggedUser | AnonymousUser) -> Settings:
+    if isinstance(user, AnonymousUser):
+        raise PermissionDenied()
     query = Settings.objects.filter(user=user)
     if query.exists():
         return query.get()
@@ -355,7 +359,9 @@ def view_document_list(
     })
 
 
-def get_pending_mood_logs(user: LoggedUser, today_hours: int, lookback_days: int) -> list[datetime.date]:
+def get_pending_mood_logs(user: LoggedUser | AnonymousUser, today_hours: int, lookback_days: int) -> list[datetime.date]:
+    if isinstance(user, AnonymousUser):
+        raise PermissionDenied()
     last_mood_log = MoodLog.objects.filter(user=user).order_by("-date").first()
     now = datetime.datetime.now()
     today = now.date()

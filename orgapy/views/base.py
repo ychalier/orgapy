@@ -5,7 +5,6 @@ import time
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import permission_required
-from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -51,8 +50,6 @@ def view_about(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_project")
 def view_home(request: HttpRequest) -> HttpResponse:
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
     settings = get_or_create_settings(request.user)
     pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
     active_projects = Project.objects.filter(user=request.user, status=Project.ACTIVE).order_by("date_creation")
@@ -210,8 +207,6 @@ def project_last_modified_func(request: HttpRequest, project_id: str) -> datetim
 @permission_required("orgapy.view_project")
 @condition(project_etag_func, project_last_modified_func)
 def view_project(request: HttpRequest, project_id: str) -> HttpResponse:
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
     project = find_user_object(Project, "id", project_id, request.user)
 
     if request.method == "POST":
@@ -640,8 +635,6 @@ def view_progress_log(request: HttpRequest, log_id: str) -> HttpResponse:
 
 @permission_required("orgapy.change_settings")
 def view_settings(request: HttpRequest) -> HttpResponse:
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
     user_settings = get_or_create_settings(request.user)
     if request.method == "POST":
         user_settings.objective_start_hours = int(request.POST.get("objective_start_hours", 0))
@@ -663,8 +656,6 @@ def view_settings(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_mood_log")
 def view_mood(request: HttpRequest, year: int | str | None = None) -> HttpResponse:
 
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
     settings = get_or_create_settings(request.user)
     pending_mood_logs = get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
 
@@ -761,8 +752,6 @@ def view_mood_log(request: HttpRequest, log_id: int) -> HttpResponse:
 @permission_required("orgapy.view_settings")
 def view_groceries(request: HttpRequest) -> HttpResponse:
 
-    if isinstance(request.user, AnonymousUser):
-        raise PermissionDenied()
     settings = get_or_create_settings(request.user)
 
     if request.method == "POST":
@@ -906,8 +895,6 @@ def view_objectives(request: HttpRequest) -> HttpResponse:
     qs = Objective.objects.filter(user=request.user).order_by("id")
 
     if request.GET.get("format") == "json":
-        if isinstance(request.user, AnonymousUser):
-            raise PermissionDenied()
         if not request.GET.get("archived"):
             qs = qs.exclude(archived=True)
         settings = get_or_create_settings(request.user)
@@ -1023,18 +1010,15 @@ def view_document_snippet(request: HttpRequest) -> HttpResponse:
     results = []
     for nonce in nonces:
         result = {"nonce": nonce, "title": None, "href": None, "icon": None, "error": None}
-        if isinstance(request.user, AnonymousUser):
-            result["error"] = "Forbidden"
-        else:
-            try:
-                doc = Document.objects.get(user=request.user, nonce=nonce)
-                result["title"] = doc.title
-                result["href"] = doc.get_absolute_url()
-                result["icon"] = doc.type_icon
-            except ValueError | Document.DoesNotExist:
-                result["error"] = "Invalid reference"
-            except Exception:
-                result["error"] = "Error"
+        try:
+            doc = Document.objects.get(user=request.user, nonce=nonce)
+            result["title"] = doc.title
+            result["href"] = doc.get_absolute_url()
+            result["icon"] = doc.type_icon
+        except ValueError | Document.DoesNotExist:
+            result["error"] = "Invalid reference"
+        except Exception:
+            result["error"] = "Error"
         results.append(result)
     return JsonResponse({"results": results})
 
