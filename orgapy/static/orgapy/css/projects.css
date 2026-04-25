@@ -54,6 +54,7 @@
     width: 1.8rem;
     overflow: hidden;
     text-overflow: "";
+    flex-shrink: 0;
 }
 
 .project-badge {

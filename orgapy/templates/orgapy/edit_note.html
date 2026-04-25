@@ -22,11 +22,11 @@
         <div class="card-body">{% include 'orgapy/partials/categories_input.html' with obj=document %}</div>
     </header>
     <div class="card-actions card-actions--sticky">
-        <button id="buttonSave" type="submit" name="action" value="save"><i class="ri-save-line"></i> Save</button>
-        <button id="buttonContinue" disabled type="submit" name="action" value="continue"><i class="ri-save-line"></i> Save and continue</button>
-        <a class="button" href="{{ document.get_absolute_url }}"><i class="ri-arrow-right-circle-line"></i> View note</a>
+        <button id="buttonSave" type="submit" name="action" value="save"><i class="ri-check-line"></i><span>Save</span></button>
+        <button id="buttonContinue" disabled type="submit" name="action" value="continue"><i class="ri-save-line"></i><span>Save and continue</span></button>
+        <a class="button" href="{{ document.get_absolute_url }}"><i class="ri-arrow-right-circle-line"></i><span>View note</span></a>
     </div>
-    <textarea class="document-form-content" id="noteContentInput" name="content" placeholder="Write content using Markdown">{% if document.content %}{{ document.content }}{% endif %}</textarea>
+    <textarea class="note-form-content" id="noteContentInput" name="content" placeholder="Write content using Markdown">{% if document.content %}{{ document.content }}{% endif %}</textarea>
 </form>
 <script>
 if (window.innerWidth > 800) {

@@ -145,6 +145,11 @@
     background: var(--bg-selection) !important;
 }
 
+.selected ::selection {
+    --bg-selection-alt: #2781be;
+    background-color: var(--bg-selection-alt);
+}
+
 .sheet-cell-input {
     position: absolute;
     top: 0;
