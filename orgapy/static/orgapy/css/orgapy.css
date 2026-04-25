@@ -998,7 +998,7 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 :popover-open {
-    position: absolute;
+    position: fixed;
     inset: unset;
     right: 1rem;
     bottom: 1rem;
