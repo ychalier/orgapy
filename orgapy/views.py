@@ -879,7 +879,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
         if "content" in request.POST or new_content:
             if not new_content:
                 new_content = request.POST["content"]
-            if new_content:
+            if new_content and new_content != doc.content:
                 update_fields.append("content")
                 update_fields.append("date_modification")
                 doc.content = new_content
@@ -986,6 +986,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
             "etag": doc.etag,
         })
 
+    response["Cache-Control"] = "no-cache; must-revalidate"
     return response
 
 
