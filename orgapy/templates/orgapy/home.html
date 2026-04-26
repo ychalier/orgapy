@@ -92,7 +92,6 @@
     <div class="project-container" href="{{ project.get_absolute_url }}"></div>
     {% endfor %}
 </div>
-{% endif %}
 <script>
 fetchAndInflateObjectives(objectivesContainer, "{% url 'orgapy:objectives' %}", false);
 for (const projectContainer of document.querySelectorAll(".project-container")) {
@@ -102,4 +101,5 @@ for (const projectContainer of document.querySelectorAll(".project-container")) 
 }
 bindCreateProjectButton(buttonCreateProject, projectsContainer, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}");
 </script>
+{% endif %}
 {% endblock %}
