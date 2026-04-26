@@ -12,6 +12,14 @@
     line-height: 1.6;
 }
 
+.card-note > :first-child {
+    margin-top: .8rem !important;
+}
+
+.card-note > :last-child {
+    margin-bottom: .8rem !important;
+}
+
 .card-note a {
     overflow-wrap: break-word;
 }
