@@ -35,7 +35,7 @@
 
 .card-note pre code {
     display: block;
-    padding: .8rem;
+    padding: .8rem 2rem .8rem .8rem;
     overflow-x: auto;
     border: 1px solid var(--border-secondary);
 }

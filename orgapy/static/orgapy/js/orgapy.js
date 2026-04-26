@@ -394,6 +394,15 @@ function markdownToHtmlFancy(element, options) {
     window.addEventListener("load", () => {
         hljs.highlightAll();
     });
+
+    for (const pre of element.querySelectorAll("pre")) {
+        const copyButton = create(pre, "button");
+        copyButton.innerHTML = `<i class="ri-file-copy-2-line"></i>`;
+        copyButton.onclick = () => {
+            navigator.clipboard.writeText(pre.querySelector("code").textContent);
+            showToast("Copied code to clipboard");
+        }
+    }
 }
 
 function markdownToHtmlBasic(element) {

@@ -480,6 +480,20 @@ button.label-purple:hover {
 
 /***** CODE *******************************************************************/
 
+pre {
+    position: relative;
+}
+
+pre > button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: var(--bg-secondary-alt);
+    font-size: small;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
 code,
 code * {
     font-family: "Fira Code", monospace;
