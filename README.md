@@ -11,16 +11,18 @@ You'll need Python 3, and a [Django](https://www.djangoproject.com/) project.
 ### Installation
 
 1. Install the [latest release](https://github.com/ychalier/orgapy/releases/latest)
-    ```console
+    ```
     pip install django-orgapy-X.X.X.tar.gz
     ```
-2. Add `"orgapy"` to the `INSTALLED_APPS` variables in Django settings
+2. Edit Django settings:
+    - Add `'orgapy'` to `INSTALLED_APPS`
+    - Add `'orgapy.middlewares.IframeHeaderMiddleware'` to `MIDDLEWARE`
 3. Migrate the database
-    ```console
+    ```
     python manage.py migrate
     ```
 4. Collect new static files
-    ```console
+    ```
     python manage.py collectstatic
     ```
 5. Setup URLs
@@ -48,7 +50,7 @@ You'll need Python 3, and a [Django](https://www.djangoproject.com/) project.
 
 ### Permissions
 
-The app uses Django built-in authentication framework, meaning that users need a Django account to created and edit notes. They also need to be granted Orgapy's permissions, such as `orgapy.add_note` or `orgapy.view_note`.
+The app uses Django built-in authentication framework, meaning that users need a Django account to created and edit notes. They also need to be granted Orgapy's permissions, such as `orgapy.add_document` or `orgapy.view_document`.
 
 ## Built With
 
