@@ -932,9 +932,16 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
     if request.GET.get("raw"):
         content, ext, mimetype = "", ".txt", "text/plain"
         if doc.type == "note":
-            content = doc.title if doc.title else "Untitled"
+            content = f"""
+---
+title: {doc.title if doc.title else "Untitled"}
+creation: {doc.date_creation.isoformat()}
+modication: {doc.date_modification.isoformat()}
+tags:  {", ".join(category.name for category in doc.categories.all())}
+---
+            """.strip() + "\n\n"
             if doc.content:
-                content += "\n\n" + doc.content
+                content += doc.content
             ext = ".md"
             mimetype = "text/markdown"
         elif doc.type == "sheet":
