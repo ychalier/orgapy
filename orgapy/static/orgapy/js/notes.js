@@ -1,3 +1,5 @@
+const TOC_SCROLL_MARGIN_TOP = 48; // px
+
 function createToc(contentContainer, tocContainer) {    
     function removeToc() {
         remove(tocContainer.parentElement.parentElement);
@@ -19,6 +21,15 @@ function createToc(contentContainer, tocContainer) {
         anchor.classList.add("link-hidden");
         anchor.textContent = title.textContent;
         anchor.href = `#${title.id}`;
+        anchor.onclick = (e) => {
+            e.preventDefault();
+            const titleBounds = title.getBoundingClientRect();
+            window.scrollTo({
+                top: window.scrollY + titleBounds.top - TOC_SCROLL_MARGIN_TOP,
+                left: window.scrollX,
+                behavior: "smooth"
+            });
+        }
     });
 }
 
