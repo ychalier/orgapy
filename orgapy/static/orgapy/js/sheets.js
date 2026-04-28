@@ -1541,6 +1541,7 @@ class Sheet {
         this.columnTypes = [];
         this.rowHeights = [];
         this.filters = [];
+        this.regexFilters = [];
         this.highlights = [];
         this.readonly = readonly;
         this.ordering = null;
@@ -1901,6 +1902,7 @@ class Sheet {
                 this.columnWidths.splice(j, 0, DEFAULT_COLUMN_WIDTH);
                 this.columnTypes.splice(j, 0, new COLUMN_TYPES[CTYPE_TEXT]());
                 this.filters.splice(j, 0, new Set());
+                this.regexFilters.splice(j, 0, null);
                 for (let i = 0; i < this.height; i++) {
                     this.values[i].splice(j, 0, null);
                     this.highlights[i].splice(j, 0, HIGHLIGHT_NONE);
@@ -1925,6 +1927,7 @@ class Sheet {
         this.columnWidths.splice(j, 1);
         this.columnTypes.splice(j, 1);
         this.filters.splice(j, 1);
+        this.regexFilters.splice(j, 1);
         for (let i = 0; i < this.height; i++) {
             this.values[i].splice(j, 1);
             this.highlights[i].splice(j, 1);
@@ -2013,36 +2016,67 @@ class Sheet {
                 el.classList.add("selected");
             }
         });
-        let values = Array.from(this.getValueSet(j));
-        if (values.length < MAX_DIFFERENT_VALUES_FOR_FILTERS) {
-            let filter_menu = this.contextMenu.addMenu("Filter");
+        
+        const values = Array.from(this.getValueSet(j));
+        const hasFewValues = values.length < MAX_DIFFERENT_VALUES_FOR_FILTERS;
+        const isText = this.columnTypes[j].constructor.INPUT_TAG == "textarea" || this.columnTypes[j].constructor.INPUT_TYPE == "text";
+
+        if (hasFewValues || isText) {
+            const filterMenu = this.contextMenu.addMenu("Filter");
+
             values.sort();
             values.splice(0, 0, null);
-            filter_menu.addItem(`Reset`, () => {
-                const valueEls = filter_menu.querySelectorAll(".menu-item");
+            filterMenu.addItem(`Reset`, () => {
+                const valueEls = filterMenu.querySelectorAll(".menu-item input[type=checkbox]");
                 values.forEach((value, i) => {
-                    valueEls[i + 2].querySelector("input").checked = true;
-                    self.setFilterState(j, value, false);
-                });
-                self.updateFilters();
-            });
-            filter_menu.addItem(`Uncheck All`, () => {
-                const valueEls = filter_menu.querySelectorAll(".menu-item");
-                values.forEach((value, i) => {
-                    valueEls[i + 2].querySelector("input").checked = false;
-                    self.setFilterState(j, value, true);
-                });
-                self.updateFilters();
-            });
-            values.forEach(value => {
-                let el = filter_menu.addItem(
-                    `<input type="checkbox" ${this.filters[j].has(value) ? "" : "checked"} /> ${value == null ? "(Empty)" : value}`,
-                    () => {
-                        el.querySelector("input").checked = !self.toggleFilter(j, value);
-                        self.updateFilters();
+                    if (i < valueEls.length) {
+                        valueEls[i].checked = true;
+                        self.setFilterState(j, value, false);
                     }
-                );
+                });
+                filterMenu.querySelectorAll("input[type=text]").forEach(input => {
+                    input.value = "";
+                    self.regexFilters[j] = null;
+                });
+                self.updateFilters();
             });
+
+            if (isText) {
+                const textFilter = filterMenu.addItem(
+                    `<input type="text" placeholder="Filter value" value="${this.regexFilters[j] == null ? "" : this.regexFilters[j]}" />`,
+                    () => {}
+                );
+                textFilter.querySelector("input").addEventListener("input", () => {
+                    const value = textFilter.querySelector("input").value;
+                    if (value.trim() == "") {
+                        self.regexFilters[j] = null;
+                    } else {
+                        self.regexFilters[j] = value;
+                    }
+                    self.updateFilters();
+                });
+            }
+
+            if (hasFewValues) {
+                filterMenu.addItem(`Uncheck All`, () => {
+                    const valueEls = filterMenu.querySelectorAll(".menu-item input[type=checkbox]");
+                    values.forEach((value, i) => {
+                        valueEls[i].checked = false;
+                        self.setFilterState(j, value, true);
+                    });
+                    self.updateFilters();
+                });
+                values.forEach(value => {
+                    let el = filterMenu.addItem(
+                        `<input type="checkbox" ${this.filters[j].has(value) ? "" : "checked"} /> ${value == null ? "(Empty)" : value}`,
+                        () => {
+                            el.querySelector("input").checked = !self.toggleFilter(j, value);
+                            self.updateFilters();
+                        }
+                    );
+                });
+            }
+            
         }
         this.contextMenu.addItem("Sort", () => {self.openSortDialog(j)});
         this.contextMenu.addItem("Resize", () => {
@@ -2182,10 +2216,22 @@ class Sheet {
         let y = 32 + DEFAULT_ROW_HEIGHT;
         let rowTop = 0;
         let previousRowWasFiltered = false;
+        const regexes = [];
+        for (let j = 0; j < this.width; j++) {
+            if (this.regexFilters[j] == null) {
+                regexes.push(null);
+            } else {
+                regexes.push(new RegExp(this.regexFilters[j], "i"));
+            }
+        }
         for (let i = 0; i < this.height; i++) {
             let shouldBeDisplayed = true;
             for (let j = 0; j < this.width; j++) {
                 if (this.filters[j].has(this.values[i][j])) {
+                    shouldBeDisplayed = false;
+                    break;
+                }
+                if (regexes[j] != null && (this.values[i][j] == null || !(typeof this.values[i][j] === 'string') || !this.values[i][j].match(regexes[j]))) {
                     shouldBeDisplayed = false;
                     break;
                 }
@@ -2207,7 +2253,7 @@ class Sheet {
             }
         }
         for (let j = 0; j < this.width; j++) {
-            if (this.filters[j].size == 0) {
+            if (this.filters[j].size == 0 && this.regexFilters[j] == null) {
                 this.columnHeads[j].classList.remove("filtered");
             } else {
                 this.columnHeads[j].classList.add("filtered");
@@ -2402,7 +2448,9 @@ class Sheet {
             }
         });
         document.addEventListener("keydown", (event) => {
-            if (self.editingColumnName) {
+            if (document.querySelector(".contextmenu.active") != null) {
+                //pass
+            } else if (self.editingColumnName) {
                 //pass
             } else if (event.key == "a" && event.ctrlKey && !self.editing) {
                 self.selection.all();
@@ -2570,7 +2618,6 @@ class Sheet {
                     }
                     self.onChange(false, true);
                 } else if (!self.editing && event.key.length == 1 && !event.ctrlKey && !event.altKey && !self.readonly) {
-                    //console.log(event.key);
                     self.startEditing();
                 }
             }
@@ -2779,6 +2826,7 @@ class Sheet {
                 this.columnNames.push(data[0][j]);
             }
             this.filters.push(new Set());
+            this.regexFilters.push(null);
         }
         this.rowHeights = [];
         for (let i = 0; i < this.height; i++) {
@@ -2805,6 +2853,12 @@ class Sheet {
             config.filters.forEach(array => {
                 this.filters.push(new Set(array));
             });
+            if (config.regexFilters != undefined) {
+                this.regexFilters = [];
+                config.regexFilters.forEach(regexFilterString => {
+                    this.regexFilters.push(regexFilterString);
+                });
+            }
         }
     }
 
@@ -3005,6 +3059,7 @@ class Sheet {
             rowHeights: [],
             script: "",
             filters: [],
+            regexFilters: [],
             highlights: this.highlights,
             shrunk: this.shrunk,
             ordering: null,
@@ -3022,6 +3077,7 @@ class Sheet {
             configObject.columnWidths.push(this.columnWidths[j]);
             configObject.columnTypes.push(this.columnTypes[j].constructor.ID);
             configObject.filters.push(Array.from(this.filters[j]));
+            configObject.regexFilters.push(this.regexFilters[j]);
         }
         if (this.script != null) configObject.script = this.script.string;
         return {
