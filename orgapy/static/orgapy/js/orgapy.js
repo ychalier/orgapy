@@ -295,6 +295,11 @@ function markdownToHtmlFancy(element, options) {
             ...extensions,
             {
                 type: "lang",
+                regex: /:::details\s+([^\n]+)\n([\s\S]+?)\n:::/g,
+                replace: (match, summary, content) => {return `<details><summary>${summary}</summary>\n\n${content}\n\n</details>`;}
+            },
+            {
+                type: "lang",
                 regex: /==([^=\n]+)==/g,
                 replace: "<mark>$1</mark>",
             },
