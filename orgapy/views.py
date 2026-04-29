@@ -937,7 +937,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
 title: {doc.title if doc.title else "Untitled"}
 creation: {doc.date_creation.isoformat()}
 modication: {doc.date_modification.isoformat()}
-tags:  {", ".join(category.name for category in doc.categories.all())}
+tags:  {", ".join(category.name for category in doc.tags.all())}
 ---
             """.strip() + "\n\n"
             if doc.content:
