@@ -41,6 +41,12 @@
     border-radius: .2rem;
 }
 
+.card-note table code {
+    background: none;
+    border-radius: 0;
+    padding: 0;
+}
+
 .card-note pre code {
     display: block;
     padding: .8rem 2rem .8rem .8rem;
