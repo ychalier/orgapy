@@ -74,5 +74,8 @@ document.querySelectorAll("input,textarea").forEach(input => {
         buttonContinue.removeAttribute("disabled");
     });
 });
+document.querySelector(".input-tags-current").addEventListener("click", () => {
+    buttonContinue.removeAttribute("disabled");
+})
 </script>
 {% endblock %}
