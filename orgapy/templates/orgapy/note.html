@@ -24,7 +24,7 @@
     <div class="card-body">
         <div class="col">
             <div class="muted"><i class="ri-calendar-line"></i> Created on <time>{{ document.date_creation | date:"Y-m-d" }}</time>{% if document.date_creation.date != document.date_modification.date %}, edited on <time>{{ document.date_modification | date:"Y-m-d" }}</time>{% endif %}</div>
-            <div><i class="ri-hashtag"></i> {% if document.categories.all %}{% for category in document.categories.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{{ category.get_absolute_url }}">{{ category.name | title }}</a>{% endfor %}{% else %}<a href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>{% endif %}</div>
+            <div><i class="ri-hashtag"></i> {% if document.tags.all %}{% for tag in document.tags.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{{ tag.get_absolute_url }}">{{ tag.name | title }}</a>{% endfor %}{% else %}<a href="{% url 'orgapy:tag' name='uncategorized' %}">uncategorized</a>{% endif %}</div>
             {% if document.referenced_in.all %}<div><i class="ri-links-line"></i> {% for ref in document.referenced_in.all %}{% if not forloop.first %}, {% endif %}<a class="link-tenuous" href="{% url 'orgapy:document' ref.nonce %}"> {{ ref.title }}</a>{% endfor %}</div>{% endif %}
         </div>
     </div>

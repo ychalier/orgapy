@@ -1,0 +1,11 @@
+<div id="tagsInput" class="input-tags">
+    <input type="hidden" name="tags" value="{% if obj %}{% for tag in obj.tags.all %}{% if not forloop.first %};{% endif %}{{ tag.name }}{% endfor %}{% elif attrs.tags %}{{ attrs.tags }}{% endif %}" />
+    <div class="input-tags-current"></div>
+    <div class="search">
+        <div class="search-bar">
+            <input type="text" placeholder="Tag" class="search-input" size="10" autocomplete="off" />
+        </div>
+        <ul class="search-suggestions menu"></ul>
+    </div>
+</div>
+<script>setupTagInput(tagsInput, "{% url 'orgapy:suggestions' %}")</script>

@@ -21,7 +21,7 @@ from .models import *
 from .utils import date_timestamp
 
 
-UserObject = TypeVar("UserObject", Category, Document, ProgressLog, Project, MoodLog, Task, Objective, Calendar)
+UserObject = TypeVar("UserObject", Tag, Document, ProgressLog, Project, MoodLog, Task, Objective, Calendar)
 LogT = TypeVar("LogT", ProgressLog, MoodLog)
 LoggedUser = AbstractBaseUser
 
@@ -179,7 +179,7 @@ def _render_document_list(
         search_query: str | None = None,
         type_filter: Literal["note", "sheet", "map"] | None = None,
         status_filter: Literal["public", "hidden", "deleted", "projects"] | None = None,
-        category_filters: str | None = None,
+        tag_filters: str | None = None,
         dt_start: datetime.date | None = None,
         dt_end: datetime.date | None = None,
         sort_key: Literal["creation", "modification", "access", "deletion", "title", "relevance"] | None = None,
@@ -201,11 +201,11 @@ def _render_document_list(
             If not 'hidden', hidden document will be excluded.
             If not 'deleted', deleted documents will be excluded.
             If 'projects', only notes with ongoing (ie. not archived) projects are shown.
-        category_filters: Filter document categories.
+        tag_filters: Filter document tags.
             If None, uses GET params.
-            Specify category names. Multiple names can be passed, separated by semi-colons (;).
-            If multiple names are passed, documents must have all listed categories to be selected.
-            If the name 'uncategorized' is passed, filters documents without any categories.
+            Specify tag names. Multiple names can be passed, separated by semi-colons (;).
+            If multiple names are passed, documents must have all listed tags to be selected.
+            If the name 'uncategorized' is passed, filters documents without any tags.
         sort_key: Sort documents, in decreasing order.
             If None, uses GET params.
             Pinned documents will always appear first.
@@ -223,12 +223,12 @@ def _render_document_list(
     if search_query is None:
         search_query = request.GET.get("query")
 
-    category_names: set[str] = set()
+    tag_names: set[str] = set()
     if search_query:
-        category_pattern = re.compile(r"#([a-zA-Z0-9]+)")
-        for name in category_pattern.findall(search_query):
-            category_names.add(name)
-        search_query = re.sub(r" +", " ", category_pattern.sub("", search_query)).strip()
+        tag_pattern = re.compile(r"#([a-zA-Z0-9]+)")
+        for name in tag_pattern.findall(search_query):
+            tag_names.add(name)
+        search_query = re.sub(r" +", " ", tag_pattern.sub("", search_query)).strip()
     if search_query:
         attrs["query"] = search_query
 
@@ -244,16 +244,16 @@ def _render_document_list(
     if status_filter:
         attrs["status"] = status_filter
 
-    if category_filters is None:
-        category_filters = request.GET.get("categories")
-    if category_filters:
-        category_names.update(category_filters.split(";"))
-    category_ids: list[int] = []
+    if tag_filters is None:
+        tag_filters = request.GET.get("tags")
+    if tag_filters:
+        tag_names.update(tag_filters.split(";"))
+    tag_ids: list[int] = []
     filter_uncategorized = False
-    if category_names:
-        category_ids = [c.id for c in Category.objects.filter(user=request.user, name__in=category_names)]
-        filter_uncategorized = "uncategorized" in category_names
-        attrs["categories"] = ";".join(sorted(category_names))
+    if tag_names:
+        tag_ids = [c.id for c in Tag.objects.filter(user=request.user, name__in=tag_names)]
+        filter_uncategorized = "uncategorized" in tag_names
+        attrs["tags"] = ";".join(sorted(tag_names))
     
     if dt_start is None and "start" in request.GET:
         dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
@@ -286,10 +286,10 @@ def _render_document_list(
         qs = qs.filter(deleted=True)
     else:
         qs = qs.filter(deleted=False)
-    for category_id in category_ids:
-        qs = qs.filter(categories__in=[category_id])
+    for tag_id in tag_ids:
+        qs = qs.filter(tags__in=[tag_id])
     if filter_uncategorized:
-        qs = qs.filter(categories__isnull=True)
+        qs = qs.filter(tags__isnull=True)
     
     if dt_start and dt_end:
         qs = qs.filter(date_creation__range=[dt_start, dt_end + datetime.timedelta(days=1)])
@@ -329,7 +329,7 @@ def _render_document_list(
         return JsonResponse(data)
 
     if request.GET.get("format") == "tsv":
-        lines = ["id\tnonce\ttype\ttitle\tdate_creation\tdate_modification\tdate_access\tdate_deletion\tpublic\tpinned\thidden\tdeleted\tcategories"]
+        lines = ["id\tnonce\ttype\ttitle\tdate_creation\tdate_modification\tdate_access\tdate_deletion\tpublic\tpinned\thidden\tdeleted\ttags"]
         for doc in qs:
             lines.append("\t".join([
                 str(doc.id),
@@ -344,7 +344,7 @@ def _render_document_list(
                 str(doc.pinned),
                 str(doc.hidden),
                 str(doc.deleted),
-                ";".join([category.name for category in doc.categories.all()])
+                ";".join([tag.name for tag in doc.tags.all()])
             ]))
         response = HttpResponse("\n".join(lines), content_type="text/tab-separated-values; charset=utf-8")
         response["Content-Disposition"] = f'inline; filename="documents.tsv"'
@@ -892,18 +892,18 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
             update_fields.append("config")
             doc.config = request.POST["config"]
 
-        if "categories" in request.POST:
-            doc.categories.clear()
-            name_list = request.POST.get("categories", "").split(";")
+        if "tags" in request.POST:
+            doc.tags.clear()
+            name_list = request.POST.get("tags", "").split(";")
             for dirty_name in name_list:
                 name = dirty_name.lower().strip()
                 if name == "" or name == "uncategorized":
                     continue
                 try:
-                    category = Category.objects.get(name=name, user=request.user)
-                except Category.DoesNotExist:
-                    category = Category.objects.create(name=name, user=request.user)
-                doc.categories.add(category)
+                    tag = Tag.objects.get(name=name, user=request.user)
+                except Tag.DoesNotExist:
+                    tag = Tag.objects.create(name=name, user=request.user)
+                doc.tags.add(tag)
 
         doc.updated_at = now
         doc.save(update_fields=update_fields + ["updated_at"])
@@ -1003,43 +1003,43 @@ def view_trash(request: HttpRequest) -> HttpResponse:
     return _render_document_list(request, "orgapy/trash.html", status_filter="deleted", sort_key="deletion")
 
 
-@permission_required("orgapy.view_category")
-def view_categories(request: HttpRequest) -> HttpResponse:
-    uncategorized = Document.objects.filter(user=request.user, categories__isnull=True).count()
-    return render(request, "orgapy/categories.html", {
-        "categories": Category.objects.filter(user=request.user),
+@permission_required("orgapy.view_tag")
+def view_tags(request: HttpRequest) -> HttpResponse:
+    uncategorized = Document.objects.filter(user=request.user, tags__isnull=True).count()
+    return render(request, "orgapy/tags.html", {
+        "tags": Tag.objects.filter(user=request.user),
         "active": "documents",
         "uncategorized": uncategorized
     })
 
 
-@permission_required("orgapy.view_category")
-def view_category(request: HttpRequest, name: str) -> HttpResponse:
+@permission_required("orgapy.view_tag")
+def view_tag(request: HttpRequest, name: str) -> HttpResponse:
     if name == "uncategorized":
-        category = {"id": -1, "name": "uncategorized"}
+        tag = {"id": -1, "name": "uncategorized"}
     else:
-        category = _find_user_object(Category, "name", name, request.user)
+        tag = _find_user_object(Tag, "name", name, request.user)
 
     if request.method == "POST":
-        if isinstance(category, dict):
+        if isinstance(tag, dict):
             raise Http404()
 
         if request.POST.get("delete"):
-            category.delete()
-            return redirect("orgapy:categories")
+            tag.delete()
+            return redirect("orgapy:tags")
         if "name" in request.POST:
             new_name = request.POST.get("name")
             if new_name is None:
                 raise BadRequest("Missing name")
             if len(new_name) > 0:
-                category.name = new_name.lower()
-                category.save()
-            return redirect("orgapy:category", name=category.name)
+                tag.name = new_name.lower()
+                tag.save()
+            return redirect("orgapy:tag", name=tag.name)
 
     return _render_document_list(request,
-        "orgapy/category.html",
-        category_filters=name,
-        kwargs={"category": category})
+        "orgapy/tag.html",
+        tag_filters=name,
+        kwargs={"tag": tag})
 
 
 @permission_required("orgapy.view_progress_log")
@@ -1242,9 +1242,9 @@ def view_groceries(request: HttpRequest) -> HttpResponse:
             settings.groceries_data = json.dumps(data)
             settings.save()
             try:
-                cat = Category.objects.get(user=request.user, name="groceries")
-            except Category.DoesNotExist:
-                cat = Category.objects.create(user=request.user, name="groceries")
+                cat = Tag.objects.get(user=request.user, name="groceries")
+            except Tag.DoesNotExist:
+                cat = Tag.objects.create(user=request.user, name="groceries")
             old_section = None
             note_content = ""
             for section_label, item_label in items:
@@ -1259,7 +1259,7 @@ def view_groceries(request: HttpRequest) -> HttpResponse:
                 type="note",
                 pinned=True
             )
-            note.categories.add(cat)
+            note.tags.add(cat)
 
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         if is_ajax:
@@ -1428,27 +1428,27 @@ def view_objective(request: HttpRequest, objective_id: str) -> HttpResponse:
     return render(request, "orgapy/objective.html", {"objective": objective})
 
 
-@permission_required("orgapy.view_category")
+@permission_required("orgapy.view_tag")
 @permission_required("orgapy.view_document")
 @permission_required("orgapy.view_project")
 def view_suggestions(request: HttpRequest) -> HttpResponse:
     stype = request.GET.get("t", "")
     limit = int(request.GET.get("l", 10))
     query = request.GET.get("q", "").strip()
-    results: list[Category | Document | Project] = []
+    results: list[Tag | Document | Project] = []
     if query:
         if not stype:
             if query.startswith("#"):
                 query = query[1:]
-                stype = "category"
+                stype = "tag"
             else:
                 stype = "document"
         if stype == "document":
             qs = Document.objects.filter(user=request.user, deleted=False, hidden=False, title__istartswith=query)
         elif stype in ["note", "sheet", "map"]:
             qs = Document.objects.filter(user=request.user, deleted=False, hidden=False, type=stype, title__istartswith=query)
-        elif stype == "category":
-            qs = Category.objects.filter(user=request.user, name__istartswith=query)
+        elif stype == "tag":
+            qs = Tag.objects.filter(user=request.user, name__istartswith=query)
         elif stype == "project":
             qs = Project.objects.filter(user=request.user).filter(Q(title__istartswith=query) | Q(document__title__istartswith=query))
         else:
@@ -1458,9 +1458,9 @@ def view_suggestions(request: HttpRequest) -> HttpResponse:
         "results": [
             {
                 "ref": getattr(result, "name", getattr(result, "nonce", None)),
-                "label": result.title if isinstance(result, Document) else (result.name if isinstance(result, Category) else result.reference),
+                "label": result.title if isinstance(result, Document) else (result.name if isinstance(result, Tag) else result.reference),
                 "url": result.get_absolute_url(),
-                "icon": result.type_icon if isinstance(result, Document) else ("ri-hashtag" if isinstance(result, Category) else "ri-briefcase-line")
+                "icon": result.type_icon if isinstance(result, Document) else ("ri-hashtag" if isinstance(result, Tag) else "ri-briefcase-line")
             }
             for result in results
         ]

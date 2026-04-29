@@ -54,12 +54,12 @@
         {% endif %}</span>
         <span class="sheet-toolbar-secondary">
             <span class="sheet-title">{% if document.title %}{{document.title}}{% else %}<i>Untitled</i>{% endif %}</span>
-            {% if document.categories.all %}
-                {% for category in document.categories.all %}
-                <a class="link-tenuous" href="{{ category.get_absolute_url }}">#{{category.name}}</a>
+            {% if document.tags.all %}
+                {% for tag in document.tags.all %}
+                <a class="link-tenuous" href="{{ tag.get_absolute_url }}">#{{tag.name}}</a>
                 {% endfor%}
             {% else %}
-                <a class="link-tenuous" href="{% url 'orgapy:category' name='uncategorized' %}">uncategorized</a>
+                <a class="link-tenuous" href="{% url 'orgapy:tag' name='uncategorized' %}">uncategorized</a>
             {% endif %}
             {% if not readonly %}{% for ref in document.referenced_in.all %}<a class="reference label" href="{% url 'orgapy:document' ref.nonce %}"><i class="ri-links-line"></i> {{ ref.title }}</a>{% endfor %}{% endif %}
             {% if document.subtitle %}

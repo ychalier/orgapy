@@ -840,41 +840,41 @@ input:checked+.toggle-slider+.toggle-text {
 
 /***** CATEGORIES INPUT *******************************************************/
 
-.input-categories {
+.input-tags {
     display: flex;
     width: fit-content;
     border-radius: .2rem;
 }
 
-.input-categories-current button {
+.input-tags-current button {
     border-radius: 0;
     border-right: none;
 }
 
-.input-categories-current button:first-child {
+.input-tags-current button:first-child {
     border-top-left-radius: .2rem;
     border-bottom-left-radius: .2rem;
 }
 
-.input-categories .search,
-.input-categories .search-bar,
-.input-categories .search-input {
+.input-tags .search,
+.input-tags .search-bar,
+.input-tags .search-input {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
 
-.input-categories .input-categories-current:empty + .search,
-.input-categories .input-categories-current:empty + .search .search-bar,
-.input-categories .input-categories-current:empty + .search .search-input {
+.input-tags .input-tags-current:empty + .search,
+.input-tags .input-tags-current:empty + .search .search-bar,
+.input-tags .input-tags-current:empty + .search .search-input {
     border-top-left-radius: .2rem;
     border-bottom-left-radius: .2rem;
 }
 
-.input-categories .search:has(.search-input:focus) {
+.input-tags .search:has(.search-input:focus) {
     outline: none;
 }
 
-.input-categories:has(:focus) {
+.input-tags:has(:focus) {
     outline: 1px solid var(--accent);
 }
 
