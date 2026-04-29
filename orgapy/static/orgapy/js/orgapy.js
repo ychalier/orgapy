@@ -602,34 +602,34 @@ function bindSearchButton(form, button) {
     });
 }
 
-function setupCategoryInput(container, suggestionsUrl) {
+function setupTagInput(container, suggestionsUrl) {
 
-    const currentContainer = container.querySelector(".input-categories-current");
+    const currentContainer = container.querySelector(".input-tags-current");
     const searchInput = container.querySelector(".search-input");
-    var categories;
+    var tags;
 
     function parseHiddenValue() {
         const value = container.querySelector("input[type=hidden]").value;
-        categories = new Set();
+        tags = new Set();
         for (const part of value.split(";")) {
             if (part.length > 0) {
-                categories.add(part);
+                tags.add(part);
             }
         }
     }
 
     function formatHiddenValue() {
-        container.querySelector("input[type=hidden]").value = Array.from(categories).join(";");
+        container.querySelector("input[type=hidden]").value = Array.from(tags).join(";");
     }
 
     function updateCurrentContainer() {
         currentContainer.innerHTML = "";
-        for (const category of categories) {
+        for (const tag of tags) {
             const element = create(currentContainer, "button", "button-accent");
-            element.innerHTML = `${category} <i class="ri-close-line"></i>`;
+            element.innerHTML = `${tag} <i class="ri-close-line"></i>`;
             element.onclick = (e) => {
                 e.preventDefault();
-                popCategory(category);
+                popTag(tag);
             }
         }
     }
@@ -640,22 +640,22 @@ function setupCategoryInput(container, suggestionsUrl) {
         searchObject.clear();
     }
 
-    function popCategory(category) {
-        categories.delete(category);
+    function popTag(tag) {
+        tags.delete(tag);
         update()
     }
 
-    function pushCategory(category) {
-        categories.add(category);
+    function pushTag(tag) {
+        tags.add(tag);
         update()
     }
 
     parseHiddenValue();
     updateCurrentContainer();
 
-    const searchObject = bindSearch(container, suggestionsUrl, {t: "category"},
+    const searchObject = bindSearch(container, suggestionsUrl, {t: "tag"},
         (entry) => {
-            if (entry != null) pushCategory(entry.label);
+            if (entry != null) pushTag(entry.label);
             searchObject.clear();
         });
 
@@ -664,9 +664,9 @@ function setupCategoryInput(container, suggestionsUrl) {
     searchInput.addEventListener("input", () => {
         const value = searchInput.value;
         if (inputEndChars.includes(value.charAt(value.length - 1))) {
-            const category = value.substring(0, value.length - 1).trim();
-            if (category.length > 0) {
-                pushCategory(category);
+            const tag = value.substring(0, value.length - 1).trim();
+            if (tag.length > 0) {
+                pushTag(tag);
             }
         }
     });
@@ -677,7 +677,7 @@ function setupCategoryInput(container, suggestionsUrl) {
             e.stopPropagation();
             const value = searchInput.value.trim();
             if (value.length > 0) {
-                pushCategory(value);
+                pushTag(value);
             }
         }
     });

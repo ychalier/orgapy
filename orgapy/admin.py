@@ -2,7 +2,7 @@ from django.contrib import admin
 from . import models
 
 admin.site.register(models.Settings)
-admin.site.register(models.Category)
+admin.site.register(models.Tag)
 admin.site.register(models.Document)
 admin.site.register(models.Project)
 admin.site.register(models.Objective)

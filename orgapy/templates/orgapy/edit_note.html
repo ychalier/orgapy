@@ -19,7 +19,7 @@
         <h1 class="card-header">
             <input class="input-inline" type="text" name="title" placeholder="Title" maxlength="255" value="{% if document.title %}{{ document.title }}{% endif %}" />
         </h1>
-        <div class="card-body">{% include 'orgapy/partials/categories_input.html' with obj=document %}</div>
+        <div class="card-body">{% include 'orgapy/partials/tags_input.html' with obj=document %}</div>
     </header>
     <div class="card-actions card-actions--sticky">
         <button id="buttonSave" type="submit" name="action" value="save"><i class="ri-check-line"></i><span>Save</span></button>

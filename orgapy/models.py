@@ -64,8 +64,8 @@ class Settings(models.Model):
         return {}
 
 
-class Category(models.Model):
-    """Represent a general category"""
+class Tag(models.Model):
+    """Represent a general tag"""
 
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -79,7 +79,7 @@ class Category(models.Model):
         return f"{ self.user } - { self.name }"
 
     def get_absolute_url(self):
-        return reverse("orgapy:category", kwargs={"name": self.name})
+        return reverse("orgapy:tag", kwargs={"name": self.name})
 
     @property
     def count(self) -> int:
@@ -115,7 +115,7 @@ class Document(models.Model):
     hidden = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
     references = models.ManyToManyField("Document", blank=True, related_name="referenced_in")
-    categories = models.ManyToManyField("Category", blank=True, related_name="documents")
+    tags = models.ManyToManyField("Tag", blank=True, related_name="documents")
     title = models.CharField(max_length=255, blank=True, null=True)
     subtitle = models.TextField(blank=True, null=True)
     content = models.TextField(blank=True, null=True)
