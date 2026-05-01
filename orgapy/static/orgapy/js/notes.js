@@ -258,13 +258,15 @@ function closeSmdeDropdown() {
     document.querySelectorAll(".smde-dropdown, .smde-highlight").forEach(remove);
 }
 
+const REFERENCE_DELIMITER_CHARS = " ),:;.";
+
 function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
     const cursor = cmInstance.getCursor();
     const line = cmInstance.getLine(cursor.line);
     let iStart = Math.max(0, cursor.ch - 1);
-    while (iStart > 0 && line.charAt(iStart) != " ") iStart--;
+    while (iStart > 0 && !REFERENCE_DELIMITER_CHARS.includes(line.charAt(iStart))) iStart--;
     let iEnd = iStart + 1;
-    while (iEnd < line.length && line.charAt(iEnd) != " ") iEnd++;
+    while (iEnd < line.length && !REFERENCE_DELIMITER_CHARS.includes(line.charAt(iEnd))) iEnd++;
     const word = line.substring(iStart, iEnd).trim();
     if (word.match(/^@(note|sheet|map|embednote|embedsheet|embedmap)\/([a-zA-Z0-9]+)?$/)) {
         setTimeout(() => { openSmdeDropdown(cmInstance, word, suggestionsUrl, documentsUrl); }, 1);
