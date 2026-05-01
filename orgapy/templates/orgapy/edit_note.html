@@ -60,7 +60,7 @@ if (window.innerWidth > 800) {
 } else {
     noteContentInput.style.height = (window.innerHeight - 290) + "px";
 }
-buttonContinue.onclick = (e) => {
+const saveAndContinue = (e) => {
     e.preventDefault();
     buttonContinue.setAttribute("disabled", "");
     const formData = new FormData(noteForm);
@@ -68,7 +68,9 @@ buttonContinue.onclick = (e) => {
     post(noteForm.getAttribute("action"), formData, inputEtag.value, (newEtag) => {inputEtag.value = newEtag})
         .then(res => {showToast("Saved note")})
         .catch(msg => {showToast(msg, true)});
-};
+}
+buttonContinue.onclick = saveAndContinue;
+noteForm.addEventListener("keydown", (e) => {if (e.key == "s" && e.ctrlKey) saveAndContinue(e)});
 const enableSaveButton = () => {buttonContinue.removeAttribute("disabled")};
 document.querySelector("input[name=title]").addEventListener("change", enableSaveButton);
 document.querySelector("input[name=tags]").addEventListener("change", enableSaveButton);
