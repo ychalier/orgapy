@@ -178,7 +178,7 @@ def _render_document_list(
         template_name: str,
         search_query: str | None = None,
         type_filter: Literal["note", "sheet", "map"] | None = None,
-        status_filter: Literal["public", "hidden", "deleted", "projects"] | None = None,
+        status_filter: Literal["public", "hidden", "deleted", "projects", "all"] | None = None,
         tag_filters: str | None = None,
         dt_start: datetime.date | None = None,
         dt_end: datetime.date | None = None,
@@ -198,9 +198,10 @@ def _render_document_list(
             If None, uses GET params.
         status_filter: Filter document status.
             If None, uses GET params.
-            If not 'hidden', hidden document will be excluded.
-            If not 'deleted', deleted documents will be excluded.
+            If not 'hidden', hidden document will be excluded (unless 'all').
+            If not 'deleted', deleted documents will be excluded (unless 'all').
             If 'projects', only notes with ongoing (ie. not archived) projects are shown.
+            If 'all', all documents are shown, even hidden and deleted.
         tag_filters: Filter document tags.
             If None, uses GET params.
             Specify tag names. Multiple names can be passed, separated by semi-colons (;).
@@ -240,7 +241,7 @@ def _render_document_list(
 
     if status_filter is None:
         s = request.GET.get("status")
-        status_filter = s if s in ["public", "hidden", "deleted", "projects"] else None # type: ignore
+        status_filter = s if s in ["public", "hidden", "deleted", "projects", "all"] else None # type: ignore
     if status_filter:
         attrs["status"] = status_filter
 
@@ -278,13 +279,13 @@ def _render_document_list(
         qs = qs.filter(public=True)
     if status_filter == "hidden":
         qs = qs.filter(hidden=True)
-    else:
+    elif status_filter != "all":
         qs = qs.filter(hidden=False)
     if status_filter == "projects":
         qs = qs.filter(project__status__in=[Project.ACTIVE, Project.INACTIVE, Project.FUTURE]).distinct()
     if status_filter == "deleted":
         qs = qs.filter(deleted=True)
-    else:
+    elif status_filter != "all":
         qs = qs.filter(deleted=False)
     for tag_id in tag_ids:
         qs = qs.filter(tags__in=[tag_id])
@@ -1046,6 +1047,7 @@ def view_tag(request: HttpRequest, name: str) -> HttpResponse:
     return _render_document_list(request,
         "orgapy/tag.html",
         tag_filters=name,
+        status_filter="all",
         kwargs={"tag": tag})
 
 

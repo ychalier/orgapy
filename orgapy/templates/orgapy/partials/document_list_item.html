@@ -10,7 +10,7 @@
 {% if obj.hidden %}<button class="button-inline" type="submit" name="hidden" value="off"><i class="ri-eye-line"></i></button>{% endif %}
 </form>
 {% if obj.get_ongoing_projects %}<a class="button button-inline" href="{% url 'orgapy:projects' %}?document={{ obj.nonce }}" title="Projects"><i class="ri-briefcase-line"></i></a>{% endif %}
-{% if obj.deleted %}<span>{{ obj.title }}</span>{% else %}<a class="link-hidden" href="{{ obj.get_absolute_url }}">{% if obj.title %}{{ obj.title }}{% else %}<i>Untitled</i>{% endif %}</a>{% endif %}
+{% if obj.deleted %}<i class="ri-delete-bin-line"></i><span>{{ obj.title }}</span>{% else %}<a class="link-hidden" href="{{ obj.get_absolute_url }}">{% if obj.title %}{{ obj.title }}{% else %}<i>Untitled</i>{% endif %}</a>{% endif %}
 {% if obj.tags.all %}{% for tag in obj.tags.all %}<a class="link-tenuous" href="{{ tag.get_absolute_url }}">#{{tag.name}}</a>{% endfor%}{% else %}<a class="link-tenuous" href="{% url 'orgapy:tag' name='uncategorized' %}">uncategorized</a>{% endif %}
 <div class="dropdown">
 <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
