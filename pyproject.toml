@@ -1,6 +1,6 @@
 [project]
 name = "django-orgapy"
-version = "5.0.0-rc.8"
+version = "5.0.0"
 authors = [
   { name="Yohan Chalier", email="yohan@chalier.fr" },
 ]
