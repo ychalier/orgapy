@@ -638,6 +638,7 @@ function setupTagInput(container, suggestionsUrl) {
         formatHiddenValue();
         updateCurrentContainer();
         searchObject.clear();
+        container.querySelector("input[type=hidden]").dispatchEvent(new Event("change"));
     }
 
     function popTag(tag) {
@@ -678,6 +679,13 @@ function setupTagInput(container, suggestionsUrl) {
             const value = searchInput.value.trim();
             if (value.length > 0) {
                 pushTag(value);
+            }
+        } else if (e.key == "Backspace") {
+            if (searchInput.value == "") {
+                const lastTagButton = container.querySelector(".input-tags-current button:last-child");
+                if (lastTagButton != null) {
+                    popTag(lastTagButton.textContent.trim());
+                }
             }
         }
     });

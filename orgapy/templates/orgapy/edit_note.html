@@ -69,13 +69,9 @@ buttonContinue.onclick = (e) => {
         .then(res => {showToast("Saved note")})
         .catch(msg => {showToast(msg, true)});
 };
-document.querySelectorAll("input,textarea").forEach(input => {
-    input.addEventListener("input", () => {
-        buttonContinue.removeAttribute("disabled");
-    });
-});
-document.querySelector(".input-tags-current").addEventListener("click", () => {
-    buttonContinue.removeAttribute("disabled");
-})
+const enableSaveButton = () => {buttonContinue.removeAttribute("disabled")};
+document.querySelector("input[name=title]").addEventListener("change", enableSaveButton);
+document.querySelector("input[name=tags]").addEventListener("change", enableSaveButton);
+noteContentInput.addEventListener("change", enableSaveButton);
 </script>
 {% endblock %}
