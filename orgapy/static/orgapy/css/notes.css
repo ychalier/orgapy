@@ -173,3 +173,36 @@
     background: var(--bg-selection);
     z-index: 1;
 }
+
+@media print {
+
+    :root {
+        --bg-page: #ffffff;
+        --bg-primary: #ffffff;
+        --bg-primary-alt: #f0f0f0;
+        --bg-secondary: #eeeeee;
+        --bg-secondary-alt: #cccccc;
+        --text: #000000;
+        --text-dim: #222222;
+        --text-muted: #444444;
+        --accent: #0f9fff;
+        --bg-accent: #b8dcf5;
+    }
+
+    .navbar,
+    .column-side,
+    .card-actions,
+    pre button {
+        display: none;
+    }
+
+    .card {
+        border: none;
+    }
+
+    pre code {
+        --bg-secondary: #303030;
+        text-wrap: wrap;
+    }
+
+}
