@@ -1,4 +1,4 @@
-function bindGroceries(groceriesContainer, saveButton, createListButton) {
+function bindGroceries(groceriesContainer, saveButton, createListButton, clearButton) {
 
     function readGroceriesData() {
         const groceriesData = {sections: []};
@@ -136,5 +136,19 @@ function bindGroceries(groceriesContainer, saveButton, createListButton) {
     saveButton.onclick = saveGroceriesData;
     saveButton.setAttribute("disabled", "");
     fetchGroceriesData();
+
+    clearButton.onclick = () => {
+        const data = readGroceriesData();
+        const form = create(document.body, "form");
+        form.method = "POST";
+        form.action = "";
+        const inputCsrf = create(form, "input");
+        inputCsrf.name = "csrfmiddlewaretoken";
+        inputCsrf.value = CSRF_TOKEN;
+        const inputAction = create(form, "input");
+        inputAction.name = "action";
+        inputAction.value = "clear";
+        form.submit();
+    }
 
 }

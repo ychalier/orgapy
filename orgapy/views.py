@@ -1270,6 +1270,14 @@ def view_groceries(request: HttpRequest) -> HttpResponse:
             )
             note.tags.add(cat)
 
+        if request.POST.get("action") == "clear":
+            data = settings.groceries
+            for section_data in data.get("sections", []):
+                for item_data in section_data.get("items", []):
+                    item_data["checked"] = False
+            settings.groceries_data = json.dumps(data)
+            settings.save()
+
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         if is_ajax:
             return HttpResponse(status=204)
