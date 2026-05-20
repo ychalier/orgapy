@@ -312,3 +312,35 @@
 .sheet-shrink .sheet-cell-input {
     padding: 5px 2px 2px 2px;
 }
+
+@media print {
+
+    .sheet-toolbar {
+        position: relative;
+        background: none;
+    }
+
+    .sheet-toolbar-primary {
+        display: none;
+    }
+
+    .sheet {
+        position: relative;
+        overflow: visible;
+    }
+
+    .sheet-head {
+        background: none;
+        border-top: none;
+        border-bottom: none;
+    }
+
+    .sheet-body {
+        padding-top: 0;
+    }
+
+    .sheet-row {
+        break-inside: avoid;
+    }
+
+}
