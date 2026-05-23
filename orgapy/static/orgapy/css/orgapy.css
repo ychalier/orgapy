@@ -564,7 +564,7 @@ iframe {
     box-sizing: border-box;
     border: none;
     padding: 0;
-    
+
     width: 100%;
     max-height: 80vh;
     height: 24rem;
@@ -844,6 +844,12 @@ input:checked+.toggle-slider+.toggle-text {
     display: flex;
     width: fit-content;
     border-radius: .2rem;
+    max-width: 100%;
+}
+
+.input-tags-current {
+    display: flex;
+    overflow: auto;
 }
 
 .input-tags-current button {
@@ -854,6 +860,10 @@ input:checked+.toggle-slider+.toggle-text {
 .input-tags-current button:first-child {
     border-top-left-radius: .2rem;
     border-bottom-left-radius: .2rem;
+}
+
+.input-tags .search {
+    flex-shrink: 0;
 }
 
 .input-tags .search,
