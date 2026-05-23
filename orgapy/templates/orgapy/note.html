@@ -78,7 +78,8 @@
     {% if not document.readonly %}
     <div id="projectsContainer" class="col">
         {% for project in document.get_ongoing_projects %}
-        <div class="project-container" href="{{ project.get_absolute_url }}"></div>
+        <div id="project{{ project.id }}" class="project-container" href="{{ project.get_absolute_url }}">{{ project.to_json_dict | json_script }}</div>
+        <script type="text/javascript">bindProject(project{{ project.id }}, "{% url 'orgapy:suggestions' %}")</script> 
         {% endfor %}
     </div>
     {% endif %}
@@ -96,11 +97,6 @@ markdownToHtml(".card-note", {fancy: true, useKatex: true, embed: true, fetchRef
 createToc(cardNote, document.querySelector("#toc"));
 {% if not readonly %}
 bindWidgets("{{ document.nonce }}");
-for (const projectContainer of document.querySelectorAll(".project-container")) {
-     bindProject(
-        projectContainer,
-        "{% url 'orgapy:suggestions' %}");
-}
 bindCreateProjectButton(buttonAddProject, projectsContainer, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}", "{{ document.nonce }}");
 {% endif %}
 </script>

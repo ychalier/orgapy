@@ -413,6 +413,7 @@ class Project(models.Model):
             },
             "status": self.status,
             "url": self.get_absolute_url(),
+            "etag": self.etag,
         }
 
     @property

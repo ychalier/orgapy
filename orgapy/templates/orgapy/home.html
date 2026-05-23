@@ -92,16 +92,12 @@
 <script type="text/javascript">loadAndInflateObjectives({{ settings.objective_start_hours }}, objectivesData, objectivesContainer, "{% url 'orgapy:objectives' %}", false);</script>
 {% endif %}
 <div id="projectsContainer" class="projects coll" tabindex="-1">
-    {% for project in projects %}
-    <div class="project-container" href="{{ project.get_absolute_url }}"></div>
-    {% endfor %}
+{% for project in projects %}
+<div id="project{{ project.id }}" class="project-container" href="{{ project.get_absolute_url }}">{{ project.to_json_dict | json_script }}</div>
+<script type="text/javascript">bindProject(project{{ project.id }}, "{% url 'orgapy:suggestions' %}")</script> 
+{% endfor %}
 </div>
-<script>
-for (const projectContainer of document.querySelectorAll(".project-container")) {
-     bindProject(
-        projectContainer,
-        "{% url 'orgapy:suggestions' %}");
-}
+<script type="text/javascript">
 bindCreateProjectButton(buttonCreateProject, projectsContainer, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}");
 </script>
 {% endif %}

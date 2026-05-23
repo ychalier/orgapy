@@ -11,6 +11,6 @@
 {% endblock head %}
 
 {% block column_main %}
-<div id="projectContainer" href="{% url 'orgapy:project' project.id %}"></div>
-<script>bindProject(projectContainer, "{% url 'orgapy:suggestions' %}", forceExpand=true)</script>
+<div id="projectContainer" class="project-container" href="{{ project.get_absolute_url }}">{{ project.to_json_dict | json_script }}</div>
+<script type="text/javascript">bindProject(projectContainer, "{% url 'orgapy:suggestions' %}", forceExpand=true)</script> 
 {% endblock %}

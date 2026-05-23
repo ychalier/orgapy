@@ -589,12 +589,12 @@ class Project {
 }
 
 function bindProject(container, suggestionsUrl, forceExpand=false) {
-    const projectUrl = container.getAttribute("href");
-    getEtag(projectUrl + "?format=json").then(({etag, data}) => {
-        const project = new Project(container, data, etag, projectUrl, suggestionsUrl, forceExpand);
-        const element = project.create()
-        container.appendChild(element);
-    });
+    const script = container.querySelector("script");
+    const data = JSON.parse(script.textContent);
+    const etag = data.etag;
+    const project = new Project(container, data, etag, container.getAttribute("href"), suggestionsUrl, forceExpand);
+    const element = project.create();
+    container.appendChild(element);
 }
 
 function bindCreateProjectButton(createButton, projectsContainer, projectsUrl, suggestionsUrl, documentNonce=null) {
