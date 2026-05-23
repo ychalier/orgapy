@@ -582,7 +582,7 @@ class MoodLog(models.Model):
 
     @property
     def activities_display(self) -> str:
-        return self.activities.replace(",", " ")
+        return " ".join(sorted(self.activities.split(",")))
 
     @property
     def overall(self) -> int:
