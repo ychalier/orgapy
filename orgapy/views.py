@@ -450,24 +450,27 @@ def view_home(request: HttpRequest) -> HttpResponse:
     pending_mood_logs = _get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
     active_projects = Project.objects.filter(user=request.user, status=Project.ACTIVE).order_by("date_creation")
 
+    now = timezone.now()
+
     events = []
     for calendar in Calendar.objects.filter(user=request.user):
         events += calendar.get_events()
     event_groups_dict = {}
     for event in events:
         dtstart = datetime.datetime.fromisoformat(event["dtstart"])
+        dtend = datetime.datetime.fromisoformat(event["dtend"])
         date = dtstart.date()
         event_groups_dict.setdefault(date, [])
         event_groups_dict[date].append({
             "title": event["title"],
             "time": None if len(event["dtstart"]) < 11 else dtstart.time(),
-            "location": event["location"]
+            "location": event["location"],
+            "over": now > dtend
         })
     event_groups = sorted(event_groups_dict.items())
     for i in range(len(event_groups)):
         event_groups[i][1].sort(key=lambda x: x["time"])
 
-    now = timezone.now()
     tasks = Task.objects\
         .filter(user=request.user, completed=False, start_date__lte=now)\
         .order_by("due_date", "start_date")
