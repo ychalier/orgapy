@@ -86,14 +86,17 @@
     </div>
 </div>
 {% endif %}
+{% if objectives %}
+{{ objectives | json_script:"objectivesData" }}
 <div id="objectivesContainer" class="objectives" tabindex="-1"></div>
+<script type="text/javascript">loadAndInflateObjectives({{ settings.objective_start_hours }}, objectivesData, objectivesContainer, "{% url 'orgapy:objectives' %}", false);</script>
+{% endif %}
 <div id="projectsContainer" class="projects coll" tabindex="-1">
     {% for project in projects %}
     <div class="project-container" href="{{ project.get_absolute_url }}"></div>
     {% endfor %}
 </div>
 <script>
-fetchAndInflateObjectives(objectivesContainer, "{% url 'orgapy:objectives' %}", false);
 for (const projectContainer of document.querySelectorAll(".project-container")) {
      bindProject(
         projectContainer,

@@ -487,6 +487,8 @@ def view_home(request: HttpRequest) -> HttpResponse:
             "tasks": group_tasks,
             "open": group_index <= Task.THISWEEK
         })
+    
+    objectives = Objective.objects.filter(user=request.user, archived=False)
 
     return render(request, "orgapy/home.html", {
         "settings": settings,
@@ -494,6 +496,7 @@ def view_home(request: HttpRequest) -> HttpResponse:
         "projects": active_projects,
         "event_groups": event_groups,
         "task_groups": task_groups,
+        "objectives": [o.to_dict() for o in objectives],
         "active": "home",
     })
 

@@ -316,3 +316,13 @@ function fetchAndInflateObjectives(container, objectivesUrl, showArchived) {
         inflateObjectives(container, objectives, data.startHours);
     });
 }
+
+function loadAndInflateObjectives(startHours, objectivesData, container, objectivesUrl, showArchived) {
+    isInitialScroll = true;
+    const data = JSON.parse(objectivesData.textContent);
+    const objectives = [];
+    data.forEach(objectiveData => {
+        objectives.push(new Objective(objectiveData));
+    });
+    inflateObjectives(container, objectives, startHours);
+}
