@@ -134,7 +134,7 @@ body.fullscreen {
     flex-shrink: 1;
     flex-grow: 0;
     flex-basis: 24rem;
-    padding-top: 3.75rem;
+    padding-top: .8rem;
     padding-right: .8rem;
     max-height: 100vh;
     width: min(24rem, 100%);
