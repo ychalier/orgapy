@@ -118,140 +118,14 @@ function bindWidgets() {
 
 }
 
-function getCharPosition(span, charIndex) {
+function getCharPosition(textNode, charIndex) {
+    if (textNode.nodeType != Node.TEXT_NODE) throw new Error(`Node ${textNode} is not a text node`);
     const range = document.createRange();
-    let textNode = span.firstChild;
-    if (!textNode || textNode.nodeType !== Node.TEXT_NODE) {
-        console.warn("Span does not contain a valid text node.");
-        return null;
-    }
     range.setStart(textNode, charIndex);
     range.setEnd(textNode, charIndex + 1);
     const rects = range.getClientRects();
-    if (rects.length > 0) {
-        return rects[0];
-    } else {
-        return null;
-    }
-}
-
-/**
- * @see https://codemirror.net/5/doc/manual.html
- */
-var smdeDropdownState = null;
-var smdeSelectedResult = 0;
-var smdeResultCount = 0;
-function openSmdeDropdown(cmInstance, word, suggestionsUrl, documentsUrl) {
-    
-    // Close any previously opened dropdown
-    closeSmdeDropdown();
-    
-    // Create and position the dropdown itself
-    const dropdown = create(document.body, "div", "smde-dropdown search");
-    const cursor = cmInstance.getCursor();
-    const line = cmInstance.getLine(cursor.line);
-    let iStart = cursor.ch;
-    while (iStart > 0 && line.charAt(iStart) != "@") iStart--;
-    const lineNode = cmInstance.display.view[cursor.line].node;
-    let textLength = null;
-    let span = null;
-    let maxLength = null;
-    for (const candidateSpan of lineNode.querySelectorAll("span")) {
-        if (maxLength == null || candidateSpan.textContent.length > maxLength) {
-            maxLength = candidateSpan.textContent.length;
-        }
-        if (candidateSpan.textContent.includes(word) && (textLength == null || candidateSpan.textContent.length < textLength)) {
-            span = candidateSpan;
-            textLength = candidateSpan.textContent.length;
-        }
-    }
-    if (span == null) {
-        throw new Error("Could not find span with target word");
-    }
-    const spanCharOffset = maxLength - span.textContent.length;
-    const wordStart = getCharPosition(span, iStart - spanCharOffset);
-    const verticalPadding = 4; // px
-    dropdown.style.top = (wordStart.bottom + verticalPadding) + "px";
-    dropdown.style.left = wordStart.left + "px";
-
-    // Parse current widget
-    const [match, objectTypeKey, objectNonce] = word.match(/@(\w+)\/([a-zA-Z0-9]+)?/);
-    const objectType = {
-        note: "note",
-        sheet: "sheet",
-        map: "map",
-        embednote: "note",
-        embedsheet: "sheet",
-        embedmap: "map"
-    }[objectTypeKey];
-    if (objectType == null || objectType == undefined) {
-        console.error("Invalid type key", objectTypeKey);
-    }
-    const iEnd = iStart + match.length;
-
-    // Highlight text node
-
-    const textAreaContainer = document.querySelector(".CodeMirror");
-    for (let i = iStart; i < iEnd; i++) {
-        const bounds = getCharPosition(span, i - spanCharOffset);
-        const highlight = create(textAreaContainer, "div", "smde-highlight");
-        highlight.style.top = bounds.top + "px";
-        highlight.style.left = bounds.left + "px";
-        highlight.style.width = bounds.width + "px";
-        highlight.style.height = bounds.height + "px";
-    }
-
-    function setNonce(newNonce, origin) {
-        smdeDropdownState = origin;
-        const replaceFrom = {line: cursor.line, ch: iStart};
-        const replaceTo = {line: cursor.line, ch: iEnd};
-        cmInstance.replaceRange(`@${objectTypeKey}/${newNonce}`, replaceFrom, replaceTo, origin);
-    }
-
-    const searchbar = create(create(dropdown, "div", "search-bar"), "input", "search-input");
-
-    // Set pinned value
-    if (objectNonce != undefined) {
-        const pinnedButton = create(dropdown, "button", "search-pin ellipsis");
-        fetch(`${documentsUrl}?part=snippet&nonce=${objectNonce}`)
-            .then(res => res.json())
-            .then(data => {
-                const result = data.results[0];
-                if (result.error == null) {
-                    pinnedButton.title = result.title;
-                    pinnedButton.innerHTML = `${result.title} <i class="ri-close-line"></i>`;
-                } else {
-                    pinnedButton.textContent = result.error;
-                }
-        });
-        pinnedButton.addEventListener("click", () => { setNonce("", "interlink-reset") });
-    }
-
-    create(dropdown, "ul", "search-suggestions menu");
-
-    bindSearch(dropdown, suggestionsUrl, {t: objectType},
-        (entry) => {
-            if (entry == null) {
-                unfocusSmdeDropdown();
-            } else {
-                setNonce(entry.ref, "interlink-set")
-            }
-        });
-
-    function unfocusSmdeDropdown() {
-        smdeDropdownState = "interlink-set";
-        cmInstance.setCursor({line: cursor.line, ch: iEnd});
-        cmInstance.focus();
-    }
-    
-    if (smdeDropdownState == "interlink-set") {
-        cmInstance.focus(); 
-    } else {
-        setTimeout(() => { searchbar.focus(); }, 50);
-    }
-
-    smdeDropdownState = null;
-
+    if (rects.length == 0) throw new Error(`Could not find client rect for char at index ${charIndex} within '${textNode.textContent}'`);
+    return rects[0];
 }
 
 function closeSmdeDropdown() {
@@ -260,6 +134,9 @@ function closeSmdeDropdown() {
 
 const REFERENCE_DELIMITER_CHARS = " ),:;.";
 
+/**
+ * @see https://codemirror.net/5/doc/manual.html
+ */
 function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
     const cursor = cmInstance.getCursor();
     const line = cmInstance.getLine(cursor.line);
@@ -269,7 +146,116 @@ function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
     while (iEnd < line.length && !REFERENCE_DELIMITER_CHARS.includes(line.charAt(iEnd))) iEnd++;
     const word = line.substring(iStart, iEnd).trim();
     if (word.match(/^@(note|sheet|map|embednote|embedsheet|embedmap)\/([a-zA-Z0-9]+)?$/)) {
-        setTimeout(() => { openSmdeDropdown(cmInstance, word, suggestionsUrl, documentsUrl); }, 1);
+
+        function findTextNode() {
+            // Locate the text node where the cursor is
+            const lineNode = cmInstance.display.view[cursor.line].node;
+            let chStart = 0;
+            let buffer = [lineNode];
+            let textNode;
+            while (buffer.length > 0) {
+                const node = buffer.splice(0, 1)[0];
+                if (node.nodeType == Node.TEXT_NODE) {
+                    const chEnd = chStart + node.length;
+                    if (cursor.ch >= chStart && cursor.ch < chEnd) {
+                        return [node, chStart];
+                    }
+                    chStart = chEnd;
+                } else {
+                    buffer = Array.from(node.childNodes).concat(buffer);
+                }
+            }
+            throw new Error("Could not find any text node containing the cursor");
+        }
+        const [textNode, chStart] = findTextNode();
+
+        // Locate the word within the text node
+        const anchor = getCharPosition(textNode, iStart - chStart + 1);
+
+        // Close any previously opened dropdown
+        closeSmdeDropdown();
+        
+        // Create and position the dropdown itself
+        const dropdown = create(document.body, "div", "smde-dropdown search");
+
+        const verticalPadding = 4; // px
+        dropdown.style.top = (anchor.bottom + verticalPadding) + "px";
+        dropdown.style.left = anchor.left + "px";
+
+        // Parse current widget
+        const [match, objectTypeKey, objectNonce] = word.match(/@(\w+)\/([a-zA-Z0-9]+)?/);
+        const objectType = {
+            note: "note",
+            sheet: "sheet",
+            map: "map",
+            embednote: "note",
+            embedsheet: "sheet",
+            embedmap: "map"
+        }[objectTypeKey];
+        if (objectType == null || objectType == undefined) {
+            console.error("Invalid type key", objectTypeKey);
+        }
+        const iEnd = iStart + match.length;
+
+        const textAreaContainer = document.querySelector(".CodeMirror");
+        function updateHighlights() {
+            const [newTextNode, _] = findTextNode();
+            textAreaContainer.querySelectorAll(".smde-highlight").forEach(remove);
+            // Highlight text node
+            for (let i = iStart - chStart + 1; i < iEnd - chStart + 1; i++) {
+                const bounds = getCharPosition(newTextNode, i);
+                const highlight = create(textAreaContainer, "div", "smde-highlight");
+                highlight.style.top = bounds.top + "px";
+                highlight.style.left = bounds.left + "px";
+                highlight.style.width = bounds.width + "px";
+                highlight.style.height = bounds.height + "px";
+            }
+        }
+
+        updateHighlights();
+
+        function setNonce(newNonce) {
+            const replaceFrom = {line: cursor.line, ch: iStart + 1};
+            const replaceTo = {line: cursor.line, ch: iEnd + 1};
+            cmInstance.replaceRange(`@${objectTypeKey}/${newNonce}`, replaceFrom, replaceTo);
+            updateHighlights();
+        }
+
+        const searchbar = create(create(dropdown, "div", "search-bar"), "input", "search-input");
+
+        // Set pinned value
+        if (objectNonce != undefined) {
+            const pinnedButton = create(dropdown, "button", "search-pin ellipsis");
+            fetch(`${documentsUrl}?part=snippet&nonce=${objectNonce}`)
+                .then(res => res.json())
+                .then(data => {
+                    const result = data.results[0];
+                    if (result.error == null) {
+                        pinnedButton.title = result.title;
+                        pinnedButton.innerHTML = `${result.title} <i class="ri-close-line"></i>`;
+                    } else {
+                        pinnedButton.textContent = result.error;
+                    }
+            });
+            pinnedButton.addEventListener("click", () => { setNonce("") });
+        }
+
+        create(dropdown, "ul", "search-suggestions menu");
+
+        bindSearch(dropdown, suggestionsUrl, {t: objectType},
+            (entry) => {
+                if (entry == null) {
+                    unfocusSmdeDropdown();
+                } else {
+                    setNonce(entry.ref)
+                }
+            });
+
+        function unfocusSmdeDropdown() {
+            cmInstance.setCursor({line: cursor.line, ch: iEnd});
+            cmInstance.focus();
+        }
+
     } else {
         closeSmdeDropdown();
     }
