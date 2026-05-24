@@ -7,7 +7,7 @@
 <div class="card">
     <h1 class="card-header">Objectives</h1>
     <div class="card-actions">
-        <button id="buttonCreateObjective"><i class="ri-add-line"></i> Create</button>
+        <form id="createObjectiveForm" action="{% url 'orgapy:objectives' %}" method="post">{% csrf_token %}<input type="hidden" name="title"><button><i class="ri-add-line"></i> Create</button></form>
     </div>
 </div>
 <div class="card">
@@ -23,4 +23,5 @@
     </div>
     {% endif %}
 </div>
+<script type="text/javascript">bindCreateForm(createObjectiveForm, "objective")</script>
 {% endblock column_main %}

@@ -1384,6 +1384,18 @@ def view_task(request: HttpRequest, task_id: str) -> HttpResponse:
 @permission_required("orgapy.view_objective")
 def view_objectives(request: HttpRequest) -> HttpResponse:
 
+    if request.method == "POST":
+        if not request.user.has_perm("orgapy.add_objective"):
+            raise PermissionDenied()
+        objective = Objective.objects.create(
+            user=request.user,
+            name=request.POST.get("title", "My task")
+        )
+        redirect_url = objective.get_absolute_url()
+        if request.POST.get("next"):
+            redirect_url += "?" + urlencode({"next": request.POST["next"]})
+        return redirect(redirect_url)
+
     qs = Objective.objects.filter(user=request.user).order_by("id")
 
     if request.GET.get("format") == "json":
@@ -1418,6 +1430,8 @@ def view_objective(request: HttpRequest, objective_id: str) -> HttpResponse:
             if not request.user.has_perm("orgapy.delete_objective"):
                 raise PermissionDenied()
             objective.delete()
+            return redirect("orgapy:objectives")
+
         elif not request.user.has_perm("orgapy.change_objective"):
             raise PermissionDenied()
 

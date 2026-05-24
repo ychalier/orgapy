@@ -1101,8 +1101,8 @@ function bindCreateForm(form, elementName) {
     form.onsubmit = (e) => {
         e.preventDefault();
         setTimeout(() => {
-            if (elementName == undefined) elementName = e.submitter.value;
-            const title = prompt(`Create ${elementName}`, "Untitled");
+            const name = elementName == undefined ? e.submitter.value : elementName;
+            const title = prompt(`Create ${name}`, "Untitled");
             if (title == null || title.trim() == "") return;
             form.querySelector("input[name=title]").value = title.trim();
             form.submit();

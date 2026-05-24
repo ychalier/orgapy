@@ -15,8 +15,8 @@
 {% endblock head %}
 
 {% block menu_create %}
-<li class="menu-item"><form id="createTaskForm" action="{% url 'orgapy:tasks' %}" method="post">{% csrf_token %}<input type="hidden" name="title"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button tabindex="3"><i class="ri-task-line"></i> Task</button></form></li>
-<li class="menu-item"><button id="buttonCreateObjective" tabindex="3"><i class="ri-focus-2-line"></i> Objective</button></li>
+<li class="menu-item"><form id="createTaskForm" action="{% url 'orgapy:tasks' %}" method="post">{% csrf_token %}<input type="hidden" name="title"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button tabindex="3"><i class="ri-task-line"></i> Task</button></form></li>
+<li class="menu-item"><form id="createObjectiveForm" action="{% url 'orgapy:objectives' %}" method="post">{% csrf_token %}<input type="hidden" name="title"><button tabindex="3"><i class="ri-focus-2-line"></i> Objective</button></form></li>
 <li class="menu-item"><button id="buttonCreateProject" tabindex="3"><i class="ri-briefcase-line"></i> Project</button></li>
 <hr>
 {{ block.super }}
@@ -100,6 +100,7 @@
 <script type="text/javascript">
 bindCreateProjectButton(buttonCreateProject, projectsContainer, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}");
 bindCreateForm(createTaskForm, "task");
+bindCreateForm(createObjectiveForm, "objective");
 </script>
 {% endif %}
 {% endblock %}

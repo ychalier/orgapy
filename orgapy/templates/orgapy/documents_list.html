@@ -9,8 +9,9 @@
         <div class="dropdown">
             <button class="dropdown-toggle"><i class="ri-add-line"></i><span>Create</span></button>
             <ul class="menu">
-                <form method="post" action="">
+                <form id="createDocFormAux" method="post" action="">
                     {% csrf_token %}
+                    <input name="title" type="hidden" />
                     <li class="menu-item"><button type="submit" name="type" value="note"><i class="ri-sticky-note-line"></i> Note</button></li>
                     <li class="menu-item"><button type="submit" name="type" value="sheet"><i class="ri-table-line"></i> Sheet</button></li>
                     <li class="menu-item"><button type="submit" name="type" value="map"><i class="ri-map-2-line"></i> Map</button></li>
@@ -19,4 +20,5 @@
         </div>
     </div>
 </div>
+<script type="text/javascript">bindCreateForm(createDocFormAux)</script>
 {% endblock content_title %}
