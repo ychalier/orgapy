@@ -733,7 +733,13 @@ def view_documents(request: HttpRequest) -> HttpResponse:
         doctype = request.POST.get("type", "note")
         if doctype not in ["note", "sheet", "map"]:
             raise BadRequest("Incorrect document type")
-        doc = Document.objects.create(user=request.user, type=doctype)
+        kwargs = {
+            "user": request.user,
+            "type": doctype
+        }
+        if "title" in request.POST:
+            kwargs["title"] = request.POST["title"]
+        doc = Document.objects.create(**kwargs)
         return redirect(doc.get_absolute_url() + "?edit=1")
     
     if request.GET.get("part") == "snippet":
@@ -1306,7 +1312,7 @@ def view_tasks(request: HttpRequest) -> HttpResponse:
         task = Task.objects.create(
             user=request.user,
             start_date=timezone.now().date(),
-            title="My task"
+            title=request.POST.get("title", "My task")
         )
         redirect_url = task.get_absolute_url()
         if request.POST.get("next"):

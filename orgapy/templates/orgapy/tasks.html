@@ -4,7 +4,7 @@
 {% block title %}Tasks{% endblock title %}
 
 {% block menu_create %}
-<li class="menu-item"><form action="{% url 'orgapy:tasks' %}" method="post">{% csrf_token %}<button tabindex="3"><i class="ri-task-line"></i> Task</button></li>
+<li class="menu-item"><form id="createTaskForm" action="{% url 'orgapy:tasks' %}" method="post">{% csrf_token %}<input type="hidden" name="title"><button tabindex="3"><i class="ri-task-line"></i> Task</button></form></li>
 <hr>
 {{ block.super }}
 {% endblock menu_create %}
@@ -25,4 +25,5 @@
     {% endfor %}
     {% include 'orgapy/partials/pagination.html' %}
 </div>
+<script type="text/javascript">bindCreateForm(createTaskForm, "task")</script>
 {% endblock column_main %}

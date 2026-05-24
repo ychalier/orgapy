@@ -599,7 +599,7 @@ function bindProject(container, suggestionsUrl, forceExpand=false) {
 
 function bindCreateProjectButton(createButton, projectsContainer, projectsUrl, suggestionsUrl, documentNonce=null) {
     createButton.addEventListener("click", () => {
-        const title = prompt("Enter project title", "Untitled");
+        const title = prompt("Create project", "Untitled");
         if (title) {
             const formData = new FormData();
             formData.append("csrfmiddlewaretoken", CSRF_TOKEN);
