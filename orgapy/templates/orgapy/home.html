@@ -37,7 +37,7 @@
             <details open>
                 <summary class="minititle">{{ group_date | date }}</summary>
                 {% for event in group_events %}
-                <div class="row row--nowrap {% if event.over %}muted{% endif %}" title="{{ event.title }}{% if event.location %} @ {{ event.location }}"{% endif %} style="width: 100%">
+                <div class="row row--nowrap {% if event.over %}muted{% endif %}" title="{{ event.title }}{% if event.location %} @ {{ event.location }}{% endif %}" style="width: 100%">
                     <a class="event-dot"></a>
                     {% if event.time %}<div>{{ event.time | date:'H:i' }}</div>{% endif %}
                     <div class="ellipsis">{{ event.title }}</div>

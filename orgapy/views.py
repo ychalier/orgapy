@@ -459,6 +459,8 @@ def view_home(request: HttpRequest) -> HttpResponse:
     for event in events:
         dtstart = datetime.datetime.fromisoformat(event["dtstart"])
         dtend = datetime.datetime.fromisoformat(event["dtend"])
+        if dtend.tzinfo is None:
+            dtend = dtend.replace(tzinfo=now.tzinfo)
         date = dtstart.date()
         event_groups_dict.setdefault(date, [])
         event_groups_dict[date].append({
