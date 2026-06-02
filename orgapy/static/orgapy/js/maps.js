@@ -1097,13 +1097,16 @@ class Layer {
         this.setLayerStyleHint();
 
         if (!this.map.readonly) {
-            const buttonsDropdown = create(summary, "span", "dropdown");
 
-            const moreButton = create(buttonsDropdown, "a", "button-inline dropdown-toggle");
+            const randomId = `menu-${Math.floor(Math.random() * 1000000)}`;
+
+            const moreButton = create(summary, "button", "button-inline muted");
             moreButton.innerHTML = `<i class="ri-more-2-fill"></i>`;
-            moreButton.tabIndex = 0;
+            moreButton.setAttribute("popovertarget", randomId);
 
-            const buttonsMenu = create(buttonsDropdown, "ul", "menu");
+            const buttonsMenu = create(summary, "ul", "menu");
+            buttonsMenu.setAttribute("id", randomId);
+            buttonsMenu.setAttribute("popover", "auto");
             function createMenuButton(title, iconClass, callback) {
                 const button = create(create(buttonsMenu, "li", "menu-item"), "button");
                 button.innerHTML = `<i class="${iconClass}"></i> ${title}`;
@@ -1121,8 +1124,6 @@ class Layer {
             createMenuButton("Import GeoJSON", "ri-upload-line", () => {self.importGeojson()});
             createMenuButton("Export to GeoJSON", "ri-download-line", () => {self.exportToGeojson()});
             createMenuButton("Delete", "ri-delete-bin-line", () => {self.askUserToDelete()});
-
-            bindDropdown(buttonsDropdown);
         }
 
         this.featuresContainer = create(this.container, "ul", "map-features");
@@ -1407,13 +1408,6 @@ function splitQuery(query) {
 
 const trimQuotes = (s) => {return s.replace(/^(\"+)/, "").replace(/(\"+)$/, "")};
 
-function clearContextMenus() {
-    let context_menus = document.querySelectorAll(".contextmenu");
-    for (let i = 0; i < context_menus.length; i++) {
-        document.body.removeChild(context_menus[i]);
-    }
-}
-
 function addContextMenuOption(menu, iconClass, label, callback) {
     let option = menu.appendChild(document.createElement("li"));
     option.classList.add("menu-item");
@@ -1424,7 +1418,6 @@ function addContextMenuOption(menu, iconClass, label, callback) {
     }
     option.addEventListener("click", () => {
         callback();
-        clearContextMenus();
     });
 }
 
@@ -1475,6 +1468,8 @@ class Map {
         this.etag = etag;
         this.layersContainer = null;
         this.distanceLine = null;
+        this.contextMenu = null;
+        this.anchor = null;
     }
 
     setTileLayer(providerIndex) {
@@ -1723,24 +1718,25 @@ class Map {
 
     inflateContextMenu(x, y, latlng) {
         var self = this;
-        clearContextMenus();
-        const menu = create(document.body, "ul", "contextmenu menu");
+
+        this.contextMenu.innerHTML = "";
         const coordsString = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
-        addContextMenuOption(menu, null, coordsString, () => {
+        addContextMenuOption(this.contextMenu, null, coordsString, () => {
             navigator.clipboard.writeText(coordsString);
             showToast("Copied coordinates to clipboard");
         });
         if (!this.readonly) {
-            addContextMenuOption(menu, "ri-map-pin-line", "Add marker", () => {self.addMarker(latlng)});
+            addContextMenuOption(this.contextMenu, "ri-map-pin-line", "Add marker", () => {self.addMarker(latlng)});
         }
         if (this.isMeasuringDistance()) {
-            addContextMenuOption(menu, "ri-route-line", "Stop distance measure", () => {self.stopMeasuringDistance()});
+            addContextMenuOption(this.contextMenu, "ri-route-line", "Stop distance measure", () => {self.stopMeasuringDistance()});
         } else {
-            addContextMenuOption(menu, "ri-route-line", "Measure distance", () => {self.startMeasuringDistance(latlng)});
+            addContextMenuOption(this.contextMenu, "ri-route-line", "Measure distance", () => {self.startMeasuringDistance(latlng)});
         }
-        const bounds = menu.getBoundingClientRect();
-        menu.style.left = Math.min(x, window.innerWidth - (bounds.width + 8)) + "px";
-        menu.style.top = Math.min(y, window.innerHeight - (bounds.height + 8)) + "px";
+        
+        this.anchor.style.left = `${x}px`;
+        this.anchor.style.top = `${y}px`;
+        this.contextMenu.showPopover();
     }
 
     inflateMap() {
@@ -1759,8 +1755,6 @@ class Map {
         L.control.mylocation({position: "bottomright"}).addTo(this.leafletMap);
         L.control.home({position: "bottomright"}).addTo(this.leafletMap);
         var self = this;
-        this.leafletMap.on("click", (e) => {clearContextMenus()});
-        this.leafletMap.on("movestart", (e) => {clearContextMenus()});
         this.leafletMap.on("contextmenu", (e) => {
             const bounds = self.container.getBoundingClientRect();
             self.inflateContextMenu(e.containerPoint.x + bounds.left, e.containerPoint.y + bounds.top, e.latlng);
@@ -1771,6 +1765,14 @@ class Map {
         this.container.innerHTML = "";
         this.container.classList.add("map-container");
         this.inflateMap();
+        this.contextMenu = create(document.body, "ul", "contextmenu menu");
+        this.contextMenu.setAttribute("popover", "auto");
+        this.anchor = create(document.body, "div");
+        this.anchor.style.position = "fixed";
+        this.anchor.style.width = "1px";
+        this.anchor.style.height = "1px";
+        this.anchor.style.anchorName = "--context-anchor";
+        this.contextMenu.style.positionAnchor = "--context-anchor";
         this.layers.forEach(layer => {
             layer.inflate();
         });

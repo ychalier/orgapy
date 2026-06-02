@@ -976,21 +976,17 @@ input:checked+.toggle-slider+.toggle-text {
     background: var(--bg-primary-hover);
 }
 
-.line .dropdown {
+.line button[popovertarget] {
     position: absolute;
     right: 0;
     top: 0;
     height: 100%;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-.line .dropdown-toggle {
+    border: none;
+    background: none;
     color: var(--text-muted);
 }
 
-.line .dropdown-toggle:hover {
+.line button[popovertarget]:hover {
     color: var(--text);
 }
 
@@ -1104,21 +1100,26 @@ input:checked+.toggle-slider+.toggle-text {
 }
 
 .menu {
-    display: flex;
-    flex-direction: column;
+    position-area: bottom span-right;
+    inset: auto;
     background: var(--bg-secondary);
     border-radius: .2rem;
     padding: 0;
     margin: 0;
     list-style: none;
     box-shadow: 0 0 4px black;
-    z-index: 2;
     line-height: 1;
     border: 1px solid var(--border-secondary);
     user-select: none;
     max-width: 32rem;
     max-height: 25rem;
     overflow-y: auto;
+    color: inherit;
+}
+
+.menu .menu,
+.menu-secondary {
+    position-area: inline-end span-block-end;
 }
 
 .menu:empty {
@@ -1193,11 +1194,10 @@ input:checked+.toggle-slider+.toggle-text {
     width: 100%;
 }
 
-.menu-item .dropdown-toggle::after {
+.menu-item button[popovertarget]::after {
     content: ">";
     float: right;
     height: 0;
-    line-height: .8rem;
 }
 
 /***** DIALOGS ****************************************************************/

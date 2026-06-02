@@ -49,27 +49,18 @@ navbarSubmitSearchFormButton.onclick = (event) => {
 }
 </script>
 {% endif %}
-<div class="dropdown">
-<a class="button dropdown-toggle" tabindex="3"><i class="ri-menu-line"></i></a>
-<ul class="menu">
+<button popovertarget="main-menu"><i class="ri-menu-line"></i></button>
+</div>
+</nav>
+{% block column_main %}{% endblock column_main %}
+</main>
+<div class="column-side"><div class="column column-side-sticky">{% block column_side %}{% endblock column_side %}</div></div>
+</div>
+
+<ul id="main-menu" popover class="menu">
 {% block menu %}
 {% if request.user.is_authenticated %}
-<li class="menu-item">
-    <div class="dropdown">
-        <div class="dropdown-toggle" tabindex="0"><i class="ri-add-line"></i> Create</div>
-        <ul class="menu">
-            {% block menu_create %}
-            <form id="createDocForm" method="post" action="{% url 'orgapy:documents' %}">
-                {% csrf_token %}
-                <input name="title" type="hidden" />
-                <li class="menu-item"><button type="submit" name="type" value="note"><i class="ri-sticky-note-line"></i> Note</button></li>
-                <li class="menu-item"><button type="submit" name="type" value="sheet"><i class="ri-table-line"></i> Sheet</button></li>
-                <li class="menu-item"><button type="submit" name="type" value="map"><i class="ri-map-2-line"></i> Map</button></li>
-            </form>
-            {% endblock menu_create %}
-        </ul>
-    </div>
-</li>
+<li class="menu-item"><button popovertarget="create-menu"><i class="ri-add-line"></i> Create</button></li>
 <hr>
 <li class="menu-item"><a href="{% url 'orgapy:calendars' %}" tabindex="3"><i class="ri-calendar-line"></i> Calendars</a></li>
 <li class="menu-item"><a href="{% url 'orgapy:groceries' %}" tabindex="3"><i class="ri-shopping-basket-line"></i> Groceries</a></li>
@@ -86,19 +77,22 @@ navbarSubmitSearchFormButton.onclick = (event) => {
 <li class="menu-item"><a href="{% url 'orgapy:about' %}" tabindex="3"><i class="ri-information-line"></i> About</a></li>
 {% endblock menu %}
 </ul>
-</div>
-</div>
-</nav>
-{% block column_main %}{% endblock column_main %}
-</main>
-<div class="column-side"><div class="column column-side-sticky">{% block column_side %}{% endblock column_side %}</div></div>
-</div>
+<ul id="create-menu" popover class="menu menu-secondary">
+    {% block menu_create %}
+    <form id="createDocForm" method="post" action="{% url 'orgapy:documents' %}">
+        {% csrf_token %}
+        <input name="title" type="hidden" />
+        <li class="menu-item"><button type="submit" name="type" value="note"><i class="ri-sticky-note-line"></i> Note</button></li>
+        <li class="menu-item"><button type="submit" name="type" value="sheet"><i class="ri-table-line"></i> Sheet</button></li>
+        <li class="menu-item"><button type="submit" name="type" value="map"><i class="ri-map-2-line"></i> Map</button></li>
+    </form>
+    <script>bindCreateForm(createDocForm)</script>
+    {% endblock menu_create %}
+</ul>
 {% endblock body %}
 <script>
-document.querySelectorAll(".dropdown").forEach(bindDropdown);
 document.querySelectorAll(".link-confirm").forEach(bindLinkConfirm);
 document.querySelectorAll(".submit-confirm").forEach(bindSubmitConfirm);
-bindCreateForm(createDocForm);
 </script>
 {% block body_scripts %}{% endblock body_scripts %}
 </body>

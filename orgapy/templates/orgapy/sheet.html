@@ -14,11 +14,11 @@
     <div class="sheet-toolbar">
         <span class="sheet-toolbar-primary">{% if not readonly %}
             <a class="link-hidden" href="{% url 'orgapy:documents' %}"><i class="ri-table-line"></i></a>
-            <span class="sheet-toolbar-buttons dropdown row">
+            <span class="sheet-toolbar-buttons row">
                 <a class="button" href="?edit=1"><i class="ri-pencil-fill"></i></a>
                 <button title="Save" class="sheet-button-save"><i class="ri-save-line"></i></button>
-                <a class="button dropdown-toggle" title="More" tabindex="0"><i class="ri-more-fill"></i></a>
-                <ul class="menu">
+                <button popovertarget="sheet-menu" title="More"><i class="ri-more-fill"></i></button>
+                <ul id="sheet-menu" popover class="menu">
                     <li class="menu-item"><button title="Script" class="sheet-button-script">ℱ Script</button></li>
                     <li class="menu-item"><button title="Toggle shrink" class="sheet-button-shrink"><i class="ri-fullscreen-exit-line"></i> Shrink</button></li>
                     <li class="menu-item"><button title="Upload TSV" class="sheet-button-upload"><i class="ri-upload-line"></i> Upload TSV</button></li>

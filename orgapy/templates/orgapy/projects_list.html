@@ -27,17 +27,15 @@
         <span class="project-status label label-inline {% if project.status == 'FU' %}label-pink{% elif project.status == 'IN' %}label-grey{% elif project.status == 'AR' %}label-purple{% endif %}" status="{{ project.status }}" href="{% url 'orgapy:project' project.id %}" etag="{{ project.etag }}">{{ project.get_status_display | upper }}</span>
         <span class="project-badge{% if project.items_count == 0 %} empty{% elif project.all_completed %} done{% endif %}" {% if project.items_count > 0 and not project.all_completed %}style="background: linear-gradient(90deg,rgba(37, 135, 50, 1){{ project.progress }}%,rgb(48, 48, 48) {{ project.progress }}%)"{% endif %}>{{ project.completed_items_count }}/{{ project.items_count }}</span>
         <a class="link-hidden" href="{{ project.get_absolute_url }}" title="{{ project.reference }}">{{ project.reference }}</a>
-        <div class="dropdown">
-            <a class="dropdown-toggle" title="More options" tabindex="0"><i class="ri-more-2-fill"></i></a>
-            <ul class="menu">
-                <form action="{% url 'orgapy:project' project.id %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="etag" value="{{ project.etag }}">
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                    <li class="menu-item"><button type="submit" name="delete" value="on" message="Do you want to delete '{{ project.reference }}'?" class="button-danger submit-confirm"><i class="ri-delete-bin-line"></i> Delete</button></li>
-                </form>
-            </ul>
-        </div>
+        <button popovertarget="menu-{{ project.id }}" title="More options"><i class="ri-more-2-fill"></i></button>
+        <ul id="menu-{{ project.id }}" popover class="menu">
+            <form action="{% url 'orgapy:project' project.id %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="etag" value="{{ project.etag }}">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <li class="menu-item"><button type="submit" name="delete" value="on" message="Do you want to delete '{{ project.reference }}'?" class="button-danger submit-confirm"><i class="ri-delete-bin-line"></i> Delete</button></li>
+            </form>
+        </ul>
         <form class="project-form" action="{% url 'orgapy:project' project.id %}" method="post">
             {% csrf_token %}
             <input type="hidden" name="etag" value="{{ project.etag }}">

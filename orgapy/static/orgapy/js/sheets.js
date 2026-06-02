@@ -1452,19 +1452,17 @@ class ContextMenu {
 
     constructor() {
         this.container = null;
+        this.anchor = null;
     }
 
     setup() {
         this.container = create(document.body, "ul", "contextmenu menu");
-        var self = this;
-        window.addEventListener("click", () => {
-           self.close();
-        });
+        this.container.setAttribute("popover", "auto");
+        this.container.style.positionAnchor = "--context-anchor";
     }
 
     reset() {
         this.container.innerHTML = "";
-        this.container.classList.remove("active");
     }
 
     addItem(label, callback) {
@@ -1472,7 +1470,6 @@ class ContextMenu {
         element.innerHTML = label;
         var self = this;
         element.addEventListener("click", (event) => {
-            //event.stopPropagation();
             self.close();
             callback(element);
             return false;
@@ -1481,15 +1478,15 @@ class ContextMenu {
     }
 
     addMenu(label) {
-        let wrapper = create(create(this.container, "li", "menu-item"), "div", "dropdown");
-        let item = create(wrapper, "div", "dropdown-toggle");
-        item.tabIndex = 0;
-        item.innerHTML = label;
-        item.addEventListener("click", (event) => {
-            event.stopPropagation();
-        })
-        let menu = create(wrapper, "ul", "menu");
-        menu.addItem = (label, callback) => {
+        const randomId = `menu-${Math.floor(Math.random() * 1000000)}`;
+        const item = create(this.container, "li", "menu-item");
+        const button = create(item, "button");
+        button.innerHTML = label;
+        button.setAttribute("popovertarget", randomId)
+        const menu = create(item, "ul", "menu");
+        menu.setAttribute("popover", "auto");
+        menu.setAttribute("id", randomId);
+        item.addItem = (label, callback) => {
             let element = create(create(menu, "li", "menu-item"), "button");
             element.innerHTML = label;
             element.addEventListener("click", (event) => {
@@ -1498,28 +1495,24 @@ class ContextMenu {
             });
             return element;
         }
-        bindDropdown(wrapper);
-        return menu;
+        return item;
     }
     
     open(x, y) {
-        let width = 0;
-        let height = 0;
-        this.container.querySelectorAll(".contextmenu > .menu-item").forEach(item => {
-            let bounds = item.getBoundingClientRect();
-            width = Math.max(width, bounds.width);
-            height += bounds.height;
-        });
-        width += 8; // padding
-        height += 8; // padding
-        x = Math.max(0, Math.min(window.innerWidth - width, x));
-        y = Math.max(0, Math.min(window.innerHeight - height, y));
-        this.container.style.left = x + "px";
-        this.container.style.top = y + "px";
-        this.container.classList.add("active");
+        this.anchor?.remove();
+        this.anchor = document.createElement("div");
+        this.anchor.style.position = "fixed";
+        this.anchor.style.left = `${x}px`;
+        this.anchor.style.top = `${y}px`;
+        this.anchor.style.width = "1px";
+        this.anchor.style.height = "1px";
+        this.anchor.style.anchorName = "--context-anchor";
+        document.body.append(this.anchor);
+        this.container.showPopover();
     }
     
     close() {
+        this.container.hidePopover();
         this.reset();
     }
 
