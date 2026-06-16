@@ -97,10 +97,13 @@
 <script type="text/javascript">bindProject(project{{ project.id }}, "{% url 'orgapy:suggestions' %}")</script> 
 {% endfor %}
 </div>
+{% endif %}
+{% endblock %}
+
+{% block body_scripts %}
 <script type="text/javascript">
 bindCreateProjectButton(buttonCreateProject, projectsContainer, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}");
 bindCreateForm(createTaskForm, "task");
 bindCreateForm(createObjectiveForm, "objective");
 </script>
-{% endif %}
 {% endblock %}
