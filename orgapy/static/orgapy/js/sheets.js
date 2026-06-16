@@ -2441,7 +2441,7 @@ class Sheet {
             }
         });
         document.addEventListener("keydown", (event) => {
-            if (document.querySelector(".contextmenu.active") != null) {
+            if (document.querySelector(".contextmenu").matches(":popover-open")) {
                 //pass
             } else if (self.editingColumnName) {
                 //pass
