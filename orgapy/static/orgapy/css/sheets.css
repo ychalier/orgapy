@@ -24,46 +24,41 @@
     line-height: 32px;
     gap: .4rem;
     padding: 0 .4rem;
+    box-sizing: border-box;
 }
 
-.sheet-toolbar-primary,
-.sheet-toolbar-secondary {
+.sheet-navbar {
     display: flex;
-    gap: .4rem;
+    background: var(--bg-primary);
+    align-items: center;
+    gap: .2rem;
 }
 
-.sheet-toolbar-primary {
-    flex-shrink: 0;
+@media (max-width: 800px) {
+    .sheet-navbar-label {
+        display: none;
+    }
 }
 
-.sheet-toolbar-primary:empty {
-    display: none;
-}
-
-.sheet-toolbar-secondary {
-    overflow: auto;
-    flex-shrink: 1;
-}
-
-.sheet-toolbar-secondary * {
-    white-space: nowrap;
-}
-
-.sheet-toolbar-buttons > button,
-.sheet-toolbar-buttons > .button {
-    display: block;
-    padding: 0;
-    width: 1.5rem;
-    height: 1.5rem;
-    line-height: 1.5rem;
-    text-align: center;
-}
-
-.sheet-toolbar .label {
-    position: relative;
+.sheet-navbar > button,
+.sheet-navbar > .button,
+.sheet-actions > button,
+.sheet-actions > .button {
+    font-size: small;
     line-height: normal;
-    height: fit-content;
-    top: .3rem;
+    padding: .2rem .3rem;
+}
+
+.sheet-meta {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.sheet-actions {
+    flex-shrink: 0;
 }
 
 .sheet-head {

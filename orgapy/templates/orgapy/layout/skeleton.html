@@ -56,7 +56,8 @@ navbarSubmitSearchFormButton.onclick = (event) => {
 </main>
 <div class="column-side"><div class="column column-side-sticky">{% block column_side %}{% endblock column_side %}</div></div>
 </div>
-
+{% endblock body %}
+{% block menus %}
 <ul id="main-menu" popover class="menu">
 {% block menu %}
 {% if request.user.is_authenticated %}
@@ -89,7 +90,7 @@ navbarSubmitSearchFormButton.onclick = (event) => {
     <script>bindCreateForm(createDocForm)</script>
     {% endblock menu_create %}
 </ul>
-{% endblock body %}
+{% endblock menus %}
 <script>
 document.querySelectorAll(".link-confirm").forEach(bindLinkConfirm);
 document.querySelectorAll(".submit-confirm").forEach(bindSubmitConfirm);
