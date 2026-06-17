@@ -1011,7 +1011,15 @@ function bindCreateForm(form, elementName) {
             const title = prompt(`Create ${name}`, "Untitled");
             if (title == null || title.trim() == "") return;
             form.querySelector("input[name=title]").value = title.trim();
+            let fakeSubmitInput;
+            if (e.submitter.hasAttribute("name")) {
+                fakeSubmitInput = create(form, "input");
+                fakeSubmitInput.setAttribute("hidden", true);
+                fakeSubmitInput.name = e.submitter.name;
+                fakeSubmitInput.value = e.submitter.value;
+            }
             form.submit();
+            if (fakeSubmitInput) fakeSubmitInput.remove();
         }, 1);
     }
 }
