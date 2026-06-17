@@ -743,6 +743,11 @@ def view_documents(request: HttpRequest) -> HttpResponse:
             kwargs["title"] = request.POST["title"]
         doc = Document.objects.create(**kwargs)
         return redirect(doc.get_absolute_url() + "?edit=1")
+
+    if request.GET.get("special") == "random":
+        doc = Document.objects.filter(user=request.user, hidden=False, deleted=False).order_by("?").first()
+        if doc:
+            return redirect("orgapy:document", doc.nonce)
     
     if request.GET.get("part") == "snippet":
         nonces = request.GET.getlist("nonce")
