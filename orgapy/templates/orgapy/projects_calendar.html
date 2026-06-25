@@ -27,6 +27,6 @@
 
 <script>
 bindCalendar(calendarContainer, buttonExport, {defaultMode: "monthly"});
-bindCreateProjectButton(buttonCreateProject, null, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}");
+bindCreateProjectButton(buttonCreateProject, null, "{% url 'orgapy:projects' %}", "{% url 'orgapy:suggestions' %}", {% if attrs.document %}"{{ attrs.document }}"{% else %}null{% endif %});
 </script>
 {% endblock %}
