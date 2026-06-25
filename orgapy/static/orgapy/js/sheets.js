@@ -13,7 +13,7 @@ const CTYPE_TEXT = 0;
 const CTYPE_BOOLEAN = 1;
 const CTYPE_INTEGER = 2;
 const CTYPE_FLOAT = 3;
-const CTYPE_SCIENTIFIC = 4; 
+const CTYPE_SCIENTIFIC = 4;
 const CTYPE_PERCENTAGE = 5;
 const CTYPE_MONETARY = 6;
 const CTYPE_DATETIME = 7;
@@ -351,7 +351,7 @@ class ExpressionConstant extends Expression {
     evaluate(sheet, i, j) {
         return this.value;
     }
-    
+
 }
 
 
@@ -403,7 +403,7 @@ class ExpressionBaseFunction extends Expression {
 
 
 class ExpressionRangeFunction extends Expression {
-    
+
     constructor(fun, cellLocation) {
         super();
         this.fun = fun;
@@ -536,7 +536,7 @@ class Script {
                     //console.log(formula.location.toString(), formula.expression.toString());
                 } catch (error) {
                     console.error(`Could not parse formula at line ${i}:`, error);
-                }          
+                }
             }
         });
         return new Script(formulas, string);
@@ -552,7 +552,7 @@ class Script {
             } catch (error) {
                 console.error("Encountered an error while evaluating", formula, ":", error);
             }
-        });     
+        });
         sheet.updateFilters();
     }
 
@@ -604,21 +604,64 @@ const MARKDOWN_PATTERN_BOLD = /\*\*([^\*]+)\*\*/g;
 const MARKDOWN_PATTERN_ITALIC = /\*([^\*]+)\*/g;
 const MARKDOWN_PATTERN_STRIKE = /~~([^~]+)~~/g;
 const MARKDOWN_PATTERN_CODE = /`([^`]+)`/g;
-const MARKDOWN_PATTERN_LINK = /\[([^\[\]]*)\]\(([^\(\)]*)\)/g;
-const MARKDOWN_PATTERN_URL = /((?:https?:\/\/)?(?:[-a-zA-Z0-9éèàç@:%._\+~#=]{2,256}\.(?:[a-z]{2,10})|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b(?:[-a-zA-Z0-9éèàç@:%_\+.~#?&//=]*))/g;
+const MARKDOWN_PATTERN_URL = /^(https?:\/\/[^\\<>"' \)]+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\\<>"' \)]*))/i;
 
 
-function convertMarkdownToHtml(string) {
-    string = string.replace(MARKDOWN_PATTERN_BOLD, "<b>$1</b>");
-    string = string.replace(MARKDOWN_PATTERN_ITALIC, "<i>$1</i>");
-    string = string.replace(MARKDOWN_PATTERN_STRIKE, "<s>$1</s>");
-    string = string.replace(MARKDOWN_PATTERN_CODE, "<code>$1</code>");
-    if (string.match(MARKDOWN_PATTERN_LINK)) {
-        string = string.replace(MARKDOWN_PATTERN_LINK, `<a href="$2">$1</a>`);
-    } else {
-        string = string.replace(MARKDOWN_PATTERN_URL, `<a href="$1">$1</a>`);
+function replaceMarkdownLinks(text) {
+   let result = "";
+   let i = 0;
+
+    while (i < text.length) {
+        if (text[i] === "[") {
+            const textEnd = text.indexOf("]", i + 1);
+
+            if (textEnd !== -1 && text[textEnd + 1] === "(") {
+                const label = text.slice(i + 1, textEnd);
+
+                let depth = 1;
+                let j = textEnd + 2;
+
+                while (j < text.length && depth > 0) {
+                    if (text[j] === "(") depth++;
+                    else if (text[j] === ")") depth--;
+                    j++;
+                }
+
+                if (depth === 0) {
+                    const url = text.slice(textEnd + 2, j - 1);
+                    result += `<a href="${url}">${label}</a>`;
+                    i = j;
+                    continue;
+                }
+            }
+        }
+
+        const remainder = text.slice(i);
+
+        const match = remainder.match(MARKDOWN_PATTERN_URL);
+
+        if (match) {
+            const url = match[0];
+            const href = url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
+            result += `<a href="${href}">${url}</a>`;
+            i += url.length;
+            continue;
+        }
+
+        result += text[i++];
     }
-    return string.replaceAll("\n", "<br>")
+
+    return result;
+}
+
+
+function convertMarkdownToHtml(text) {
+    text = text.replace(MARKDOWN_PATTERN_BOLD, "<b>$1</b>");
+    text = text.replace(MARKDOWN_PATTERN_ITALIC, "<i>$1</i>");
+    text = text.replace(MARKDOWN_PATTERN_STRIKE, "<s>$1</s>");
+    text = text.replace(MARKDOWN_PATTERN_CODE, "<code>$1</code>");
+    text = replaceMarkdownLinks(text);
+    return text.replaceAll("\n", "<br>")
 }
 
 
@@ -774,7 +817,7 @@ class SelectionRange {
         this.endJ = j;
         this.updateBounds();
     }
-    
+
     actualDi(di) {
         let actualDi = 0;
         let visibleDi = 0;
@@ -1292,7 +1335,7 @@ class ColumnTypeTime extends ColumnType {
             let minutes = parseInt(match[2]);
             let seconds = 0;
             if (match[3] != null) {
-                seconds = parseInt(match[3]); 
+                seconds = parseInt(match[3]);
             }
             let date = new Date();
             date.setFullYear(1970, 1, 1);
@@ -1497,7 +1540,7 @@ class ContextMenu {
         }
         return item;
     }
-    
+
     open(x, y) {
         this.anchor?.remove();
         this.anchor = document.createElement("div");
@@ -1510,7 +1553,7 @@ class ContextMenu {
         document.body.append(this.anchor);
         this.container.showPopover();
     }
-    
+
     close() {
         this.container.hidePopover();
         this.reset();
@@ -1551,7 +1594,7 @@ class Sheet {
         this.rows = [];
         this.columnHeads = [];
         this.rowHeads = [];
-        
+
         // Flags
         this.selecting = false;
         this.selectingRows = false;
@@ -1559,7 +1602,7 @@ class Sheet {
         this.editing = false;
         this.editingColumnName = false;
         this.resizing = false;
-        
+
         // Attributes
         this.resizingStart = null;
         this.resizingColumn = null;
@@ -1619,7 +1662,7 @@ class Sheet {
     }
 
     getSelectionAsTsv() {
-        if (this.selection == null) return "";      
+        if (this.selection == null) return "";
         let bounds = this.selection.bounds();
         let array = [];
         for (let i = bounds.top; i <= bounds.bottom; i++) {
@@ -1630,7 +1673,7 @@ class Sheet {
                 if (!this.selection.containsColumn(j)) continue;
                 array[k].push(this.columnTypes[j].formatText(this.values[i][j]));
             }
-        }  
+        }
         return formatTsv(array);
     }
 
@@ -2009,7 +2052,7 @@ class Sheet {
                 el.classList.add("selected");
             }
         });
-        
+
         const values = Array.from(this.getValueSet(j));
         const hasFewValues = values.length < MAX_DIFFERENT_VALUES_FOR_FILTERS;
         const isText = this.columnTypes[j].constructor.INPUT_TAG == "textarea" || this.columnTypes[j].constructor.INPUT_TYPE == "text";
@@ -2069,12 +2112,12 @@ class Sheet {
                     );
                 });
             }
-            
+
         }
         this.contextMenu.addItem("Sort", () => {self.openSortDialog(j)});
         this.contextMenu.addItem("Resize", () => {
             let newWidth = prompt(`Column width (default is ${DEFAULT_COLUMN_WIDTH}):`, self.columnWidths[j]);
-            if (newWidth != null) {    
+            if (newWidth != null) {
                 self.selection.columns().forEach(q => {
                     self.setColumnWidth(q, newWidth);
                 });
@@ -2150,7 +2193,7 @@ class Sheet {
 
     setColumnName(j, name) {
         this.columnNames[j] = name.trim() == "" ? colname(j) : name.trim();
-        let el = this.columnHeads[j].querySelector(".sheet-column-name"); 
+        let el = this.columnHeads[j].querySelector(".sheet-column-name");
         el.textContent = this.columnNames[j];
         el.title = this.columnNames[j];
         this.onChange(true, false);
