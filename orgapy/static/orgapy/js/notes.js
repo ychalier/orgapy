@@ -1,6 +1,6 @@
 const TOC_SCROLL_MARGIN_TOP = 48; // px
 
-function createToc(contentContainer, tocContainer) {    
+function createToc(contentContainer, tocContainer) {
     function removeToc() {
         remove(tocContainer.parentElement.parentElement);
     }
@@ -138,10 +138,13 @@ const REFERENCE_DELIMITER_CHARS = " ),:;.";
  * @see https://codemirror.net/5/doc/manual.html
  */
 function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
+    setTimeout(() => {
+
     const cursor = cmInstance.getCursor();
     const line = cmInstance.getLine(cursor.line);
     let iStart = Math.max(0, cursor.ch - 1);
     while (iStart > 0 && !REFERENCE_DELIMITER_CHARS.includes(line.charAt(iStart))) iStart--;
+    if (iStart > 0) iStart++;
     let iEnd = iStart + 1;
     while (iEnd < line.length && !REFERENCE_DELIMITER_CHARS.includes(line.charAt(iEnd))) iEnd++;
     const word = line.substring(iStart, iEnd).trim();
@@ -157,7 +160,7 @@ function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
                 const node = buffer.splice(0, 1)[0];
                 if (node.nodeType == Node.TEXT_NODE) {
                     const chEnd = chStart + node.length;
-                    if (cursor.ch >= chStart && cursor.ch < chEnd) {
+                    if (cursor.ch >= chStart && cursor.ch <= chEnd) {
                         return [node, chStart];
                     }
                     chStart = chEnd;
@@ -170,11 +173,11 @@ function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
         const [textNode, chStart] = findTextNode();
 
         // Locate the word within the text node
-        const anchor = getCharPosition(textNode, iStart - chStart + 1);
+        const anchor = getCharPosition(textNode, iStart - chStart);
 
         // Close any previously opened dropdown
         closeSmdeDropdown();
-        
+
         // Create and position the dropdown itself
         const dropdown = create(document.body, "div", "smde-dropdown search");
 
@@ -202,7 +205,7 @@ function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
             const [newTextNode, _] = findTextNode();
             textAreaContainer.querySelectorAll(".smde-highlight").forEach(remove);
             // Highlight text node
-            for (let i = iStart - chStart + 1; i < iEnd - chStart + 1; i++) {
+            for (let i = iStart - chStart; i < iEnd - chStart; i++) {
                 const bounds = getCharPosition(newTextNode, i);
                 const highlight = create(textAreaContainer, "div", "smde-highlight");
                 highlight.style.top = bounds.top + "px";
@@ -215,8 +218,8 @@ function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
         updateHighlights();
 
         function setNonce(newNonce) {
-            const replaceFrom = {line: cursor.line, ch: iStart + 1};
-            const replaceTo = {line: cursor.line, ch: iEnd + 1};
+            const replaceFrom = {line: cursor.line, ch: iStart};
+            const replaceTo = {line: cursor.line, ch: iEnd};
             cmInstance.replaceRange(`@${objectTypeKey}/${newNonce}`, replaceFrom, replaceTo);
             updateHighlights();
         }
@@ -259,4 +262,7 @@ function onCmCursorActivity(cmInstance, suggestionsUrl, documentsUrl) {
     } else {
         closeSmdeDropdown();
     }
+
+    }, 1);
+
 }
