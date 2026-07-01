@@ -1500,8 +1500,23 @@ class ContextMenu {
 
     setup() {
         this.container = create(document.body, "ul", "contextmenu menu");
-        this.container.setAttribute("popover", "auto");
+        this.container.setAttribute("popover", "manual");
         this.container.style.positionAnchor = "--context-anchor";
+        var self = this;
+        document.addEventListener("click", (e) => {
+            if (!self.container.matches(":popover-open")) {
+                return;
+            }
+            if (self.container.contains(e.target)) {
+                return;
+            }
+            self.container.hidePopover();
+        });
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && self.container.matches(":popover-open")) {
+                self.container.hidePopover();
+            }
+        });
     }
 
     reset() {
