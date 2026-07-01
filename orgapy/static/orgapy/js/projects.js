@@ -125,7 +125,7 @@ class Project {
         if (this.document != null) documentLink.href = this.document.url;
         const documentEditLink = create(actionButtons, "a", "button");
         documentEditLink.innerHTML = `<i class="ri-pencil-fill"></i><span>Edit document</span>`;
-        if (this.document != null) documentEditLink.href = this.document.url + "/edit";
+        if (this.document != null) documentEditLink.href = this.document.url + "?edit=1";
         const documentClear = create(actionButtons, "span", "button button-danger");
         documentClear.innerHTML = `<i class="ri-close-line"></i><span>Unbind from project</span>`;
 
