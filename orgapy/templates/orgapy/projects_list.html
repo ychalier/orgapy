@@ -11,12 +11,11 @@
 
 {% block column_main %}
 <div class="card">
-    <h1 class="card-header">Projects</h1>
     <div class="card-body">{% include 'orgapy/partials/project_search.html' %}</div>
     <div class="card-actions">
-        <button id="buttonCreateProject"><i class="ri-add-line"></i><span>Create project</span></button>
         <a class="button" href="{% querystring calendar=1 %}"><i class="ri-calendar-line"></i><span>Calendar</span></a>
         <a class="button" href="{% querystring format='tsv' %}"><i class="ri-download-line"></i><span>Export</span></a>
+        <button id="buttonCreateProject"><i class="ri-add-line"></i><span>Create</span></button>
     </div>
 </div>
 

@@ -621,7 +621,6 @@ def view_projects(request: HttpRequest) -> HttpResponse:
         "paginator": _pretty_paginator(projects),
         "active": "projects",
         "attrs": attrs,
-        "active": "projects",
     })
 
 

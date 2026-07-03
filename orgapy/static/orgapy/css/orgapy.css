@@ -1529,3 +1529,16 @@ dialog > .card {
 .spaced-lines {
     line-height: 1.6;
 }
+
+span.show-xs {
+    display: none;
+}
+
+@media (max-width: 800px) {
+    span.show-xs {
+        display: unset;
+    }
+    span.hide-xs {
+        display: none;
+    }
+}
