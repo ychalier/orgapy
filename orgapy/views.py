@@ -471,7 +471,7 @@ def view_home(request: HttpRequest) -> HttpResponse:
         })
     event_groups = sorted(event_groups_dict.items())
     for i in range(len(event_groups)):
-        event_groups[i][1].sort(key=lambda x: x["time"])
+        event_groups[i][1].sort(key=lambda x: (x.get("time"), x.get("title")))
 
     tasks = Task.objects\
         .filter(user=request.user, completed=False, start_date__lte=now)\
