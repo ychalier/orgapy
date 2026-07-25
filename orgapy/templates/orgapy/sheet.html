@@ -16,6 +16,7 @@
         <div class="sheet-navbar">
             <a href="{% url 'orgapy:home' %}" class="button {% if active == "home" %}active{% endif %}" tabindex="2"><i class="ri-home-line"></i> <span class="sheet-navbar-label">Home</span></a>
             <a href="{% url 'orgapy:documents' %}" class="button {% if active == "documents" %}active{% endif %}" tabindex="2"><i class="ri-file-copy-2-line"></i> <span class="sheet-navbar-label">Documents</span></a>
+            <a href="{% url 'orgapy:projects' %}" class="button {% if active == "projects" %}active{% endif %}" tabindex="2"><i class="ri-briefcase-line"></i> <span class="sheet-navbar-label">Projects</span></a>
             <button popovertarget="main-menu"><i class="ri-menu-line"></i></button>
         </div>
         {% endif %}
