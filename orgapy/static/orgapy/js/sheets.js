@@ -1603,6 +1603,7 @@ class Sheet {
         this.toolbarButtonSave = null;
         this.toolbarButtonToggleShrink = null;
         this.table = null;
+        this.cellTopLeft = null;
         this.cells = [];
         this.columnHandles = [];
         this.rowHandles = [];
@@ -1619,6 +1620,8 @@ class Sheet {
         this.resizing = false;
 
         // Attributes
+        this.hasFilterOn = false;
+        this.filteredHeight = null;
         this.resizingStart = null;
         this.resizingColumn = null;
         this.resizingRow = null;
@@ -1655,6 +1658,7 @@ class Sheet {
         this.selecting = true;
         this.selection.start(i, j, this.selectingRows, this.selectingColumns);
         this.selection.set();
+        this.updateSizeDisplay();
     }
 
     addSelection(i, j) {
@@ -1662,11 +1666,13 @@ class Sheet {
         this.selecting = true;
         this.selection.add(i, j, this.selectingRows, this.selectingColumns);
         this.selection.set();
+        this.updateSizeDisplay();
     }
 
     updateSelection(i, j) {
         this.selection.update(this.selectingColumns ? this.height - 1 : i, this.selectingRows ? this.width - 1 : j);
         this.selection.set();
+        this.updateSizeDisplay();
     }
 
     endSelection() {
@@ -1674,6 +1680,7 @@ class Sheet {
         this.selectingRows = false;
         this.selectingColumns = false;
         this.selection.set();
+        this.updateSizeDisplay();
     }
 
     getSelectionAsTsv() {
@@ -2317,6 +2324,8 @@ class Sheet {
                 regexes.push(new RegExp(this.regexFilters[j], "i"));
             }
         }
+        this.hasFilterOn = false;
+        this.filteredHeight = 0;
         for (let i = 0; i < this.height; i++) {
             let shouldBeDisplayed = true;
             for (let j = 0; j < this.width; j++) {
@@ -2338,11 +2347,13 @@ class Sheet {
                 this.rowHandles[i].style.top = (y - HANDLE_SIZE/2) + "px";
                 rowTop--;
                 previousRowWasFiltered = false;
+                this.filteredHeight++;
             } else {
                 this.rows[i].classList.add("hidden");
                 this.rowHandles[i].classList.add("hidden");
                 this.rowHandles[i].style.top = 0;
                 previousRowWasFiltered = true;
+                this.hasFilterOn = true;
             }
         }
         for (let j = 0; j < this.width; j++) {
@@ -2354,6 +2365,7 @@ class Sheet {
         }
         this.selection.setFilteredRanges();
         this.selection.set();
+        this.updateSizeDisplay();
     }
 
     setCellsEventListeners() {
@@ -2441,11 +2453,10 @@ class Sheet {
                 }
             });
         }
-        let cellTopLeft = this.container.querySelector(".sheet-row-head .sheet-cell:first-child");
-        cellTopLeft.addEventListener("click", () => {
+        this.cellTopLeft.addEventListener("click", () => {
             self.selection.all();
         });
-        cellTopLeft.addEventListener("dblclick", () => {
+        this.cellTopLeft.addEventListener("dblclick", () => {
             self.selection.reset();
             self.selection.clear();
         });
@@ -2784,8 +2795,9 @@ class Sheet {
         tableBody.innerHTML = "";
 
         let rowHead = create(tableHead, "div", "sheet-row sheet-row-head");
-        let cellTopLeft = create(rowHead, "div", "sheet-cell sheet-cell-head sheet-cell-top-left");
-        cellTopLeft.style.height = (this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT) + "px";
+        this.cellTopLeft = create(rowHead, "div", "sheet-cell sheet-cell-head sheet-cell-top-left");
+        this.cellTopLeft.style.height = (this.shrunk ? SHRUNK_ROW_HEIGHT : DEFAULT_ROW_HEIGHT) + "px";
+        this.updateSizeDisplay(this.height, this.width);
         this.columnHeads = [];
         for (let j = 0; j < this.width; j++) {
             const columnHeadCell = create(rowHead, "div", "sheet-cell");
@@ -2842,6 +2854,18 @@ class Sheet {
         this.updateDatalists();
 
         this.setCellsEventListeners();
+    }
+
+    updateSizeDisplay() {
+        let height = this.hasFilterOn ? this.filteredHeight : this.height;
+        let width = this.width;
+        const selectionHeight = this.selection.rows().length;
+        const selectionWidth = this.selection.columns().length;
+        if (selectionHeight > 1 || selectionWidth > 1) {
+            height = selectionHeight;
+            width = selectionWidth;
+        }
+        this.cellTopLeft.textContent = `${height}×${width}`;
     }
 
     initializeValues(data=null, config=null) {

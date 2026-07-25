@@ -192,6 +192,9 @@
 
 .sheet-cell-top-left {
     cursor: cell !important;
+    color: var(--text-muted);
+    font-size: 8pt;
+    line-height: 32px;
 }
 
 .sheet-cell-shelf {
