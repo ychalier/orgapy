@@ -1692,6 +1692,30 @@ class Sheet {
         return formatTsv(array);
     }
 
+    copySelection() {
+        if (navigator.clipboard == undefined) {
+            console.warn("Clipboard is not accessible");
+            return;
+        }
+        const string = this.getSelectionAsTsv();
+        navigator.clipboard.writeText(string);
+    }
+
+    cutSelection() {
+        this.copySelection();
+        this.clearSelection();
+    }
+
+    clearSelection() {
+        if (!this.readonly) {
+            this.selection.iterate((i, j) => {
+                this.values[i][j] = null;
+                this.setCellContent(i, j);
+            });
+            this.onChange(true, false);
+        }
+    }
+
     startEditing(causedByClick=false) {
         this.editing = true;
         let root = this.selection.root();
@@ -2192,6 +2216,24 @@ class Sheet {
         this.contextMenu.open(x, y);
     }
 
+    openCellContextMenu(x, y, i, j) {
+        if (this.readonly) return;
+        this.contextMenu.reset();
+        var self = this;
+        const highlightMenu = this.contextMenu.addMenu("Highlight");
+        highlightMenu.addItem("None", () => { self.setHighlight(HIGHLIGHT_NONE) });
+        highlightMenu.addItem("Accent", () => { self.setHighlight(HIGHLIGHT_ACCENT) });
+        highlightMenu.addItem("Success", () => { self.setHighlight(HIGHLIGHT_SUCCESS) });
+        highlightMenu.addItem("Error", () => { self.setHighlight(HIGHLIGHT_ERROR) });
+        this.contextMenu.addItem("Copy", () => { self.copySelection() });
+        this.contextMenu.addItem("Cut", () => { self.cutSelection() });
+        this.contextMenu.addItem("Clear", () => { self.clearSelection() });
+        this.contextMenu.addItem("Toggle bold", () => { self.toggleBold() });
+        this.contextMenu.addItem("Toggle italic", () => { self.toggleItalic() });
+        this.contextMenu.addItem("Edit link", () => { self.editLink() });
+        this.contextMenu.open(x, y);
+    }
+
     setColumnType(j, ctype) {
         let oldCtype = this.columnTypes[j];
         let newCtype = new (COLUMN_TYPES[ctype])();
@@ -2324,12 +2366,18 @@ class Sheet {
                         self.addSelection(i, j);
                     } else if (event.shiftKey  && !inSelection) {
                         self.updateSelection(i, j);
-                    } else if (!event.ctrlKey && !event.shiftKey) {
+                    } else if (!event.ctrlKey && !event.shiftKey && (!inSelection || event.button == 0)) {
                         self.startSelection(i, j);
                     }
                 });
                 this.cells[i][j].addEventListener("dblclick", () => {
                     if (!self.editing && !self.readonly) self.startEditing(true);
+                });
+                this.cells[i][j].addEventListener("contextmenu", (event) => {
+                    if (!self.editing) {
+                        event.preventDefault();
+                        this.openCellContextMenu(event.clientX, event.clientY, i, j);
+                    }
                 });
             }
         }
@@ -2351,7 +2399,7 @@ class Sheet {
         for (let j = 0; j < this.width; j++) {
             let handle = this.columnHandles[j];
             handle.addEventListener("mousedown", (event) => {
-                if (!self.readonly) {
+                if (!self.readonly && event.button == 0) {
                     self.startResizingColumn(j, event);
                 }
             });
@@ -2364,7 +2412,7 @@ class Sheet {
         for (let i = 0; i < this.height; i++) {
             let handle = this.rowHandles[i];
             handle.addEventListener("mousedown", (event) => {
-                if (!self.readonly) {
+                if (!self.readonly && event.button == 0) {
                     self.startResizingRow(i, event);
                 }
             });
@@ -2454,6 +2502,42 @@ class Sheet {
 
     toggleItalic() {
         this.toggleMarker("*");
+    }
+
+    editLink() {
+        const MARKDOWN_PATTERN_LINK = /\[([^\[\]]*)\]\(([^\(\)]*)\)/g;
+        let root = this.selection.root();
+        let value = this.values[root.i][root.j];
+        if (value != null && typeof(value) == typeof("")) {
+            if (value.match(MARKDOWN_PATTERN_LINK)) {
+                let match = MARKDOWN_PATTERN_LINK.exec(value);
+                let url = prompt("Current URL:", match[2]);
+                if (url != null) {
+                    if (url.trim() == "") {
+                        this.values[root.i][root.j] = match[1];
+                    } else {
+                        this.values[root.i][root.j] = `[${match[1]}](${url})`;
+                    }
+                    this.setCellContent(root.i, root.j);
+                    this.onChange(true, false);
+                }
+            } else {
+                let url = prompt("Enter a URL:");
+                if (url != null && url.trim() != "") {
+                    this.values[root.i][root.j] = `[${value}](${url})`;
+                    this.setCellContent(root.i, root.j);
+                    this.onChange(true, false);
+                }
+            }
+        }
+    }
+
+    setHighlight(highlightValue) {
+        this.selection.iterate((i, j) => {
+            this.highlights[i][j] = highlightValue;
+            this.setCellContent(i, j);
+        });
+        this.onChange(false, true);
     }
 
     setGlobalEventListeners() {
@@ -2582,11 +2666,7 @@ class Sheet {
                         self.selection.move(16, 0, event.ctrlKey);
                     }
                 } else if (!self.editing && (event.key == "Delete" || event.key == "Backspace") && !self.readonly) {
-                    self.selection.iterate((i, j) => {
-                        self.values[i][j] = null;
-                        self.setCellContent(i, j);
-                    });
-                    self.onChange(true, false);
+                    self.clearSelection();
                 } else if (event.key == "Tab") {
                     if (self.editing && !self.readonly) self.stopEditing();
                     if (event.shiftKey) {
@@ -2602,72 +2682,30 @@ class Sheet {
                     event.preventDefault();
                     self.toggleItalic();
                 } else if (event.key == "k" && event.ctrlKey && !self.readonly) {
-                    let root = self.selection.root();
-                    let value = self.values[root.i][root.j];
-                    if (value != null && typeof(value) == typeof("")) {
-                        if (value.match(MARKDOWN_PATTERN_LINK)) {
-                            let match = MARKDOWN_PATTERN_LINK.exec(value);
-                            let url = prompt("Current URL:", match[2]);
-                            if (url != null) {
-                                if (url.trim() == "") {
-                                    self.values[root.i][root.j] = match[1];
-                                } else {
-                                    self.values[root.i][root.j] = `[${match[1]}](${url})`;
-                                }
-                                self.setCellContent(root.i, root.j);
-                                self.onChange(true, false);
-                            }
-                        } else {
-                            let url = prompt("Enter a URL:");
-                            if (url != null && url.trim() != "") {
-                                self.values[root.i][root.j] = `[${value}](${url})`;
-                                self.setCellContent(root.i, root.j);
-                                self.onChange(true, false);
-                            }
-                        }
-                    }
+                    event.preventDefault();
+                    self.editLink();
                 } else if (event.key == "c" && event.ctrlKey) {
                     if (!self.editing) {
                         event.preventDefault();
+                        self.copySelection();
                         let string = self.getSelectionAsTsv();
                         navigator.clipboard.writeText(string);
                     }
                 } else if (event.key == "x" && event.ctrlKey) {
                     if (!self.editing) {
                         event.preventDefault();
-                        let string = self.getSelectionAsTsv();
-                        navigator.clipboard.writeText(string);
-                        if (!self.readonly) {
-                            self.selection.iterate((i, j) => {
-                                self.values[i][j] = null;
-                                self.setCellContent(i, j);
-                            });
-                            self.onChange(true, false);
-                        }
+                        self.cutSelection();
                     }
                 } else if (event.altKey && (event.key == "²" || event.key == "&" || event.key == "é" || event.key == "\"") && !self.readonly) {
                     if (event.key == "²") {
-                        self.selection.iterate((i, j) => {
-                            if (self.highlights[i][j] >= 0) {
-                                self.highlights[i][j] = HIGHLIGHT_NONE;
-                                self.setCellContent(i, j);
-                            }
-                        });
-                    } else {
-                        let highlight = null;
-                        if (event.key == "&") {
-                            highlight = HIGHLIGHT_ACCENT;
-                        } else if (event.key == "é") {
-                            highlight = HIGHLIGHT_SUCCESS;
-                        } else if (event.key == "\"") {
-                            highlight = HIGHLIGHT_ERROR;
-                        }
-                        self.selection.iterate((i, j) => {
-                            self.highlights[i][j] = highlight;
-                            self.setCellContent(i, j);
-                        });
+                        self.setHighlight(HIGHLIGHT_NONE);
+                    } else if (event.key == "&") {
+                        self.setHighlight(HIGHLIGHT_ACCENT);
+                    } else if (event.key == "é") {
+                        self.setHighlight(HIGHLIGHT_SUCCESS);
+                    } else if (event.key == "\"") {
+                        self.setHighlight(HIGHLIGHT_ERROR);
                     }
-                    self.onChange(false, true);
                 } else if (!self.editing && event.key.length == 1 && !event.ctrlKey && !event.altKey && !self.readonly) {
                     self.startEditing();
                 }
