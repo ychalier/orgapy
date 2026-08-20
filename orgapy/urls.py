@@ -19,7 +19,6 @@ urlpatterns = [
     path("mood", views.view_mood, name="mood"),
     path("mood/<log_id>", views.view_mood_log, name="mood_log"),
     path("trash", views.view_trash, name="trash"),
-    path("groceries", views.view_groceries, name="groceries"),
     path("tasks", views.view_tasks, name="tasks"),
     path("tasks/<task_id>", views.view_task, name="task"),
     path("objectives", views.view_objectives, name="objectives"),

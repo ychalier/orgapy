@@ -40,7 +40,6 @@ class Settings(models.Model):
     mood_log_hours = models.PositiveIntegerField(default=19, validators=[MinValueValidator(0), MaxValueValidator(23)])
     mood_activities = models.TextField(default="Hiking 🥾\nRunning 🏃\nParty 🎉")
     mood_log_lookback_days = models.PositiveIntegerField(default=2)
-    groceries_data = models.TextField(blank=True, null=True)
 
     class Meta:
 
@@ -56,12 +55,6 @@ class Settings(models.Model):
             label, emoji = line.strip().split(" ")
             activities.append((label, emoji))
         return activities
-
-    @property
-    def groceries(self) -> dict:
-        if self.groceries_data:
-            return json.loads(self.groceries_data)
-        return {}
 
 
 class Tag(models.Model):
