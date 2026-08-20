@@ -255,17 +255,19 @@ def _render_document_list(
         tag_ids = [c.id for c in Tag.objects.filter(user=request.user, name__in=tag_names)]
         filter_uncategorized = "uncategorized" in tag_names
         attrs["tags"] = ";".join(sorted(tag_names))
-    
-    if dt_start is None and "start" in request.GET:
-        dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
+
+    dt_start_string = request.GET.get("start")
+    if dt_start is None and dt_start_string:
+        dt_start = datetime.datetime.strptime(dt_start_string, "%Y-%m-%d")
     if dt_start:
         attrs["start"] = dt_start.strftime("%Y-%m-%d")
-    
-    if dt_end is None and "end" in request.GET:
-        dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
+
+    dt_end_string = request.GET.get("end")
+    if dt_end is None and dt_end_string:
+        dt_end = datetime.datetime.strptime(dt_end_string, "%Y-%m-%d")
     if dt_end:
         attrs["end"] = dt_end.strftime("%Y-%m-%d")
-    
+
     if sort_key is None:
         s = request.GET.get("sort")
         sort_key = s if s in ["creation", "modification", "access", "deletion", "title", "relevance"] else None # type: ignore
@@ -291,7 +293,7 @@ def _render_document_list(
         qs = qs.filter(tags__in=[tag_id])
     if filter_uncategorized:
         qs = qs.filter(tags__isnull=True)
-    
+
     if dt_start and dt_end:
         qs = qs.filter(date_creation__range=[dt_start, dt_end + datetime.timedelta(days=1)])
     elif dt_start:
@@ -311,7 +313,7 @@ def _render_document_list(
             qs = qs.order_by("-pinned", f"-date_{sort_key}")
     else:
         qs = qs.order_by("-pinned", "-date_modification")
-        
+
     if request.GET.get("format") == "json":
         mindt = Document.objects.values("date_creation").aggregate(Min("date_creation"))["date_creation__min"]
         maxdt = Document.objects.values("date_creation").aggregate(Max("date_creation"))["date_creation__max"]
@@ -402,10 +404,12 @@ def _render_calendar(
     dt_start = datetime.datetime(year, 1, 1, 0, 0, 0, 0)
     dt_end = datetime.datetime(year, 12, 31, 0, 0, 0, 0)
     try:
-        if "start" in request.GET:
-            dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
-        if "end" in request.GET:
-            dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
+        dt_start_string = request.GET.get("start")
+        if dt_start_string:
+            dt_start = datetime.datetime.strptime(dt_start_string, "%Y-%m-%d")
+        dt_end_string = request.GET.get("end")
+        if dt_end_string:
+            dt_end = datetime.datetime.strptime(dt_end_string, "%Y-%m-%d")
     except ValueError:
         raise BadRequest("Wrong value")
 
@@ -489,7 +493,7 @@ def view_home(request: HttpRequest) -> HttpResponse:
             "tasks": group_tasks,
             "open": group_index <= Task.THISWEEK
         })
-    
+
     objectives = Objective.objects.filter(user=request.user, archived=False)
 
     return render(request, "orgapy/home.html", {
@@ -542,14 +546,16 @@ def view_projects(request: HttpRequest) -> HttpResponse:
         attrs["document"] = document_filter
 
     dt_start = None
-    if "start" in request.GET:
-        dt_start = datetime.datetime.strptime(request.GET["start"], "%Y-%m-%d")
+    dt_start_string = request.GET.get("start")
+    if dt_start_string:
+        dt_start = datetime.datetime.strptime(dt_start_string, "%Y-%m-%d")
     if dt_start:
         attrs["start"] = dt_start.strftime("%Y-%m-%d")
 
     dt_end = None
-    if "end" in request.GET:
-        dt_end = datetime.datetime.strptime(request.GET["end"], "%Y-%m-%d")
+    dt_end_string = request.GET.get("end")
+    if dt_end_string:
+        dt_end = datetime.datetime.strptime(dt_end_string, "%Y-%m-%d")
     if dt_end:
         attrs["end"] = dt_end.strftime("%Y-%m-%d")
 
@@ -665,8 +671,9 @@ def view_project(request: HttpRequest, project_id: str) -> HttpResponse:
 
         if request.POST.get("delete") == "on":
             project.delete()
-            if "next" in request.POST:
-                return redirect(request.POST["next"])
+            next_url = request.POST.get("next")
+            if next_url:
+                return redirect(next_url)
             if is_ajax:
                 return HttpResponse(status=204)
             return redirect("orgapy:projects")
@@ -675,12 +682,12 @@ def view_project(request: HttpRequest, project_id: str) -> HttpResponse:
 
         if "title" in request.POST:
             update_fields.append("title")
-            new_title = request.POST["title"]
+            new_title = request.POST.get("title")
             project.title = new_title if new_title else None
 
         if "checklist" in request.POST:
             update_fields.append("checklist")
-            new_checklist = request.POST["checklist"]
+            new_checklist = request.POST.get("checklist")
             _compare_checklists(request.user, project.reference, project.checklist, new_checklist)
             project.checklist = new_checklist
             update_fields.append("date_modification")
@@ -707,8 +714,9 @@ def view_project(request: HttpRequest, project_id: str) -> HttpResponse:
         project.updated_at = now
         project.save(update_fields=update_fields + ["updated_at"])
 
-        if "next" in request.POST:
-            return redirect(request.POST["next"])
+        next_url = request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
 
         if is_ajax:
             response = HttpResponse(status=204)
@@ -747,7 +755,7 @@ def view_documents(request: HttpRequest) -> HttpResponse:
         doc = Document.objects.filter(user=request.user, hidden=False, deleted=False).order_by("?").first()
         if doc:
             return redirect("orgapy:document", doc.nonce)
-    
+
     if request.GET.get("part") == "snippet":
         nonces = request.GET.getlist("nonce")
         results = []
@@ -826,14 +834,15 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
 
         if request.POST.get("destroy") == "on":
             doc.delete()
-            if "next" in request.POST:
-                return redirect(request.POST["next"])
+            next_url = request.POST.get("next")
+            if next_url:
+                return redirect(next_url)
             return redirect("orgapy:documents")
-        
+
         new_content = None
         if "widgets" in request.POST and doc.content:
             new_content = doc.content
-            widget_updates = json.loads(request.POST["widgets"])
+            widget_updates = json.loads(request.POST.get("widgets", "[]"))
             for update in widget_updates:
                 widget_type = update.get("type")
                 widget_index = update.get("index")
@@ -889,15 +898,15 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
 
         if "title" in request.POST:
             update_fields.append("title")
-            doc.title = request.POST["title"]
+            doc.title = request.POST.get("title")
 
         if "subtitle" in request.POST:
             update_fields.append("subtitle")
-            doc.subtitle = request.POST["subtitle"]
+            doc.subtitle = request.POST.get("subtitle")
 
         if "content" in request.POST or new_content:
             if not new_content:
-                new_content = request.POST["content"]
+                new_content = request.POST.get("content")
             if new_content and new_content != doc.content:
                 update_fields.append("content")
                 update_fields.append("date_modification")
@@ -909,7 +918,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
 
         if "config" in request.POST:
             update_fields.append("config")
-            doc.config = request.POST["config"]
+            doc.config = request.POST.get("config")
 
         if "tags" in request.POST:
             doc.tags.clear()
@@ -927,8 +936,9 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
         doc.updated_at = now
         doc.save(update_fields=update_fields + ["updated_at"])
 
-        if "next" in request.POST:
-            return redirect(request.POST["next"])
+        next_url = request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
 
         action = request.POST.get("action")
         if action == "continue":
@@ -1023,8 +1033,9 @@ def view_trash(request: HttpRequest) -> HttpResponse:
             Document.objects.filter(user=request.user, deleted=True).update(deleted=False)
         if request.POST.get("destroy") and request.user.has_perm("orgapy.delete_document"):
             Document.objects.filter(user=request.user, deleted=True).delete()
-        if "next" in request.POST:
-            return redirect(request.POST["next"])
+        next_url = request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
         return redirect("orgapy:documents")
     return _render_document_list(request, "orgapy/trash.html", status_filter="deleted", sort_key="deletion")
 
@@ -1122,11 +1133,13 @@ def view_progress_log(request: HttpRequest, log_id: str) -> HttpResponse:
             if not request.user.has_perm("orgapy.change_progress_log"):
                 raise PermissionDenied()
             if "description" in request.POST:
-                log.description = request.POST["description"]
-            if "type" in request.POST:
-                log.type = request.POST["type"]
-            if "dt" in request.POST:
-                log.dt = datetime.datetime.strptime(request.POST["dt"], f"%Y-%m-%dT%H:%M")
+                log.description = request.POST.get("description")
+            log_type = request.POST.get("type")
+            if log_type:
+                log.type = log_type
+            log_dt = request.POST.get("dt")
+            if log_dt:
+                log.dt = datetime.datetime.strptime(log_dt, f"%Y-%m-%dT%H:%M")
             log.save()
 
         return redirect("orgapy:progress")
@@ -1146,8 +1159,9 @@ def view_settings(request: HttpRequest) -> HttpResponse:
         user_settings.mood_activities = request.POST.get("mood_activities", "").strip()
         user_settings.beach_mode = bool(request.POST.get("beach_mode", False))
         user_settings.save()
-        if "ref" in request.POST and request.POST["ref"]:
-            return redirect(request.POST["ref"])
+        ref_url = request.POST.get("ref")
+        if ref_url:
+            return redirect(ref_url)
     return render(request, "orgapy/settings.html", {"settings": user_settings})
 
 
@@ -1163,12 +1177,12 @@ def view_mood(request: HttpRequest, year: int | str | None = None) -> HttpRespon
             raise PermissionDenied()
         log = MoodLog.objects.create(
             user=request.user,
-            date=datetime.datetime.strptime(request.POST["date"], "%Y-%m-%d"),
-            mood=int(request.POST["mood"]),
-            energy=int(request.POST["energy"]),
-            health=int(request.POST["health"]),
-            stress=int(request.POST["stress"]),
-            activities=request.POST["activities"].strip().strip(","))
+            date=datetime.datetime.strptime(request.POST.get("date", ""), "%Y-%m-%d"),
+            mood=int(request.POST.get("mood", 0)),
+            energy=int(request.POST.get("energy", 0)),
+            health=int(request.POST.get("health", 0)),
+            stress=int(request.POST.get("stress", 0)),
+            activities=request.POST.get("activities", "").strip().strip(","))
 
         is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
         if is_ajax:
@@ -1232,11 +1246,11 @@ def view_mood_log(request: HttpRequest, log_id: int) -> HttpResponse:
         if action == "save":
             if not request.user.has_perm("change_mood_log"):
                 raise PermissionDenied()
-            log.mood = int(request.POST["mood"])
-            log.energy = int(request.POST["energy"])
-            log.health = int(request.POST["health"])
-            log.stress = int(request.POST["stress"])
-            log.activities = request.POST["activities"]
+            log.mood = int(request.POST.get("mood", 0))
+            log.energy = int(request.POST.get("energy", 0))
+            log.health = int(request.POST.get("health", 0))
+            log.stress = int(request.POST.get("stress", 0))
+            log.activities = request.POST.get("activities", "")
             log.save()
 
         return redirect("orgapy:mood")
@@ -1352,20 +1366,25 @@ def view_task(request: HttpRequest, task_id: str) -> HttpResponse:
         if action == "save":
             if not request.user.has_perm("orgapy.change_task"):
                 raise PermissionDenied()
-            if "title" in request.POST:
-                task.title = request.POST["title"]
-            if "start_date" in request.POST:
-                task.start_date = datetime.datetime.strptime(request.POST["start_date"], "%Y-%m-%d").date()
-            if "due_date" in request.POST:
+            title = request.POST.get("title")
+            if title:
+                task.title = title
+            start_date_string = request.POST.get("start_date")
+            if start_date_string:
+                task.start_date = datetime.datetime.strptime(start_date_string, "%Y-%m-%d").date()
+            due_date_string = request.POST.get("due_date")
+            if due_date_string:
                 if request.POST["due_date"]:
-                    task.due_date = datetime.datetime.strptime(request.POST["due_date"], "%Y-%m-%d").date()
+                    task.due_date = datetime.datetime.strptime(due_date_string, "%Y-%m-%d").date()
                 else:
                     task.due_date = None
-            if "recurring_mode" in request.POST:
-                task.recurring_mode = request.POST["recurring_mode"]
+            recurring_mode = request.POST.get("recurring_mode")
+            if recurring_mode:
+                task.recurring_mode = recurring_mode
             if "recurring_period" in request.POST:
-                if request.POST["recurring_period"]:
-                    task.recurring_period = int(request.POST["recurring_period"])
+                recurring_period_string = request.POST.get("recurring_period")
+                if recurring_period_string:
+                    task.recurring_period = int(recurring_period_string)
                 else:
                     task.recurring_period = None
             task.save()
@@ -1381,8 +1400,9 @@ def view_task(request: HttpRequest, task_id: str) -> HttpResponse:
             )
             task.create_recurring_child()
 
-        if request.POST.get("next"):
-            return redirect(request.POST["next"])
+        next_url = request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
 
     return render(request, "orgapy/task.html", {"task": task})
 
@@ -1442,10 +1462,13 @@ def view_objective(request: HttpRequest, objective_id: str) -> HttpResponse:
             raise PermissionDenied()
 
         if action == "add-completion":
-            if "ts" in request.POST:
-                ts = int(request.POST["ts"])
-            elif "date" in request.POST and "time" in request.POST:
-                ts = int(datetime.datetime.strptime(request.POST["date"] + " " + request.POST["time"], "%Y-%m-%d %H:%M:%S").timestamp())
+            ts_string = request.POST.get("ts")
+            date_string = request.POST.get("date")
+            time_string = request.POST.get("time")
+            if ts_string:
+                ts = int(ts_string)
+            elif date_string and time_string:
+                ts = int(datetime.datetime.strptime(date_string + " " + time_string, "%Y-%m-%d %H:%M:%S").timestamp())
             else:
                 raise BadRequest("Missing timestamp")
             history = json.loads(objective.history) if objective.history else []
@@ -1458,14 +1481,14 @@ def view_objective(request: HttpRequest, objective_id: str) -> HttpResponse:
             )
 
         if action == "delete-completion":
-            ts = int(request.POST["ts"])
+            ts = int(request.POST.get("ts", 0))
             history = json.loads(objective.history) if objective.history else []
             history.remove(ts)
             objective.history = json.dumps(history)
 
         if action == "save":
-            objective.name = request.POST["name"]
-            objective.period = int(request.POST["period"])
+            objective.name = request.POST.get("name", "Unnamed")
+            objective.period = int(request.POST.get("period", 0))
             objective.flexible = request.POST["flexible"] == "on"
             objective.archived = request.POST["archived"] == "on"
 
@@ -1531,38 +1554,39 @@ def view_calendars(request: HttpRequest) -> HttpResponse:
                 url=request.POST["url"],
                 username=request.POST["username"],
                 password=request.POST["password"],
-                sync_period=int(request.POST["sync_period"]),
+                sync_period=int(request.POST.get("sync_period", 24 * 3600)),
             )
 
         if action == "save":
             if not request.user.has_perm("orgapy.change_calendar"):
                 raise PermissionDenied()
-            calendar = _find_user_object(Calendar, "id", request.POST["id"], request.user)
-            calendar.calendar_name = request.POST["name"]
-            calendar.url = request.POST["url"]
-            calendar.username = request.POST["username"]
-            calendar.password = request.POST["password"]
-            calendar.sync_period = int(request.POST["sync_period"])
+            calendar = _find_user_object(Calendar, "id", request.POST.get("id", ""), request.user)
+            calendar.calendar_name = request.POST.get("name", "Unnamed")
+            calendar.url = request.POST.get("url", "")
+            calendar.username = request.POST.get("username", "")
+            calendar.password = request.POST.get("password", "")
+            calendar.sync_period = int(request.POST.get("sync_period", 24 * 3600))
             calendar.save()
 
         if action == "delete":
             if not request.user.has_perm("orgapy.delete_calendar"):
                 raise PermissionDenied()
-            calendar = _find_user_object(Calendar, "id", request.POST["id"], request.user)
+            calendar = _find_user_object(Calendar, "id", request.POST.get("id", ""), request.user)
             calendar.delete()
 
         if action == "refresh":
             if not request.user.has_perm("orgapy.change_calendar"):
                 raise PermissionDenied()
             if "id" in request.POST:
-                calendar = _find_user_object(Calendar, "id", request.POST["id"], request.user)
+                calendar = _find_user_object(Calendar, "id", request.POST.get("id", ""), request.user)
                 calendar.fetch_events()
             else:
                 for calendar in Calendar.objects.filter(user=request.user):
                     calendar.fetch_events()
-        
-        if "next" in request.POST:
-            return redirect(request.POST["next"])
 
-    calendars = Calendar.objects.filter(user=request.user)    
+        next_url = request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
+
+    calendars = Calendar.objects.filter(user=request.user)
     return render(request, "orgapy/calendars.html", {"calendars": calendars})
