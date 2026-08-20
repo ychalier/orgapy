@@ -21,7 +21,17 @@ from .models import *
 from .utils import date_timestamp
 
 
-UserObject = TypeVar("UserObject", Tag, Document, ProgressLog, Project, MoodLog, Task, Objective, Calendar)
+UserObject = TypeVar("UserObject",
+    Tag,
+    Document,
+    ProgressLog,
+    Project,
+    MoodLog,
+    Task,
+    Objective,
+    Calendar,
+    Checklist
+)
 LogT = TypeVar("LogT", ProgressLog, MoodLog)
 LoggedUser = AbstractBaseUser
 
@@ -1590,3 +1600,114 @@ def view_calendars(request: HttpRequest) -> HttpResponse:
 
     calendars = Calendar.objects.filter(user=request.user)
     return render(request, "orgapy/calendars.html", {"calendars": calendars})
+
+
+@permission_required("orgapy.view_checklist")
+def view_checklists(request: HttpRequest) -> HttpResponse:
+
+    if request.method == "POST":
+        
+        if not request.user.has_perm("orgapy.add_checklist"):
+            raise PermissionDenied()
+        checklist = Checklist.objects.create(
+            user=request.user,
+            title=request.POST.get("title", "My checklist")
+        )
+        redirect_url = checklist.get_absolute_url()
+        if request.POST.get("next"):
+            redirect_url += "?" + urlencode({"next": request.POST["next"]})
+        return redirect(redirect_url)
+
+    page_size = 23
+    objects = Checklist.objects.filter(user=request.user).order_by("title")
+    paginator = Paginator(objects, page_size)
+    page = request.GET.get("page")
+    checklists = paginator.get_page(page)
+
+    return render(request, "orgapy/checklists.html", {
+        "checklists": checklists,
+        "paginator": _pretty_paginator(checklists)
+    })
+
+
+@permission_required("orgapy.view_checklist")
+def view_checklist(request: HttpRequest, checklist_id: int) -> HttpResponse:
+
+    checklist = _find_user_object(Checklist, "id", checklist_id, request.user)
+
+    if request.method == "POST":
+
+        action = request.POST.get("action")
+
+        if not request.user.has_perm("orgapy.change_checklist"):
+            raise PermissionDenied()
+
+        title_string = request.POST.get("title")
+        if title_string:
+            checklist.title = title_string
+
+        if "checklist" in request.POST:
+            checklist.json = request.POST.get("checklist")
+        
+        checklist.save()
+
+        note = None
+        if action == "create":
+            items: list[tuple[str, str]] = []
+            data = checklist.data
+            for section_data in data.get("sections", []):
+                for item_data in section_data.get("items", []):
+                    if item_data.get("checked"):
+                        items.append((section_data.get("label", "Unnamed section"), item_data.get("label", "Unnamed item")))
+                    item_data["checked"] = False
+            checklist.json = json.dumps(data)
+            checklist.consumed_at = timezone.now()
+            checklist.save()
+            try:
+                cat = Tag.objects.get(user=request.user, name="checklist")
+            except Tag.DoesNotExist:
+                cat = Tag.objects.create(user=request.user, name="checklist")
+            old_section = None
+            note_content = ""
+            for section_label, item_label in items:
+                if section_label != old_section:
+                    note_content += f"\n**{section_label}**\n\n"
+                    old_section = section_label
+                note_content += f"- [ ] {item_label}\n"
+            note = Document.objects.create(
+                user=request.user,
+                title=f"{checklist.title} {datetime.datetime.now().strftime("%b, %d")}",
+                content=note_content.strip(),
+                type="note",
+                pinned=True
+            )
+            note.tags.add(cat)
+
+        if action == "clear":
+            data = checklist.data
+            for section_data in data.get("sections", []):
+                for item_data in section_data.get("items", []):
+                    item_data["checked"] = False
+            checklist.json = json.dumps(data)
+            checklist.save()
+
+        if action == "delete":
+            if not request.user.has_perm("orgapy.delete_checklist"):
+                raise PermissionDenied()
+            checklist.delete()
+
+        next_url = request.POST.get("next")
+        if next_url:
+            return redirect(next_url)
+
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        if is_ajax:
+            return HttpResponse(status=204)
+
+        if note is not None:
+            return redirect(note.get_absolute_url())
+
+    if request.GET.get("format") == "json":
+        return JsonResponse(checklist.data)
+    
+    return render(request, "orgapy/checklist.html", {"checklist": checklist})

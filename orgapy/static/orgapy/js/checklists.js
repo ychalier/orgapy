@@ -1,14 +1,14 @@
-function bindGroceries(groceriesContainer, saveButton, createListButton, clearButton) {
+function bindChecklist(checklistContainer, saveButton, createListButton, clearButton, titleInput) {
 
-    function readGroceriesData() {
-        const groceriesData = {sections: []};
-        for (const section of groceriesContainer.querySelectorAll(".groceries-section")) {
+    function readChecklistData() {
+        const checklistData = {sections: []};
+        for (const section of checklistContainer.querySelectorAll(".checklist-section")) {
             const sectionData = {
                 items: [],
-                label: section.querySelector(".groceries-section-label").value.trim()
+                label: section.querySelector(".checklist-section-label").value.trim()
             }
             if (sectionData.label.length == 0) continue;
-            for (const item of section.querySelectorAll(".groceries-item")) {
+            for (const item of section.querySelectorAll(".checklist-item")) {
                 const itemData = {
                     checked: item.querySelector("input[name='checked']").checked,
                     label: item.querySelector("input[name='label']").value.trim()
@@ -17,9 +17,9 @@ function bindGroceries(groceriesContainer, saveButton, createListButton, clearBu
                     sectionData.items.push(itemData);
                 }
             }
-            groceriesData.sections.push(sectionData);
+            checklistData.sections.push(sectionData);
         }
-        return groceriesData;
+        return checklistData;
     }
 
     function onInput() {
@@ -28,14 +28,14 @@ function bindGroceries(groceriesContainer, saveButton, createListButton, clearBu
 
     function resetDragRank() {
         dragRankClear();
-        dragRank(groceriesContainer, ".groceries-section", onInput, {domReorder: true});
-        for (const section of groceriesContainer.querySelectorAll(".groceries-section")) {
-            dragRank(section.querySelector(".groceries-items"), ".groceries-item", onInput, {domReorder: true});
+        dragRank(checklistContainer, ".checklist-section", onInput, {domReorder: true});
+        for (const section of checklistContainer.querySelectorAll(".checklist-section")) {
+            dragRank(section.querySelector(".checklist-items"), ".checklist-item", onInput, {domReorder: true});
         }
     }
 
     function createItemElement(itemData, container) {
-        const item = create(container, "li", "groceries-item");
+        const item = create(container, "li", "checklist-item");
         const itemCheckbox = create(item, "input");
         itemCheckbox.type = "checkbox";
         itemCheckbox.name = "checked";
@@ -59,8 +59,8 @@ function bindGroceries(groceriesContainer, saveButton, createListButton, clearBu
     }
 
     function createSectionElement(sectionData, container) {
-        const section = create(container, "div", "groceries-section");
-        const sectionLabel = create(section, "input", "groceries-section-label");
+        const section = create(container, "div", "checklist-section");
+        const sectionLabel = create(section, "input", "checklist-section-label");
         sectionLabel.value = sectionData.label;
         sectionLabel.addEventListener("change", () => {
             if (sectionLabel.value.trim() == "") {
@@ -71,7 +71,7 @@ function bindGroceries(groceriesContainer, saveButton, createListButton, clearBu
         });
         sectionLabel.type = "text";
         sectionLabel.placeholder = "Section";
-        const itemList = create(section, "ul", "groceries-items");
+        const itemList = create(section, "ul", "checklist-items");
         for (const itemData of sectionData.items) {
             createItemElement(itemData, itemList);
         }
@@ -86,46 +86,46 @@ function bindGroceries(groceriesContainer, saveButton, createListButton, clearBu
         return section;
     }
 
-    function inflateGroceries(groceriesData) {
-        groceriesContainer.innerHTML = "";
-        for (const sectionData of groceriesData.sections) {
-            createSectionElement(sectionData, groceriesContainer);
+    function inflateChecklist(checklistData) {
+        checklistContainer.innerHTML = "";
+        for (const sectionData of checklistData.sections) {
+            createSectionElement(sectionData, checklistContainer);
         }
-        const buttonAddSection = create(groceriesContainer, "button", "button-add-section");
+        const buttonAddSection = create(checklistContainer, "button", "button-add-section");
         buttonAddSection.textContent = "Add section";
         buttonAddSection.onclick = () => {
-            groceriesContainer.insertBefore(createSectionElement({label: "", items: []}, null), buttonAddSection);
+            checklistContainer.insertBefore(createSectionElement({label: "", items: []}, null), buttonAddSection);
             resetDragRank();
             onInput();
         };
         resetDragRank();
     }
 
-    function fetchGroceriesData() {
-        fetch("?format=json").then(res => res.json()).then(groceriesData => {
-            inflateGroceries(groceriesData);
+    function fetchChecklistData() {
+        fetch("?format=json").then(res => res.json()).then(checklistData => {
+            inflateChecklist(checklistData);
         });
     }
 
-    function saveGroceriesData() {
+    function saveChecklistData() {
         saveButton.setAttribute("disabled", "");
-        const data = readGroceriesData();
-        post("", {groceries: JSON.stringify(data)})
-            .then(res => {showToast("Saved groceries")})
+        const data = readChecklistData();
+        post("", {title: titleInput.value, checklist: JSON.stringify(data)})
+            .then(res => {showToast("Saved checklist")})
             .catch(msg => {showToast(msg, true)});
     }
 
     function createList() {
-        const data = readGroceriesData();
+        const data = readChecklistData();
         const form = create(document.body, "form");
         form.method = "POST";
         form.action = "";
         const inputCsrf = create(form, "input");
         inputCsrf.name = "csrfmiddlewaretoken";
         inputCsrf.value = CSRF_TOKEN;
-        const inputGroceries = create(form, "input");
-        inputGroceries.name = "groceries";
-        inputGroceries.value = JSON.stringify(data);
+        const inputChecklist = create(form, "input");
+        inputChecklist.name = "checklist";
+        inputChecklist.value = JSON.stringify(data);
         const inputAction = create(form, "input");
         inputAction.name = "action";
         inputAction.value = "create";
@@ -133,12 +133,13 @@ function bindGroceries(groceriesContainer, saveButton, createListButton, clearBu
     }
 
     createListButton.onclick = createList;
-    saveButton.onclick = saveGroceriesData;
+    saveButton.onclick = saveChecklistData;
     saveButton.setAttribute("disabled", "");
-    fetchGroceriesData();
+    titleInput.oninput = onInput;
+    fetchChecklistData();
 
     clearButton.onclick = () => {
-        const data = readGroceriesData();
+        const data = readChecklistData();
         const form = create(document.body, "form");
         form.method = "POST";
         form.action = "";

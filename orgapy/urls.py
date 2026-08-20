@@ -26,4 +26,6 @@ urlpatterns = [
     path("objectives/<objective_id>", views.view_objective, name="objective"),
     path("calendars", views.view_calendars, name="calendars"),
     path("suggestions", views.view_suggestions, name="suggestions"),
+    path("checklists", views.view_checklists, name="checklists"),
+    path("checklists/<checklist_id>", views.view_checklist, name="checklist")
 ]

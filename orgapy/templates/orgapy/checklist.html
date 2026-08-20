@@ -1,0 +1,40 @@
+{% extends "orgapy/layout/skeleton.html" %}
+{% load static %}
+{% block title %}{{ checklist.title }}{% endblock title %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'orgapy/css/checklists.css' %}">
+<script src="{% static 'orgapy/js/dragrank.js' %}"></script>
+<script src="{% static 'orgapy/js/checklists.js' %}"></script>
+{% endblock head %}
+
+{% block column_main %}
+<div class="card card--nobottom" style="margin-bottom: -.8rem">
+    <h1 class="card-header">
+        <input id="titleInput" class="input-inline" name="title" type="text" placeholder="Shopping list, …" value="{{ checklist.title }}" />
+    </h1>
+    <div class="card-body">
+        <div class="hint">Check items to put on the list, and click <q>Create list</q> to turn it into a note.</div>
+    </div>
+</div>
+
+<div class="card-actions card-actions--sticky">
+    <button id="createListButton"><i class="ri-sticky-note-line"></i><span>Create list</span></button>
+    <button id="saveButton" disabled><i class="ri-save-line"></i><span>Save for later</span></button>
+    <button id="clearButton"><i class="ri-close-line"></i><span>Clear</span></button>
+    <form action="" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'orgapy:checklists' %}">
+        <button type="submit" name="action" value="delete" class="button-danger submit-confirm" message="Do you want to delete '{{ checklist.title }}'?"><i class="ri-delete-bin-line"></i><span>Delete</span></button>
+    </form>
+</div>
+
+<div class="card">
+    <div id="checklistContainer" class="checklist"></div>
+</div>
+
+<script>
+    bindChecklist(checklistContainer, saveButton, createListButton, clearButton, titleInput);
+</script>
+{% endblock column_main %}

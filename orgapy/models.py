@@ -161,7 +161,7 @@ class Document(models.Model):
 
     def get_archived_projects(self):
         return self.project_set.filter(status=Project.ARCHIVED) # type: ignore
-    
+
     @property
     def etag(self) -> str:
         return hashlib.sha256(f"{self.nonce}:{self.updated_at.timestamp()}".encode()).hexdigest()
@@ -183,10 +183,10 @@ class Objective(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     def get_absolute_url(self):
         return reverse("orgapy:objective", args=[self.id])
-    
+
     def to_dict(self):
         history_dict = None
         if self.history is not None:
@@ -271,7 +271,7 @@ class Task(models.Model):
         if self.due_date is None:
             return False
         return timezone.now().date() > self.due_date
-    
+
     def get_group(self, today: datetime.date) -> int:
         if self.due_date is None:
             return self.NODATE
@@ -332,10 +332,10 @@ class Task(models.Model):
             recurring_parent=self if self.recurring_parent is None else self.recurring_parent,
         )
         print("Child:", child)
-    
+
     def get_absolute_url(self):
         return reverse("orgapy:task", args=[self.id])
-        
+
 
 class Project(models.Model):
 
@@ -370,7 +370,7 @@ class Project(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:project", args=[self.id])
-    
+
     @property
     def etag(self) -> str:
         return hashlib.sha256(f"{self.id}:{self.updated_at.timestamp()}".encode()).hexdigest()
@@ -515,7 +515,7 @@ class ProgressLog(models.Model):
     @property
     def dt_html(self) -> str:
         return f"{self.dt.year}-{self.dt.month:02d}-{self.dt.day:02d}T{self.dt.hour:02d}:{self.dt.minute:02d}"
-    
+
     def get_icon_class(self) -> str:
         if self.type == self.PROJECT_CHECKLIST_ITEM_CHECKED:
             return "ri-briefcase-line"
@@ -550,7 +550,7 @@ class MoodLog(models.Model):
 
     def __str__(self):
         return f"MoodLog(user={self.user}, date={self.date})"
-    
+
     def get_absolute_url(self):
         return reverse("orgapy:mood_log", args=[self.id])
 
@@ -591,3 +591,29 @@ class MoodLog(models.Model):
     @property
     def label(self) -> str:
         return ["-", "Devastated", "Very bad", "Bad", "Not Great", "Neutral", "Good", "Very good", "Excellent"][self.overall]
+
+
+class Checklist(models.Model):
+
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    consumed_at = models.DateTimeField(blank=True, null=True)
+    title = models.CharField(max_length=255)
+    json = models.TextField(blank=True, null=True)
+
+    class Meta:
+
+        ordering = ["user", "title"]
+
+    def __str__(self):
+        return f"{ self.user } - { self.title }"
+
+    @property
+    def data(self) -> dict:
+        if self.json:
+            return json.loads(self.json)
+        return {"sections": []}
+
+    def get_absolute_url(self):
+        return reverse("orgapy:checklist", args=[self.id])
