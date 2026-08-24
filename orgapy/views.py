@@ -477,15 +477,20 @@ def view_home(request: HttpRequest) -> HttpResponse:
             dtend = dtend.replace(tzinfo=now.tzinfo)
         date = dtstart.date()
         event_groups_dict.setdefault(date, [])
-        event_groups_dict[date].append({
+        event_dict = {
             "title": event["title"],
             "time": None if len(event["dtstart"]) < 11 else dtstart.time(),
             "location": event["location"],
             "over": now > dtend
-        })
+        }
+        event_dict["sort_key"] = "00:00:00"
+        if event_dict["time"] is not None:
+            event_dict["sort_key"] = event_dict["time"].strftime("%H:%M:S")
+        event_dict["sort_key"] += " " + str(event["title"])
+        event_groups_dict[date].append(event_dict)
     event_groups = sorted(event_groups_dict.items())
     for i in range(len(event_groups)):
-        event_groups[i][1].sort(key=lambda x: (x.get("time"), x.get("title")))
+        event_groups[i][1].sort(key=lambda x: x["sort_key"])
 
     tasks = Task.objects\
         .filter(user=request.user, completed=False, start_date__lte=now)\
