@@ -342,3 +342,24 @@
     }
 
 }
+
+.sheet-suggestions {
+    position: fixed;
+    z-index: 1000;
+    max-height: 12rem;
+    overflow-y: auto;
+    background: var(--bg-secondary);
+    color: inherit;
+    border: 1px solid var(--border-secondary);
+    border-radius: .3rem;
+    box-shadow: 0 0 4px black;
+}
+
+.sheet-suggestion {
+    padding: .3rem .6rem;
+    cursor: pointer;
+}
+
+.sheet-suggestion:hover, .sheet-suggestion.active {
+    background: var(--bg-secondary-hover);
+}

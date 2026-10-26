@@ -1095,8 +1095,10 @@ class ColumnType {
     static LABEL = null;
     static INPUT_TAG = "textarea";
     static INPUT_STEP = 1;
-    static USES_DATALIST = false;
+    static INPUT_SUFFIX = null;
+    static USES_SUGGESTIONS = false;
     static CLICK_TO_LOOP = false;
+    static SUGGEST_SEPARATOR = null;
 
     constructor() {}
 
@@ -1122,7 +1124,7 @@ class ColumnTypeText extends ColumnType {
     static LABEL = "Text";
     static INPUT_TAG = "input";
     static INPUT_TYPE = "text";
-    static USES_DATALIST = true;
+    static USES_SUGGESTIONS = true;
 
 }
 
@@ -1458,7 +1460,9 @@ class ColumnTypeTags extends ColumnType {
     static LABEL = "Tags";
     static INPUT_TAG = "input";
     static INPUT_TYPE = "text";
-    static USES_DATALIST = true;
+    static INPUT_SUFFIX = ",";
+    static USES_SUGGESTIONS = true;
+    static SUGGEST_SEPARATOR = ",";
 
     formatHtml(value) {
         const parts = value.split(/, ?/gm);
@@ -1467,6 +1471,14 @@ class ColumnTypeTags extends ColumnType {
             htmlBits.push(`<span class="label">${part}</span>`);
         }
         return `<span style="display: inline-flex; gap: .2rem">` + htmlBits.join("") + "</span>";
+    }
+
+    parse(string) {
+        const value = safeParse(string, x => x.replace(/,+$/, ""));
+        if (value == null) return null;
+        const values = value.split(",");
+        values.sort((a, b) => a.toLowerCase() < b.toLowerCase() ? -1 : 1);
+        return values.join(",");
     }
 
 }
@@ -1737,7 +1749,6 @@ class Sheet {
             this.editing = false;
             this.values[root.i][root.j] = value;
             this.setCellContent(root.i, root.j);
-            this.updateDatalists();
             this.onChange(true, false);
             return;
         }
@@ -1754,10 +1765,13 @@ class Sheet {
         if (columnType.INPUT_TAG == "input" && columnType.INPUT_STEP != null) {
             input.step = columnType.INPUT_STEP;
         }
-        if (columnType.USES_DATALIST) {
-            input.setAttribute("list", `datalist-${root.j}`);
+        if (columnType.USES_SUGGESTIONS) {
+            this.attachSuggestions(input, root.j, columnType.SUGGEST_SEPARATOR);
         }
         input.value = this.columnTypes[root.j].formatText(value);
+        if (columnType.INPUT_SUFFIX != null) {
+            input.value += columnType.INPUT_SUFFIX;
+        }
         if (causedByClick) {
             setTimeout(() => {
                 input.focus();
@@ -1845,9 +1859,9 @@ class Sheet {
         }
         let value = this.columnTypes[root.j].parse(input.value);
         this.values[root.i][root.j] = value;
+        this.closeSuggestions();
         remove(input);
         this.setCellContent(root.i, root.j);
-        this.updateDatalists();
         this.onChange(true, false);
     }
 
@@ -2329,14 +2343,28 @@ class Sheet {
         for (let i = 0; i < this.height; i++) {
             let shouldBeDisplayed = true;
             for (let j = 0; j < this.width; j++) {
-                if (this.filters[j].has(this.values[i][j])) {
-                    shouldBeDisplayed = false;
-                    break;
-                }
-                if (regexes[j] != null && (this.values[i][j] == null || !(typeof this.values[i][j] === 'string') || !this.values[i][j].match(regexes[j]))) {
-                    shouldBeDisplayed = false;
-                    break;
-                }
+                const columnType = this.columnTypes[j].constructor;
+                if (columnType.SUGGEST_SEPARATOR != null) {
+                    if (this.values[i][j] == null) {
+                        shouldBeDisplayed = !this.filters[j].has(null);
+                    } else {
+                        let allFiltered = true;
+                        for (const value of this.values[i][j].split(columnType.SUGGEST_SEPARATOR)) {
+                            allFiltered = allFiltered && this.filters[j].has(value);
+                            if (!allFiltered) break;
+                        }
+                        shouldBeDisplayed = !allFiltered;
+                    }
+                } else {
+                    if (this.filters[j].has(this.values[i][j])) {
+                        shouldBeDisplayed = false;
+                        break;
+                    }
+                        if (regexes[j] != null && (this.values[i][j] == null || !(typeof this.values[i][j] === 'string') || !this.values[i][j].match(regexes[j]))) {
+                        shouldBeDisplayed = false;
+                        break;
+                    }  
+                } 
             }
             if (shouldBeDisplayed) {
                 this.filteredRows.add(i);
@@ -2725,10 +2753,17 @@ class Sheet {
     }
 
     getValueSet(j) {
-        let vset = new Set();
+        const vset = new Set();
+        const columnType = this.columnTypes[j].constructor;
         for (let i = 0; i < this.height; i++) {
             if (this.values[i][j] == null) continue;
-            vset.add(this.values[i][j]);
+            if (columnType.SUGGEST_SEPARATOR != null) {
+                for (const value of this.values[i][j].split(columnType.SUGGEST_SEPARATOR)) {
+                    vset.add(value);
+                }
+            } else {
+                vset.add(this.values[i][j]);
+            }
         }
         return Array.from(vset);
     }
@@ -2756,25 +2791,90 @@ class Sheet {
         }
     }
 
-    updateDatalists() {
-        for (let j = 0; j < this.width; j++) {
-            let datalist = document.getElementById(`datalist-${j}`);
-            if (datalist == null) {
-                datalist = create(document.body, "datalist");
-                datalist.setAttribute("id", `datalist-${j}`);
-            } else {
-                datalist.innerHTML = "";
-            }
-            if (!this.columnTypes[j].constructor.USES_DATALIST) {
-                continue;
-            }
-            const values = this.getValueSet(j);
-            if (values.length < MAX_DIFFERENT_VALUES_FOR_FILTERS) {
-                for (const value of values) {
-                    create(datalist, "option").value = value;
-                }
-            }
+    closeSuggestions() {
+        if (this.suggestionsBox != null) {
+            remove(this.suggestionsBox);
+            this.suggestionsBox = null;
         }
+    }
+
+    attachSuggestions(input, j, separator) {
+
+        const self = this;
+        const all = this.getValueSet(j).filter(v => v !== "");
+        let items = [];
+        let active = -1;
+
+        function fragmentRange() {
+            const end = input.selectionStart;
+            const start = separator == null ? 0 : input.value.slice(0, end).lastIndexOf(separator) + 1;
+            return [start, end];
+        }
+
+        function draw() {
+            self.closeSuggestions();
+            if (items.length == 0) return;
+            const box = create(document.body, "div", "sheet-suggestions");
+            const rect = input.getBoundingClientRect();
+            box.style.left = rect.left + "px";
+            box.style.top = rect.bottom + "px";
+            box.style.minWidth = rect.width + "px";
+            items.forEach((item, k) => {
+                const row = create(box, "div", "sheet-suggestion");
+                row.textContent = item;
+                if (k == active) row.classList.add("active");
+                // pointerdown + preventDefault: keeps focus (and the mobile keyboard) in the input
+                row.addEventListener("pointerdown", (event) => {
+                    event.preventDefault();
+                    accept(item);
+                });
+            });
+            self.suggestionsBox = box;
+        }
+
+        function refresh() {
+            const [start, end] = fragmentRange();
+            const query = input.value.slice(start, end).trim().toLowerCase();
+            const used = new Set(separator == null ? [input.value.trim().toLowerCase()] : input.value.split(separator).map(s => s.trim().toLowerCase()));
+            items = all
+                .filter(v => !used.has(v.toLowerCase()) && v.toLowerCase().includes(query))
+                .sort((a, b) => b.toLowerCase().startsWith(query) - a.toLowerCase().startsWith(query))
+                .slice(0, 8);
+            active = -1;
+            draw();
+        }
+
+        function accept(item) {
+            const [start, end] = fragmentRange();
+            input.value = separator == null ? item : input.value.slice(0, start) + item + separator + input.value.slice(end);
+            const caret = separator == null ? item.length : start + item.length + separator.length;
+            input.setSelectionRange(caret, caret);
+            input.focus();
+            refresh(); // keep offering the remaining tags
+        }
+
+        input.addEventListener("input", refresh);
+        input.addEventListener("focus", refresh);
+        input.addEventListener("keydown", (event) => {
+            if (self.suggestionsBox == null) return;
+            const key = event.key;
+            if (key == "ArrowDown" || key == "ArrowUp") {
+                event.preventDefault();
+                event.stopPropagation();
+                // cycles through -1 (nothing highlighted), 0, 1, ... n-1
+                const n = items.length + 1;
+                active = ((active + 1 + (key == "ArrowDown" ? 1 : -1) + n) % n) - 1;
+                draw();
+            } else if ((key == "Enter" || key == "Tab") && active >= 0) {
+                // only intercept when a suggestion is highlighted; otherwise Enter/Tab commit the cell as usual
+                event.preventDefault();
+                event.stopPropagation();
+                accept(items[active]);
+            } else if (key == "Escape") {
+                event.stopPropagation();
+                self.closeSuggestions();
+            }
+        });
     }
 
     inflate() {
@@ -2851,8 +2951,6 @@ class Sheet {
         }
 
         this.updateFilters();
-        this.updateDatalists();
-
         this.setCellsEventListeners();
     }
 
