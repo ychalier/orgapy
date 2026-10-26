@@ -55,7 +55,7 @@
     </form>
     <form method="post" action="">
         {% csrf_token %}
-        <input type="hidden" name="etag" value="{{ etag }}">
+        <input id="etagDeleteInput" type="hidden" name="etag" value="{{ etag }}">
         <input type="hidden" name="next" value="{% url 'orgapy:documents' %}">
         <button type="submit" name="deleted" value="on" class="button-danger submit-confirm" message="Do you want to delete '{{ document.title }}'?"><i class="ri-delete-bin-line"></i><span>Delete</span></button>
     </form>

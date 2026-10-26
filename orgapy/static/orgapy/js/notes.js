@@ -54,7 +54,13 @@ function bindWidgets() {
         }
         if (selectedUpdates.length > 0) {
             const etagMeta = document.querySelector("meta[name='etag']");
-            post("", {widgets: JSON.stringify(selectedUpdates), action: "continue"}, etagMeta.content, (newEtag) => {etagMeta.content = newEtag})
+            post("", {widgets: JSON.stringify(selectedUpdates), action: "continue"}, etagMeta.content, (newEtag) => {
+                    etagMeta.content = newEtag;
+                    const etagDeleteInput = document.getElementById("etagDeleteInput");
+                    if (etagDeleteInput != null) {
+                        etagDeleteInput.value = newEtag;
+                    }
+                })
                 .then(res => {showToast("Saved widgets")})
                 .catch(msg => {showToast(msg, true)});
         }
