@@ -26,5 +26,7 @@ urlpatterns = [
     path("calendars", views.view_calendars, name="calendars"),
     path("suggestions", views.view_suggestions, name="suggestions"),
     path("checklists", views.view_checklists, name="checklists"),
-    path("checklists/<checklist_id>", views.view_checklist, name="checklist")
+    path("checklists/<checklist_id>", views.view_checklist, name="checklist"),
+    path("diary", views.view_diary, name="diary"),
+    path("diary/<date_string>", views.view_diary_entry, name="diary_entry")
 ]

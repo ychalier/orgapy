@@ -1,5 +1,7 @@
+from ast import Try
 import datetime
 import json
+from multiprocessing import Value
 import re
 import time
 from typing import Callable, Literal, TypeVar, Any
@@ -1673,3 +1675,106 @@ def view_checklist(request: HttpRequest, checklist_id: int) -> HttpResponse:
         return JsonResponse(checklist.data)
 
     return render(request, "orgapy/checklist.html", {"checklist": checklist})
+
+
+@permission_required("orgapy.view_diary_entry")
+def view_diary(request: HttpRequest) -> HttpResponse:
+    return render(request, "orgapy/diary.html", {})
+
+
+def _diary_entry_etag_func(request: HttpRequest, date_string: str) -> str | None:
+    try:
+        entry = DiaryEntry.objects.get(user=request.user, date=datetime.datetime.strptime(date_string, "%Y-%m-%d"))
+    except ValueError:
+        return None
+    except DiaryEntry.DoesNotExist:
+        return None
+    return entry.etag
+
+
+def _diary_entry_last_modified_func(request: HttpRequest, date_string: str) -> datetime.datetime | None:
+    try:
+        entry = DiaryEntry.objects.get(user=request.user, date=datetime.datetime.strptime(date_string, "%Y-%m-%d"))
+    except ValueError:
+        return None
+    except DiaryEntry.DoesNotExist:
+        return None
+    return entry.modified_at
+
+
+@permission_required("orgapy.view_diary_entry")
+@condition(_diary_entry_etag_func, _diary_entry_last_modified_func)
+def view_diary_entry(request: HttpRequest, date_string: str) -> HttpResponse:
+    try:
+        d = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+    except ValueError:
+        raise BadRequest("Incorrect date")
+
+    if request.method == "POST":
+
+        is_new = False
+        try:
+            entry = DiaryEntry.objects.get(user=request.user, date=d)
+        except DiaryEntry.DoesNotExist:
+            entry = DiaryEntry.objects.create(user=request.user, date=d)
+            is_new = True
+
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        client_etag = request.headers.get("If-Match") or request.POST.get("etag")
+        current_etag = entry.etag
+
+        if not is_new and client_etag != current_etag:
+            if is_ajax:
+                return HttpResponse(status=412)
+            else:
+                return HttpResponse(
+                    "This entry was modified by someone else while you were editing. "
+                    "Please review the latest version before saving again.",
+                    content_type="text/plain",
+                    status=412)
+
+        if request.POST.get("action") == "delete":
+            entry.delete()
+            next_url = request.POST.get("next")
+            if next_url:
+                return redirect(next_url)
+            return redirect("orgapy:diary")
+
+        if "content" in request.POST:
+            entry.content = request.POST["content"]
+
+        entry.save()
+
+        next_url = request.POST.get("next")
+        action = request.POST.get("action")
+        if action == "continue":
+            if is_ajax:
+                response = HttpResponse(status=204)
+            else:
+                response = redirect(request.path)
+        elif next_url:
+            return redirect(next_url)
+        else:
+            response = redirect("orgapy:diary_entry", entry.date_string)
+
+        response["ETag"] = entry.etag
+        return response
+
+    else:
+        try:
+            entry = DiaryEntry.objects.get(user=request.user, date=d)
+        except DiaryEntry.DoesNotExist:
+            entry = {
+                "date": d,
+                "content": None,
+                "date_string": d.strftime("%Y-%m-%d"),
+            }
+
+    response = render(request, "orgapy/diary_entry.html", {
+        "entry": entry,
+        "active": "diary",
+        "etag": entry.etag if isinstance(entry, DiaryEntry) else None,
+    })
+    response["Cache-Control"] = "no-cache; must-revalidate"
+
+    return response

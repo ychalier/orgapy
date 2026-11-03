@@ -1,0 +1,38 @@
+{% extends "orgapy/layout/skeleton.html" %}
+
+{% block title %}{{ entry.date_string }}{% endblock title %}
+
+{% block column_main %}
+<form id="entryForm" action="" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% if request.GET.next %}{{ request.GET.next}}{% else %}{% url 'orgapy:diary' %}{% endif %}">
+    <input type="hidden" name="date" value="{{ entry.date_string }}">
+    <input id="inputEtag" type="hidden" name="etag" value="{{ etag }}">
+    <div class="card">
+        <h1 class="card-header">{{ entry.date | date:"l N jS, Y" }}</h1>
+        <div class="card-body colll">
+            <textarea id="contentInput" class="textarea-seamless" name="content" rows="16">{% if entry.content %}{{ entry.content }}{% endif %}</textarea>
+        </div>
+        <div class="card-actions">
+            <button id="buttonSave" type="submit" name="action" value="save"><i class="ri-check-line"></i><span>Save</span></button>
+            <button id="buttonContinue" disabled type="submit" name="action" value="continue"><i class="ri-save-line"></i><span>Save and continue</span></button>
+            <button type="submit" name="action" value="delete" class="button-danger submit-confirm" message="Do you want to delete {{ entry.date_string }} entry?"><i class="ri-delete-bin-line"></i><span>Delete</span></button>
+        </div>
+    </div>
+</form>
+<script>
+const saveAndContinue = (e) => {
+    e.preventDefault();
+    buttonContinue.setAttribute("disabled", "");
+    const formData = new FormData(entryForm);
+    formData.append("action", "continue");
+    post(entryForm.getAttribute("action"), formData, inputEtag.value, (newEtag) => {inputEtag.value = newEtag})
+        .then(res => {showToast("Saved entry")})
+        .catch(msg => {showToast(msg, true)});
+}
+buttonContinue.onclick = saveAndContinue;
+entryForm.addEventListener("keydown", (e) => {if (e.key == "s" && e.ctrlKey) saveAndContinue(e)});
+const enableSaveButton = () => {buttonContinue.removeAttribute("disabled")};
+contentInput.addEventListener("input", enableSaveButton);
+</script>
+{% endblock column_main %}

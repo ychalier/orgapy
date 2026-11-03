@@ -610,3 +610,31 @@ class Checklist(models.Model):
 
     def get_absolute_url(self):
         return reverse("orgapy:checklist", args=[self.id])
+
+
+class DiaryEntry(models.Model):
+
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    date = models.DateField()
+    content = models.TextField(blank=True, null=True)
+
+    @property
+    def date_string(self) -> str:
+        return self.date.strftime("%Y-%m-%d")
+
+    class Meta:
+
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.user} - {self.date_string}"
+
+    def get_absolute_url(self):
+        return reverse("orgapy:diary_entry", args=[self.date_string])
+
+    @property
+    def etag(self) -> str:
+        return hashlib.sha256(f"{self.id}:{self.modified_at.timestamp()}".encode()).hexdigest()

@@ -267,6 +267,17 @@ textarea:disabled {
     font-weight: inherit;
 }
 
+.textarea-seamless {
+    line-height: 1.6;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.textarea-seamless:focus {
+    outline: none;
+}
+
 /***** BUTTONS ****************************************************************/
 
 button,
