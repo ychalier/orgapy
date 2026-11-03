@@ -6,7 +6,7 @@ from typing import Callable, Literal, TypeVar, Any
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import permission_required
-from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+from django.contrib.auth.models import AbstractBaseUser, AnonymousUser, User
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.core.paginator import Page, Paginator
 from django.db import models, connection
@@ -525,6 +525,8 @@ def view_home(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_project")
 def view_projects(request: HttpRequest) -> HttpResponse:
 
+    if not isinstance(request.user, User): raise PermissionDenied()
+
     if request.method == "POST":
         if not request.user.has_perm("orgapy.add_project"):
             raise PermissionDenied()
@@ -817,7 +819,7 @@ def view_document(request: HttpRequest, nonce: str) -> HttpResponse:
         raise Http404()
     has_permission = False
     readonly = True
-    if request.user is not None and doc.user == request.user and request.user.has_perm("orgapy.view_document"):
+    if request.user is not None and doc.user == request.user and isinstance(request.user, User) and request.user.has_perm("orgapy.view_document"):
         readonly = False
         has_permission = True
     elif doc.public:
@@ -1043,6 +1045,7 @@ tags:  {", ".join(category.name for category in doc.tags.all())}
 
 @permission_required("orgapy.view_document")
 def view_trash(request: HttpRequest) -> HttpResponse:
+    if not isinstance(request.user, User): raise PermissionDenied()
     if request.method == "POST":
         if request.POST.get("restore") and request.user.has_perm("orgapy.change_document"):
             Document.objects.filter(user=request.user, deleted=True).update(deleted=False)
@@ -1097,7 +1100,7 @@ def view_tag(request: HttpRequest, name: str) -> HttpResponse:
 
 @permission_required("orgapy.view_progress_log")
 def view_progress(request: HttpRequest) -> HttpResponse:
-
+    if not isinstance(request.user, User): raise PermissionDenied()
     if request.method == "POST":
         if not request.user.has_perm("orgapy.add_progress_log"):
             raise PermissionDenied()
@@ -1133,6 +1136,7 @@ def view_progress(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_progress_log")
 def view_progress_log(request: HttpRequest, log_id: str) -> HttpResponse:
+    if not isinstance(request.user, User): raise PermissionDenied()
     log = _find_user_object(ProgressLog, "id", log_id, request.user)
 
     if request.method == "POST":
@@ -1183,6 +1187,7 @@ def view_settings(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_mood_log")
 def view_mood(request: HttpRequest, year: int | str | None = None) -> HttpResponse:
 
+    if not isinstance(request.user, User): raise PermissionDenied()
     settings = _get_or_create_settings(request.user)
     pending_mood_logs = _get_pending_mood_logs(request.user, settings.mood_log_hours, settings.mood_log_lookback_days)
 
@@ -1247,6 +1252,7 @@ def view_mood(request: HttpRequest, year: int | str | None = None) -> HttpRespon
 
 @permission_required("orgapy.view_mood_loog")
 def view_mood_log(request: HttpRequest, log_id: int) -> HttpResponse:
+    if not isinstance(request.user, User): raise PermissionDenied()
     log = _find_user_object(MoodLog, "id", log_id, request.user)
 
     if request.method == "POST":
@@ -1276,6 +1282,8 @@ def view_mood_log(request: HttpRequest, log_id: int) -> HttpResponse:
 @permission_required("orgapy.view_task")
 def view_tasks(request: HttpRequest) -> HttpResponse:
 
+    if not isinstance(request.user, User): raise PermissionDenied()
+
     if request.method == "POST":
         if not request.user.has_perm("orgapy.add_task"):
             raise PermissionDenied()
@@ -1303,6 +1311,9 @@ def view_tasks(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_task")
 def view_task(request: HttpRequest, task_id: str) -> HttpResponse:
+
+    if not isinstance(request.user, User): raise PermissionDenied()
+
     task = _find_user_object(Task, "id", task_id, request.user)
 
     if request.method == "POST":
@@ -1360,6 +1371,8 @@ def view_task(request: HttpRequest, task_id: str) -> HttpResponse:
 @permission_required("orgapy.view_objective")
 def view_objectives(request: HttpRequest) -> HttpResponse:
 
+    if not isinstance(request.user, User): raise PermissionDenied()
+
     if request.method == "POST":
         if not request.user.has_perm("orgapy.add_objective"):
             raise PermissionDenied()
@@ -1394,6 +1407,9 @@ def view_objectives(request: HttpRequest) -> HttpResponse:
 
 @permission_required("orgapy.view_objective")
 def view_objective(request: HttpRequest, objective_id: str) -> HttpResponse:
+
+    if not isinstance(request.user, User): raise PermissionDenied()
+
     objective = _find_user_object(Objective, "id", objective_id, request.user)
 
     if request.method == "POST":
@@ -1492,6 +1508,8 @@ def view_suggestions(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_calendar")
 def view_calendars(request: HttpRequest) -> HttpResponse:
 
+    if not isinstance(request.user, User): raise PermissionDenied()
+
     if request.method == "POST":
         action = request.POST.get("action")
 
@@ -1545,8 +1563,10 @@ def view_calendars(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_checklist")
 def view_checklists(request: HttpRequest) -> HttpResponse:
 
+    if not isinstance(request.user, User): raise PermissionDenied()
+
     if request.method == "POST":
-        
+
         if not request.user.has_perm("orgapy.add_checklist"):
             raise PermissionDenied()
         checklist = Checklist.objects.create(
@@ -1573,6 +1593,8 @@ def view_checklists(request: HttpRequest) -> HttpResponse:
 @permission_required("orgapy.view_checklist")
 def view_checklist(request: HttpRequest, checklist_id: int) -> HttpResponse:
 
+    if not isinstance(request.user, User): raise PermissionDenied()
+
     checklist = _find_user_object(Checklist, "id", checklist_id, request.user)
 
     if request.method == "POST":
@@ -1588,7 +1610,7 @@ def view_checklist(request: HttpRequest, checklist_id: int) -> HttpResponse:
 
         if "checklist" in request.POST:
             checklist.json = request.POST.get("checklist")
-        
+
         checklist.save()
 
         note = None
@@ -1649,5 +1671,5 @@ def view_checklist(request: HttpRequest, checklist_id: int) -> HttpResponse:
 
     if request.GET.get("format") == "json":
         return JsonResponse(checklist.data)
-    
+
     return render(request, "orgapy/checklist.html", {"checklist": checklist})
