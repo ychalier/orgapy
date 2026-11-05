@@ -16,10 +16,6 @@
                     <button class="moodlog-tracker mood-neutral" name="energy" title="Energy"></button>
                     <button class="moodlog-tracker mood-neutral" name="health" title="Health"></button>
                     <button class="moodlog-tracker mood-neutral" name="stress" title="Stress"></button>
-                    <div class="moodlog-activities-wrapper">
-                        <input class="moodlog-activities" type="text" name="activities" placeholder="Activities" /> 
-                        <div class="moodlog-activities-suggestions">{% for label, emoji in settings.mood_activities_list %}<button title="{{ label }}">{{ emoji }}</button>{% endfor %}</div>
-                    </div>
                     <button class="moodlog-submit"><i class="ri-save-line"></i></button>
                 </div>
             </form>
