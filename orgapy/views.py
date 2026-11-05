@@ -1679,6 +1679,10 @@ def view_checklist(request: HttpRequest, checklist_id: int) -> HttpResponse:
 
 @permission_required("orgapy.view_diary_entry")
 def view_diary(request: HttpRequest) -> HttpResponse:
+
+    if request.GET.get("date"):
+        return redirect("orgapy:diary_entry", request.GET["date"])
+
     return render(request, "orgapy/diary.html", {})
 
 
@@ -1774,6 +1778,8 @@ def view_diary_entry(request: HttpRequest, date_string: str) -> HttpResponse:
         "entry": entry,
         "active": "diary",
         "etag": entry.etag if isinstance(entry, DiaryEntry) else None,
+        "next": d + datetime.timedelta(days=1),
+        "prev": d + datetime.timedelta(days=-1),
     })
     response["Cache-Control"] = "no-cache; must-revalidate"
 

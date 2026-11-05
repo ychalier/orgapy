@@ -278,6 +278,22 @@ textarea:disabled {
     outline: none;
 }
 
+.inline-form {
+    display: inline-flex;
+}
+
+.inline-form input:not(:first-child) {
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.inline-form input:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+
 /***** BUTTONS ****************************************************************/
 
 button,
@@ -1473,6 +1489,11 @@ dialog > .card {
 
 .row--nowrap {
     flex-wrap: nowrap;
+}
+
+.row--fullwidth {
+    width: 100%;
+    justify-content: space-between;
 }
 
 .col,
