@@ -1,0 +1,57 @@
+{% extends "orgapy/layout/skeleton.html" %}
+
+{% block title %}Diary{% endblock title %}
+
+{% block column_main %}
+<nav class="card">
+    <div class="card-body row row--fullwidth">
+        <a class="link-tenuous" href="{{ prev_url }}">&lt; previous</a>
+        <form class="inline-form" action="" method="get">
+            <input type="date" name="after"  max="{{ today | date:'Y-m-d' }}" value="{{ after | date:'Y-m-d' }}" style="width: auto">
+            <input type="date" name="before" max="{{ today | date:'Y-m-d' }}" value="{{ before | date:'Y-m-d' }}" style="width: auto">
+            <input type="submit" value="View">
+        </form>
+        {% if next_url %}
+        <a class="link-tenuous" href="{{ next_url }}">next &gt;</a>
+        {% else %}
+        <a class="disabled">next &gt;</a>
+        {% endif %}
+    </div>
+</nav>
+{% for entry in entries %}
+<form class="entry card" action="{% url 'orgapy:diary_entry' entry.date_string %}" method="post" data-date="{{ entry.date_string }}">
+    <h3 class="card-header">{{ entry.date | date:"l N jS, Y" }}</h3>
+    <div class="card-body colll">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% if request.GET.next %}{{ request.GET.next}}{% else %}{% url 'orgapy:diary' %}{% endif %}">
+        <input type="hidden" name="date" value="{{ entry.date_string }}">
+        <input type="hidden" name="etag" value="{{ entry.etag }}">
+        <textarea class="textarea-seamless" name="content" rows="6">{% if entry.content %}{{ entry.content }}{% endif %}</textarea>
+    </div>
+    <div class="card-actions">
+        <button type="submit" name="action" value="continue" disabled><i class="ri-save-line"></i><span>Save</span></button>
+        <button type="submit" name="action" value="delete" class="button-danger submit-confirm" message="Do you want to delete {{ entry.date_string }} entry?"><i class="ri-delete-bin-line"></i><span>Delete</span></button>
+    </div>
+</form>
+{% endfor %}
+<script>
+    for (const form of document.querySelectorAll("form.entry")) {
+        const buttonContinue = form.querySelector("button[value=continue]");
+        const contentInput = form.querySelector("textarea");
+        const inputEtag = form.querySelector("input[name=etag]");
+        const saveAndContinue = (e) => {
+            e.preventDefault();
+            buttonContinue.setAttribute("disabled", "");
+            const formData = new FormData(form);
+            formData.append("action", "continue");
+            post(form.getAttribute("action"), formData, inputEtag.value, (newEtag) => {inputEtag.value = newEtag})
+                .then(res => {showToast(`Saved ${form.dataset.date} entry`)})
+                .catch(msg => {showToast(msg, true)});
+        }
+        buttonContinue.onclick = saveAndContinue;
+        form.addEventListener("keydown", (e) => {if (e.key == "s" && e.ctrlKey) saveAndContinue(e)});
+        const enableSaveButton = () => {buttonContinue.removeAttribute("disabled")};
+        contentInput.addEventListener("input", enableSaveButton);
+    }
+</script>
+{% endblock column_main %}

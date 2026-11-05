@@ -200,6 +200,11 @@ a:focus-visible {
     outline: 1px solid var(--accent);
 }
 
+a.disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
 /***** DETAILS ****************************************************************/
 
 summary {
@@ -1492,6 +1497,7 @@ dialog > .card {
 }
 
 .row--fullwidth {
+    box-sizing: border-box;
     width: 100%;
     justify-content: space-between;
 }

@@ -1683,7 +1683,56 @@ def view_diary(request: HttpRequest) -> HttpResponse:
     if request.GET.get("date"):
         return redirect("orgapy:diary_entry", request.GET["date"])
 
-    return render(request, "orgapy/diary.html", {})
+    if request.GET.get("before") and request.GET.get("after"):
+        before = datetime.datetime.strptime(request.GET["before"], "%Y-%m-%d").date()
+        after = datetime.datetime.strptime(request.GET["after"], "%Y-%m-%d").date()
+        size = (before - after).days
+    else:
+        size = int(request.GET.get("size", 7)) - 1
+        if request.GET.get("before"):
+            before = datetime.datetime.strptime(request.GET["before"], "%Y-%m-%d").date()
+            after = before - datetime.timedelta(days=size)
+        elif request.GET.get("after"):
+            after = datetime.datetime.strptime(request.GET["after"], "%Y-%m-%d").date()
+            before = after + datetime.timedelta(days=size)
+        else:
+            before = datetime.date.today()
+            after = before - datetime.timedelta(days=size)
+
+    entries = []
+    d = after
+    while d <= before:
+        try:
+            entry = DiaryEntry.objects.get(user=request.user, date=d)
+        except DiaryEntry.DoesNotExist:
+            entry = {
+                "date": d,
+                "content": None,
+                "date_string": d.strftime("%Y-%m-%d"),
+                "etag": None,
+            }
+        entries.append(entry)
+        d += datetime.timedelta(days=1)
+
+    prev_date = after - datetime.timedelta(days=1)
+    prev_url = reverse("orgapy:diary") + f"?before={prev_date.strftime("%Y-%m-%d")}&size={ size + 1}"
+
+    next_date = before + datetime.timedelta(days=1)
+    if next_date > datetime.date.today():
+        next_url = None
+    else:
+        next_url = reverse("orgapy:diary") + f"?after={next_date.strftime("%Y-%m-%d")}&size={ size + 1}"
+
+    return render(request, "orgapy/diary.html", {
+        "active": "diary",
+        "entries": reversed(entries),
+        "size": size + 1,
+        "after": after,
+        "before": before,
+        "today": datetime.date.today(),
+        "prev_url": prev_url,
+        "next_url": next_url,
+    })
 
 
 def _diary_entry_etag_func(request: HttpRequest, date_string: str) -> str | None:
