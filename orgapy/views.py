@@ -1683,6 +1683,36 @@ def view_diary(request: HttpRequest) -> HttpResponse:
     if request.GET.get("date"):
         return redirect("orgapy:diary_entry", request.GET["date"])
 
+    if request.GET.get("format"):
+
+        entries = DiaryEntry.objects.all()
+
+        match request.GET.get("format"):
+            case "txt":
+                content_type = "text/plain"
+                text = ""
+                for entry in reversed(entries):
+                    text += entry.date.strftime("%A %B %d, %Y") + "\n"
+                    text += entry.content + "\n\n"
+
+            case "tsv":
+                content_type = "text/tab-separated-values"
+                text = "date\tcontent\n"
+                for entry in entries:
+                    content = "" if entry.content is None else re.sub("[ \r\n]+", " ", entry.content)
+                    text += f"{entry.date_string}\t{content}\n"
+
+            case _:
+                raise BadRequest("Unknown format")
+        
+        first = entries.first()
+        last = entries.last()
+
+        filename = f"diary-{first.date_string if first else 'null'}-{last.date_string if last else 'null'}.{request.GET['format']}"
+        response = HttpResponse(text, content_type=f"{content_type}; charset=utf-8")
+        response["Content-Disposition"] = f'inline; filename="{filename}"'
+        return response
+
     if request.GET.get("before") and request.GET.get("after"):
         before = datetime.datetime.strptime(request.GET["before"], "%Y-%m-%d").date()
         after = datetime.datetime.strptime(request.GET["after"], "%Y-%m-%d").date()

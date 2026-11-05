@@ -5,17 +5,11 @@
 {% block column_main %}
 <nav class="card">
     <div class="card-body row row--fullwidth">
-        <a class="link-tenuous" href="{{ prev_url }}">&lt; previous</a>
         <form class="inline-form" action="" method="get">
             <input type="date" name="after"  max="{{ today | date:'Y-m-d' }}" value="{{ after | date:'Y-m-d' }}" style="width: auto">
             <input type="date" name="before" max="{{ today | date:'Y-m-d' }}" value="{{ before | date:'Y-m-d' }}" style="width: auto">
-            <input type="submit" value="View">
+            <input type="submit" value="→">
         </form>
-        {% if next_url %}
-        <a class="link-tenuous" href="{{ next_url }}">next &gt;</a>
-        {% else %}
-        <a class="disabled">next &gt;</a>
-        {% endif %}
     </div>
 </nav>
 {% for entry in entries %}
@@ -34,6 +28,17 @@
     </div>
 </form>
 {% endfor %}
+<nav class="card">
+    <div class="card-body row row--fullwidth">
+        <a class="link-tenuous" href="{{ prev_url }}">&lt; previous</a>
+        <a class="button" href="?format=txt"><i class="ri-download-line"></i> Export</a>
+        {% if next_url %}
+        <a class="link-tenuous" href="{{ next_url }}">next &gt;</a>
+        {% else %}
+        <a class="disabled">next &gt;</a>
+        {% endif %}
+    </div>
+</nav>
 <script>
     for (const form of document.querySelectorAll("form.entry")) {
         const buttonContinue = form.querySelector("button[value=continue]");

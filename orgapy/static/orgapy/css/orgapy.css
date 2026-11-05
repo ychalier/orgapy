@@ -285,6 +285,7 @@ textarea:disabled {
 
 .inline-form {
     display: inline-flex;
+    overflow: auto;
 }
 
 .inline-form input:not(:first-child) {
