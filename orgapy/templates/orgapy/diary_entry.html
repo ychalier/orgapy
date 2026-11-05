@@ -17,7 +17,7 @@
             <a class="link-tenuous" href="{% url 'orgapy:diary_entry' prev %}">&lt; {{ prev | date }}</a>
             <form class="inline-form" method="get" action="{% url 'orgapy:diary' %}">
                 <input name="date" type="date" value="{{ entry.date_string }}" />
-                <input type="submit" value="View">
+                <input type="submit" value="→">
             </form>
             <a class="link-tenuous" href="{% url 'orgapy:diary_entry' next %}">{{ next | date }} &gt;</a>
         </nav>

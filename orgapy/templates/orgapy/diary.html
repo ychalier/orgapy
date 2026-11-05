@@ -14,7 +14,7 @@
 </nav>
 {% for entry in entries %}
 <form class="entry card" action="{% url 'orgapy:diary_entry' entry.date_string %}" method="post" data-date="{{ entry.date_string }}">
-    <h3 class="card-header">{{ entry.date | date:"l N jS, Y" }}</h3>
+    <h3 class="card-header"><a class="link-hidden" href="{% url 'orgapy:diary_entry' entry.date_string %}">{{ entry.date | date:"l N jS, Y" }}</a></h3>
     <div class="card-body colll">
         {% csrf_token %}
         <input type="hidden" name="next" value="{% if request.GET.next %}{{ request.GET.next}}{% else %}{% url 'orgapy:diary' %}{% endif %}">
